@@ -1,0 +1,17 @@
+[project]
+name = "hermes-ali"
+version = "1.0.0"
+description = "Lightweight cross-platform Hermes Agent terminal with LAN/IP access"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Xie Lab" }]
+keywords = ["hermes", "agent", "terminal", "webui", "sse"]
+
+[project.urls]
+Homepage = "https://github.com/xielab2017/Hermes-ALI"
+Repository = "https://github.com/xielab2017/Hermes-ALI"
+Issues = "https://github.com/xielab2017/Hermes-ALI/issues"
+
+[project.scripts]
+hermes-ali = "server:main"

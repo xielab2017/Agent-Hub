@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f1419" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Hermes-ALI</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div id="login-overlay" class="overlay hidden">
+    <form id="login-form" class="login-card">
+      <h1>Hermes-ALI</h1>
+      <p>输入访问密码以连接终端</p>
+      <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" required />
+      <button type="submit">进入</button>
+      <p id="login-error" class="error hidden"></p>
+    </form>
+  </div>
+
+  <div id="app" class="app">
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-head">
+        <div class="brand">
+          <span class="brand-mark">H</span>
+          <div>
+            <div class="brand-name">Hermes-ALI</div>
+            <div class="brand-sub" id="version-label">v1.0.0</div>
+          </div>
+        </div>
+        <button id="btn-new" class="btn primary" title="New chat">+ 新对话</button>
+      </div>
+      <div id="session-list" class="session-list"></div>
+      <div class="sidebar-foot">
+        <div id="conn-info" class="conn-info"></div>
+        <div id="agent-badge" class="badge">checking…</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <button id="btn-menu" class="btn ghost icon" aria-label="Menu">☰</button>
+        <h2 id="chat-title">New chat</h2>
+        <button id="btn-stop" class="btn ghost hidden" title="Stop">⏹</button>
+      </header>
+
+      <div id="messages" class="messages">
+        <div class="empty-state" id="empty-state">
+          <div class="empty-logo">ALI</div>
+          <h3>轻量 Hermes 终端</h3>
+          <p>在任意设备浏览器中打开本页 IP 即可互通。<br/>发送消息开始对话。</p>
+        </div>
+      </div>
+
+      <footer class="composer">
+        <textarea id="input" rows="1" placeholder="输入消息… (Enter 发送，Shift+Enter 换行)"></textarea>
+        <button id="btn-send" class="btn primary send" disabled>发送</button>
+      </footer>
+    </main>
+  </div>
+
+  <div id="sidebar-backdrop" class="backdrop hidden"></div>
+  <script src="/app.js"></script>
+</body>
+</html>
