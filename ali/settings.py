@@ -15,8 +15,9 @@ SETTINGS_FILE = STATE_DIR / "settings.json"
 CAMPUS_CONFIG_FILE = STATE_DIR / "campus-office-ai.json"
 
 DEFAULT_CAMPUS: dict[str, Any] = {
-    "schema_version": "1.0",
+    "schema_version": "1.1",
     "install_root": "",
+    "mode": "single",  # single | hybrid
     "backend": {
         "type": "campus-openai-compatible",
         "base_url": "",
@@ -24,7 +25,15 @@ DEFAULT_CAMPUS: dict[str, Any] = {
         "verify_tls": True,
         "timeout_seconds": 60,
     },
+    # Per-tier provider override when mode=hybrid
+    "hybrid": {
+        # "simple": {"provider": "openai", "model": "gpt-4o-mini"},
+    },
     "models": {
+        "fast": "",
+        "main": "",
+        "vision": "",
+        "reasoning": "",
         "qwen_fast": "",
         "qwen_main": "",
         "qwen_vl": "",
@@ -110,16 +119,49 @@ def load_campus_config() -> dict[str, Any]:
 
 def save_campus_config(data: dict[str, Any]) -> dict[str, Any]:
     ensure_state_dirs()
+    from .providers import looks_like_secret
+
     merged = _deep_merge(DEFAULT_CAMPUS, data or {})
     # Never persist secrets
     backend = merged.get("backend") or {}
     for secret_key in ("api_key", "password", "token", "secret"):
         backend.pop(secret_key, None)
+    env_name = str(backend.get("api_key_env") or "").strip()
+    if looks_like_secret(env_name):
+        # User pasted a real key into the env-name field — refuse to store it
+        backend["api_key_env"] = ""
+        merged["_warning"] = (
+            "Detected API key pasted into api_key_env. "
+            "Cleared it. Put the key in an OS environment variable "
+            "(e.g. NVIDIA_API_KEY), and set api_key_env to that variable NAME only. "
+            "Rotate the exposed key if it was shared."
+        )
     merged["backend"] = backend
+
+    # Sync generic ↔ legacy model keys
+    models = dict(merged.get("models") or {})
+    pairs = [
+        ("fast", "qwen_fast"),
+        ("main", "qwen_main"),
+        ("vision", "qwen_vl"),
+        ("reasoning", "deepseek_reasoning"),
+    ]
+    for gen, legacy in pairs:
+        if models.get(gen) and not models.get(legacy):
+            models[legacy] = models[gen]
+        elif models.get(legacy) and not models.get(gen):
+            models[gen] = models[legacy]
+    merged["models"] = models
+
+    # Strip internal warning from disk file but keep in return
+    warning = merged.pop("_warning", None)
+    to_write = {k: v for k, v in merged.items() if not str(k).startswith("_")}
     CAMPUS_CONFIG_FILE.write_text(
-        json.dumps(merged, ensure_ascii=False, indent=2) + "\n",
+        json.dumps(to_write, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
+    if warning:
+        merged["_warning"] = warning
     return merged
 
 
@@ -144,7 +186,16 @@ def export_campus_config(dest: str) -> str:
 def api_key_status(cfg: dict[str, Any] | None = None) -> dict[str, Any]:
     cfg = cfg or load_campus_config()
     env_name = ((cfg.get("backend") or {}).get("api_key_env") or "CAMPUS_LLM_API_KEY").strip()
-    present = bool(os.environ.get(env_name))
+    from .providers import looks_like_secret
+
+    if looks_like_secret(env_name):
+        return {
+            "env_name": "",
+            "present": False,
+            "hint": "invalid — a secret was pasted; use env VAR NAME only",
+            "invalid_secret": True,
+        }
+    present = bool(env_name and os.environ.get(env_name))
     return {
         "env_name": env_name,
         "present": present,
@@ -153,12 +204,15 @@ def api_key_status(cfg: dict[str, Any] | None = None) -> dict[str, Any]:
 
 
 def public_settings_view() -> dict[str, Any]:
+    from .providers import catalog_payload
+
     cfg = load_campus_config()
     return {
         "config": cfg,
         "config_path": str(CAMPUS_CONFIG_FILE),
         "api_key": api_key_status(cfg),
         "defaults": DEFAULT_CAMPUS,
+        "catalog": catalog_payload(),
     }
 
 

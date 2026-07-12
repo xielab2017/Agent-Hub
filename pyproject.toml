@@ -1,6 +1,6 @@
 [project]
 name = "hermes-ali"
-version = "1.1.1"
+version = "1.1.2"
 description = "Lightweight cross-platform Hermes Agent terminal with LAN/IP access"
 readme = "README.md"
 requires-python = ">=3.9"

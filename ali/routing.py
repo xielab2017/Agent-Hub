@@ -85,18 +85,21 @@ def resolve_route(
     cfg: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Resolve to concrete model id + audit metadata."""
+    from .providers import get_provider
+
     cfg = cfg or load_campus_config()
     data_policy = (cfg.get("data_policy") or "internal").lower()
     routing = cfg.get("routing") or {}
     backend = cfg.get("backend") or {}
     backend_type = (backend.get("type") or "").lower()
+    mode = (cfg.get("mode") or "single").lower()
+    hybrid = cfg.get("hybrid") or {}
 
     raw = (route or "auto").strip().lower()
     if raw in ("auto", ""):
         tier = classify_message(message)
         route_key = TIERS[tier]["route_key"]
-    elif raw.upper() in TIERS:
-        tier = raw.upper() if raw.upper() != "vision" else "Vision"
+    elif raw.upper() in TIERS or raw == "vision":
         if raw.lower() == "vision":
             tier = "Vision"
         else:
@@ -111,22 +114,42 @@ def resolve_route(
             "reasoning": "C3",
         }.get(route_key, "C1")
 
+    provider_id = backend_type
+    base_url = backend.get("base_url") or ""
+    api_key_env = backend.get("api_key_env") or ""
     model = _model_for_slot(cfg, route_key)
+
+    if mode == "hybrid" or backend_type == "hybrid":
+        entry = hybrid.get(route_key) or {}
+        provider_id = (entry.get("provider") or "").strip() or provider_id
+        if entry.get("model"):
+            model = str(entry["model"]).strip()
+        prov = get_provider(provider_id) if provider_id and provider_id != "hybrid" else None
+        if prov:
+            base_url = prov.get("base_url") or base_url
+            api_key_env = prov.get("api_key_env") or api_key_env
+
     blocked = False
     block_reason = ""
 
-    # Safety: restricted data must not leave campus
+    external_ids = {
+        "openai",
+        "anthropic",
+        "nvidia-nim",
+        "nvidia-api",
+        "nvidia-hosted",
+        "openrouter",
+        "minimax",
+        "gemini",
+        "deepseek",
+        "kimi",
+        "hybrid",
+    }
     if data_policy == "restricted":
-        external = backend_type in ("nvidia-api", "nvidia-hosted", "openai", "openrouter")
-        if external or routing.get("restricted_external_fallback"):
-            # If somehow configured for external under restricted — block
-            if external:
-                blocked = True
-                block_reason = "data_policy=restricted forbids external model backends"
-        # Also block if user explicitly asked for nvidia fallback
-        if routing.get("restricted_external_fallback") is True:
-            # handbook: must be false under restricted; warn but allow campus models
-            pass
+        effective = provider_id if (mode == "hybrid" or backend_type == "hybrid") else backend_type
+        if effective in external_ids and effective not in ("campus-openai-compatible", "local-ollama"):
+            blocked = True
+            block_reason = f"data_policy=restricted forbids external provider '{effective}'"
 
     review = bool(TIERS.get(tier, {}).get("review"))
 
@@ -135,8 +158,11 @@ def resolve_route(
         "route_key": route_key,
         "model": model,
         "model_slot": (routing.get(route_key) or route_key),
+        "mode": mode if mode == "hybrid" or backend_type == "hybrid" else "single",
+        "provider": provider_id,
         "backend_type": backend_type,
-        "base_url": backend.get("base_url") or "",
+        "base_url": base_url,
+        "api_key_env": api_key_env,
         "data_policy": data_policy,
         "review_recommended": review,
         "blocked": blocked,
@@ -157,6 +183,7 @@ def routing_matrix() -> list[dict[str, Any]]:
                 "examples": meta["examples"],
                 "route_key": meta["route_key"],
                 "model": resolved["model"],
+                "provider": resolved.get("provider") or resolved.get("backend_type"),
                 "review": bool(meta.get("review")),
             }
         )

@@ -354,6 +354,28 @@ body {
 }
 .matrix th { background: var(--bg-soft); color: var(--muted); font-weight: 600; }
 
+.warn-box {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--warn) 50%, var(--border));
+  background: color-mix(in srgb, var(--warn) 12%, var(--bg));
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.hybrid-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+hr.soft {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 8px 0;
+}
+.field em { font-style: normal; font-weight: 400; }
+
 .backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 20; }
 
 @media (max-width: 860px) {

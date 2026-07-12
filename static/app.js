@@ -258,6 +258,15 @@ function escapeHtml(s) {
     .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
+function looksLikeSecret(value) {
+  const v = String(value || "").trim();
+  if (!v) return false;
+  const lower = v.toLowerCase();
+  if (lower.startsWith("nvapi-") || lower.startsWith("sk-") || lower.startsWith("sk-ant-") || lower.startsWith("sk-or-")) return true;
+  if (v.length >= 40 && /[a-z]/.test(v) && /\d/.test(v) && v !== v.toUpperCase()) return true;
+  return false;
+}
+
 function renderMd(text) {
   let s = escapeHtml(text);
   s = s.replace(/```([\s\S]*?)```/g, (_, code) => `<pre><code>${code}</code></pre>`);
@@ -771,26 +780,151 @@ async function renderControl() {
   ).join("") + `<p class="muted">API Key (${escapeHtml((health.api_key || {}).env_name || "")}): ${(health.api_key || {}).present ? t("key.set") : t("key.missing")}</p>`;
 
   const b = cfg.backend || {};
+  const catalog = (state.settings && state.settings.catalog) || {};
+  const providers = catalog.providers || [];
+  const hybridPresets = catalog.hybrid_presets || [];
+  const providerOpts = providers.map((p) => ({ value: p.id, label: p.label }));
+  const currentProv = providers.find((p) => p.id === (b.type || "")) || null;
+  const langZh = state.prefs.language !== "en";
+
   $("#ctab-backend").innerHTML = `
     <div class="grid-2">
-      ${field("Backend type", "backend.type", { selected: b.type || "campus-openai-compatible", options: ["campus-openai-compatible", "nvidia-nim", "local-ollama"] }, "select")}
-      ${field("API key env name", "backend.api_key_env", b.api_key_env || "CAMPUS_LLM_API_KEY")}
+      ${field(langZh ? "后端类型 / Provider" : "Backend type", "backend.type", {
+        selected: b.type || "campus-openai-compatible",
+        options: providerOpts,
+      }, "select")}
+      ${field(langZh ? "API Key 环境变量名（不要填密钥本身）" : "API key ENV name (not the secret)", "backend.api_key_env",
+        looksLikeSecret(b.api_key_env) ? "" : (b.api_key_env || ""))}
       ${field("Base URL", "backend.base_url", b.base_url || "")}
       ${field("Timeout (s)", "backend.timeout_seconds", String(b.timeout_seconds || 60), "number")}
     </div>
-    ${field("Install / workspace root", "install_root", cfg.install_root || "")}
-    ${field("Default workspace", "workspace", cfg.workspace || "")}`;
+    <p class="muted" id="provider-hint">${escapeHtml((currentProv && currentProv.hint) || "")}</p>
+    ${looksLikeSecret(b.api_key_env) ? `<p class="warn-box">${langZh
+      ? "⚠ 检测到你把真实 API Key 填进了「环境变量名」。已拒绝保存密钥。请在系统环境变量中设置（如 NVIDIA_API_KEY），此处只填变量名。若密钥已泄露请立刻轮换。"
+      : "⚠ A real API key was pasted into the env-name field. Cleared. Set the secret in your OS env (e.g. NVIDIA_API_KEY) and put only the variable NAME here. Rotate the key if exposed."}</p>` : ""}
+    <div class="row gap" style="justify-content:flex-start;flex-wrap:wrap">
+      <button type="button" class="btn primary" id="btn-apply-provider">${langZh ? "应用此厂商并刷新模型" : "Apply provider → refresh models"}</button>
+    </div>
+    ${field(langZh ? "安装 / 根目录" : "Install / workspace root", "install_root", cfg.install_root || "")}
+    ${field(langZh ? "默认工作区" : "Default workspace", "workspace", cfg.workspace || "")}
+    <hr class="soft" />
+    <h4>${langZh ? "混合融合 Hybrid" : "Hybrid fusion"}</h4>
+    <p class="muted">${langZh ? "一键套用多厂商组合；再在「模型 / 路由」里微调。" : "One-click multi-provider recipes; tune in Models / Routing."}</p>
+    <div class="hybrid-presets" id="hybrid-presets"></div>`;
+
+  const hp = $("#hybrid-presets");
+  if (hp) {
+    hybridPresets.forEach((preset) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "btn ghost";
+      btn.textContent = preset.label;
+      btn.addEventListener("click", async () => {
+        try {
+          const data = await api("/api/settings/apply-provider", {
+            method: "POST",
+            body: JSON.stringify({ hybrid_preset: preset.id }),
+          });
+          state.settings = data;
+          if (data.warning) alert(data.warning);
+          $("#settings-status").textContent = langZh ? "已应用混合方案" : "Hybrid applied";
+          renderControl();
+          // jump to models tab
+          document.querySelector('.ctab[data-ctab="models"]')?.click();
+        } catch (e) {
+          $("#settings-status").textContent = e.message;
+        }
+      });
+      hp.appendChild(btn);
+    });
+  }
+
+  const typeSel = document.querySelector('[data-key="backend.type"]');
+  if (typeSel) {
+    typeSel.addEventListener("change", () => {
+      const p = providers.find((x) => x.id === typeSel.value);
+      const hint = $("#provider-hint");
+      if (hint) hint.textContent = (p && p.hint) || "";
+      const envEl = document.querySelector('[data-key="backend.api_key_env"]');
+      const urlEl = document.querySelector('[data-key="backend.base_url"]');
+      if (p && p.id !== "hybrid") {
+        if (envEl && (!envEl.value || !looksLikeSecret(envEl.value))) envEl.value = p.api_key_env || "";
+        if (urlEl) urlEl.value = p.base_url || "";
+      }
+    });
+  }
+
+  const applyBtn = $("#btn-apply-provider");
+  if (applyBtn) {
+    applyBtn.onclick = async () => {
+      const pid = document.querySelector('[data-key="backend.type"]').value;
+      try {
+        const data = await api("/api/settings/apply-provider", {
+          method: "POST",
+          body: JSON.stringify({ provider: pid, fill_models: true }),
+        });
+        state.settings = data;
+        if (data.warning) alert(data.warning);
+        $("#settings-status").textContent = langZh ? "已切换厂商并写入推荐模型" : "Provider applied with model defaults";
+        renderControl();
+        document.querySelector('.ctab[data-ctab="models"]')?.click();
+      } catch (e) {
+        $("#settings-status").textContent = e.message;
+      }
+    };
+  }
 
   const m = cfg.models || {};
+  const suggestions = (currentProv && currentProv.suggestions) || {};
+  const slots = catalog.slots || [
+    { id: "fast", legacy: "qwen_fast", tier: "C0", label: "Fast" },
+    { id: "main", legacy: "qwen_main", tier: "C1/C2", label: "Main" },
+    { id: "vision", legacy: "qwen_vl", tier: "Vision", label: "Vision" },
+    { id: "reasoning", legacy: "deepseek_reasoning", tier: "C3", label: "Reasoning" },
+    { id: "embedding", legacy: "embedding", tier: "—", label: "Embedding" },
+    { id: "reranker", legacy: "reranker", tier: "—", label: "Reranker" },
+  ];
+
+  function modelField(slot) {
+    const legacy = slot.legacy;
+    const val = m[legacy] || m[slot.id] || "";
+    const opts = suggestions[slot.id] || [];
+    const listId = `suggest-${slot.id}`;
+    return `<label class="field"><span>${escapeHtml(slot.label)} <em class="muted">(${escapeHtml(slot.tier)})</em></span>
+      <input list="${listId}" data-key="models.${escapeHtml(legacy)}" value="${escapeHtml(val)}" placeholder="${langZh ? "选择或输入模型 ID" : "pick or type model id"}" />
+      <datalist id="${listId}">${opts.map((o) => `<option value="${escapeHtml(o)}"></option>`).join("")}</datalist>
+    </label>`;
+  }
+
+  const isHybrid = (cfg.mode === "hybrid") || (b.type === "hybrid");
+  let hybridHtml = "";
+  if (isHybrid) {
+    const hy = cfg.hybrid || {};
+    const routeKeys = [
+      { key: "simple", label: "C0 Fast" },
+      { key: "office", label: "C1 Office" },
+      { key: "vision", label: "Vision" },
+      { key: "reasoning", label: "C3 Reasoning" },
+    ];
+    hybridHtml = `<h4>${langZh ? "混合路由绑定" : "Hybrid route binding"}</h4>
+      <div class="grid-2">${routeKeys.map((rk) => {
+        const entry = hy[rk.key] || {};
+        const provOpts = providers.filter((p) => p.id !== "hybrid").map((p) =>
+          `<option value="${escapeHtml(p.id)}" ${p.id === entry.provider ? "selected" : ""}>${escapeHtml(p.label)}</option>`
+        ).join("");
+        return `<div class="field"><span>${escapeHtml(rk.label)}</span>
+          <select data-key="hybrid.${rk.key}.provider">${provOpts}</select>
+          <input data-key="hybrid.${rk.key}.model" value="${escapeHtml(entry.model || "")}" placeholder="model id" />
+        </div>`;
+      }).join("")}</div>`;
+  }
+
   $("#ctab-models").innerHTML = `
-    <div class="grid-2">
-      ${field("Qwen fast (C0)", "models.qwen_fast", m.qwen_fast || "")}
-      ${field("Qwen main (C1/C2)", "models.qwen_main", m.qwen_main || "")}
-      ${field("Qwen VL (Vision)", "models.qwen_vl", m.qwen_vl || "")}
-      ${field("DeepSeek reasoning (C3)", "models.deepseek_reasoning", m.deepseek_reasoning || "")}
-      ${field("Embedding", "models.embedding", m.embedding || "")}
-      ${field("Reranker", "models.reranker", m.reranker || "")}
-    </div>`;
+    <p class="muted">${langZh
+      ? `当前厂商：<strong>${escapeHtml((currentProv && currentProv.label) || b.type || "—")}</strong>。切换后端后点「应用此厂商」可自动填充推荐模型。`
+      : `Provider: <strong>${escapeHtml((currentProv && currentProv.label) || b.type || "—")}</strong>. Apply provider to auto-fill recommendations.`}</p>
+    <div class="grid-2">${slots.map(modelField).join("")}</div>
+    ${hybridHtml}`;
 
   const r = cfg.routing || {};
   $("#ctab-routing").innerHTML = `
@@ -801,10 +935,10 @@ async function renderControl() {
       ${field("reasoning →", "routing.reasoning", r.reasoning || "deepseek_reasoning")}
     </div>
     ${field("restricted_external_fallback", "routing.restricted_external_fallback", !!r.restricted_external_fallback, "checkbox")}
-    <table class="matrix"><thead><tr><th>Tier</th><th>Examples</th><th>Route</th><th>Model</th></tr></thead>
+    <table class="matrix"><thead><tr><th>Tier</th><th>Examples</th><th>Provider</th><th>Model</th></tr></thead>
     <tbody>${(matrix.matrix || []).map((row) =>
       `<tr><td>${escapeHtml(row.tier)}</td><td>${escapeHtml(row.examples)}</td>
-       <td>${escapeHtml(row.route_key)}</td><td><code>${escapeHtml(row.model || "—")}</code></td></tr>`
+       <td>${escapeHtml(row.provider || "—")}</td><td><code>${escapeHtml(row.model || "—")}</code></td></tr>`
     ).join("")}</tbody></table>`;
 
   const o = cfg.obsidian || {};
@@ -857,6 +991,9 @@ function collectSettingsFromForm() {
       val = String(val).split(",").map((s) => s.trim()).filter(Boolean);
     }
     if (key === "backend.timeout_seconds") val = Number(val) || 60;
+    if (key === "backend.api_key_env" && looksLikeSecret(val)) {
+      val = "";
+    }
     const parts = key.split(".");
     let cur = cfg;
     for (let i = 0; i < parts.length - 1; i++) {
@@ -869,6 +1006,19 @@ function collectSettingsFromForm() {
   cfg.ali.language = state.prefs.language;
   cfg.ali.theme = state.prefs.theme;
   cfg.ali.accent = state.prefs.accent;
+  // mode follows backend type
+  if ((cfg.backend || {}).type === "hybrid") cfg.mode = "hybrid";
+  else if (cfg.mode === "hybrid" && (cfg.backend || {}).type !== "hybrid") {
+    // keep hybrid bindings if user still has hybrid map, else single
+    cfg.mode = Object.keys(cfg.hybrid || {}).length ? "hybrid" : "single";
+  }
+  // sync generic model keys
+  const models = cfg.models || {};
+  [["fast", "qwen_fast"], ["main", "qwen_main"], ["vision", "qwen_vl"], ["reasoning", "deepseek_reasoning"]].forEach(([g, l]) => {
+    if (models[l] && !models[g]) models[g] = models[l];
+    if (models[g] && !models[l]) models[l] = models[g];
+  });
+  cfg.models = models;
   return cfg;
 }
 

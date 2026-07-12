@@ -113,6 +113,11 @@ def handle_get(handler) -> None:
     if path == "/api/settings":
         return _json(handler, 200, public_settings_view())
 
+    if path == "/api/providers":
+        from .providers import catalog_payload
+
+        return _json(handler, 200, catalog_payload())
+
     if path == "/api/routing":
         return _json(handler, 200, {"matrix": routing.routing_matrix(), "tiers": routing.TIERS})
 
@@ -182,7 +187,32 @@ def handle_post(handler) -> None:
         cfg = body.get("config") if isinstance(body.get("config"), dict) else body
         saved = save_campus_config(cfg)
         audit.log_event("settings_save", {"keys": list(saved.keys())})
-        return _json(handler, 200, {"ok": True, "config": saved, **public_settings_view()})
+        view = public_settings_view()
+        if saved.get("_warning"):
+            view["warning"] = saved["_warning"]
+        return _json(handler, 200, {"ok": True, "config": {k: v for k, v in saved.items() if not str(k).startswith("_")}, **view})
+
+    if path == "/api/settings/apply-provider":
+        body = _read_json(handler)
+        from .providers import apply_hybrid_preset, apply_provider_preset
+
+        try:
+            current = load_campus_config()
+            provider_id = str(body.get("provider") or "")
+            hybrid_preset = str(body.get("hybrid_preset") or "")
+            fill_models = body.get("fill_models", True)
+            if hybrid_preset:
+                next_cfg = apply_hybrid_preset(current, hybrid_preset)
+            else:
+                next_cfg = apply_provider_preset(current, provider_id, fill_models=bool(fill_models))
+            saved = save_campus_config(next_cfg)
+            view = public_settings_view()
+            if saved.get("_warning"):
+                view["warning"] = saved["_warning"]
+            audit.log_event("apply_provider", {"provider": provider_id, "hybrid_preset": hybrid_preset or None})
+            return _json(handler, 200, {"ok": True, **view})
+        except ValueError as exc:
+            return _json(handler, 400, {"error": str(exc)})
 
     if path == "/api/settings/import":
         body = _read_json(handler)
