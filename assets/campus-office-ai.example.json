@@ -1,0 +1,39 @@
+{
+  "schema_version": "1.0",
+  "install_root": "D:\\CampusOfficeAI",
+  "backend": {
+    "type": "campus-openai-compatible",
+    "base_url": "https://YOUR-CAMPUS-ENDPOINT.example.edu/v1",
+    "api_key_env": "CAMPUS_LLM_API_KEY",
+    "verify_tls": true,
+    "timeout_seconds": 60
+  },
+  "models": {
+    "qwen_fast": "REPLACE_WITH_SERVER_MODEL_ID",
+    "qwen_main": "REPLACE_WITH_SERVER_MODEL_ID",
+    "qwen_vl": "REPLACE_WITH_SERVER_MODEL_ID",
+    "deepseek_reasoning": "REPLACE_WITH_SERVER_MODEL_ID",
+    "embedding": "REPLACE_WITH_SERVER_MODEL_ID",
+    "reranker": "REPLACE_WITH_SERVER_MODEL_ID"
+  },
+  "routing": {
+    "simple": "qwen_fast",
+    "office": "qwen_main",
+    "vision": "qwen_vl",
+    "reasoning": "deepseek_reasoning",
+    "restricted_external_fallback": false
+  },
+  "obsidian": {
+    "vault_path": "C:\\Users\\YOUR_NAME\\Documents\\Campus-Office-Vault",
+    "ai_inbox": "00_Inbox\\AI_Candidates",
+    "allowed_roots": ["02_Team", "03_Projects", "04_Meetings", "05_Research", "06_SOP_and_Skills", "07_Templates", "08_Decisions"],
+    "excluded_globs": [".obsidian/**", ".trash/**", "**/Private/**", "**/*credential*", "**/*secret*"],
+    "write_requires_approval": true
+  },
+  "windows": {
+    "install_obsidian": false,
+    "enable_startup": false,
+    "create_firewall_rule": false
+  },
+  "data_policy": "internal"
+}

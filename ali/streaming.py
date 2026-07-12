@@ -92,8 +92,15 @@ def start_chat(
     message: str,
     model: str = "",
     workspace: str = "",
+    route: str = "auto",
+    workflow_id: str = "",
+    system: str = "",
+    display_message: str = "",
 ) -> dict[str, Any]:
     """Start a background agent run; returns stream_id for SSE."""
+    from . import audit, routing
+    from .settings import load_campus_config
+
     session = store.get_session(session_id)
     if session is None:
         raise ValueError("session not found")
@@ -102,10 +109,19 @@ def start_chat(
     if not msg:
         raise ValueError("empty message")
 
+    cfg = load_campus_config()
+    route_info = routing.resolve_route(route or "auto", msg, cfg)
+    if route_info.get("blocked"):
+        raise ValueError(route_info.get("block_reason") or "route blocked by data_policy")
+
+    # Prefer explicit model, else routed model
+    resolved_model = (model or "").strip() or route_info.get("model") or ""
+    ws = (workspace or "").strip() or (cfg.get("workspace") or "")
+    preamble = system or routing.system_preamble(route_info, cfg)
+
     stream_id = str(uuid.uuid4())
     q: queue.Queue = queue.Queue()
     with _lock:
-        # Cancel previous stream for this session if any
         old = ACTIVE.get(session_id)
         if old and old in STREAMS:
             _put(STREAMS[old], "cancelled", {"session_id": session_id})
@@ -113,16 +129,41 @@ def start_chat(
         STREAMS[stream_id] = q
         ACTIVE[session_id] = stream_id
 
-    store.append_messages(session_id, {"role": "user", "content": msg})
+    shown = (display_message or msg).strip()
+    meta = {
+        "role": "user",
+        "content": shown,
+        "route": route_info,
+        "workflow_id": workflow_id or None,
+    }
+    if display_message and display_message != msg:
+        meta["expanded"] = True
+    store.append_messages(session_id, meta)
+    audit.log_event(
+        "chat_start",
+        {
+            "session_id": session_id,
+            "stream_id": stream_id,
+            "tier": route_info.get("tier"),
+            "route_key": route_info.get("route_key"),
+            "model": resolved_model,
+            "workflow_id": workflow_id or None,
+        },
+    )
 
     t = threading.Thread(
         target=_run_agent_streaming,
-        args=(session_id, msg, model, workspace, stream_id),
+        args=(session_id, msg, resolved_model, ws, stream_id, route_info, preamble),
         daemon=True,
         name=f"ali-stream-{stream_id[:8]}",
     )
     t.start()
-    return {"stream_id": stream_id, "session_id": session_id}
+    return {
+        "stream_id": stream_id,
+        "session_id": session_id,
+        "route": route_info,
+        "model": resolved_model,
+    }
 
 
 def _run_agent_streaming(
@@ -131,6 +172,8 @@ def _run_agent_streaming(
     model: str,
     workspace: str,
     stream_id: str,
+    route_info: dict[str, Any] | None = None,
+    preamble: str = "",
 ) -> None:
     q = STREAMS.get(stream_id)
     if q is None:
@@ -138,6 +181,8 @@ def _run_agent_streaming(
 
     assistant_parts: list[str] = []
     tools_seen: list[dict[str, Any]] = []
+    route_info = route_info or {}
+    _put(q, "route", route_info)
 
     def on_token(delta: str) -> None:
         if not delta:
@@ -155,13 +200,15 @@ def _run_agent_streaming(
 
     try:
         AIAgent = get_ai_agent()
+        agent_input = msg_text
+        if preamble:
+            agent_input = f"[SYSTEM CONTEXT]\n{preamble}\n\n[USER]\n{msg_text}"
+
         if AIAgent is None:
-            # Demo / fallback mode so the UI is usable without agent install
-            _demo_reply(q, msg_text, assistant_parts)
+            _demo_reply(q, msg_text, assistant_parts, route_info=route_info, preamble=preamble)
         else:
             session = store.get_session(session_id)
-            history = list(session.messages[:-1]) if session else []  # exclude just-added user msg
-            # Rebuild openai-style history (user/assistant only)
+            history = list(session.messages[:-1]) if session else []
             clean_history = []
             for m in history:
                 role = m.get("role")
@@ -177,7 +224,6 @@ def _run_agent_streaming(
             }
             if model:
                 kwargs["model"] = model
-            # tool_progress_callback may not exist on older agents
             try:
                 agent = AIAgent(**kwargs, tool_progress_callback=on_tool)
             except TypeError:
@@ -192,11 +238,10 @@ def _run_agent_streaming(
                     pass
 
             result = agent.run_conversation(
-                user_message=msg_text,
+                user_message=agent_input,
                 conversation_history=clean_history,
                 task_id=session_id,
             )
-            # Some agents return final text instead of streaming
             if not assistant_parts and result:
                 final = ""
                 if isinstance(result, dict):
@@ -217,11 +262,15 @@ def _run_agent_streaming(
             final_text = "(no response)"
             _put(q, "token", {"text": final_text})
 
-        assistant_msg: dict[str, Any] = {"role": "assistant", "content": final_text}
+        assistant_msg: dict[str, Any] = {
+            "role": "assistant",
+            "content": final_text,
+            "route": route_info,
+        }
         if tools_seen:
             assistant_msg["tools"] = tools_seen
         store.append_messages(session_id, assistant_msg)
-        _put(q, "done", {"session_id": session_id, "content": final_text})
+        _put(q, "done", {"session_id": session_id, "content": final_text, "route": route_info})
 
     except Exception as exc:  # noqa: BLE001
         err = f"{type(exc).__name__}: {exc}"
@@ -236,7 +285,7 @@ def _run_agent_streaming(
         with _lock:
             if ACTIVE.get(session_id) == stream_id:
                 ACTIVE.pop(session_id, None)
-            # Keep queue briefly for late SSE subscribers
+
             def _cleanup() -> None:
                 time.sleep(60)
                 with _lock:
@@ -245,36 +294,54 @@ def _run_agent_streaming(
             threading.Thread(target=_cleanup, daemon=True).start()
 
 
-def _demo_reply(q: queue.Queue, msg_text: str, assistant_parts: list[str]) -> None:
-    """Lightweight fallback when Hermes Agent is not installed."""
-    status = agent_status()
-    lines = [
-        "Hermes-ALI is running in **demo mode** (Hermes Agent not detected).\n\n",
-        f"You said: _{msg_text[:200]}_\n\n",
-        "To enable the full agent:\n",
-        "1. Install Hermes Agent: https://hermes-agent.nousresearch.com/\n",
-        "2. Run `hermes model` to configure a provider\n",
-        "3. Restart Hermes-ALI\n\n",
-        f"HERMES_HOME: `{status['hermes_home']}`\n",
-    ]
-    if status.get("import_error"):
-        lines.append(f"Import error: `{status['import_error']}`\n")
-    if status.get("candidates"):
-        lines.append("Found candidate dirs: " + ", ".join(f"`{c}`" for c in status["candidates"]))
-    else:
-        lines.append("No agent directories found. Set `HERMES_ALI_AGENT_DIR` if installed elsewhere.")
+def _demo_reply(
+    q: queue.Queue,
+    msg_text: str,
+    assistant_parts: list[str],
+    route_info: dict[str, Any] | None = None,
+    preamble: str = "",
+) -> None:
+    """Fallback when Hermes Agent is not installed."""
+    from . import workflows
+    from .settings import load_campus_config
 
+    status = agent_status()
+    cfg = load_campus_config()
+    health = workflows.health_snapshot()
+    route_info = route_info or {}
+    lines = [
+        "Hermes-ALI **Campus Office** demo mode（未检测到 Hermes Agent）。\n\n",
+        f"**路由**: {route_info.get('tier', '?')} → `{route_info.get('route_key', '')}` "
+        f"model=`{route_info.get('model') or '(未配置)'}`\n",
+        f"**数据策略**: `{cfg.get('data_policy')}` | **后端**: `{((cfg.get('backend') or {}).get('type'))}`\n\n",
+        f"你的输入摘要: _{msg_text[:240]}_\n\n",
+        "### 控制中心检查\n",
+    ]
+    for c in health.get("checks") or []:
+        mark = "✅" if c.get("ok") else "⚠️"
+        lines.append(f"- {mark} **{c['id']}**: {c.get('detail')}\n")
+    lines.extend(
+        [
+            "\n### 启用完整 Agent\n",
+            "1. 安装 Hermes Agent: https://hermes-agent.nousresearch.com/\n",
+            "2. `hermes model` 配置校园 OpenAI-compatible / NVIDIA NIM\n",
+            "3. 在控制中心填写 campus-office-ai 模型 ID 与 Vault 路径\n",
+            "4. 重启 Hermes-ALI\n\n",
+            f"HERMES_HOME: `{status['hermes_home']}`\n",
+        ]
+    )
+    if status.get("import_error"):
+        lines.append(f"Import: `{status['import_error']}`\n")
     text = "".join(lines)
-    # Simulate streaming
-    chunk = 24
+    chunk = 28
     for i in range(0, len(text), chunk):
         part = text[i : i + chunk]
         assistant_parts.append(part)
         _put(q, "token", {"text": part})
-        time.sleep(0.02)
+        time.sleep(0.015)
 
 
-def iter_sse(stream_id: str, timeout: float = 300.0) -> Callable:
+def iter_sse(stream_id: str, timeout: float = 300.0):
     """Generator yielding SSE-formatted strings."""
     q = STREAMS.get(stream_id)
     if q is None:

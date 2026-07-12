@@ -8,8 +8,9 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
-from . import auth, sessions as store, streaming
-from .config import STATIC_DIR, VERSION, local_ips, RUNTIME
+from . import audit, auth, obsidian, routing, sessions as store, streaming, workflows
+from .config import REPO_ROOT, RUNTIME, STATIC_DIR, VERSION, local_ips
+from .settings import import_campus_config, load_campus_config, public_settings_view, save_campus_config
 
 
 def _json(handler, status: int, payload: Any) -> None:
@@ -57,8 +58,7 @@ def requires_auth(path: str) -> bool:
         return False
     if path.startswith("/static/") or path.startswith("/assets/"):
         return False
-    # Allow CSS/JS at root of static served paths
-    if path.endswith((".css", ".js", ".svg", ".png", ".ico", ".woff2")):
+    if path.endswith((".css", ".js", ".svg", ".png", ".ico", ".woff2", ".json")):
         return False
     return path.startswith("/api/")
 
@@ -74,18 +74,20 @@ def handle_get(handler) -> None:
         return _serve_file(handler, STATIC_DIR / "index.html")
 
     if path.startswith("/static/"):
-        rel = path[len("/static/") :]
-        return _serve_file(handler, STATIC_DIR / rel)
+        return _serve_file(handler, STATIC_DIR / path[len("/static/") :])
 
-    # Convenience: /app.js /style.css
     if path in ("/app.js", "/style.css"):
         return _serve_file(handler, STATIC_DIR / path.lstrip("/"))
+
+    if path.startswith("/assets/"):
+        return _serve_file(handler, REPO_ROOT / "assets" / path[len("/assets/") :], root=REPO_ROOT / "assets")
 
     if path in ("/health", "/api/health"):
         return _json(handler, 200, {"ok": True, "version": VERSION})
 
     if path == "/api/status":
         st = streaming.agent_status()
+        health = workflows.health_snapshot()
         return _json(
             handler,
             200,
@@ -97,13 +99,41 @@ def handle_get(handler) -> None:
                 "port": RUNTIME.get("port"),
                 "local_ips": local_ips(),
                 "agent": st,
+                "health": health,
+                "default_route": ((load_campus_config().get("ali") or {}).get("default_route") or "auto"),
             },
         )
 
-    if path == "/api/sessions":
-        return _json(handler, 200, {"sessions": store.list_sessions()})
+    if path == "/api/settings":
+        return _json(handler, 200, public_settings_view())
 
-    if len(parts) == 2 and parts[0] == "api" and parts[1] == "sessions":
+    if path == "/api/routing":
+        return _json(handler, 200, {"matrix": routing.routing_matrix(), "tiers": routing.TIERS})
+
+    if path == "/api/workflows":
+        return _json(handler, 200, {"presets": workflows.list_presets()})
+
+    if path == "/api/health/office":
+        return _json(handler, 200, workflows.health_snapshot())
+
+    if path == "/api/audit":
+        limit = int((qs.get("limit") or ["50"])[0])
+        return _json(handler, 200, {"events": audit.recent(limit)})
+
+    if path == "/api/obsidian":
+        return _json(handler, 200, obsidian.vault_status())
+
+    if path == "/api/obsidian/notes":
+        limit = int((qs.get("limit") or ["40"])[0])
+        root = (qs.get("root") or [""])[0]
+        return _json(handler, 200, obsidian.list_notes(limit=limit, root_filter=root))
+
+    if len(parts) == 4 and parts[0] == "api" and parts[1] == "obsidian" and parts[2] == "note":
+        # /api/obsidian/note?path=
+        rel = (qs.get("path") or [""])[0]
+        return _json(handler, 200, obsidian.read_note(rel))
+
+    if path == "/api/sessions":
         return _json(handler, 200, {"sessions": store.list_sessions()})
 
     if len(parts) == 3 and parts[0] == "api" and parts[1] == "sessions":
@@ -113,8 +143,7 @@ def handle_get(handler) -> None:
         return _json(handler, 200, session.to_dict())
 
     if len(parts) == 3 and parts[0] == "api" and parts[1] == "stream":
-        stream_id = parts[2]
-        return _sse_stream(handler, stream_id)
+        return _sse_stream(handler, parts[2])
 
     _json(handler, 404, {"error": "not found"})
 
@@ -142,6 +171,66 @@ def handle_post(handler) -> None:
     if requires_auth(path) and not auth.is_authenticated(handler):
         return _json(handler, 401, {"error": "unauthorized"})
 
+    if path == "/api/settings":
+        body = _read_json(handler)
+        cfg = body.get("config") if isinstance(body.get("config"), dict) else body
+        saved = save_campus_config(cfg)
+        audit.log_event("settings_save", {"keys": list(saved.keys())})
+        return _json(handler, 200, {"ok": True, "config": saved, **public_settings_view()})
+
+    if path == "/api/settings/import":
+        body = _read_json(handler)
+        try:
+            saved = import_campus_config(str(body.get("path") or ""))
+            return _json(handler, 200, {"ok": True, "config": saved})
+        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            return _json(handler, 400, {"error": str(exc)})
+
+    if path == "/api/routing/resolve":
+        body = _read_json(handler)
+        info = routing.resolve_route(
+            str(body.get("route") or "auto"),
+            str(body.get("message") or ""),
+        )
+        return _json(handler, 200, info)
+
+    if path == "/api/workflows/run":
+        body = _read_json(handler)
+        preset_id = str(body.get("preset_id") or "")
+        session_id = str(body.get("session_id") or "")
+        user_input = str(body.get("input") or "")
+        try:
+            built = workflows.build_workflow_message(preset_id, user_input)
+            if not session_id:
+                s = store.create_session(title=built["preset"]["name"])
+                session_id = s.id
+            result = streaming.start_chat(
+                session_id=session_id,
+                message=built["message"],
+                route=built["preset"].get("route") or built["route"].get("route_key") or "office",
+                workflow_id=preset_id,
+                system=built["system"],
+                display_message=f"[{built['preset']['name']}] {user_input[:200] or '(使用工作流模板)'}",
+                workspace=str(body.get("workspace") or ""),
+            )
+            workflows.record_run(preset_id, session_id, built["route"], "started")
+            result["preset"] = built["preset"]
+            result["session_id"] = session_id
+            return _json(handler, 200, result)
+        except ValueError as exc:
+            return _json(handler, 400, {"error": str(exc)})
+
+    if path == "/api/obsidian/write":
+        body = _read_json(handler)
+        result = obsidian.write_candidate(
+            title=str(body.get("title") or "AI_Note"),
+            content=str(body.get("content") or ""),
+            approved=bool(body.get("approved")),
+            tags=list(body.get("tags") or ["ai-candidate"]),
+        )
+        audit.log_event("obsidian_write", {"ok": result.get("ok"), "path": result.get("path"), "needs_approval": result.get("needs_approval")})
+        return _json(handler, 200 if result.get("ok") or result.get("needs_approval") else 400, result)
+
     if path == "/api/sessions":
         body = _read_json(handler)
         s = store.create_session(title=str(body.get("title") or "New chat"), model=str(body.get("model") or ""))
@@ -155,6 +244,10 @@ def handle_post(handler) -> None:
                 message=str(body.get("message") or ""),
                 model=str(body.get("model") or ""),
                 workspace=str(body.get("workspace") or ""),
+                route=str(body.get("route") or "auto"),
+                workflow_id=str(body.get("workflow_id") or ""),
+                system=str(body.get("system") or ""),
+                display_message=str(body.get("display_message") or ""),
             )
             return _json(handler, 200, result)
         except ValueError as exc:
@@ -199,10 +292,10 @@ def handle_delete(handler) -> None:
     _json(handler, 404, {"error": "not found"})
 
 
-def _serve_file(handler, filepath: Path) -> None:
+def _serve_file(handler, filepath: Path, root: Path | None = None) -> None:
     try:
         filepath = filepath.resolve()
-        static_root = STATIC_DIR.resolve()
+        static_root = (root or STATIC_DIR).resolve()
         if not str(filepath).startswith(str(static_root)) or not filepath.is_file():
             return _json(handler, 404, {"error": "not found"})
         data = filepath.read_bytes()
@@ -216,6 +309,8 @@ def _serve_file(handler, filepath: Path) -> None:
         ctype = "text/css; charset=utf-8"
     elif filepath.suffix == ".html":
         ctype = "text/html; charset=utf-8"
+    elif filepath.suffix == ".json":
+        ctype = "application/json; charset=utf-8"
     else:
         ctype = ctype or "application/octet-stream"
 
