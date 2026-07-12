@@ -1,7 +1,136 @@
-/* Hermes-ALI Campus Office frontend */
+/* Hermes-ALI Campus Office frontend — i18n + themes */
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+const ACCENTS = ["ocean", "forest", "amber", "rose", "slate", "teal"];
+
+const I18N = {
+  zh: {
+    "login.hint": "输入访问密码以连接终端",
+    "login.password": "密码",
+    "login.submit": "进入",
+    "login.error": "密码错误",
+    "nav.newChat": "+ 新对话",
+    "nav.chats": "会话",
+    "nav.workflows": "工作流",
+    "nav.control": "⚙ 控制中心",
+    "chat.new": "新对话",
+    "empty.title": "校园办公 AI 终端",
+    "empty.body": "Hermes 管任务 · OpenSquilla 式路由 · Obsidian 存知识<br/>从左侧选择办公工作流，或直接对话。",
+    "composer.route": "路由",
+    "composer.workspace": "工作区",
+    "composer.workspacePh": "可选：工作目录路径",
+    "composer.inputPh": "输入消息或工作流内容… (Enter 发送)",
+    "composer.send": "发送",
+    "route.auto": "Auto（自动分级）",
+    "route.simple": "C0 简单 / Qwen fast",
+    "route.office": "C1 办公 / Qwen main",
+    "route.c2": "C2 长文（生成+审核）",
+    "route.reasoning": "C3 推理 / DeepSeek",
+    "route.vision": "Vision / Qwen-VL",
+    "control.title": "控制中心",
+    "control.close": "关闭",
+    "control.appearance": "外观",
+    "control.health": "健康",
+    "control.backend": "后端",
+    "control.models": "模型",
+    "control.routing": "路由",
+    "control.obsidian": "知识库",
+    "control.security": "安全",
+    "control.save": "保存配置",
+    "wf.inputPh": "粘贴会议笔记 / 邮件要点 / 文档内容…",
+    "wf.saveInbox": "完成后写入 Obsidian AI_Candidates（需确认）",
+    "wf.cancel": "取消",
+    "wf.run": "运行",
+    "conn.local": "本机",
+    "conn.lan": "局域网",
+    "agent.ready": "Agent 就绪",
+    "agent.demo": "演示模式",
+    "confirm.vault": "将结果写入 Obsidian AI_Candidates？仅候选区，不会进入正式目录。",
+    "vault.ok": "已写入知识库候选区",
+    "vault.fail": "写入失败",
+    "wf.template": "(使用工作流模板)",
+    "appearance.lang": "界面语言",
+    "appearance.theme": "深浅模式",
+    "appearance.accent": "主题色",
+    "appearance.hint": "可在侧栏一键切换；保存配置后会同步到服务器，供多设备默认使用。",
+    "theme.dark": "深色",
+    "theme.light": "浅色",
+    "saved": "已保存",
+    "imported": "已导入",
+    "key.set": "已设置",
+    "key.missing": "未设置 — 请用系统环境变量，勿写入 JSON",
+  },
+  en: {
+    "login.hint": "Enter password to access the terminal",
+    "login.password": "Password",
+    "login.submit": "Enter",
+    "login.error": "Invalid password",
+    "nav.newChat": "+ New chat",
+    "nav.chats": "Chats",
+    "nav.workflows": "Workflows",
+    "nav.control": "⚙ Control Center",
+    "chat.new": "New chat",
+    "empty.title": "Campus Office AI Terminal",
+    "empty.body": "Hermes runs tasks · OpenSquilla-style routing · Obsidian stores knowledge<br/>Pick an office workflow on the left, or just chat.",
+    "composer.route": "Route",
+    "composer.workspace": "Workspace",
+    "composer.workspacePh": "Optional workspace path",
+    "composer.inputPh": "Message or workflow input… (Enter to send)",
+    "composer.send": "Send",
+    "route.auto": "Auto (classify)",
+    "route.simple": "C0 Simple / Qwen fast",
+    "route.office": "C1 Office / Qwen main",
+    "route.c2": "C2 Long-form (gen + review)",
+    "route.reasoning": "C3 Reasoning / DeepSeek",
+    "route.vision": "Vision / Qwen-VL",
+    "control.title": "Control Center",
+    "control.close": "Close",
+    "control.appearance": "Appearance",
+    "control.health": "Health",
+    "control.backend": "Backend",
+    "control.models": "Models",
+    "control.routing": "Routing",
+    "control.obsidian": "Knowledge",
+    "control.security": "Security",
+    "control.save": "Save",
+    "wf.inputPh": "Paste meeting notes / email points / document text…",
+    "wf.saveInbox": "Save result to Obsidian AI_Candidates (confirm)",
+    "wf.cancel": "Cancel",
+    "wf.run": "Run",
+    "conn.local": "Local",
+    "conn.lan": "LAN",
+    "agent.ready": "Agent ready",
+    "agent.demo": "Demo mode",
+    "confirm.vault": "Write result to Obsidian AI_Candidates? Candidates only — not formal folders.",
+    "vault.ok": "Wrote to knowledge inbox",
+    "vault.fail": "Write failed",
+    "wf.template": "(workflow template)",
+    "appearance.lang": "Language",
+    "appearance.theme": "Light / Dark",
+    "appearance.accent": "Accent color",
+    "appearance.hint": "Use sidebar toggles anytime. Saving syncs defaults to the server for other devices.",
+    "theme.dark": "Dark",
+    "theme.light": "Light",
+    "saved": "Saved",
+    "imported": "Imported",
+    "key.set": "set",
+    "key.missing": "missing — set OS env var, never paste into JSON",
+  },
+};
+
+const WF_I18N = {
+  meeting_minutes: { en: { name: "Meeting minutes", description: "Structure notes into decisions / todos / risks" } },
+  email_draft: { en: { name: "Email draft", description: "Draft a reviewable email (does not send)" } },
+  doc_summary: { en: { name: "Doc summary", description: "Short summary + key points + filename" } },
+  research_review: { en: { name: "Long-form + review", description: "Generate then checklist review (C2)" } },
+  code_decision: { en: { name: "Reasoning / decision", description: "Architecture, code review, hard reasoning" } },
+  vision_extract: { en: { name: "Vision extract", description: "PPT/PDF/figure structure extraction" } },
+  deploy_preflight: { en: { name: "Deploy preflight", description: "Read-only campus-office-ai checklist" } },
+  acceptance_check: { en: { name: "Acceptance checklist", description: "Hermes/API/routing/Obsidian/security table" } },
+  sop_candidate: { en: { name: "SOP candidate", description: "Draft SOP into AI_Candidates only" } },
+};
 
 const state = {
   token: localStorage.getItem("hermes_ali_token") || "",
@@ -13,7 +142,95 @@ const state = {
   settings: null,
   pendingWf: null,
   lastAssistantText: "",
+  prefs: {
+    language: localStorage.getItem("hermes_ali_lang") || "zh",
+    theme: localStorage.getItem("hermes_ali_theme") || "dark",
+    accent: localStorage.getItem("hermes_ali_accent") || "ocean",
+  },
 };
+
+function t(key) {
+  const lang = state.prefs.language === "en" ? "en" : "zh";
+  return (I18N[lang] && I18N[lang][key]) || (I18N.zh[key] || key);
+}
+
+function applyI18n() {
+  const lang = state.prefs.language === "en" ? "en" : "zh";
+  document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+  $$("[data-i18n]").forEach((el) => {
+    const key = el.getAttribute("data-i18n");
+    if (key) el.textContent = t(key);
+  });
+  $$("[data-i18n-html]").forEach((el) => {
+    const key = el.getAttribute("data-i18n-html");
+    if (key) el.innerHTML = t(key);
+  });
+  $$("[data-i18n-placeholder]").forEach((el) => {
+    const key = el.getAttribute("data-i18n-placeholder");
+    if (key) el.setAttribute("placeholder", t(key));
+  });
+  const langBtn = $("#btn-lang");
+  if (langBtn) langBtn.textContent = lang === "zh" ? "中 / EN" : "EN / 中";
+  const themeBtn = $("#btn-theme");
+  if (themeBtn) themeBtn.textContent = state.prefs.theme === "dark" ? "☾ Dark" : "☀ Light";
+}
+
+function applyTheme() {
+  document.documentElement.setAttribute("data-theme", state.prefs.theme === "light" ? "light" : "dark");
+  document.documentElement.setAttribute("data-accent", ACCENTS.includes(state.prefs.accent) ? state.prefs.accent : "ocean");
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute("content", state.prefs.theme === "light" ? "#f4f7fb" : "#0f1419");
+  renderAccentDots();
+  applyI18n();
+}
+
+function persistPrefsLocal() {
+  localStorage.setItem("hermes_ali_lang", state.prefs.language);
+  localStorage.setItem("hermes_ali_theme", state.prefs.theme);
+  localStorage.setItem("hermes_ali_accent", state.prefs.accent);
+}
+
+async function persistPrefsServer() {
+  try {
+    const view = state.settings || (await api("/api/settings"));
+    const cfg = JSON.parse(JSON.stringify((view && view.config) || {}));
+    if (!cfg.ali) cfg.ali = {};
+    cfg.ali.language = state.prefs.language;
+    cfg.ali.theme = state.prefs.theme;
+    cfg.ali.accent = state.prefs.accent;
+    const data = await api("/api/settings", { method: "POST", body: JSON.stringify({ config: cfg }) });
+    state.settings = data;
+  } catch (_) {
+    /* offline / unauth — local prefs still apply */
+  }
+}
+
+function setPrefs(partial, { syncServer = false } = {}) {
+  Object.assign(state.prefs, partial);
+  persistPrefsLocal();
+  applyTheme();
+  if (syncServer) persistPrefsServer();
+  if (state.status) {
+    renderConn(state.status);
+    renderAgent(state.status);
+  }
+  if (state.workflows.length) renderWorkflowList();
+}
+
+function renderAccentDots() {
+  const row = $("#accent-row");
+  if (!row) return;
+  row.innerHTML = "";
+  ACCENTS.forEach((name) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "accent-dot" + (state.prefs.accent === name ? " active" : "");
+    b.dataset.accent = name;
+    b.title = name;
+    b.addEventListener("click", () => setPrefs({ accent: name }, { syncServer: true }));
+    row.appendChild(b);
+  });
+}
 
 async function api(path, opts = {}) {
   const headers = Object.assign({ "Content-Type": "application/json" }, opts.headers || {});
@@ -56,15 +273,31 @@ function renderMd(text) {
 }
 
 async function boot() {
+  applyTheme();
   try {
     const status = await api("/api/status");
     state.status = status;
-    $("#version-label").textContent = `v${status.version || "1.1.0"}`;
+    $("#version-label").textContent = `v${status.version || "1.1.1"}`;
+    if (status.ui) {
+      // Server defaults fill gaps; localStorage already loaded — prefer local if set
+      const hasLocal =
+        localStorage.getItem("hermes_ali_lang") ||
+        localStorage.getItem("hermes_ali_theme") ||
+        localStorage.getItem("hermes_ali_accent");
+      if (!hasLocal) {
+        setPrefs({
+          language: status.ui.language || "zh",
+          theme: status.ui.theme || "dark",
+          accent: status.ui.accent || "ocean",
+        });
+      }
+    }
     renderConn(status);
     renderAgent(status);
     if (status.default_route) $("#route-select").value = status.default_route;
     if (status.auth_required && !status.authenticated && !state.token) {
       showLogin(true);
+      applyI18n();
       return;
     }
     showLogin(false);
@@ -72,6 +305,7 @@ async function boot() {
     if (status.health && status.health.workspace) {
       $("#workspace-input").value = status.health.workspace;
     }
+    applyI18n();
     if (!state.sessions.length) await createSession();
     else await selectSession(state.sessions[0].id);
   } catch (err) {
@@ -79,14 +313,15 @@ async function boot() {
       $("#agent-badge").textContent = "offline";
       console.error(err);
     }
+    applyI18n();
   }
 }
 
 function renderConn(status) {
   const port = status.port || 8765;
   const ips = status.local_ips || [];
-  const lines = [`本机: http://127.0.0.1:${port}`];
-  ips.slice(0, 2).forEach((ip) => lines.push(`局域网: http://${ip}:${port}`));
+  const lines = [`${t("conn.local")}: http://127.0.0.1:${port}`];
+  ips.slice(0, 2).forEach((ip) => lines.push(`${t("conn.lan")}: http://${ip}:${port}`));
   $("#conn-info").innerHTML = lines.map(escapeHtml).join("<br>");
 }
 
@@ -96,10 +331,10 @@ function renderAgent(status) {
   const health = status.health || {};
   const policy = health.data_policy || "";
   if (agent.available) {
-    el.textContent = `Agent ready · ${policy || "office"}`;
+    el.textContent = `${t("agent.ready")} · ${policy || "office"}`;
     el.className = "badge ok";
   } else {
-    el.textContent = `Demo · ${policy || "office"}`;
+    el.textContent = `${t("agent.demo")} · ${policy || "office"}`;
     el.className = "badge warn";
   }
 }
@@ -112,7 +347,8 @@ async function refreshSessions() {
   state.sessions.forEach((s) => {
     const btn = document.createElement("button");
     btn.className = "session-item" + (s.id === state.currentId ? " active" : "");
-    btn.innerHTML = `<span class="title">${escapeHtml(s.title || "New chat")}</span>
+    const title = s.title || t("chat.new");
+    btn.innerHTML = `<span class="title">${escapeHtml(title)}</span>
       <span class="del" title="Delete" data-del="${s.id}">×</span>`;
     btn.addEventListener("click", (e) => {
       if (e.target && e.target.dataset && e.target.dataset.del) {
@@ -127,20 +363,35 @@ async function refreshSessions() {
   });
 }
 
-async function loadWorkflows() {
-  const data = await api("/api/workflows");
-  state.workflows = data.presets || [];
+function wfLabel(w) {
+  if (state.prefs.language === "en" && WF_I18N[w.id] && WF_I18N[w.id].en) {
+    return {
+      name: WF_I18N[w.id].en.name,
+      description: WF_I18N[w.id].en.description,
+    };
+  }
+  return { name: w.name, description: w.description || "" };
+}
+
+function renderWorkflowList() {
   const list = $("#workflow-list");
   list.innerHTML = "";
   state.workflows.forEach((w) => {
+    const label = wfLabel(w);
     const btn = document.createElement("button");
     btn.className = "wf-item";
-    btn.innerHTML = `<div class="name">${escapeHtml(w.icon || "")} ${escapeHtml(w.name)}</div>
-      <div class="desc">${escapeHtml(w.description || "")}</div>
+    btn.innerHTML = `<div class="name">${escapeHtml(w.icon || "")} ${escapeHtml(label.name)}</div>
+      <div class="desc">${escapeHtml(label.description)}</div>
       <span class="tier">${escapeHtml(w.tier)} · ${escapeHtml(w.route)}</span>`;
     btn.addEventListener("click", () => openWorkflow(w));
     list.appendChild(btn);
   });
+}
+
+async function loadWorkflows() {
+  const data = await api("/api/workflows");
+  state.workflows = data.presets || [];
+  renderWorkflowList();
 }
 
 async function loadSettings() {
@@ -151,7 +402,7 @@ async function loadSettings() {
 }
 
 async function createSession() {
-  const s = await api("/api/sessions", { method: "POST", body: JSON.stringify({ title: "New chat" }) });
+  const s = await api("/api/sessions", { method: "POST", body: JSON.stringify({ title: t("chat.new") }) });
   await refreshSessions();
   await selectSession(s.id);
 }
@@ -161,7 +412,7 @@ async function deleteSession(id) {
   if (state.currentId === id) {
     state.currentId = null;
     $("#messages").innerHTML = "";
-    $("#chat-title").textContent = "New chat";
+    $("#chat-title").textContent = t("chat.new");
   }
   await refreshSessions();
   if (!state.currentId && state.sessions.length) await selectSession(state.sessions[0].id);
@@ -171,7 +422,7 @@ async function deleteSession(id) {
 async function selectSession(id) {
   const s = await api(`/api/sessions/${id}`);
   state.currentId = id;
-  $("#chat-title").textContent = s.title || "New chat";
+  $("#chat-title").textContent = s.title || t("chat.new");
   renderMessages(s.messages || []);
   await refreshSessions();
   $("#input").focus();
@@ -183,8 +434,8 @@ function renderMessages(messages) {
   if (!messages.length) {
     box.innerHTML = `<div class="empty-state" id="empty-state">
       <div class="empty-logo">ALI</div>
-      <h3>校园办公 AI 终端</h3>
-      <p>Hermes 管任务 · OpenSquilla 式路由 · Obsidian 存知识<br/>从左侧选择办公工作流，或直接对话。</p>
+      <h3 data-i18n="empty.title">${escapeHtml(t("empty.title"))}</h3>
+      <p data-i18n-html="empty.body">${t("empty.body")}</p>
     </div>`;
     return;
   }
@@ -205,7 +456,7 @@ function appendMessage(m, scroll = true) {
   let tools = "";
   if (m.tools && m.tools.length) {
     tools = `<div class="tools">${m.tools
-      .map((t) => `⚙ ${escapeHtml(t.name)} — ${escapeHtml(t.preview || "")}`)
+      .map((x) => `⚙ ${escapeHtml(x.name)} — ${escapeHtml(x.preview || "")}`)
       .join("<br>")}</div>`;
   }
   div.innerHTML = `<div class="meta">${role}${escapeHtml(route)}</div><div class="body">${
@@ -256,8 +507,8 @@ async function sendMessage(overrideText, extra = {}) {
     if (start.route) setRouteBadge(start.route);
     await readSSE(`/api/stream/${start.stream_id}`, {
       onRoute(r) { setRouteBadge(r); },
-      onToken(t) {
-        full += t;
+      onToken(tok) {
+        full += tok;
         state.lastAssistantText = full;
         bodyEl.innerHTML = renderMd(full);
         $("#messages").scrollTop = $("#messages").scrollHeight;
@@ -286,7 +537,7 @@ async function sendMessage(overrideText, extra = {}) {
     updateSendEnabled();
     await refreshSessions();
     const cur = state.sessions.find((s) => s.id === state.currentId);
-    if (cur) $("#chat-title").textContent = cur.title || "New chat";
+    if (cur) $("#chat-title").textContent = cur.title || t("chat.new");
   }
   return full;
 }
@@ -336,11 +587,11 @@ async function stopStream() {
   try { await api(`/api/sessions/${state.currentId}/cancel`, { method: "POST", body: "{}" }); } catch (_) {}
 }
 
-/* ---- Workflows ---- */
 function openWorkflow(w) {
   state.pendingWf = w;
-  $("#wf-title").textContent = `${w.icon || ""} ${w.name}`;
-  $("#wf-desc").textContent = w.description || "";
+  const label = wfLabel(w);
+  $("#wf-title").textContent = `${w.icon || ""} ${label.name}`;
+  $("#wf-desc").textContent = label.description || "";
   $("#wf-input").value = "";
   $("#wf-save-inbox").checked = !!w.save_to_inbox;
   $("#wf-overlay").classList.remove("hidden");
@@ -353,6 +604,7 @@ async function runWorkflow() {
   const input = $("#wf-input").value.trim();
   const saveInbox = $("#wf-save-inbox").checked;
   $("#wf-overlay").classList.add("hidden");
+  const label = wfLabel(w);
 
   const data = await api("/api/workflows/run", {
     method: "POST",
@@ -374,8 +626,11 @@ async function runWorkflow() {
     }
   }
 
-  // Stream already started by server — attach to SSE
-  appendMessage({ role: "user", content: `[${w.name}] ${input || "(使用工作流模板)"}`, route: data.route });
+  appendMessage({
+    role: "user",
+    content: `[${label.name}] ${input || t("wf.template")}`,
+    route: data.route,
+  });
   const assistantEl = appendMessage({ role: "assistant", content: "", route: data.route });
   const bodyEl = assistantEl.querySelector(".body");
   state.streaming = true;
@@ -384,8 +639,8 @@ async function runWorkflow() {
   try {
     await readSSE(`/api/stream/${data.stream_id}`, {
       onRoute(r) { setRouteBadge(r); },
-      onToken(t) {
-        full += t;
+      onToken(tok) {
+        full += tok;
         state.lastAssistantText = full;
         bodyEl.innerHTML = renderMd(full);
         $("#messages").scrollTop = $("#messages").scrollHeight;
@@ -412,24 +667,23 @@ async function runWorkflow() {
   }
 
   if (saveInbox && full.trim()) {
-    const ok = confirm("将结果写入 Obsidian AI_Candidates？仅候选区，不会进入正式目录。");
+    const ok = confirm(t("confirm.vault"));
     if (ok) {
       const wr = await api("/api/obsidian/write", {
         method: "POST",
         body: JSON.stringify({
-          title: w.name,
+          title: label.name,
           content: full,
           approved: true,
           tags: ["ai-candidate", w.id],
         }),
       });
-      if (wr.ok) appendMessage({ role: "assistant", content: `已写入知识库候选区：\`${wr.path}\`` });
-      else appendMessage({ role: "assistant", content: `写入失败：${wr.error || "unknown"}`, error: true });
+      if (wr.ok) appendMessage({ role: "assistant", content: `${t("vault.ok")}：\`${wr.path}\`` });
+      else appendMessage({ role: "assistant", content: `${t("vault.fail")}：${wr.error || "unknown"}`, error: true });
     }
   }
 }
 
-/* ---- Control Center ---- */
 function openControl(on = true) {
   $("#control-overlay").classList.toggle("hidden", !on);
   if (on) renderControl();
@@ -441,15 +695,13 @@ function field(label, key, value, type = "text") {
       <input type="checkbox" data-key="${escapeHtml(key)}" ${value ? "checked" : ""} /></label>`;
   }
   if (type === "select") {
-    const opts = value.options.map((o) =>
-      `<option value="${escapeHtml(o)}" ${o === value.selected ? "selected" : ""}>${escapeHtml(o)}</option>`
-    ).join("");
+    const opts = value.options.map((o) => {
+      const optLabel = o.label || o.value || o;
+      const optVal = o.value != null ? o.value : o;
+      return `<option value="${escapeHtml(optVal)}" ${optVal === value.selected ? "selected" : ""}>${escapeHtml(optLabel)}</option>`;
+    }).join("");
     return `<label class="field"><span>${escapeHtml(label)}</span>
       <select data-key="${escapeHtml(key)}">${opts}</select></label>`;
-  }
-  if (type === "textarea") {
-    return `<label class="field"><span>${escapeHtml(label)}</span>
-      <textarea data-key="${escapeHtml(key)}" rows="3">${escapeHtml(value || "")}</textarea></label>`;
   }
   return `<label class="field"><span>${escapeHtml(label)}</span>
     <input type="${type}" data-key="${escapeHtml(key)}" value="${escapeHtml(value || "")}" /></label>`;
@@ -460,11 +712,63 @@ async function renderControl() {
   const cfg = (state.settings && state.settings.config) || {};
   const health = await api("/api/health/office");
   const matrix = await api("/api/routing");
+  const ali = cfg.ali || {};
+
+  $("#ctab-appearance").innerHTML = `
+    <div class="grid-2">
+      ${field(t("appearance.lang"), "ali.language", {
+        selected: state.prefs.language,
+        options: [
+          { value: "zh", label: "中文" },
+          { value: "en", label: "English" },
+        ],
+      }, "select")}
+      ${field(t("appearance.theme"), "ali.theme", {
+        selected: state.prefs.theme,
+        options: [
+          { value: "dark", label: t("theme.dark") },
+          { value: "light", label: t("theme.light") },
+        ],
+      }, "select")}
+      ${field(t("appearance.accent"), "ali.accent", {
+        selected: state.prefs.accent,
+        options: ACCENTS.map((a) => ({ value: a, label: a })),
+      }, "select")}
+    </div>
+    <div class="accent-row" id="accent-row-control"></div>
+    <p class="muted">${escapeHtml(t("appearance.hint"))}</p>`;
+
+  const ctrlRow = $("#accent-row-control");
+  if (ctrlRow) {
+    ACCENTS.forEach((name) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "accent-dot" + (state.prefs.accent === name ? " active" : "");
+      b.dataset.accent = name;
+      b.title = name;
+      b.addEventListener("click", () => {
+        const sel = document.querySelector('[data-key="ali.accent"]');
+        if (sel) sel.value = name;
+        setPrefs({ accent: name });
+        renderControl();
+      });
+      ctrlRow.appendChild(b);
+    });
+  }
+
+  $$("#ctab-appearance [data-key]").forEach((el) => {
+    el.addEventListener("change", () => {
+      const key = el.getAttribute("data-key");
+      if (key === "ali.language") setPrefs({ language: el.value });
+      if (key === "ali.theme") setPrefs({ theme: el.value });
+      if (key === "ali.accent") setPrefs({ accent: el.value });
+    });
+  });
 
   $("#ctab-health").innerHTML = (health.checks || []).map((c) =>
     `<div class="check-row"><div><strong>${escapeHtml(c.id)}</strong><div class="muted">${escapeHtml(c.detail || "")}</div></div>
       <span class="${c.ok ? "ok" : "bad"}">${c.ok ? "PASS" : "CHECK"}</span></div>`
-  ).join("") + `<p class="muted">API Key (${escapeHtml((health.api_key || {}).env_name || "")}): ${(health.api_key || {}).present ? "已设置" : "未设置 — 请用系统环境变量，勿写入 JSON"}</p>`;
+  ).join("") + `<p class="muted">API Key (${escapeHtml((health.api_key || {}).env_name || "")}): ${(health.api_key || {}).present ? t("key.set") : t("key.missing")}</p>`;
 
   const b = cfg.backend || {};
   $("#ctab-backend").innerHTML = `
@@ -475,8 +779,7 @@ async function renderControl() {
       ${field("Timeout (s)", "backend.timeout_seconds", String(b.timeout_seconds || 60), "number")}
     </div>
     ${field("Install / workspace root", "install_root", cfg.install_root || "")}
-    ${field("Default workspace", "workspace", cfg.workspace || "")}
-    <p class="muted">密钥只放在环境变量（如 CAMPUS_LLM_API_KEY），与手册一致。</p>`;
+    ${field("Default workspace", "workspace", cfg.workspace || "")}`;
 
   const m = cfg.models || {};
   $("#ctab-models").innerHTML = `
@@ -487,8 +790,7 @@ async function renderControl() {
       ${field("DeepSeek reasoning (C3)", "models.deepseek_reasoning", m.deepseek_reasoning || "")}
       ${field("Embedding", "models.embedding", m.embedding || "")}
       ${field("Reranker", "models.reranker", m.reranker || "")}
-    </div>
-    <p class="muted">模型 ID 必须来自校园 <code>/v1/models</code>，勿用宣传名猜测。</p>`;
+    </div>`;
 
   const r = cfg.routing || {};
   $("#ctab-routing").innerHTML = `
@@ -498,27 +800,25 @@ async function renderControl() {
       ${field("vision →", "routing.vision", r.vision || "qwen_vl")}
       ${field("reasoning →", "routing.reasoning", r.reasoning || "deepseek_reasoning")}
     </div>
-    ${field("允许受限数据外部降级（危险）", "routing.restricted_external_fallback", !!r.restricted_external_fallback, "checkbox")}
-    <table class="matrix"><thead><tr><th>等级</th><th>场景</th><th>路由</th><th>当前模型</th></tr></thead>
+    ${field("restricted_external_fallback", "routing.restricted_external_fallback", !!r.restricted_external_fallback, "checkbox")}
+    <table class="matrix"><thead><tr><th>Tier</th><th>Examples</th><th>Route</th><th>Model</th></tr></thead>
     <tbody>${(matrix.matrix || []).map((row) =>
       `<tr><td>${escapeHtml(row.tier)}</td><td>${escapeHtml(row.examples)}</td>
-       <td>${escapeHtml(row.route_key)}</td><td><code>${escapeHtml(row.model || "(未配置)")}</code></td></tr>`
+       <td>${escapeHtml(row.route_key)}</td><td><code>${escapeHtml(row.model || "—")}</code></td></tr>`
     ).join("")}</tbody></table>`;
 
   const o = cfg.obsidian || {};
   $("#ctab-obsidian").innerHTML = `
-    ${field("Vault 路径", "obsidian.vault_path", o.vault_path || "")}
-    ${field("AI 候选目录", "obsidian.ai_inbox", o.ai_inbox || "00_Inbox/AI_Candidates")}
-    ${field("允许检索目录（逗号分隔）", "obsidian.allowed_roots", (o.allowed_roots || []).join(", "))}
-    ${field("写入需审批", "obsidian.write_requires_approval", o.write_requires_approval !== false, "checkbox")}
-    <p class="muted">正式目录只放人工审核后的笔记；AI 默认只写 AI_Candidates。</p>`;
+    ${field("Vault path", "obsidian.vault_path", o.vault_path || "")}
+    ${field("AI inbox", "obsidian.ai_inbox", o.ai_inbox || "00_Inbox/AI_Candidates")}
+    ${field("Allowed roots (comma)", "obsidian.allowed_roots", (o.allowed_roots || []).join(", "))}
+    ${field("Write requires approval", "obsidian.write_requires_approval", o.write_requires_approval !== false, "checkbox")}`;
 
   $("#ctab-security").innerHTML = `
-    ${field("数据策略", "data_policy", { selected: cfg.data_policy || "internal", options: ["public", "internal", "restricted"] }, "select")}
-    <p class="muted">restricted：禁止校外 NVIDIA/云端降级。邮件发送、删改文件、防火墙、开机启动均需人工确认。</p>
-    <p class="muted">配置文件：<code>${escapeHtml((state.settings && state.settings.config_path) || "")}</code></p>
-    ${field("从本地路径导入 campus-office-ai.json", "import_path", "")}
-    <button type="button" class="btn ghost" id="btn-import-cfg">导入配置文件</button>`;
+    ${field("data_policy", "data_policy", { selected: cfg.data_policy || "internal", options: ["public", "internal", "restricted"] }, "select")}
+    <p class="muted"><code>${escapeHtml((state.settings && state.settings.config_path) || "")}</code></p>
+    ${field("Import campus-office-ai.json path", "import_path", "")}
+    <button type="button" class="btn ghost" id="btn-import-cfg">Import</button>`;
 
   const importBtn = $("#btn-import-cfg");
   if (importBtn) {
@@ -527,12 +827,21 @@ async function renderControl() {
       if (!path) return;
       try {
         await api("/api/settings/import", { method: "POST", body: JSON.stringify({ path }) });
-        $("#settings-status").textContent = "已导入";
+        $("#settings-status").textContent = t("imported");
         renderControl();
       } catch (e) {
         $("#settings-status").textContent = e.message;
       }
     };
+  }
+
+  // keep ali defaults in form for save
+  if (!document.querySelector('[data-key="ali.default_route"]')) {
+    const hidden = document.createElement("input");
+    hidden.type = "hidden";
+    hidden.setAttribute("data-key", "ali.default_route");
+    hidden.value = ali.default_route || "office";
+    $("#ctab-appearance").appendChild(hidden);
   }
 }
 
@@ -556,6 +865,10 @@ function collectSettingsFromForm() {
     }
     cur[parts[parts.length - 1]] = val;
   });
+  if (!cfg.ali) cfg.ali = {};
+  cfg.ali.language = state.prefs.language;
+  cfg.ali.theme = state.prefs.theme;
+  cfg.ali.accent = state.prefs.accent;
   return cfg;
 }
 
@@ -563,16 +876,23 @@ async function saveSettings() {
   const cfg = collectSettingsFromForm();
   const data = await api("/api/settings", { method: "POST", body: JSON.stringify({ config: cfg }) });
   state.settings = data;
-  $("#settings-status").textContent = "已保存 " + new Date().toLocaleTimeString();
+  if (cfg.ali) {
+    setPrefs({
+      language: cfg.ali.language || state.prefs.language,
+      theme: cfg.ali.theme || state.prefs.theme,
+      accent: cfg.ali.accent || state.prefs.accent,
+    });
+  }
+  $("#settings-status").textContent = `${t("saved")} ${new Date().toLocaleTimeString()}`;
   const status = await api("/api/status");
   state.status = status;
   renderAgent(status);
+  renderConn(status);
 }
 
-/* ---- Events ---- */
 $$(".tab").forEach((tab) => {
   tab.addEventListener("click", () => {
-    $$(".tab").forEach((t) => t.classList.remove("active"));
+    $$(".tab").forEach((x) => x.classList.remove("active"));
     tab.classList.add("active");
     const panel = tab.dataset.panel;
     $("#panel-chats").classList.toggle("hidden", panel !== "chats");
@@ -582,7 +902,7 @@ $$(".tab").forEach((tab) => {
 
 $$(".ctab").forEach((tab) => {
   tab.addEventListener("click", () => {
-    $$(".ctab").forEach((t) => t.classList.remove("active"));
+    $$(".ctab").forEach((x) => x.classList.remove("active"));
     tab.classList.add("active");
     $$(".ctab-panel").forEach((p) => p.classList.add("hidden"));
     $(`#ctab-${tab.dataset.ctab}`).classList.remove("hidden");
@@ -602,7 +922,7 @@ $("#login-form").addEventListener("submit", async (e) => {
     showLogin(false);
     await boot();
   } catch (_) {
-    $("#login-error").textContent = "密码错误";
+    $("#login-error").textContent = t("login.error");
     $("#login-error").classList.remove("hidden");
   }
 });
@@ -620,6 +940,13 @@ $("#btn-save-settings").addEventListener("click", () => saveSettings().catch((e)
 $("#wf-cancel").addEventListener("click", () => $("#wf-overlay").classList.add("hidden"));
 $("#wf-run").addEventListener("click", () => runWorkflow().catch((e) => alert(e.message)));
 
+$("#btn-lang").addEventListener("click", () => {
+  setPrefs({ language: state.prefs.language === "zh" ? "en" : "zh" }, { syncServer: true });
+});
+$("#btn-theme").addEventListener("click", () => {
+  setPrefs({ theme: state.prefs.theme === "dark" ? "light" : "dark" }, { syncServer: true });
+});
+
 $("#input").addEventListener("input", () => {
   updateSendEnabled();
   const el = $("#input");
@@ -633,4 +960,5 @@ $("#input").addEventListener("keydown", (e) => {
   }
 });
 
+applyTheme();
 boot();

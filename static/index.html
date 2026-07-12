@@ -1,20 +1,20 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="dark" data-accent="ocean">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0f1419" />
-  <title>Hermes-ALI · Campus Office</title>
+  <title>Hermes-ALI</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
   <div id="login-overlay" class="overlay hidden">
     <form id="login-form" class="login-card">
       <h1>Hermes-ALI</h1>
-      <p>输入访问密码以连接终端</p>
-      <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" required />
-      <button type="submit">进入</button>
-      <p id="login-error" class="error hidden"></p>
+      <p data-i18n="login.hint">输入访问密码以连接终端</p>
+      <input type="password" id="login-password" data-i18n-placeholder="login.password" placeholder="Password" autocomplete="current-password" required />
+      <button type="submit" data-i18n="login.submit">进入</button>
+      <p id="login-error" class="error hidden" data-i18n="login.error">密码错误</p>
     </form>
   </div>
 
@@ -25,13 +25,18 @@
           <span class="brand-mark">H</span>
           <div>
             <div class="brand-name">Hermes-ALI</div>
-            <div class="brand-sub" id="version-label">v1.1.0</div>
+            <div class="brand-sub" id="version-label">v1.1.1</div>
           </div>
         </div>
-        <button id="btn-new" class="btn primary">+ 新对话</button>
+        <div class="quick-prefs">
+          <button type="button" id="btn-lang" class="btn ghost chip" title="Language">中 / EN</button>
+          <button type="button" id="btn-theme" class="btn ghost chip" title="Theme">☾ / ☀</button>
+        </div>
+        <div class="accent-row" id="accent-row" title="Accent color"></div>
+        <button id="btn-new" class="btn primary" data-i18n="nav.newChat">+ 新对话</button>
         <div class="nav-tabs">
-          <button class="tab active" data-panel="chats">会话</button>
-          <button class="tab" data-panel="workflows">工作流</button>
+          <button class="tab active" data-panel="chats" data-i18n="nav.chats">会话</button>
+          <button class="tab" data-panel="workflows" data-i18n="nav.workflows">工作流</button>
         </div>
       </div>
 
@@ -44,7 +49,7 @@
       </div>
 
       <div class="sidebar-foot">
-        <button id="btn-control" class="btn ghost block">⚙ 控制中心</button>
+        <button id="btn-control" class="btn ghost block" data-i18n="nav.control">⚙ 控制中心</button>
         <div id="conn-info" class="conn-info"></div>
         <div id="agent-badge" class="badge">checking…</div>
       </div>
@@ -53,7 +58,7 @@
     <main class="main">
       <header class="topbar">
         <button id="btn-menu" class="btn ghost icon" aria-label="Menu">☰</button>
-        <h2 id="chat-title">New chat</h2>
+        <h2 id="chat-title" data-i18n="chat.new">New chat</h2>
         <span id="route-badge" class="route-badge">AUTO</span>
         <button id="btn-stop" class="btn ghost hidden" title="Stop">⏹</button>
       </header>
@@ -61,54 +66,55 @@
       <div id="messages" class="messages">
         <div class="empty-state" id="empty-state">
           <div class="empty-logo">ALI</div>
-          <h3>校园办公 AI 终端</h3>
-          <p>Hermes 管任务 · OpenSquilla 式路由 · Obsidian 存知识<br/>从左侧选择办公工作流，或直接对话。</p>
+          <h3 data-i18n="empty.title">校园办公 AI 终端</h3>
+          <p data-i18n-html="empty.body">Hermes 管任务 · OpenSquilla 式路由 · Obsidian 存知识<br/>从左侧选择办公工作流，或直接对话。</p>
         </div>
       </div>
 
       <footer class="composer">
         <div class="composer-tools">
           <label>
-            路由
+            <span data-i18n="composer.route">路由</span>
             <select id="route-select">
-              <option value="auto">Auto（自动分级）</option>
-              <option value="simple">C0 简单 / Qwen fast</option>
-              <option value="office">C1 办公 / Qwen main</option>
-              <option value="C2">C2 长文（生成+审核）</option>
-              <option value="reasoning">C3 推理 / DeepSeek</option>
-              <option value="vision">Vision / Qwen-VL</option>
+              <option value="auto" data-i18n="route.auto">Auto（自动分级）</option>
+              <option value="simple" data-i18n="route.simple">C0 简单 / Qwen fast</option>
+              <option value="office" data-i18n="route.office">C1 办公 / Qwen main</option>
+              <option value="C2" data-i18n="route.c2">C2 长文（生成+审核）</option>
+              <option value="reasoning" data-i18n="route.reasoning">C3 推理 / DeepSeek</option>
+              <option value="vision" data-i18n="route.vision">Vision / Qwen-VL</option>
             </select>
           </label>
           <label class="grow">
-            工作区
-            <input id="workspace-input" type="text" placeholder="可选：工作目录路径" />
+            <span data-i18n="composer.workspace">工作区</span>
+            <input id="workspace-input" type="text" data-i18n-placeholder="composer.workspacePh" placeholder="可选：工作目录路径" />
           </label>
         </div>
         <div class="composer-row">
-          <textarea id="input" rows="1" placeholder="输入消息或工作流内容… (Enter 发送)"></textarea>
-          <button id="btn-send" class="btn primary send" disabled>发送</button>
+          <textarea id="input" rows="1" data-i18n-placeholder="composer.inputPh" placeholder="输入消息或工作流内容… (Enter 发送)"></textarea>
+          <button id="btn-send" class="btn primary send" disabled data-i18n="composer.send">发送</button>
         </div>
       </footer>
     </main>
   </div>
 
-  <!-- Control Center -->
   <div id="control-overlay" class="overlay hidden">
     <div class="control-card">
       <div class="control-head">
-        <h2>控制中心</h2>
-        <button id="btn-control-close" class="btn ghost">关闭</button>
+        <h2 data-i18n="control.title">控制中心</h2>
+        <button id="btn-control-close" class="btn ghost" data-i18n="control.close">关闭</button>
       </div>
       <div class="control-tabs">
-        <button class="ctab active" data-ctab="health">健康</button>
-        <button class="ctab" data-ctab="backend">后端</button>
-        <button class="ctab" data-ctab="models">模型</button>
-        <button class="ctab" data-ctab="routing">路由</button>
-        <button class="ctab" data-ctab="obsidian">知识库</button>
-        <button class="ctab" data-ctab="security">安全</button>
+        <button class="ctab active" data-ctab="appearance" data-i18n="control.appearance">外观</button>
+        <button class="ctab" data-ctab="health" data-i18n="control.health">健康</button>
+        <button class="ctab" data-ctab="backend" data-i18n="control.backend">后端</button>
+        <button class="ctab" data-ctab="models" data-i18n="control.models">模型</button>
+        <button class="ctab" data-ctab="routing" data-i18n="control.routing">路由</button>
+        <button class="ctab" data-ctab="obsidian" data-i18n="control.obsidian">知识库</button>
+        <button class="ctab" data-ctab="security" data-i18n="control.security">安全</button>
       </div>
       <div class="control-body">
-        <section id="ctab-health" class="ctab-panel"></section>
+        <section id="ctab-appearance" class="ctab-panel"></section>
+        <section id="ctab-health" class="ctab-panel hidden"></section>
         <section id="ctab-backend" class="ctab-panel hidden"></section>
         <section id="ctab-models" class="ctab-panel hidden"></section>
         <section id="ctab-routing" class="ctab-panel hidden"></section>
@@ -116,24 +122,23 @@
         <section id="ctab-security" class="ctab-panel hidden"></section>
       </div>
       <div class="control-foot">
-        <button id="btn-save-settings" class="btn primary">保存配置</button>
+        <button id="btn-save-settings" class="btn primary" data-i18n="control.save">保存配置</button>
         <span id="settings-status" class="muted"></span>
       </div>
     </div>
   </div>
 
-  <!-- Workflow runner modal -->
   <div id="wf-overlay" class="overlay hidden">
     <div class="login-card wf-card">
       <h2 id="wf-title">工作流</h2>
       <p id="wf-desc" class="muted"></p>
-      <textarea id="wf-input" rows="6" placeholder="粘贴会议笔记 / 邮件要点 / 文档内容…"></textarea>
+      <textarea id="wf-input" rows="6" data-i18n-placeholder="wf.inputPh" placeholder="粘贴会议笔记 / 邮件要点 / 文档内容…"></textarea>
       <div class="row">
-        <label class="check"><input type="checkbox" id="wf-save-inbox" /> 完成后写入 Obsidian AI_Candidates（需确认）</label>
+        <label class="check"><input type="checkbox" id="wf-save-inbox" /> <span data-i18n="wf.saveInbox">完成后写入 Obsidian AI_Candidates（需确认）</span></label>
       </div>
       <div class="row gap">
-        <button id="wf-cancel" class="btn ghost">取消</button>
-        <button id="wf-run" class="btn primary">运行</button>
+        <button id="wf-cancel" class="btn ghost" data-i18n="wf.cancel">取消</button>
+        <button id="wf-run" class="btn primary" data-i18n="wf.run">运行</button>
       </div>
     </div>
   </div>

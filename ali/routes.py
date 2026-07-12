@@ -88,6 +88,7 @@ def handle_get(handler) -> None:
     if path == "/api/status":
         st = streaming.agent_status()
         health = workflows.health_snapshot()
+        ali = load_campus_config().get("ali") or {}
         return _json(
             handler,
             200,
@@ -100,7 +101,12 @@ def handle_get(handler) -> None:
                 "local_ips": local_ips(),
                 "agent": st,
                 "health": health,
-                "default_route": ((load_campus_config().get("ali") or {}).get("default_route") or "auto"),
+                "default_route": ali.get("default_route") or "auto",
+                "ui": {
+                    "language": ali.get("language") or "zh",
+                    "theme": ali.get("theme") or "dark",
+                    "accent": ali.get("accent") or "ocean",
+                },
             },
         )
 

@@ -70,6 +70,9 @@ DEFAULT_CAMPUS: dict[str, Any] = {
     "ali": {
         "default_route": "office",  # simple | office | vision | reasoning | auto
         "show_route_badge": True,
+        "language": "zh",  # zh | en
+        "theme": "dark",  # dark | light
+        "accent": "ocean",  # ocean | forest | amber | rose | slate | teal
         "require_approval_for": [
             "email_send",
             "file_delete",
