@@ -214,6 +214,111 @@ def handle_post(handler) -> None:
         except ValueError as exc:
             return _json(handler, 400, {"error": str(exc)})
 
+    if path == "/api/settings/api-key":
+        body = _read_json(handler)
+        from .secrets import set_api_key
+        from .providers import looks_like_secret
+
+        raw_key = str(body.get("api_key") or body.get("key") or "").strip()
+        provider = str(body.get("provider") or (load_campus_config().get("backend") or {}).get("type") or "default").strip()
+        env_name = str(body.get("api_key_env") or (load_campus_config().get("backend") or {}).get("api_key_env") or "").strip()
+
+        # If user pasted key into env_name by mistake, treat as key
+        if looks_like_secret(env_name) and not raw_key:
+            raw_key = env_name
+            env_name = ""
+
+        if not raw_key and body.get("clear"):
+            set_api_key(provider, "")
+            if env_name:
+                set_api_key(env_name, "")
+            return _json(handler, 200, {"ok": True, "present": False, **public_settings_view()})
+
+        if not raw_key:
+            return _json(handler, 400, {"error": "api_key required"})
+
+        # Save under provider id and env name slot
+        info = set_api_key(provider, raw_key)
+        if env_name and not looks_like_secret(env_name):
+            set_api_key(env_name, raw_key)
+            # persist correct env name in config
+            cfg = load_campus_config()
+            cfg.setdefault("backend", {})["api_key_env"] = env_name
+            save_campus_config(cfg)
+        elif provider:
+            from .providers import get_provider
+
+            prov = get_provider(provider)
+            if prov and prov.get("api_key_env"):
+                cfg = load_campus_config()
+                cfg.setdefault("backend", {})["api_key_env"] = prov["api_key_env"]
+                if provider != "hybrid":
+                    cfg["backend"]["type"] = provider
+                save_campus_config(cfg)
+                set_api_key(str(prov["api_key_env"]), raw_key)
+
+        audit.log_event("api_key_save", {"provider": provider, "present": True})
+        view = public_settings_view()
+        view["api_key_saved"] = {"provider": provider, "masked": info.get("masked")}
+        return _json(handler, 200, {"ok": True, **view})
+
+    if path == "/api/settings/refresh-models":
+        body = _read_json(handler)
+        from . import llm_client
+        from .secrets import resolve_api_key
+
+        cfg = load_campus_config()
+        # optionally update base_url/type from body first
+        if body.get("base_url") or body.get("provider"):
+            backend = dict(cfg.get("backend") or {})
+            if body.get("provider"):
+                backend["type"] = str(body["provider"])
+            if body.get("base_url"):
+                backend["base_url"] = str(body["base_url"]).strip()
+            cfg["backend"] = backend
+            cfg = save_campus_config(cfg)
+
+        provider = str((cfg.get("backend") or {}).get("type") or "")
+        key_info = resolve_api_key(cfg, provider=provider)
+        base_url = str((cfg.get("backend") or {}).get("base_url") or "").strip()
+        if not base_url:
+            return _json(handler, 400, {"error": "base_url missing — set Backend Base URL first"})
+        if not key_info.get("present") and provider not in ("local-ollama",):
+            return _json(handler, 400, {"error": "API key missing — paste key in Control Center and Save key"})
+
+        result = llm_client.list_models(
+            base_url,
+            key_info.get("key") or "",
+            timeout=float((cfg.get("backend") or {}).get("timeout_seconds") or 30),
+            verify_tls=bool((cfg.get("backend") or {}).get("verify_tls", True)),
+        )
+        if not result.get("ok"):
+            return _json(handler, 400, {"error": result.get("error") or "list models failed", **result})
+
+        models = result.get("models") or []
+        suggested = llm_client.suggest_slots(models)
+        apply_suggest = body.get("apply_suggestions", True)
+        if apply_suggest and suggested:
+            m = dict(cfg.get("models") or {})
+            m.update({k: v for k, v in suggested.items() if v})
+            cfg["models"] = m
+            cfg = save_campus_config(cfg)
+
+        audit.log_event("refresh_models", {"count": len(models), "provider": provider})
+        view = public_settings_view()
+        return _json(
+            handler,
+            200,
+            {
+                "ok": True,
+                "models": models,
+                "count": len(models),
+                "suggested": suggested,
+                "applied": bool(apply_suggest),
+                **view,
+            },
+        )
+
     if path == "/api/settings/import":
         body = _read_json(handler)
         try:

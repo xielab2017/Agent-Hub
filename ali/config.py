@@ -7,7 +7,7 @@ import socket
 import sys
 from pathlib import Path
 
-VERSION = "1.1.2"
+VERSION = "1.1.3"
 APP_NAME = "Hermes-ALI"
 
 # Default bind: all interfaces so phones / other PCs can connect by IP

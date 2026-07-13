@@ -128,13 +128,19 @@ def save_campus_config(data: dict[str, Any]) -> dict[str, Any]:
         backend.pop(secret_key, None)
     env_name = str(backend.get("api_key_env") or "").strip()
     if looks_like_secret(env_name):
-        # User pasted a real key into the env-name field — refuse to store it
-        backend["api_key_env"] = ""
+        # Accidentally pasted key into env-name — stash it as secret and restore proper env name
+        from .secrets import set_api_key
+        from .providers import get_provider
+
+        provider_id = str(backend.get("type") or "default")
+        set_api_key(provider_id, env_name)
+        prov = get_provider(provider_id)
+        proper = (prov or {}).get("api_key_env") or "API_KEY"
+        set_api_key(str(proper), env_name)
+        backend["api_key_env"] = proper
         merged["_warning"] = (
-            "Detected API key pasted into api_key_env. "
-            "Cleared it. Put the key in an OS environment variable "
-            "(e.g. NVIDIA_API_KEY), and set api_key_env to that variable NAME only. "
-            "Rotate the exposed key if it was shared."
+            "Detected API key in api_key_env field. "
+            f"Saved it securely to local secrets and set api_key_env={proper}."
         )
     merged["backend"] = backend
 
@@ -184,23 +190,9 @@ def export_campus_config(dest: str) -> str:
 
 
 def api_key_status(cfg: dict[str, Any] | None = None) -> dict[str, Any]:
-    cfg = cfg or load_campus_config()
-    env_name = ((cfg.get("backend") or {}).get("api_key_env") or "CAMPUS_LLM_API_KEY").strip()
-    from .providers import looks_like_secret
+    from .secrets import public_key_status
 
-    if looks_like_secret(env_name):
-        return {
-            "env_name": "",
-            "present": False,
-            "hint": "invalid — a secret was pasted; use env VAR NAME only",
-            "invalid_secret": True,
-        }
-    present = bool(env_name and os.environ.get(env_name))
-    return {
-        "env_name": env_name,
-        "present": present,
-        "hint": "set" if present else "missing — set via OS env / Credential Manager, never paste into chat",
-    }
+    return public_key_status(cfg)
 
 
 def public_settings_view() -> dict[str, Any]:

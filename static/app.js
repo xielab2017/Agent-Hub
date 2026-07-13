@@ -142,6 +142,7 @@ const state = {
   settings: null,
   pendingWf: null,
   lastAssistantText: "",
+  liveModels: [],
   prefs: {
     language: localStorage.getItem("hermes_ali_lang") || "zh",
     theme: localStorage.getItem("hermes_ali_theme") || "dark",
@@ -341,6 +342,9 @@ function renderAgent(status) {
   const policy = health.data_policy || "";
   if (agent.available) {
     el.textContent = `${t("agent.ready")} · ${policy || "office"}`;
+    el.className = "badge ok";
+  } else if (agent.direct_llm) {
+    el.textContent = `Direct LLM · ${policy || "office"}`;
     el.className = "badge ok";
   } else {
     el.textContent = `${t("agent.demo")} · ${policy || "office"}`;
@@ -787,24 +791,31 @@ async function renderControl() {
   const currentProv = providers.find((p) => p.id === (b.type || "")) || null;
   const langZh = state.prefs.language !== "en";
 
+  const keyStatus = (state.settings && state.settings.api_key) || {};
   $("#ctab-backend").innerHTML = `
     <div class="grid-2">
       ${field(langZh ? "后端类型 / Provider" : "Backend type", "backend.type", {
         selected: b.type || "campus-openai-compatible",
         options: providerOpts,
       }, "select")}
-      ${field(langZh ? "API Key 环境变量名（不要填密钥本身）" : "API key ENV name (not the secret)", "backend.api_key_env",
-        looksLikeSecret(b.api_key_env) ? "" : (b.api_key_env || ""))}
+      ${field(langZh ? "API Key 环境变量名" : "API key ENV name", "backend.api_key_env",
+        looksLikeSecret(b.api_key_env) ? ((currentProv && currentProv.api_key_env) || "") : (b.api_key_env || ""))}
       ${field("Base URL", "backend.base_url", b.base_url || "")}
       ${field("Timeout (s)", "backend.timeout_seconds", String(b.timeout_seconds || 60), "number")}
     </div>
+    <label class="field"><span>${langZh ? "API Key（保存在本机 secrets，不会写入 JSON）" : "API Key (local secrets only)"}</span>
+      <input type="password" id="api-key-input" placeholder="${keyStatus.present ? (langZh ? "已保存：" : "saved: ") + escapeHtml(keyStatus.masked || "****") : (langZh ? "粘贴 nvapi-… / sk-or-… 等密钥" : "paste API key")}" autocomplete="off" />
+    </label>
     <p class="muted" id="provider-hint">${escapeHtml((currentProv && currentProv.hint) || "")}</p>
-    ${looksLikeSecret(b.api_key_env) ? `<p class="warn-box">${langZh
-      ? "⚠ 检测到你把真实 API Key 填进了「环境变量名」。已拒绝保存密钥。请在系统环境变量中设置（如 NVIDIA_API_KEY），此处只填变量名。若密钥已泄露请立刻轮换。"
-      : "⚠ A real API key was pasted into the env-name field. Cleared. Set the secret in your OS env (e.g. NVIDIA_API_KEY) and put only the variable NAME here. Rotate the key if exposed."}</p>` : ""}
+    <p class="muted">${langZh ? "密钥状态：" : "Key status: "} <strong>${keyStatus.present ? (langZh ? "已配置" : "set") : (langZh ? "未配置" : "missing")}</strong>
+      ${keyStatus.masked ? ` (${escapeHtml(keyStatus.masked)})` : ""}
+      ${keyStatus.source ? ` · ${escapeHtml(keyStatus.source)}` : ""}</p>
     <div class="row gap" style="justify-content:flex-start;flex-wrap:wrap">
-      <button type="button" class="btn primary" id="btn-apply-provider">${langZh ? "应用此厂商并刷新模型" : "Apply provider → refresh models"}</button>
+      <button type="button" class="btn primary" id="btn-save-key">${langZh ? "保存 API Key" : "Save API Key"}</button>
+      <button type="button" class="btn primary" id="btn-refresh-models">${langZh ? "拉取可用模型" : "Fetch models"}</button>
+      <button type="button" class="btn ghost" id="btn-apply-provider">${langZh ? "应用厂商默认" : "Apply provider defaults"}</button>
     </div>
+    <div id="live-models-box" class="muted"></div>
     ${field(langZh ? "安装 / 根目录" : "Install / workspace root", "install_root", cfg.install_root || "")}
     ${field(langZh ? "默认工作区" : "Default workspace", "workspace", cfg.workspace || "")}
     <hr class="soft" />
@@ -859,13 +870,15 @@ async function renderControl() {
     applyBtn.onclick = async () => {
       const pid = document.querySelector('[data-key="backend.type"]').value;
       try {
+        // save form backend fields first
+        await saveSettings();
         const data = await api("/api/settings/apply-provider", {
           method: "POST",
           body: JSON.stringify({ provider: pid, fill_models: true }),
         });
         state.settings = data;
         if (data.warning) alert(data.warning);
-        $("#settings-status").textContent = langZh ? "已切换厂商并写入推荐模型" : "Provider applied with model defaults";
+        $("#settings-status").textContent = langZh ? "已应用厂商默认模型" : "Provider defaults applied";
         renderControl();
         document.querySelector('.ctab[data-ctab="models"]')?.click();
       } catch (e) {
@@ -874,8 +887,100 @@ async function renderControl() {
     };
   }
 
+  const saveKeyBtn = $("#btn-save-key");
+  if (saveKeyBtn) {
+    saveKeyBtn.onclick = async () => {
+      const keyEl = $("#api-key-input");
+      const key = (keyEl && keyEl.value || "").trim();
+      const pid = document.querySelector('[data-key="backend.type"]').value;
+      const envName = document.querySelector('[data-key="backend.api_key_env"]').value;
+      const baseUrl = document.querySelector('[data-key="backend.base_url"]').value;
+      if (!key) {
+        $("#settings-status").textContent = langZh ? "请先粘贴 API Key" : "Paste API key first";
+        return;
+      }
+      try {
+        // persist backend fields
+        const cfg = collectSettingsFromForm();
+        cfg.backend = cfg.backend || {};
+        cfg.backend.type = pid;
+        cfg.backend.api_key_env = envName;
+        cfg.backend.base_url = baseUrl;
+        await api("/api/settings", { method: "POST", body: JSON.stringify({ config: cfg }) });
+        const data = await api("/api/settings/api-key", {
+          method: "POST",
+          body: JSON.stringify({ api_key: key, provider: pid, api_key_env: envName }),
+        });
+        state.settings = data;
+        if (keyEl) keyEl.value = "";
+        $("#settings-status").textContent = langZh
+          ? `API Key 已保存（${(data.api_key_saved && data.api_key_saved.masked) || "****"}）`
+          : `API Key saved (${(data.api_key_saved && data.api_key_saved.masked) || "****"})`;
+        renderControl();
+      } catch (e) {
+        $("#settings-status").textContent = e.message;
+      }
+    };
+  }
+
+  const refreshBtn = $("#btn-refresh-models");
+  if (refreshBtn) {
+    refreshBtn.onclick = async () => {
+      const pid = document.querySelector('[data-key="backend.type"]').value;
+      const baseUrl = document.querySelector('[data-key="backend.base_url"]').value;
+      const envName = document.querySelector('[data-key="backend.api_key_env"]').value;
+      const key = ($("#api-key-input") && $("#api-key-input").value || "").trim();
+      try {
+        $("#settings-status").textContent = langZh ? "正在拉取模型…" : "Fetching models…";
+        // save key if pasted
+        if (key) {
+          await api("/api/settings/api-key", {
+            method: "POST",
+            body: JSON.stringify({ api_key: key, provider: pid, api_key_env: envName }),
+          });
+        }
+        const cfg = collectSettingsFromForm();
+        cfg.backend = cfg.backend || {};
+        cfg.backend.type = pid;
+        cfg.backend.base_url = baseUrl;
+        cfg.backend.api_key_env = envName;
+        await api("/api/settings", { method: "POST", body: JSON.stringify({ config: cfg }) });
+        const data = await api("/api/settings/refresh-models", {
+          method: "POST",
+          body: JSON.stringify({ provider: pid, base_url: baseUrl, apply_suggestions: true }),
+        });
+        state.settings = data;
+        state.liveModels = data.models || [];
+        const box = $("#live-models-box");
+        if (box) {
+          const sample = (data.models || []).slice(0, 12).map(escapeHtml).join(", ");
+          box.innerHTML = langZh
+            ? `已拉取 <strong>${data.count || 0}</strong> 个模型，并自动填入推荐档位。<br/><code>${sample}${(data.models || []).length > 12 ? "…" : ""}</code>`
+            : `Fetched <strong>${data.count || 0}</strong> models and applied slot suggestions.<br/><code>${sample}${(data.models || []).length > 12 ? "…" : ""}</code>`;
+        }
+        $("#settings-status").textContent = langZh
+          ? `模型已更新（${data.count || 0}）`
+          : `Models updated (${data.count || 0})`;
+        renderControl();
+        document.querySelector('.ctab[data-ctab="models"]')?.click();
+      } catch (e) {
+        $("#settings-status").textContent = e.message;
+        const box = $("#live-models-box");
+        if (box) box.innerHTML = `<span class="warn-box" style="display:inline-block">${escapeHtml(e.message)}</span>`;
+      }
+    };
+  }
+
   const m = cfg.models || {};
-  const suggestions = (currentProv && currentProv.suggestions) || {};
+  const live = state.liveModels || [];
+  const suggestions = {
+    ...(currentProv && currentProv.suggestions ? currentProv.suggestions : {}),
+  };
+  // merge live models into every slot suggestion list
+  ["fast", "main", "vision", "reasoning", "embedding", "reranker"].forEach((slot) => {
+    const base = suggestions[slot] || [];
+    suggestions[slot] = Array.from(new Set([...(base || []), ...live]));
+  });
   const slots = catalog.slots || [
     { id: "fast", legacy: "qwen_fast", tier: "C0", label: "Fast" },
     { id: "main", legacy: "qwen_main", tier: "C1/C2", label: "Main" },

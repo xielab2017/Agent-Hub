@@ -59,14 +59,24 @@ def get_ai_agent():
 
 
 def agent_status() -> dict[str, Any]:
+    from .secrets import resolve_api_key
+    from .settings import load_campus_config
+
     cls = get_ai_agent()
     dirs = [str(p) for p in discover_agent_dirs()]
+    cfg = load_campus_config()
+    key = resolve_api_key(cfg)
+    backend = cfg.get("backend") or {}
+    direct_ready = bool(backend.get("base_url") and (key.get("present") or backend.get("type") == "local-ollama"))
     return {
         "available": cls is not None,
+        "direct_llm": direct_ready,
         "agent_dir": str(_agent_dir) if _agent_dir else (dirs[0] if dirs else None),
         "hermes_home": str(hermes_home()),
         "import_error": _import_error,
         "candidates": dirs,
+        "api_key_present": bool(key.get("present")),
+        "api_key_masked": key.get("masked") or "",
     }
 
 
@@ -205,7 +215,17 @@ def _run_agent_streaming(
             agent_input = f"[SYSTEM CONTEXT]\n{preamble}\n\n[USER]\n{msg_text}"
 
         if AIAgent is None:
-            _demo_reply(q, msg_text, assistant_parts, route_info=route_info, preamble=preamble)
+            used = _direct_llm_reply(
+                q,
+                session_id,
+                msg_text,
+                model,
+                assistant_parts,
+                route_info=route_info,
+                preamble=preamble,
+            )
+            if not used:
+                _demo_reply(q, msg_text, assistant_parts, route_info=route_info, preamble=preamble)
         else:
             session = store.get_session(session_id)
             history = list(session.messages[:-1]) if session else []
@@ -292,6 +312,82 @@ def _run_agent_streaming(
                     STREAMS.pop(stream_id, None)
 
             threading.Thread(target=_cleanup, daemon=True).start()
+
+
+def _direct_llm_reply(
+    q: queue.Queue,
+    session_id: str,
+    msg_text: str,
+    model: str,
+    assistant_parts: list[str],
+    *,
+    route_info: dict[str, Any] | None = None,
+    preamble: str = "",
+) -> bool:
+    """Use OpenAI-compatible HTTP when Hermes Agent is absent but API is configured."""
+    from . import llm_client
+    from .secrets import resolve_api_key
+    from .settings import load_campus_config
+
+    cfg = load_campus_config()
+    route_info = route_info or {}
+    provider = str(route_info.get("provider") or (cfg.get("backend") or {}).get("type") or "")
+    key_info = resolve_api_key(cfg, provider=provider if provider != "hybrid" else "")
+    base_url = str(route_info.get("base_url") or (cfg.get("backend") or {}).get("base_url") or "").strip()
+    api_key = key_info.get("key") or ""
+    use_model = (model or route_info.get("model") or "").strip()
+    verify_tls = bool((cfg.get("backend") or {}).get("verify_tls", True))
+    timeout = float((cfg.get("backend") or {}).get("timeout_seconds") or 120)
+
+    if not base_url or not use_model:
+        return False
+    # Ollama often needs no key; others need a key
+    if not api_key and provider not in ("local-ollama",):
+        return False
+
+    session = store.get_session(session_id)
+    history = list(session.messages[:-1]) if session else []
+    messages: list[dict[str, str]] = []
+    if preamble:
+        messages.append({"role": "system", "content": preamble})
+    for m in history:
+        role = m.get("role")
+        content = m.get("content")
+        if role in ("user", "assistant", "system") and isinstance(content, str):
+            messages.append({"role": role, "content": content})
+    messages.append({"role": "user", "content": msg_text})
+
+    _put(
+        q,
+        "meta",
+        {
+            "mode": "direct-llm",
+            "provider": provider,
+            "model": use_model,
+            "base_url": base_url,
+            "key_source": key_info.get("source"),
+        },
+    )
+
+    def on_token(delta: str) -> None:
+        if not delta:
+            return
+        assistant_parts.append(delta)
+        _put(q, "token", {"text": delta})
+
+    text = llm_client.stream_chat(
+        base_url,
+        api_key,
+        model=use_model,
+        messages=messages,
+        timeout=timeout,
+        verify_tls=verify_tls,
+        on_token=on_token,
+    )
+    if text and not assistant_parts:
+        assistant_parts.append(text)
+        _put(q, "token", {"text": text})
+    return True
 
 
 def _demo_reply(
