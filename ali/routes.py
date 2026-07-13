@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
-from . import audit, auth, obsidian, routing, sessions as store, streaming, workflows
+from . import audit, auth, fsutil, obsidian, routing, sessions as store, streaming, workflows
 from .config import REPO_ROOT, RUNTIME, STATIC_DIR, VERSION, local_ips
 from .settings import import_campus_config, load_campus_config, public_settings_view, save_campus_config
 
@@ -101,7 +101,7 @@ def handle_get(handler) -> None:
                 "local_ips": local_ips(),
                 "agent": st,
                 "health": health,
-                "default_route": ali.get("default_route") or "auto",
+                "default_route": "auto" if (ali.get("default_route") in (None, "", "office")) else ali.get("default_route"),
                 "ui": {
                     "language": ali.get("language") or "zh",
                     "theme": ali.get("theme") or "dark",
@@ -133,6 +133,10 @@ def handle_get(handler) -> None:
 
     if path == "/api/obsidian":
         return _json(handler, 200, obsidian.vault_status())
+
+    if path == "/api/fs/list":
+        target = (qs.get("path") or [""])[0]
+        return _json(handler, 200, fsutil.list_dir(target))
 
     if path == "/api/obsidian/notes":
         limit = int((qs.get("limit") or ["40"])[0])

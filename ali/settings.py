@@ -77,7 +77,7 @@ DEFAULT_CAMPUS: dict[str, Any] = {
     "data_policy": "internal",  # internal | restricted | public
     "workspace": "",
     "ali": {
-        "default_route": "office",  # simple | office | vision | reasoning | auto
+        "default_route": "auto",  # simple | office | vision | reasoning | auto
         "show_route_badge": True,
         "language": "zh",  # zh | en
         "theme": "dark",  # dark | light

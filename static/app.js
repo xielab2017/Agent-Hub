@@ -17,7 +17,15 @@ const I18N = {
     "nav.control": "⚙ 控制中心",
     "chat.new": "新对话",
     "empty.title": "校园办公 AI 终端",
-    "empty.body": "Hermes 管任务 · OpenSquilla 式路由 · Obsidian 存知识<br/>从左侧选择办公工作流，或直接对话。",
+    "empty.body": "有 Hermes Agent → 工作流模式（Skill / 工具 / 审批）<br/>无 Hermes → AI 对话模式（直连模型 API）",
+    "mode.workflow": "工作流模式 · Hermes Agent",
+    "mode.ai": "AI 对话模式 · Direct LLM",
+    "mode.demo": "演示模式 · 请配置 API Key 或安装 Hermes",
+    "fs.title": "选择工作路径",
+    "fs.use": "使用此目录",
+    "fs.close": "关闭",
+    "fs.up": "↑ 上级",
+    "auto.hint": "Auto 预览",
     "composer.route": "路由",
     "composer.workspace": "工作区",
     "composer.workspacePh": "可选：工作目录路径",
@@ -73,18 +81,26 @@ const I18N = {
     "nav.control": "⚙ Control Center",
     "chat.new": "New chat",
     "empty.title": "Campus Office AI Terminal",
-    "empty.body": "Hermes runs tasks · OpenSquilla-style routing · Obsidian stores knowledge<br/>Pick an office workflow on the left, or just chat.",
+    "empty.body": "With Hermes Agent → Workflow mode (skills / tools / approvals)<br/>Without Hermes → AI chat mode (direct model API)",
+    "mode.workflow": "Workflow · Hermes Agent",
+    "mode.ai": "AI chat · Direct LLM",
+    "mode.demo": "Demo · set API key or install Hermes",
+    "fs.title": "Choose workspace",
+    "fs.use": "Use this folder",
+    "fs.close": "Close",
+    "fs.up": "↑ Up",
+    "auto.hint": "Auto preview",
     "composer.route": "Route",
     "composer.workspace": "Workspace",
     "composer.workspacePh": "Optional workspace path",
     "composer.inputPh": "Message or workflow input… (Enter to send)",
     "composer.send": "Send",
     "route.auto": "Auto (classify)",
-    "route.simple": "C0 Simple / Qwen fast",
-    "route.office": "C1 Office / Qwen main",
+    "route.simple": "C0 Simple / fast",
+    "route.office": "C1 Office / main",
     "route.c2": "C2 Long-form (gen + review)",
-    "route.reasoning": "C3 Reasoning / DeepSeek",
-    "route.vision": "Vision / Qwen-VL",
+    "route.reasoning": "C3 Reasoning",
+    "route.vision": "Vision",
     "control.title": "Control Center",
     "control.close": "Close",
     "control.appearance": "Appearance",
@@ -304,7 +320,9 @@ async function boot() {
     }
     renderConn(status);
     renderAgent(status);
-    if (status.default_route) $("#route-select").value = status.default_route;
+    // Prefer Auto; only honor non-office saved defaults (office was wrongly used as default before)
+    const dr = status.default_route || "auto";
+    $("#route-select").value = (dr === "office" || !dr) ? "auto" : dr;
     if (status.auth_required && !status.authenticated && !state.token) {
       showLogin(true);
       applyI18n();
@@ -335,21 +353,134 @@ function renderConn(status) {
   $("#conn-info").innerHTML = lines.map(escapeHtml).join("<br>");
 }
 
+function renderModeBanner(status) {
+  let el = $("#mode-banner");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "mode-banner";
+    el.className = "mode-banner";
+    const main = $(".main");
+    const topbar = $(".topbar");
+    if (main && topbar) main.insertBefore(el, topbar.nextSibling);
+  }
+  const agent = (status && status.agent) || {};
+  if (agent.available) {
+    el.innerHTML = `<strong>${escapeHtml(t("mode.workflow"))}</strong>`;
+  } else if (agent.direct_llm) {
+    el.innerHTML = `<strong>${escapeHtml(t("mode.ai"))}</strong> — ${escapeHtml(agent.api_key_masked || "API")}`;
+  } else {
+    el.innerHTML = `<strong>${escapeHtml(t("mode.demo"))}</strong>`;
+  }
+}
+
 function renderAgent(status) {
   const el = $("#agent-badge");
   const agent = status.agent || {};
   const health = status.health || {};
   const policy = health.data_policy || "";
   if (agent.available) {
-    el.textContent = `${t("agent.ready")} · ${policy || "office"}`;
+    el.textContent = `${t("mode.workflow")} · ${policy || "office"}`;
     el.className = "badge ok";
   } else if (agent.direct_llm) {
-    el.textContent = `Direct LLM · ${policy || "office"}`;
+    el.textContent = `${t("mode.ai")} · ${policy || "office"}`;
     el.className = "badge ok";
   } else {
-    el.textContent = `${t("agent.demo")} · ${policy || "office"}`;
+    el.textContent = `${t("mode.demo")}`;
     el.className = "badge warn";
   }
+  renderModeBanner(status);
+}
+
+function setRouteBadge(info) {
+  if (!info) return;
+  const auto = info.auto ? "AUTO→" : "";
+  const label = `${auto}${info.tier || "?"} / ${info.route_key || ""}${info.model ? " · " + info.model : ""}`;
+  $("#route-badge").textContent = label;
+  $("#route-badge").title = `${info.provider || ""} ${info.model || ""}`.trim();
+}
+
+let _autoTimer = null;
+async function previewAutoRoute() {
+  const hint = $("#auto-route-hint");
+  if (!hint) return;
+  const route = $("#route-select").value || "auto";
+  const text = $("#input").value.trim();
+  if (route !== "auto") {
+    hint.textContent = "";
+    return;
+  }
+  if (!text) {
+    hint.textContent = `${t("auto.hint")}: …`;
+    return;
+  }
+  try {
+    const info = await api("/api/routing/resolve", {
+      method: "POST",
+      body: JSON.stringify({ route: "auto", message: text }),
+    });
+    hint.textContent = `${t("auto.hint")}: ${info.tier} → ${info.route_key} · ${info.model || "(no model)"}`;
+    setRouteBadge(info);
+  } catch (_) {
+    hint.textContent = "";
+  }
+}
+
+function scheduleAutoPreview() {
+  clearTimeout(_autoTimer);
+  _autoTimer = setTimeout(previewAutoRoute, 280);
+}
+
+let fsState = { path: "", parent: null };
+
+async function openFsBrowser(startPath) {
+  $("#fs-overlay").classList.remove("hidden");
+  $("#fs-title").textContent = t("fs.title");
+  $("#btn-fs-use").textContent = t("fs.use");
+  $("#btn-fs-close").textContent = t("fs.close");
+  $("#btn-fs-up").textContent = t("fs.up");
+  await loadFs(startPath || $("#workspace-input").value.trim() || "");
+}
+
+async function loadFs(path) {
+  const data = await api(`/api/fs/list?path=${encodeURIComponent(path || "")}`);
+  if (!data.ok) {
+    $("#fs-list").innerHTML = `<div class="muted">${escapeHtml(data.error || "error")}</div>`;
+    return;
+  }
+  fsState.path = data.path;
+  fsState.parent = data.parent;
+  $("#fs-path").value = data.path;
+  const shorts = $("#fs-shortcuts");
+  shorts.innerHTML = "";
+  (data.shortcuts || []).forEach((s) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "btn ghost chip";
+    b.textContent = s.label;
+    b.addEventListener("click", () => loadFs(s.path));
+    shorts.appendChild(b);
+  });
+  const list = $("#fs-list");
+  list.innerHTML = "";
+  (data.entries || []).forEach((e) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "fs-item";
+    b.textContent = `📁 ${e.name}`;
+    b.addEventListener("click", () => loadFs(e.path));
+    b.addEventListener("dblclick", () => {
+      $("#workspace-input").value = e.path;
+      closeFsBrowser();
+    });
+    list.appendChild(b);
+  });
+  if (!(data.entries || []).length) {
+    list.innerHTML = `<div class="muted">(empty)</div>`;
+  }
+}
+
+function closeFsBrowser() {
+  $("#fs-overlay").classList.add("hidden");
 }
 
 async function refreshSessions() {
@@ -483,12 +614,6 @@ function appendMessage(m, scroll = true) {
 function updateSendEnabled() {
   const has = $("#input").value.trim().length > 0;
   $("#btn-send").disabled = !has || state.streaming || !state.currentId;
-}
-
-function setRouteBadge(info) {
-  if (!info) return;
-  const label = `${info.tier || "?"}→${info.route_key || ""}${info.model ? " · " + info.model : ""}`;
-  $("#route-badge").textContent = label;
 }
 
 async function sendMessage(overrideText, extra = {}) {
@@ -1195,6 +1320,26 @@ $("#btn-save-settings").addEventListener("click", () => saveSettings().catch((e)
 $("#wf-cancel").addEventListener("click", () => $("#wf-overlay").classList.add("hidden"));
 $("#wf-run").addEventListener("click", () => runWorkflow().catch((e) => alert(e.message)));
 
+$("#btn-browse-ws")?.addEventListener("click", () => openFsBrowser().catch((e) => alert(e.message)));
+$("#btn-fs-close")?.addEventListener("click", closeFsBrowser);
+$("#btn-fs-use")?.addEventListener("click", () => {
+  if (fsState.path) $("#workspace-input").value = fsState.path;
+  closeFsBrowser();
+});
+$("#btn-fs-up")?.addEventListener("click", () => {
+  if (fsState.parent) loadFs(fsState.parent).catch((e) => alert(e.message));
+});
+$("#route-select")?.addEventListener("change", () => {
+  scheduleAutoPreview();
+  const v = $("#route-select").value;
+  if (v !== "auto") {
+    api("/api/routing/resolve", {
+      method: "POST",
+      body: JSON.stringify({ route: v, message: $("#input").value || "" }),
+    }).then(setRouteBadge).catch(() => {});
+  }
+});
+
 $("#btn-lang").addEventListener("click", () => {
   setPrefs({ language: state.prefs.language === "zh" ? "en" : "zh" }, { syncServer: true });
 });
@@ -1204,6 +1349,7 @@ $("#btn-theme").addEventListener("click", () => {
 
 $("#input").addEventListener("input", () => {
   updateSendEnabled();
+  scheduleAutoPreview();
   const el = $("#input");
   el.style.height = "auto";
   el.style.height = Math.min(el.scrollHeight, 160) + "px";

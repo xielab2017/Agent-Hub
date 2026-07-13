@@ -57,26 +57,67 @@ def _model_for_slot(cfg: dict[str, Any], slot: str) -> str:
     models = cfg.get("models") or {}
     routing = cfg.get("routing") or {}
     model_key = routing.get(slot) or slot
-    # model_key may already be a models.* key
-    return (models.get(model_key) or models.get(slot) or "").strip()
+    # Prefer explicit model id from models map (legacy or generic)
+    for key in (model_key, slot, f"qwen_{slot}" if not slot.startswith("qwen_") else slot):
+        val = (models.get(key) or "").strip()
+        if val:
+            return val
+    # Generic slot names
+    generic = {"simple": "fast", "office": "main", "vision": "vision", "reasoning": "reasoning"}.get(slot)
+    if generic:
+        val = (models.get(generic) or "").strip()
+        if val:
+            return val
+    return ""
 
 
 def classify_message(text: str) -> str:
     """Heuristic auto-tier when route=auto."""
-    t = (text or "").lower()
-    vision_kw = ("ppt", "pdf", "图片", "图表", "截图", "image", "figure", "slide", "扫描")
+    raw = (text or "").strip()
+    t = raw.lower()
+    n = len(raw)
+
+    vision_kw = (
+        "ppt", "pdf", "图片", "图表", "截图", "image", "figure", "slide", "扫描",
+        "ocr", "截屏", "看图", "多模态", "vision",
+    )
     if any(k in t for k in vision_kw):
         return "Vision"
-    reason_kw = ("推理", "证明", "算法", "代码审查", "code review", "架构决策", "debug", "复杂度")
-    if any(k in t for k in reason_kw) or len(text) > 2500:
+
+    reason_kw = (
+        "推理", "证明", "算法", "代码审查", "code review", "架构决策", "debug",
+        "复杂度", "实现", "重构", "bug", "traceback", "写代码", "编程", "leetcode",
+        "prove", "optimize", "设计方案",
+    )
+    if any(k in t for k in reason_kw) or n > 2500:
         return "C3"
-    long_kw = ("长文", "论文", "综述", "科研", "数据解释", "报告全文")
-    if any(k in t for k in long_kw) or len(text) > 1200:
+
+    long_kw = (
+        "长文", "论文", "综述", "科研", "数据解释", "报告全文", "详细分析",
+        "研究报告", "调研", "白皮书",
+    )
+    if any(k in t for k in long_kw) or n > 1200:
         return "C2"
-    simple_kw = ("分类", "命名", "短摘要", "一句话", "标签")
-    if any(k in t for k in simple_kw) and len(text) < 400:
+
+    office_kw = (
+        "邮件", "会议", "纪要", "通知", "公文", "周报", "日程", "审批",
+        "总结", "起草", "回复", "email", "meeting", "memo", "写一封", "帮我写",
+    )
+    if any(k in t for k in office_kw):
+        return "C1"
+
+    simple_kw = (
+        "分类", "命名", "短摘要", "一句话", "标签", "翻译成", "改个名",
+        "hello", "hi", "你好", "在吗", "测试", "ping", "哈哈",
+    )
+    # short chit-chat / trivial → C0 (fast model)
+    if n < 24 or (any(k in t for k in simple_kw) and n < 400):
         return "C0"
-    return "C1"
+
+    # medium-length default office
+    if n < 800:
+        return "C1"
+    return "C2"
 
 
 def resolve_route(
@@ -159,6 +200,7 @@ def resolve_route(
         "model": model,
         "model_slot": (routing.get(route_key) or route_key),
         "mode": mode if mode == "hybrid" or backend_type == "hybrid" else "single",
+        "auto": raw in ("auto", ""),
         "provider": provider_id,
         "backend_type": backend_type,
         "base_url": base_url,

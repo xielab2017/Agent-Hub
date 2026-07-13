@@ -84,9 +84,13 @@
               <option value="vision" data-i18n="route.vision">Vision / Qwen-VL</option>
             </select>
           </label>
-          <label class="grow">
+          <label class="grow workspace-field">
             <span data-i18n="composer.workspace">工作区</span>
-            <input id="workspace-input" type="text" data-i18n-placeholder="composer.workspacePh" placeholder="可选：工作目录路径" />
+            <div class="workspace-row">
+              <input id="workspace-input" type="text" data-i18n-placeholder="composer.workspacePh" placeholder="可选：工作目录路径" />
+              <button type="button" id="btn-browse-ws" class="btn ghost" title="Browse">…</button>
+            </div>
+            <span id="auto-route-hint" class="auto-hint muted"></span>
           </label>
         </div>
         <div class="composer-row">
@@ -95,6 +99,22 @@
         </div>
       </footer>
     </main>
+  </div>
+
+  <div id="fs-overlay" class="overlay hidden">
+    <div class="control-card fs-card">
+      <div class="control-head">
+        <h2 id="fs-title">选择工作路径</h2>
+        <button type="button" id="btn-fs-close" class="btn ghost">关闭</button>
+      </div>
+      <div class="fs-toolbar">
+        <button type="button" id="btn-fs-up" class="btn ghost">↑ 上级</button>
+        <input id="fs-path" type="text" readonly />
+        <button type="button" id="btn-fs-use" class="btn primary">使用此目录</button>
+      </div>
+      <div id="fs-shortcuts" class="fs-shortcuts"></div>
+      <div id="fs-list" class="fs-list"></div>
+    </div>
   </div>
 
   <div id="control-overlay" class="overlay hidden">

@@ -127,6 +127,8 @@ def start_chat(
     # Prefer explicit model, else routed model
     resolved_model = (model or "").strip() or route_info.get("model") or ""
     ws = (workspace or "").strip() or (cfg.get("workspace") or "")
+    route_info = dict(route_info)
+    route_info["workspace"] = ws
     preamble = system or routing.system_preamble(route_info, cfg)
 
     stream_id = str(uuid.uuid4())
@@ -350,6 +352,19 @@ def _direct_llm_reply(
     messages: list[dict[str, str]] = []
     if preamble:
         messages.append({"role": "system", "content": preamble})
+    # Include workspace hint for direct LLM (no shell tools)
+    from .settings import load_campus_config as _load
+
+    _cfg = _load()
+    # workspace passed via route_info optional field set by caller
+    ws = (route_info or {}).get("workspace") or _cfg.get("workspace") or ""
+    if ws:
+        messages.append(
+            {
+                "role": "system",
+                "content": f"Working directory for this session: {ws}. Prefer paths relative to it when discussing files.",
+            }
+        )
     for m in history:
         role = m.get("role")
         content = m.get("content")
