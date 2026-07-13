@@ -221,11 +221,18 @@ def handle_post(handler) -> None:
     if path == "/api/settings/api-key":
         body = _read_json(handler)
         from .secrets import set_api_key
-        from .providers import looks_like_secret
+        from .providers import (
+            apply_provider_preset,
+            detect_provider_from_key,
+            key_provider_mismatch,
+            looks_like_secret,
+            get_provider,
+        )
 
         raw_key = str(body.get("api_key") or body.get("key") or "").strip()
         provider = str(body.get("provider") or (load_campus_config().get("backend") or {}).get("type") or "default").strip()
         env_name = str(body.get("api_key_env") or (load_campus_config().get("backend") or {}).get("api_key_env") or "").strip()
+        auto_switch = body.get("auto_switch", True)
 
         # If user pasted key into env_name by mistake, treat as key
         if looks_like_secret(env_name) and not raw_key:
@@ -241,17 +248,28 @@ def handle_post(handler) -> None:
         if not raw_key:
             return _json(handler, 400, {"error": "api_key required"})
 
+        detected = detect_provider_from_key(raw_key)
+        switched = None
+        mismatch = key_provider_mismatch(provider, raw_key)
+        if mismatch and auto_switch and detected and get_provider(detected):
+            # Auto-switch backend to match the key (fixes sk-or- on nvidia-nim etc.)
+            cfg = apply_provider_preset(load_campus_config(), detected, fill_models=True)
+            save_campus_config(cfg)
+            switched = {"from": provider, "to": detected}
+            provider = detected
+            env_name = str((cfg.get("backend") or {}).get("api_key_env") or "")
+            mismatch = None
+
         # Save under provider id and env name slot
         info = set_api_key(provider, raw_key)
         if env_name and not looks_like_secret(env_name):
             set_api_key(env_name, raw_key)
-            # persist correct env name in config
             cfg = load_campus_config()
             cfg.setdefault("backend", {})["api_key_env"] = env_name
+            if provider != "hybrid":
+                cfg["backend"]["type"] = provider
             save_campus_config(cfg)
         elif provider:
-            from .providers import get_provider
-
             prov = get_provider(provider)
             if prov and prov.get("api_key_env"):
                 cfg = load_campus_config()
@@ -261,9 +279,21 @@ def handle_post(handler) -> None:
                 save_campus_config(cfg)
                 set_api_key(str(prov["api_key_env"]), raw_key)
 
-        audit.log_event("api_key_save", {"provider": provider, "present": True})
+        audit.log_event("api_key_save", {"provider": provider, "present": True, "switched": switched})
         view = public_settings_view()
-        view["api_key_saved"] = {"provider": provider, "masked": info.get("masked")}
+        view["api_key_saved"] = {
+            "provider": provider,
+            "masked": info.get("masked"),
+            "detected": detected,
+            "switched": switched,
+            "mismatch": mismatch,
+        }
+        if switched:
+            view["warning"] = (
+                f"密钥格式匹配 {switched['to']}，已自动将后端从 {switched['from']} 切换为 {switched['to']}。"
+            )
+        elif mismatch:
+            view["warning"] = mismatch.get("message")
         return _json(handler, 200, {"ok": True, **view})
 
     if path == "/api/settings/refresh-models":

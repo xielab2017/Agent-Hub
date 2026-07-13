@@ -227,6 +227,13 @@ def stream_chat(
             detail = exc.read().decode("utf-8", errors="replace")[:800]
         except Exception:  # noqa: BLE001
             detail = str(exc)
+        if exc.code == 401:
+            raise RuntimeError(
+                "HTTP 401 Unauthorized — API Key 无效，或密钥与后端厂商不匹配。"
+                "OpenRouter 密钥以 sk-or- 开头（后端须选 openrouter）；"
+                "NVIDIA 密钥以 nvapi- 开头（后端须选 nvidia-nim）。"
+                f" 原始响应: {detail[:300]}"
+            ) from exc
         # Non-stream fallback
         if exc.code in (400, 404, 415, 422):
             return _chat_once(base_url, api_key, model=model, messages=messages, timeout=timeout, verify_tls=verify_tls, on_token=on_token)

@@ -486,6 +486,89 @@ def looks_like_secret(value: str) -> bool:
     return False
 
 
+# Key prefix → provider id
+_KEY_PREFIX_PROVIDERS: list[tuple[str, str]] = [
+    ("nvapi-", "nvidia-nim"),
+    ("sk-or-", "openrouter"),
+    ("sk-ant-", "anthropic"),
+    ("sk-proj-", "openai"),
+    ("sk-litellm-", "openai"),
+]
+
+
+def detect_provider_from_key(api_key: str) -> str | None:
+    k = (api_key or "").strip().lower()
+    if not k:
+        return None
+    for prefix, provider_id in _KEY_PREFIX_PROVIDERS:
+        if k.startswith(prefix):
+            return provider_id
+    # generic sk- often OpenAI (but not sk-or / sk-ant)
+    if k.startswith("sk-") and not k.startswith(("sk-or-", "sk-ant-")):
+        return "openai"
+    return None
+
+
+def key_provider_mismatch(provider_id: str, api_key: str) -> dict[str, Any] | None:
+    """Return mismatch info if key format conflicts with selected provider."""
+    detected = detect_provider_from_key(api_key)
+    pid = (provider_id or "").strip()
+    if not detected or not pid or pid in ("hybrid", "campus-openai-compatible", "local-ollama"):
+        return None
+    # openrouter keys only work on openrouter
+    if detected == "openrouter" and pid != "openrouter":
+        return {
+            "selected": pid,
+            "detected": "openrouter",
+            "message": (
+                f"当前后端是 {pid}，但密钥是 OpenRouter 格式（sk-or-…）。"
+                f"请把后端改为 openrouter，或粘贴对应厂商的密钥"
+                f"（NVIDIA 应为 nvapi-…）。"
+            ),
+            "message_en": (
+                f"Backend is {pid} but key looks like OpenRouter (sk-or-…). "
+                f"Switch backend to openrouter, or paste a matching key "
+                f"(NVIDIA keys start with nvapi-)."
+            ),
+        }
+    if detected == "nvidia-nim" and pid != "nvidia-nim":
+        return {
+            "selected": pid,
+            "detected": "nvidia-nim",
+            "message": (
+                f"当前后端是 {pid}，但密钥是 NVIDIA 格式（nvapi-…）。"
+                f"请把后端改为 nvidia-nim，或粘贴对应厂商密钥。"
+            ),
+            "message_en": (
+                f"Backend is {pid} but key looks like NVIDIA (nvapi-…). "
+                f"Switch backend to nvidia-nim or paste a matching key."
+            ),
+        }
+    if detected == "openai" and pid not in ("openai", "openrouter"):
+        # OpenAI keys sometimes used via compatible proxies — soft warn only for nvidia
+        if pid == "nvidia-nim":
+            return {
+                "selected": pid,
+                "detected": "openai",
+                "message": (
+                    "当前后端是 nvidia-nim，但密钥像 OpenAI（sk-…）。"
+                    "NVIDIA 密钥一般以 nvapi- 开头；OpenRouter 以 sk-or- 开头。"
+                ),
+                "message_en": (
+                    "Backend is nvidia-nim but key looks like OpenAI (sk-…). "
+                    "NVIDIA keys usually start with nvapi-; OpenRouter with sk-or-."
+                ),
+            }
+    if detected == "anthropic" and pid != "anthropic":
+        return {
+            "selected": pid,
+            "detected": "anthropic",
+            "message": f"密钥像 Anthropic（sk-ant-…），但后端是 {pid}。请改为 anthropic 或换密钥。",
+            "message_en": f"Key looks like Anthropic (sk-ant-…) but backend is {pid}.",
+        }
+    return None
+
+
 def apply_provider_preset(cfg: dict[str, Any], provider_id: str, *, fill_models: bool = True) -> dict[str, Any]:
     """Return a new config with backend (+ optional models/routing) from provider catalog."""
     out = deepcopy(cfg)

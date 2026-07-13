@@ -347,6 +347,32 @@ def _direct_llm_reply(
     if not api_key and provider not in ("local-ollama",):
         return False
 
+    from .providers import apply_provider_preset, detect_provider_from_key, key_provider_mismatch, get_provider
+    from .settings import save_campus_config
+
+    mismatch = key_provider_mismatch(provider, api_key)
+    if mismatch:
+        detected = detect_provider_from_key(api_key)
+        if detected and get_provider(detected):
+            # Auto-heal: switch provider to match the key, then continue
+            cfg = apply_provider_preset(cfg, detected, fill_models=True)
+            save_campus_config(cfg)
+            provider = detected
+            base_url = str((cfg.get("backend") or {}).get("base_url") or "")
+            # Prefer model from new provider defaults if old model empty/wrong
+            use_model = (cfg.get("models") or {}).get("qwen_main") or (cfg.get("models") or {}).get("main") or use_model
+            _put(
+                q,
+                "meta",
+                {
+                    "mode": "direct-llm",
+                    "auto_switched_provider": detected,
+                    "reason": mismatch.get("message"),
+                },
+            )
+        else:
+            raise RuntimeError(mismatch.get("message") or "API key does not match backend provider")
+
     session = store.get_session(session_id)
     history = list(session.messages[:-1]) if session else []
     messages: list[dict[str, str]] = []
