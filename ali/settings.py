@@ -88,6 +88,8 @@ DEFAULT_CAMPUS: dict[str, Any] = {
         # agent = Hermes/OpenClaw tools (hermes-webui style); direct = Hub HTTP chat only
         "hub_chat_mode": "agent",  # agent | direct
         "hub_fast_chat": False,  # legacy alias: True ⇒ force direct (kept for old configs)
+        # recommended | observe | disabled — written into Hermes hub_route_contract.json
+        "token_optimizer_mode": "recommended",
         "language": "zh",  # zh | en
         "theme": "dark",  # dark | light
         "accent": "ocean",  # ocean | forest | amber | rose | slate | teal
@@ -102,6 +104,10 @@ DEFAULT_CAMPUS: dict[str, Any] = {
             "startup",
             "vault_write_formal",
         ],
+    },
+    "webui": {
+        "root": "",  # optional absolute path to hermes-webui checkout
+        "port": 8787,
     },
     "search": {
         "enabled": True,

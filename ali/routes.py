@@ -36,6 +36,7 @@ from . import (
     streaming,
     uploads,
     websearch,
+    webui_bridge,
     workflows,
 )
 from .config import APP_NAME, REPO_ROOT, RUNTIME, STATIC_DIR, VERSION, local_ips
@@ -223,6 +224,48 @@ def handle_get(handler) -> None:
 
         return _json(handler, 200, catalog_payload())
 
+    if path == "/api/usage":
+        # ── Token usage summary (OpenSquilla) ───────────────────────────────
+        tracker = streaming.get_usage_tracker()
+        has_squilla = streaming.get_has_squilla()
+        if tracker is None:
+            return _json(handler, 200, {
+                "ok": False,
+                "available": False,
+                "message": "OpenSquilla UsageTracker not available",
+            })
+        all_sessions = tracker.all_sessions()
+        rows = []
+        total_input = total_output = total_cost = total_cache_read = total_cache_write = 0
+        for sid, usage in all_sessions.items():
+            rows.append({
+                "sessionKey": sid,
+                "inputTokens": usage.input_tokens,
+                "outputTokens": usage.output_tokens,
+                "cacheReadTokens": usage.cache_read_tokens,
+                "cacheWriteTokens": usage.cache_write_tokens,
+                "costUsd": round(usage.total_cost, 8),
+                "billedCostUsd": round(usage.billed_cost, 8),
+                "model": usage.model_id,
+                "provider": getattr(usage, "provider", ""),
+            })
+            total_input += usage.input_tokens
+            total_output += usage.output_tokens
+            total_cost += usage.total_cost
+            total_cache_read += usage.cache_read_tokens
+            total_cache_write += usage.cache_write_tokens
+        return _json(handler, 200, {
+            "ok": True,
+            "available": True,
+            "totalSessions": len(rows),
+            "totalInputTokens": total_input,
+            "totalOutputTokens": total_output,
+            "totalCacheReadTokens": total_cache_read,
+            "totalCacheWriteTokens": total_cache_write,
+            "totalCostUsd": round(total_cost, 8),
+            "sessions": rows,
+        })
+
     if path == "/api/routing":
         from .providers import model_options_payload
 
@@ -333,6 +376,9 @@ def handle_get(handler) -> None:
 
     if path == "/api/runtimes":
         return _json(handler, 200, runtimes.list_runtimes())
+
+    if path == "/api/webui/status":
+        return _json(handler, 200, webui_bridge.status(load_campus_config()))
 
     if path == "/api/home":
         return _json(handler, 200, home.home_status())
@@ -466,6 +512,10 @@ def handle_post(handler) -> None:
         saved = save_campus_config(cfg)
         audit.log_event("settings_save", {"keys": list(saved.keys())})
         hermes_sync = _sync_hermes_safe(saved)
+        try:
+            route_contract = webui_bridge.export_route_contract(saved)
+        except Exception as exc:  # noqa: BLE001
+            route_contract = {"ok": False, "error": str(exc)}
         view = public_settings_view()
         if saved.get("_warning"):
             view["warning"] = saved["_warning"]
@@ -476,6 +526,7 @@ def handle_post(handler) -> None:
                 "ok": True,
                 "config": {k: v for k, v in saved.items() if not str(k).startswith("_")},
                 "hermes_sync": hermes_sync,
+                "route_contract": route_contract,
                 **view,
             },
         )
@@ -1113,6 +1164,45 @@ def handle_post(handler) -> None:
             return _json(handler, 200, result)
         except ValueError as exc:
             return _json(handler, 400, {"error": str(exc)})
+
+    if path == "/api/webui/start":
+        cfg = load_campus_config()
+        body = _read_json(handler)
+        sync = bool(body.get("sync", True))
+        if sync:
+            result = webui_bridge.sync_before_open(cfg)
+        else:
+            result = webui_bridge.ensure_running(cfg)
+        audit.log_event("webui_start", {"ok": result.get("ok"), "healthy": result.get("healthy")})
+        # Always 200: front-end api() throws on non-2xx; surface health in body.
+        return _json(handler, 200, result)
+
+    if path == "/api/webui/open":
+        cfg = load_campus_config()
+        body = _read_json(handler)
+        sync = bool(body.get("sync", True))
+        embedded = body.get("embedded", True)
+        if isinstance(embedded, str):
+            embedded = embedded.lower() not in ("0", "false", "no")
+        profile = str(body.get("profile") or "").strip()
+        if sync:
+            started = webui_bridge.sync_before_open(cfg)
+        else:
+            started = webui_bridge.ensure_running(cfg)
+        url = webui_bridge.open_url(cfg, embedded=bool(embedded), profile=profile)
+        payload = {
+            **started,
+            "url": url,
+            "open_url": url,
+            "embedded": bool(embedded),
+        }
+        audit.log_event("webui_open", {"url": url, "healthy": started.get("healthy")})
+        return _json(handler, 200, payload)
+
+    if path == "/api/webui/stop":
+        result = webui_bridge.stop(load_campus_config())
+        audit.log_event("webui_stop", {"stopped": result.get("stopped")})
+        return _json(handler, 200, result)
 
     if path == "/api/ecosystem/activate":
         body = _read_json(handler)

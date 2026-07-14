@@ -1,5 +1,17 @@
 # Changelog
 
+## v3.0.0 — 2026-07-15
+
+Hermes-WebUI fusion: Agent Hub as control-plane shell with deep Hermes sessions.
+
+- `ali/webui_bridge.py`: discover/start/stop Hermes-WebUI sharing `HERMES_HOME`
+- APIs: `GET /api/webui/status`, `POST /api/webui/start|open|stop`
+- UI: 「Hermes 深度会话」fullscreen iframe + Claws panel WebUI controls
+- Export `{HERMES_HOME}/webui/hub_route_contract.json` for WebUI token optimizer (C0–C3)
+- Sync Hub→Hermes before opening deep sessions
+
+Companion WebUI changes live in the hermes-webui checkout (`docs/agent-hub-bridge.md`).
+
 ## v2.0.0 — 2026-07-14
 
 Unified model routing, agent configuration, resilient provider settings, and adaptive chat layout.

@@ -14,6 +14,102 @@ from typing import Any, Callable
 from . import sessions as store
 from .config import discover_agent_dirs, hermes_home
 
+# ── OpenSquilla token optimization ──────────────────────────────────────────────
+try:
+    from opensquilla.engine.usage import UsageTracker, estimate_cost, lookup_price
+    _USAGE_TRACKER = UsageTracker()
+    _HAS_SQUILLA = True
+except Exception:
+    _USAGE_TRACKER = None
+    _HAS_SQUILLA = False
+
+try:
+    import tiktoken
+    _ENCODERS: dict[str, Any] = {}
+    def _count_tokens(text: str, model: str = "gpt-4o") -> int:
+        if not text:
+            return 0
+        try:
+            enc_name = "cl100k_base"
+            if "o1" in model.lower() or "o3" in model.lower():
+                enc_name = "o200k_base"
+            elif "4o" in model.lower():
+                enc_name = "cl100k_base"
+            elif "o3-mini" in model.lower():
+                enc_name = "o200k_base"
+            enc = _ENCODERS.get(enc_name)
+            if enc is None:
+                enc = tiktoken.get_encoding(enc_name)
+                _ENCODERS[enc_name] = enc
+            return len(enc.encode(text or ""))
+        except Exception:
+            return max(1, len(text) // 4)
+except Exception:
+    def _count_tokens(text: str, model: str = "gpt-4o") -> int:
+        return max(1, len(text) // 4)
+
+
+def _track_usage(
+    session_id: str,
+    model: str,
+    input_tokens: int,
+    output_tokens: int,
+    cache_read_tokens: int = 0,
+    cache_write_tokens: int = 0,
+    billed_cost: float = 0.0,
+    provider: str = "",
+) -> dict[str, Any]:
+    """Record usage and return the snapshot dict for SSE events."""
+    if _USAGE_TRACKER is not None:
+        _USAGE_TRACKER.add(
+            session_key=session_id,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            model_id=model,
+            cache_read_tokens=cache_read_tokens,
+            cache_write_tokens=cache_write_tokens,
+            billed_cost=billed_cost,
+            provider=provider,
+        )
+        snap = _USAGE_TRACKER.session_snapshot(session_id)
+        if snap:
+            return {
+                "inputTokens": snap.input_tokens,
+                "outputTokens": snap.output_tokens,
+                "cacheReadTokens": snap.cache_read_tokens,
+                "cacheWriteTokens": snap.cache_write_tokens,
+                "costUsd": round(snap.cost_usd, 8),
+                "billedCostUsd": round(snap.billed_cost, 8),
+            }
+    # Fallback: estimate from token counts
+    price = lookup_price(model, provider) if _HAS_SQUILLA else None
+    est = estimate_cost(
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        cache_read_tokens=cache_read_tokens,
+        cache_write_tokens=cache_write_tokens,
+        price=price,
+    ) if price else None
+    return {
+        "inputTokens": input_tokens,
+        "outputTokens": output_tokens,
+        "cacheReadTokens": cache_read_tokens,
+        "cacheWriteTokens": cache_write_tokens,
+        "costUsd": round(est.cost_usd, 8) if est else 0.0,
+        "billedCostUsd": 0.0,
+    }
+
+
+def get_usage_tracker() -> Any:
+    """Return the shared UsageTracker for the /api/usage endpoint."""
+    return _USAGE_TRACKER
+
+
+def get_has_squilla() -> bool:
+    return _HAS_SQUILLA
+
+
+# ── Stream queues ─────────────────────────────────────────────────────────────
 # stream_id -> Queue of SSE event dicts
 STREAMS: dict[str, queue.Queue] = {}
 # session_id -> stream_id currently running
@@ -559,6 +655,13 @@ def start_chat(
     route_info = routing.resolve_route(effective_route, msg, cfg)
     if route_info.get("blocked"):
         raise ValueError(route_info.get("block_reason") or "route blocked by data_policy")
+    # Keep Hermes-WebUI token_optimizer contract aligned with Hub routing.
+    try:
+        from . import webui_bridge
+
+        webui_bridge.export_route_contract(cfg, last_decision=route_info)
+    except Exception:
+        pass
 
     # Prefer subagent dedicated model (speed/specialization), else UI/route model
     ali = cfg.get("ali") if isinstance(cfg.get("ali"), dict) else {}
@@ -1398,6 +1501,38 @@ def _run_agent_streaming(
             assistant_msg["grounding_check"] = {"ok": True, "soft": True}
 
         store.append_messages(session_id, assistant_msg)
+
+        # ── Token usage tracking (OpenSquilla) ─────────────────────────────
+        model_used = (
+            route_info.get("model")
+            or (route_public or {}).get("model")
+            or "unknown"
+        )
+        provider_used = (
+            route_info.get("provider")
+            or (route_public or {}).get("provider")
+            or ""
+        )
+        # Count tokens from the conversation
+        history_text = ""
+        for h in clean_history:
+            role = h.get("role", "user")
+            content = h.get("content") or ""
+            history_text += f"{role}: {content}\n\n"
+        input_text = history_text + f"user: {msg_text}\n"
+        output_text = final_text or ""
+        input_toks = _count_tokens(input_text, model_used)
+        output_toks = _count_tokens(output_text, model_used)
+        usage_data = _track_usage(
+            session_id=session_id,
+            model=model_used,
+            input_tokens=input_toks,
+            output_tokens=output_toks,
+            cache_read_tokens=0,
+            cache_write_tokens=0,
+            billed_cost=0.0,
+            provider=provider_used,
+        )
         done_payload: dict[str, Any] = {
             "session_id": session_id,
             "content": final_text,
@@ -1405,6 +1540,8 @@ def _run_agent_streaming(
             "message_id": assistant_msg.get("id"),
             "grounding_check": assistant_msg.get("grounding_check") or {"ok": True, "soft": True},
             "healed": bool(route_info.get("_heal_attempted")),
+            # Token usage — consumed by the webui widget
+            "usage": usage_data,
         }
         if assistant_msg.get("elapsed_ms") is not None:
             done_payload["elapsed_ms"] = assistant_msg["elapsed_ms"]
@@ -1572,6 +1709,7 @@ def _run_agent_streaming(
                         "healed": True,
                         "message_id": assistant_msg.get("id"),
                         "route": route_public,
+                        "usage": usage_data,
                     }
                     if assistant_msg.get("elapsed_ms") is not None:
                         done_payload["elapsed_ms"] = assistant_msg["elapsed_ms"]

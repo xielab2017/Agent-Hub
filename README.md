@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/xielab2017/Agent-Hub/releases"><img alt="version" src="https://img.shields.io/badge/version-2.0.0-rose.svg" /></a>
+  <a href="https://github.com/xielab2017/Agent-Hub/releases"><img alt="version" src="https://img.shields.io/badge/version-3.0.0-rose.svg" /></a>
   <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-MIT-blue.svg" /></a>
   <a href="https://www.python.org/"><img alt="python" src="https://img.shields.io/badge/python-%3E%3D3.9-brightgreen.svg" /></a>
   <a href="https://github.com/xielab2017/Agent-Hub"><img alt="platform" src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg" /></a>
@@ -34,11 +34,12 @@
 | **并行子代理** | 自然语言或点选多 Slot，看板并行 + 合成 |
 | **Soul / Skills / MCP** | 多身份、技能库、MCP Hub |
 | **控制中心** | 模型、路由、生态、外观 Logo、定时任务、自我进化等 |
+| **Hermes 深度会话** | 一键启动/嵌入 [Hermes-WebUI](https://github.com/nesquena/hermes-webui)，共享 `HERMES_HOME` 与 C0–C3 路由契约 |
 | **跨设备** | 默认监听 `0.0.0.0:8765`，同局域网可用 IP 访问 |
 
 <p align="center">
   <img src="docs/images/screenshot-chat.jpg" alt="主界面：任务与会话" width="92%" />
-  <br/><em>主界面 · v2.0.0</em>
+  <br/><em>主界面 · v3.0.0</em>
 </p>
 
 <p align="center">
@@ -175,15 +176,20 @@ Agent-Hub/
 
 ## 开发与版本
 
-当前版本：**v2.0.0**
+当前版本：**v3.0.0**（分支 `v3.0`）
 
 ```bash
 # 健康检查
 curl -s http://127.0.0.1:8765/api/health
+
+# 检出 V3.0 分支
+git fetch origin
+git checkout v3.0
 ```
 
 简要更新：
 
+- **v3.0.0** — 与 Hermes-WebUI 深度融合：一键联运 / iframe 深度会话、共享 `HERMES_HOME`、导出 C0–C3 路由契约
 - **v2.0.0** — 统一模型目录、路由与 Agent/Subagent 选模；自适应可调布局；代理 TLS 配置持久化
 - **v1.4.59** — 内置 Logo 预设：SUAT 彩标 + 白板；Hub 守护安装加固  
 - **v1.4.58** — 子代理对接 C0–C3 + Soul；并行自动选档位  

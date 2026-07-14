@@ -15,7 +15,7 @@ const FONT_SIZE_LABELS = {
   zh: { 13: "小 13", 14: "中 14", 15: "中大 15", 16: "大 16", 18: "特大 18" },
   en: { 13: "S 13", 14: "M 14", 15: "M+ 15", 16: "L 16", 18: "XL 18" },
 };
-const LOGO_VER = "2.0.0";
+const LOGO_VER = "3.0.0";
 const DEFAULT_LOGO = `/brand/suat-logo-color.png?v=${LOGO_VER}`;
 const LOGO_PRESETS = [
   { id: "suat-color", src: `/brand/suat-logo-color.png?v=${LOGO_VER}`, labelKey: "appearance.logoPresetColor" },
@@ -103,6 +103,15 @@ const I18N = {
     "login.submit": "进入",
     "login.error": "密码错误",
     "nav.newChat": "+ 新任务",
+    "nav.deepWebui": "◈ Hermes 深度会话",
+    "nav.deepWebuiShort": "深度会话",
+    "webui.deepTitle": "Hermes 深度会话",
+    "webui.refresh": "刷新",
+    "webui.newTab": "新标签打开",
+    "webui.close": "关闭",
+    "webui.starting": "正在启动 Hermes-WebUI…",
+    "webui.ready": "已连接",
+    "webui.failed": "启动失败",
     "nav.chats": "进行中",
     "nav.workflows": "模板",
     "nav.tasks": "任务",
@@ -292,6 +301,15 @@ const I18N = {
     "login.submit": "Enter",
     "login.error": "Invalid password",
     "nav.newChat": "+ New task",
+    "nav.deepWebui": "◈ Hermes deep session",
+    "nav.deepWebuiShort": "Deep chat",
+    "webui.deepTitle": "Hermes deep session",
+    "webui.refresh": "Refresh",
+    "webui.newTab": "Open in tab",
+    "webui.close": "Close",
+    "webui.starting": "Starting Hermes-WebUI…",
+    "webui.ready": "Connected",
+    "webui.failed": "Start failed",
     "nav.chats": "Active",
     "nav.workflows": "Templates",
     "nav.tasks": "Tasks",
@@ -536,6 +554,8 @@ const state = {
     logoEmpty: localStorage.getItem("hermes_ali_logo_empty") || "",
     thinkingDepth: normalizeThinkingDepth(localStorage.getItem("hermes_ali_thinking_depth") || "medium"),
   },
+  /** Cumulative token usage for the current session (from SSE done events) */
+  usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, cost: null },
 };
 
 function t(key) {
@@ -2307,6 +2327,18 @@ function makeStreamHandlers(sessionId, assistantEl, bodyEl, startRoute, stateBag
         }
       }
       setSessionRun(sessionId, { pct: 100 });
+      // ── Token usage from done payload (OpenSquilla) ─────────────────────
+      if (payload && payload.usage) {
+        const u = payload.usage;
+        state.usage.input = (state.usage.input || 0) + (u.inputTokens || 0);
+        state.usage.output = (state.usage.output || 0) + (u.outputTokens || 0);
+        state.usage.cacheRead = (state.usage.cacheRead || 0) + (u.cacheReadTokens || 0);
+        state.usage.cacheWrite = (state.usage.cacheWrite || 0) + (u.cacheWriteTokens || 0);
+        if (u.costUsd != null) {
+          state.usage.cost = (state.usage.cost || 0) + u.costUsd;
+        }
+        updateTokenChip(state.usage);
+      }
     },
     bag: mirror,
   };
@@ -5989,6 +6021,15 @@ async function renderRuntimesPanel(langZh) {
     <p class="muted">${langZh
       ? "「同步 LLM」把控制中心的 Provider / API Key / 模型写入上方所选 Claw（OpenClaw / NanoBot / Hermes 等）的配置；「同步到 Hermes」仅写入 Hermes。"
       : "Sync LLM writes Hub provider/API key/model into the selected Claw (OpenClaw / NanoBot / Hermes…). Sync to Hermes only updates Hermes homes."}</p>
+    <div class="webui-bridge-card" id="webui-bridge-card">
+      <h4>${langZh ? "Hermes-WebUI 深度会话" : "Hermes-WebUI deep session"}</h4>
+      <p class="muted" id="webui-bridge-status">${langZh ? "检测中…" : "Checking…"}</p>
+      <div class="row gap" style="justify-content:flex-start;flex-wrap:wrap">
+        <button type="button" class="btn primary" id="btn-webui-start">${langZh ? "启动 WebUI" : "Start WebUI"}</button>
+        <button type="button" class="btn ghost" id="btn-webui-open-panel">${langZh ? "打开深度会话" : "Open deep session"}</button>
+        <button type="button" class="btn ghost" id="btn-webui-stop">${langZh ? "停止" : "Stop"}</button>
+      </div>
+    </div>
     <div class="skill-list" id="runtime-list"></div>
     <div id="runtime-install-progress" class="hidden"></div>
     <pre id="runtime-install-log" class="install-log muted"></pre>`;
@@ -6072,6 +6113,39 @@ async function renderRuntimesPanel(langZh) {
           : `<button type="button" class="btn ghost chip" data-copy="${escapeHtml(r.id)}">${langZh ? "复制命令" : "Copy cmds"}</button>`}
       </div>`;
     list.appendChild(row);
+  });
+
+  const refreshWebuiBridgeStatus = async () => {
+    const el = $("#webui-bridge-status");
+    try {
+      const st = await api("/api/webui/status");
+      if (!el) return;
+      const root = st.root_found ? (st.root || "") : (langZh ? "未找到仓库" : "root missing");
+      el.innerHTML = langZh
+        ? `状态：<strong>${st.healthy ? "在线" : (st.running ? "启动中" : "离线")}</strong> · 端口 <code>${escapeHtml(String(st.port || ""))}</code> · PID ${escapeHtml(String(st.pid || "—"))}<br/>HOME <code>${escapeHtml(st.hermes_home || "")}</code><br/>WebUI <code>${escapeHtml(root)}</code>`
+        : `Status: <strong>${st.healthy ? "online" : (st.running ? "starting" : "offline")}</strong> · port <code>${escapeHtml(String(st.port || ""))}</code> · PID ${escapeHtml(String(st.pid || "—"))}<br/>HOME <code>${escapeHtml(st.hermes_home || "")}</code><br/>WebUI <code>${escapeHtml(root)}</code>`;
+    } catch (e) {
+      if (el) el.textContent = e.message;
+    }
+  };
+  refreshWebuiBridgeStatus();
+  $("#btn-webui-start")?.addEventListener("click", async () => {
+    try {
+      $("#settings-status").textContent = t("webui.starting");
+      const res = await api("/api/webui/start", { method: "POST", body: JSON.stringify({ sync: true }) });
+      $("#settings-status").textContent = res.healthy ? t("webui.ready") : (res.error_zh || res.error || t("webui.failed"));
+      await refreshWebuiBridgeStatus();
+    } catch (e) { $("#settings-status").textContent = e.message; }
+  });
+  $("#btn-webui-open-panel")?.addEventListener("click", () => openDeepWebui().catch((e) => {
+    $("#settings-status").textContent = e.message;
+  }));
+  $("#btn-webui-stop")?.addEventListener("click", async () => {
+    try {
+      await api("/api/webui/stop", { method: "POST", body: "{}" });
+      $("#settings-status").textContent = langZh ? "已停止 WebUI" : "WebUI stopped";
+      await refreshWebuiBridgeStatus();
+    } catch (e) { $("#settings-status").textContent = e.message; }
   });
 
   $("#btn-runtime-set").onclick = async () => {
@@ -7456,7 +7530,59 @@ function bindClick(sel, handler) {
   });
 }
 
+let _deepWebuiUrl = "";
+
+function closeDeepWebui() {
+  const overlay = $("#webui-overlay");
+  const frame = $("#webui-frame");
+  if (overlay) {
+    overlay.classList.add("hidden");
+    overlay.setAttribute("aria-hidden", "true");
+  }
+  if (frame) frame.removeAttribute("src");
+}
+
+async function openDeepWebui({ forceTab = false } = {}) {
+  const statusEl = $("#webui-overlay-status");
+  const overlay = $("#webui-overlay");
+  const frame = $("#webui-frame");
+  if (statusEl) statusEl.textContent = t("webui.starting");
+  const res = await api("/api/webui/open", {
+    method: "POST",
+    body: JSON.stringify({ sync: true, embedded: true }),
+  });
+  const url = res.url || res.open_url || "";
+  if (!url) throw new Error(res.error_zh || res.error || t("webui.failed"));
+  _deepWebuiUrl = url;
+  if (!res.healthy && !res.ok) {
+    if (statusEl) statusEl.textContent = res.error_zh || res.error || t("webui.failed");
+    window.open(url, "_blank", "noopener");
+    return res;
+  }
+  if (forceTab || !frame || !overlay) {
+    window.open(url, "_blank", "noopener");
+    if (statusEl) statusEl.textContent = t("webui.ready");
+    return res;
+  }
+  overlay.classList.remove("hidden");
+  overlay.setAttribute("aria-hidden", "false");
+  frame.src = url;
+  if (statusEl) statusEl.textContent = t("webui.ready");
+  return res;
+}
+
 bindClick("#btn-new", () => createSession());
+bindClick("#btn-deep-webui", () => openDeepWebui());
+bindClick("#btn-deep-webui-top", () => openDeepWebui());
+bindClick("#btn-webui-close", () => closeDeepWebui());
+bindClick("#btn-webui-refresh", () => {
+  const frame = $("#webui-frame");
+  if (frame && _deepWebuiUrl) frame.src = _deepWebuiUrl;
+});
+bindClick("#btn-webui-newtab", () => {
+  if (_deepWebuiUrl) window.open(_deepWebuiUrl, "_blank", "noopener");
+  else openDeepWebui({ forceTab: true }).catch((e) => alert(e.message));
+});
 bindClick("#btn-send", () => sendMessage());
 bindClick("#btn-stop", stopStream);
 bindClick("#btn-menu", () => setSidebarOpen(true));
@@ -7762,3 +7888,122 @@ boot().then(() => {
 }).catch(() => {
   startGatewayHealthPoll();
 });
+
+// ── Token usage widget (OpenSquilla) ───────────────────────────────────────────
+
+function fmtTok(n) {
+  if (!n && n !== 0) return "–";
+  n = Number(n) || 0;
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
+  if (n >= 1_000) return (n / 1_000).toFixed(1) + "k";
+  return String(n);
+}
+
+function fmtCost(v) {
+  if (!v && v !== 0) return "";
+  v = Number(v) || 0;
+  if (v <= 0) return "";
+  if (v < 0.001) return "$<0.001";
+  return "$" + v.toFixed(4);
+}
+
+function updateTokenChip(usage) {
+  const chip = document.getElementById("token-chip");
+  const elIn = document.getElementById("token-in");
+  const elOut = document.getElementById("token-out");
+  const elCost = document.getElementById("token-cost");
+  if (!chip) return;
+  if (!usage || (usage.input === 0 && usage.output === 0)) {
+    chip.classList.add("hidden");
+    return;
+  }
+  chip.classList.remove("hidden");
+  if (elIn) elIn.textContent = fmtTok(usage.input);
+  if (elOut) elOut.textContent = fmtTok(usage.output);
+  if (elCost) {
+    if (usage.cost != null && usage.cost > 0) {
+      elCost.textContent = " " + fmtCost(usage.cost);
+    } else {
+      elCost.textContent = "";
+    }
+  }
+}
+
+function showUsageModal(sessions) {
+  const langZh = (document.documentElement.lang || "zh").startsWith("zh");
+  const overlay = document.createElement("div");
+  overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;";
+  const panel = document.createElement("div");
+  panel.style.cssText = "background:var(--surface,#fff);border-radius:12px;padding:24px;min-width:360px;max-width:560px;max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.2);";
+  let totalCost = 0, totalIn = 0, totalOut = 0, totalCacheRead = 0, totalCacheWrite = 0;
+  let rows = sessions.map(s => {
+    totalIn += Number(s.inputTokens || 0);
+    totalOut += Number(s.outputTokens || 0);
+    totalCost += Number(s.costUsd || 0);
+    totalCacheRead += Number(s.cacheReadTokens || 0);
+    totalCacheWrite += Number(s.cacheWriteTokens || 0);
+    const cost = Number(s.costUsd || 0);
+    return `<tr>
+      <td style="padding:6px 12px;font-size:12px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${s.sessionKey || ""}">${s.sessionKey || "–"}</td>
+      <td style="padding:6px 12px;font-size:12px">${fmtTok(s.inputTokens)}</td>
+      <td style="padding:6px 12px;font-size:12px">${fmtTok(s.outputTokens)}</td>
+      <td style="padding:6px 12px;font-size:12px">${fmtTok(s.cacheReadTokens)}</td>
+      <td style="padding:6px 12px;font-size:12px">${fmtTok(s.cacheWriteTokens)}</td>
+      <td style="padding:6px 12px;font-size:12px">${cost > 0 ? fmtCost(cost) : "–"}</td>
+    </tr>`;
+  }).join("");
+  const title = langZh ? "Token 使用详情" : "Token Usage Details";
+  const colSession = langZh ? "会话" : "Session";
+  const colIn = langZh ? "输入" : "In";
+  const colOut = langZh ? "输出" : "Out";
+  const colCR = langZh ? "缓存读" : "Cache R";
+  const colCW = langZh ? "缓存写" : "Cache W";
+  const colCost = langZh ? "费用" : "Cost";
+  panel.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <h3 style="margin:0;font-size:16px">${title}</h3>
+      <button id="usage-modal-close" style="background:none;border:none;font-size:20px;cursor:pointer;padding:4px;line-height:1">×</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;text-align:center">
+      <div><div style="font-size:20px;font-weight:600">${fmtTok(totalIn)}</div><div style="font-size:11px;color:var(--muted)">${colIn} ↑</div></div>
+      <div><div style="font-size:20px;font-weight:600">${fmtTok(totalOut)}</div><div style="font-size:11px;color:var(--muted)">${colOut} ↓</div></div>
+      <div><div style="font-size:20px;font-weight:600">${totalCost > 0 ? fmtCost(totalCost) : "–"}</div><div style="font-size:11px;color:var(--muted)">${colCost}</div></div>
+    </div>
+    <div style="margin-bottom:16px;font-size:11px;color:var(--muted)">${colCR}: ${fmtTok(totalCacheRead)} &nbsp;|&nbsp; ${colCW}: ${fmtTok(totalCacheWrite)}</div>
+    ${rows ? `<table style="width:100%;border-collapse:collapse">
+      <thead><tr style="border-bottom:1px solid var(--border)">
+        <th style="text-align:left;padding:4px 12px;font-size:11px;font-weight:600">${colSession}</th>
+        <th style="text-align:right;padding:4px 12px;font-size:11px;font-weight:600">${colIn}</th>
+        <th style="text-align:right;padding:4px 12px;font-size:11px;font-weight:600">${colOut}</th>
+        <th style="text-align:right;padding:4px 12px;font-size:11px;font-weight:600">${colCR}</th>
+        <th style="text-align:right;padding:4px 12px;font-size:11px;font-weight:600">${colCW}</th>
+        <th style="text-align:right;padding:4px 12px;font-size:11px;font-weight:600">${colCost}</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>` : `<p style="color:var(--muted);font-size:13px;text-align:center;padding:16px">${langZh ? "暂无数据" : "No data yet"}</p>`}
+  `;
+  overlay.appendChild(panel);
+  document.body.appendChild(overlay);
+  overlay.addEventListener("click", e => { if (e.target === overlay) overlay.remove(); });
+  document.getElementById("usage-modal-close").addEventListener("click", () => overlay.remove());
+}
+
+async function showUsagePanel() {
+  try {
+    const res = await fetch("/api/usage");
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data && data.sessions) {
+      showUsageModal(data.sessions);
+    }
+  } catch (_) {}
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const chip = document.getElementById("token-chip");
+  if (chip) chip.addEventListener("click", showUsagePanel);
+});
+
+// Extend onDone to consume usage data from SSE done payload
+const _origOnDone = window._onDoneRef;
+// We'll patch the onDone handler inline below (see token-chip integration in onDone)

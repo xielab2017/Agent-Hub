@@ -981,6 +981,16 @@ html[data-bg="white"] .brand-sub {
   padding: 4px 8px; border-radius: 8px;
   border: 1px solid var(--border); color: var(--accent);
 }
+.token-chip {
+  font-size: 11px; font-family: var(--mono);
+  padding: 4px 8px; border-radius: 8px;
+  border: 1px solid var(--border); color: var(--accent);
+  cursor: pointer; user-select: none; white-space: nowrap;
+  transition: background 0.15s;
+}
+.token-chip:hover { background: color-mix(in srgb, var(--accent, #607d8b) 12%, transparent); }
+.token-chip .muted { color: var(--muted); margin-left: 2px; }
+.token-chip.hidden { display: none; }
 
 .messages {
   flex: 1; overflow: auto; padding: 20px 16px 28px;
@@ -1397,6 +1407,27 @@ hr.soft { border: 0; border-top: 1px solid var(--border); margin: 14px 0; }
   backdrop-filter: blur(6px);
   padding: 16px;
 }
+.webui-overlay {
+  position: fixed; inset: 0; z-index: 60;
+  display: flex; flex-direction: column;
+  background: var(--bg);
+}
+.webui-overlay.hidden { display: none !important; }
+.webui-overlay-bar {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 10px 14px; border-bottom: 1px solid var(--border);
+  background: var(--bg-elev);
+}
+.webui-frame {
+  flex: 1; width: 100%; border: 0; background: #0b1118;
+}
+.webui-bridge-card {
+  margin: 12px 0 16px; padding: 12px 14px;
+  border: 1px solid var(--border); border-radius: 12px;
+  background: color-mix(in srgb, var(--bg-elev) 88%, var(--accent) 12%);
+}
+.webui-bridge-card h4 { margin: 0 0 6px; }
+#btn-deep-webui { margin-top: 8px; }
 .login-card, .wf-card {
   width: min(480px, calc(100vw - 32px));
   background: var(--bg-elev); border: 1px solid var(--border);
