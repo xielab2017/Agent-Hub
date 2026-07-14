@@ -26,6 +26,8 @@ from ali.config import (  # noqa: E402
     local_ips,
 )
 from ali.streaming import agent_status  # noqa: E402
+from ali.digest import start_scheduler  # noqa: E402
+from ali.home import ensure_home  # noqa: E402
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -74,8 +76,11 @@ def print_banner(host: str, port: int) -> None:
         print("  Auth:    password required (HERMES_ALI_PASSWORD)")
     else:
         print("  Auth:    off  (set HERMES_ALI_PASSWORD to protect remote access)")
-    if status["available"]:
-        print(f"  Agent:   ready ({status.get('agent_dir')})")
+    if status.get("available") or (status.get("hermes_cli") or {}).get("available"):
+        engine = status.get("chat_engine") or "hermes"
+        print(f"  Agent:   ready ({engine}) · {status.get('agent_dir') or (status.get('hermes_cli') or {}).get('bin')}")
+        if status.get("import_error") and engine == "hermes-cli":
+            print("  Note:    in-process import failed; using Hermes CLI (venv)")
     else:
         print("  Agent:   demo mode — install Hermes Agent for full power")
     print("  " + "─" * 42)
@@ -92,6 +97,14 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     ensure_state_dirs()
+    ensure_home()
+    try:
+        from ali.ecosystem import ensure_auto_activated
+
+        ensure_auto_activated()
+    except Exception:  # noqa: BLE001
+        pass
+    start_scheduler()
     RUNTIME["host"] = args.host
     RUNTIME["port"] = args.port
     server = ThreadingHTTPServer((args.host, args.port), Handler)

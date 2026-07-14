@@ -79,9 +79,17 @@ DEFAULT_CAMPUS: dict[str, Any] = {
     "ali": {
         "default_route": "auto",  # simple | office | vision | reasoning | auto
         "show_route_badge": True,
+        "thinking_depth": "medium",  # light | medium | high | very_high
+        "agent_runtime": "auto",  # auto | hermes | openclaw | … (Connect pins a concrete claw)
+        "auto_runtime": "hermes",  # what `auto → X` prefers first (user-settable)
+        # agent = Hermes/OpenClaw tools (hermes-webui style); direct = Hub HTTP chat only
+        "hub_chat_mode": "agent",  # agent | direct
+        "hub_fast_chat": False,  # legacy alias: True ⇒ force direct (kept for old configs)
         "language": "zh",  # zh | en
         "theme": "dark",  # dark | light
         "accent": "ocean",  # ocean | forest | amber | rose | slate | teal
+        "logo_sidebar": "",  # empty = SUAT default; /brand/... or /brand/custom/...
+        "logo_empty": "",  # empty = same policy; independent of sidebar when set
         "require_approval_for": [
             "email_send",
             "file_delete",
@@ -91,6 +99,15 @@ DEFAULT_CAMPUS: dict[str, Any] = {
             "startup",
             "vault_write_formal",
         ],
+    },
+    "search": {
+        "enabled": True,
+        "provider": "auto",  # auto | google_cse | serpapi | bing | so360
+        "deep": True,
+        "max_results": 10,
+        "google_cse_cx": "",
+        "proxy": "",  # e.g. http://127.0.0.1:7890 for Google CSE/SerpAPI on campus
+        "verify_tls": True,
     },
 }
 
@@ -159,6 +176,25 @@ def save_campus_config(data: dict[str, Any]) -> dict[str, Any]:
             models[gen] = models[legacy]
     merged["models"] = models
 
+    # Normalize composer thinking depth + Claws Control Center prefs
+    ali = merged.get("ali") if isinstance(merged.get("ali"), dict) else {}
+    if isinstance(ali, dict):
+        from . import routing as routing_mod
+        from . import runtimes as runtimes_mod
+
+        ali = dict(ali)
+        ali["thinking_depth"] = routing_mod.normalize_thinking_depth(
+            ali.get("thinking_depth"), "medium"
+        )
+        active = str(ali.get("agent_runtime") or "auto").strip() or "auto"
+        if active != "auto" and not runtimes_mod.get_runtime(active):
+            active = "auto"
+        ali["agent_runtime"] = active
+        ali["auto_runtime"] = runtimes_mod.normalize_auto_runtime(
+            str(ali.get("auto_runtime") or "")
+        )
+        merged["ali"] = ali
+
     # Strip internal warning from disk file but keep in return
     warning = merged.pop("_warning", None)
     to_write = {k: v for k, v in merged.items() if not str(k).startswith("_")}
@@ -197,6 +233,7 @@ def api_key_status(cfg: dict[str, Any] | None = None) -> dict[str, Any]:
 
 def public_settings_view() -> dict[str, Any]:
     from .providers import catalog_payload
+    from . import websearch
 
     cfg = load_campus_config()
     return {
@@ -205,6 +242,7 @@ def public_settings_view() -> dict[str, Any]:
         "api_key": api_key_status(cfg),
         "defaults": DEFAULT_CAMPUS,
         "catalog": catalog_payload(),
+        "search": websearch.search_status(),
     }
 
 

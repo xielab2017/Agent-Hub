@@ -225,7 +225,7 @@ def health_snapshot() -> dict[str, Any]:
         "routing_matrix": matrix,
         "workspace": cfg.get("workspace") or "",
         "checks": [
-            {"id": "config", "ok": True, "detail": "campus-office-ai.json loaded"},
+            {"id": "config", "ok": True, "detail": "校园配置已加载（本地 settings）"},
             {"id": "base_url", "ok": bool(backend.get("base_url")), "detail": backend.get("base_url") or "missing"},
             {"id": "api_key", "ok": key["present"], "detail": key["hint"]},
             {"id": "models", "ok": models_set >= 2, "detail": f"{models_set} model slots filled"},

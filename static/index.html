@@ -4,13 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0f1419" />
-  <title>Hermes-ALI</title>
-  <link rel="stylesheet" href="/style.css" />
+  <title>Agent Hub</title>
+  <link rel="stylesheet" href="/style.css?v=1.4.59" />
 </head>
 <body>
   <div id="login-overlay" class="overlay hidden">
     <form id="login-form" class="login-card">
-      <h1>Hermes-ALI</h1>
+      <h1>Agent Hub</h1>
       <p data-i18n="login.hint">输入访问密码以连接终端</p>
       <input type="password" id="login-password" data-i18n-placeholder="login.password" placeholder="Password" autocomplete="current-password" required />
       <button type="submit" data-i18n="login.submit">进入</button>
@@ -22,30 +22,30 @@
     <aside id="sidebar" class="sidebar">
       <div class="sidebar-head">
         <div class="brand">
-          <span class="brand-mark">H</span>
+          <img class="brand-logo" src="/brand/suat-logo-color.png?v=1.4.59" alt="SUAT" />
           <div>
-            <div class="brand-name">Hermes-ALI</div>
-            <div class="brand-sub" id="version-label">v1.1.1</div>
+            <div class="brand-name">Agent Hub</div>
+            <div class="brand-sub" id="version-label">v1.4.59</div>
           </div>
         </div>
         <div class="quick-prefs">
           <button type="button" id="btn-lang" class="btn ghost chip" title="Language">中 / EN</button>
           <button type="button" id="btn-theme" class="btn ghost chip" title="Theme">☾ / ☀</button>
         </div>
+        <div class="bg-row" id="bg-row" title="Background"></div>
         <div class="accent-row" id="accent-row" title="Accent color"></div>
-        <button id="btn-new" class="btn primary" data-i18n="nav.newChat">+ 新对话</button>
-        <div class="nav-tabs">
-          <button class="tab active" data-panel="chats" data-i18n="nav.chats">会话</button>
-          <button class="tab" data-panel="workflows" data-i18n="nav.workflows">工作流</button>
+        <div class="font-size-row" id="font-size-row" title="Font size">
+          <span class="font-size-label" id="font-size-label" data-i18n="appearance.fontSize">字号</span>
+          <button type="button" id="btn-font-dec" class="btn ghost chip font-step" aria-label="Decrease font size">A−</button>
+          <select id="font-size-select" class="font-size-select" aria-label="Font size"></select>
+          <button type="button" id="btn-font-inc" class="btn ghost chip font-step" aria-label="Increase font size">A+</button>
         </div>
+        <button type="button" id="btn-new" class="btn primary" data-i18n="nav.newChat">+ 新任务</button>
       </div>
 
-      <div id="panel-chats" class="side-panel">
+      <div id="panel-main" class="side-panel">
+        <div class="side-section-label" data-i18n="nav.sessions">会话</div>
         <div id="session-list" class="session-list"></div>
-      </div>
-
-      <div id="panel-workflows" class="side-panel hidden">
-        <div id="workflow-list" class="workflow-list"></div>
       </div>
 
       <div class="sidebar-foot">
@@ -60,28 +60,104 @@
         <button id="btn-menu" class="btn ghost icon" aria-label="Menu">☰</button>
         <h2 id="chat-title" data-i18n="chat.new">New chat</h2>
         <span id="route-badge" class="route-badge">AUTO</span>
+        <span id="engine-badge" class="route-badge engine-badge hidden" title="Engine"></span>
         <button id="btn-stop" class="btn ghost hidden" title="Stop">⏹</button>
       </header>
+      <div id="subagent-bar" class="subagent-bar hidden" aria-label="Subagents" hidden></div>
+      <div id="active-runs" class="active-runs hidden" aria-label="Active runs"></div>
 
-      <div id="messages" class="messages">
-        <div class="empty-state" id="empty-state">
-          <div class="empty-logo">ALI</div>
-          <h3 data-i18n="empty.title">校园办公 AI 终端</h3>
-          <p data-i18n-html="empty.body">Hermes 管任务 · OpenSquilla 式路由 · Obsidian 存知识<br/>从左侧选择办公工作流，或直接对话。</p>
+      <div id="chat-panes" class="chat-panes">
+        <div id="messages" class="messages">
+          <div class="empty-state" id="empty-state">
+            <img class="empty-logo-img" src="/brand/suat-logo-color.png?v=1.4.59" alt="深圳理工大学" />
+            <h3 data-i18n="empty.title">校园 Agent Hub</h3>
+            <p data-i18n-html="empty.body">描述任务并运行 · Agent Hub 调度 Skill / Agent · 进度条跟踪执行</p>
+          </div>
         </div>
+        <aside id="subagent-pane" class="subagent-pane hidden">
+          <div class="subagent-pane-head">
+            <strong id="subagent-pane-title">Subagent</strong>
+            <button type="button" id="btn-close-subpane" class="btn ghost chip">×</button>
+          </div>
+          <div id="subagent-pane-body" class="subagent-pane-body muted"></div>
+        </aside>
       </div>
 
       <footer class="composer">
+        <div id="stream-status" class="stream-status hidden" aria-live="polite">
+          <div class="stream-status-head">
+            <span class="stream-status-dot" aria-hidden="true"></span>
+            <strong id="stream-status-label" data-i18n="stream.running">思考与输出中…</strong>
+            <span id="stream-status-pct" class="muted">0%</span>
+          </div>
+          <div class="stream-status-track"><div id="stream-status-bar" class="stream-status-fill"></div></div>
+          <div id="stream-status-hint" class="stream-status-hint muted"></div>
+        </div>
+        <div id="skill-bar" class="skill-bar skill-bar-composer" aria-label="Skills">
+          <div class="skill-bar-head">
+            <span data-i18n="skills.picker">Skill</span>
+            <select id="skill-cat-select" title="Category"></select>
+            <select id="skill-sub-select" title="Subcategory"></select>
+            <select id="skill-pick-select" class="skill-pick-select" title="Skill">
+              <option value="">— 选择 Skill —</option>
+            </select>
+            <button type="button" class="btn ghost chip" id="btn-skill-add" data-i18n="skills.add">添加</button>
+            <button type="button" class="btn ghost chip" id="btn-skill-auto" data-i18n="skills.auto">自动匹配</button>
+          </div>
+          <div id="skill-selected" class="skill-selected-row"></div>
+        </div>
+        <div id="subagent-picker" class="skill-bar skill-bar-composer" aria-label="Subagents">
+          <div class="skill-bar-head">
+            <span data-i18n="sub.picker">Subagent</span>
+            <select id="subagent-pick-select" class="skill-pick-select" title="Subagent">
+              <option value="">— 选择子代理 —</option>
+            </select>
+            <button type="button" class="btn ghost chip" id="btn-subagent-add" data-i18n="sub.add">添加</button>
+          </div>
+          <div id="subagent-selected" class="skill-selected-row"></div>
+        </div>
         <div class="composer-tools">
+          <label>
+            <span data-i18n="composer.soul">Soul</span>
+            <select id="soul-select"></select>
+          </label>
+          <label>
+            <span data-i18n="composer.hubChat">Hub 聊天</span>
+            <select id="hub-chat-mode-select" title="Agent vs Fast chat">
+              <option value="agent" data-i18n="hubChat.agent">Agent（工具）</option>
+              <option value="direct" data-i18n="hubChat.direct">快聊</option>
+            </select>
+          </label>
+          <label>
+            <span data-i18n="composer.mode">模式</span>
+            <select id="chat-mode-select">
+              <option value="auto">工作流 Auto</option>
+              <option value="single">指定模型</option>
+            </select>
+          </label>
           <label>
             <span data-i18n="composer.route">路由</span>
             <select id="route-select">
               <option value="auto" data-i18n="route.auto">Auto（自动分级）</option>
-              <option value="simple" data-i18n="route.simple">C0 简单 / Qwen fast</option>
-              <option value="office" data-i18n="route.office">C1 办公 / Qwen main</option>
+              <option value="simple" data-i18n="route.simple">C0 简单 / Fast</option>
+              <option value="office" data-i18n="route.office">C1 办公 / Main</option>
               <option value="C2" data-i18n="route.c2">C2 长文（生成+审核）</option>
-              <option value="reasoning" data-i18n="route.reasoning">C3 推理 / DeepSeek</option>
-              <option value="vision" data-i18n="route.vision">Vision / Qwen-VL</option>
+              <option value="reasoning" data-i18n="route.reasoning">C3 推理</option>
+              <option value="vision" data-i18n="route.vision">Vision</option>
+              <option value="agent" data-i18n="route.agent">Agent（主模型）</option>
+            </select>
+          </label>
+          <label>
+            <span data-i18n="composer.model">模型</span>
+            <select id="model-select"></select>
+          </label>
+          <label>
+            <span data-i18n="composer.thinkingDepth">思考深度</span>
+            <select id="thinking-depth-select">
+              <option value="light" data-i18n="thinking.light">轻 / Light</option>
+              <option value="medium" selected data-i18n="thinking.medium">中 / Medium</option>
+              <option value="high" data-i18n="thinking.high">高 / High</option>
+              <option value="very_high" data-i18n="thinking.veryHigh">非常高 / Very high</option>
             </select>
           </label>
           <label class="grow workspace-field">
@@ -91,11 +167,21 @@
               <button type="button" id="btn-browse-ws" class="btn ghost" title="Browse">…</button>
             </div>
             <span id="auto-route-hint" class="auto-hint muted"></span>
+            <div id="ws-grounding" class="ws-grounding muted"></div>
           </label>
         </div>
-        <div class="composer-row">
-          <textarea id="input" rows="1" data-i18n-placeholder="composer.inputPh" placeholder="输入消息或工作流内容… (Enter 发送)"></textarea>
-          <button id="btn-send" class="btn primary send" disabled data-i18n="composer.send">发送</button>
+        <div id="attach-bar" class="attach-bar hidden"></div>
+        <div class="composer-row composer-row-ext">
+          <div class="composer-actions">
+            <button type="button" id="btn-upload-file" class="btn ghost chip" title="Upload file">📎</button>
+            <button type="button" id="btn-upload-folder" class="btn ghost chip" title="Upload folder">📁</button>
+            <button type="button" id="btn-web-search" class="btn ghost chip" data-i18n="composer.search" title="Deep web search">联网搜索</button>
+            <button type="button" id="btn-deep-search" class="btn ghost chip active" data-i18n="composer.deepSearch" title="Deep multi-engine search">深度搜索</button>
+            <input type="file" id="file-input" class="hidden" multiple accept="image/*,.xlsx,.xlsm,.xls,.csv,.tsv,.pdf,.doc,.docx,.txt,.md,.json,.zip,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
+            <input type="file" id="folder-input" class="hidden" webkitdirectory directory multiple />
+          </div>
+          <textarea id="input" rows="1" data-i18n-placeholder="composer.inputPh" placeholder="描述办公/科研任务… Enter 换行 · ⌘/Ctrl+Enter 运行工作流"></textarea>
+          <button id="btn-send" class="btn primary send" disabled data-i18n="composer.send">运行</button>
         </div>
       </footer>
     </main>
@@ -127,18 +213,38 @@
         <button class="ctab active" data-ctab="appearance" data-i18n="control.appearance">外观</button>
         <button class="ctab" data-ctab="health" data-i18n="control.health">健康</button>
         <button class="ctab" data-ctab="backend" data-i18n="control.backend">后端</button>
+        <button class="ctab" data-ctab="search" data-i18n="control.search">搜索</button>
         <button class="ctab" data-ctab="models" data-i18n="control.models">模型</button>
         <button class="ctab" data-ctab="routing" data-i18n="control.routing">路由</button>
+        <button class="ctab" data-ctab="runtimes" data-i18n="control.runtimes">Claws</button>
+        <button class="ctab" data-ctab="ecosystem" data-i18n="control.ecosystem">生态</button>
+        <button class="ctab" data-ctab="mcp" data-i18n="control.mcp">MCP</button>
+        <button class="ctab" data-ctab="skills" data-i18n="control.skills">Skills</button>
+        <button class="ctab" data-ctab="recommend" data-i18n="control.recommend">每日推荐</button>
+        <button class="ctab" data-ctab="soul" data-i18n="control.soul">Soul</button>
+        <button class="ctab" data-ctab="agents" data-i18n="control.agents">Agents</button>
+        <button class="ctab" data-ctab="feedback" data-i18n="control.feedback">反馈</button>
         <button class="ctab" data-ctab="obsidian" data-i18n="control.obsidian">知识库</button>
+        <button class="ctab" data-ctab="schedule" data-i18n="control.schedule">定时任务</button>
         <button class="ctab" data-ctab="security" data-i18n="control.security">安全</button>
       </div>
       <div class="control-body">
         <section id="ctab-appearance" class="ctab-panel"></section>
         <section id="ctab-health" class="ctab-panel hidden"></section>
         <section id="ctab-backend" class="ctab-panel hidden"></section>
+        <section id="ctab-search" class="ctab-panel hidden"></section>
         <section id="ctab-models" class="ctab-panel hidden"></section>
         <section id="ctab-routing" class="ctab-panel hidden"></section>
+        <section id="ctab-runtimes" class="ctab-panel hidden"></section>
+        <section id="ctab-ecosystem" class="ctab-panel hidden"></section>
+        <section id="ctab-mcp" class="ctab-panel hidden"></section>
+        <section id="ctab-skills" class="ctab-panel hidden"></section>
+        <section id="ctab-recommend" class="ctab-panel hidden"></section>
+        <section id="ctab-soul" class="ctab-panel hidden"></section>
+        <section id="ctab-agents" class="ctab-panel hidden"></section>
+        <section id="ctab-feedback" class="ctab-panel hidden"></section>
         <section id="ctab-obsidian" class="ctab-panel hidden"></section>
+        <section id="ctab-schedule" class="ctab-panel hidden"></section>
         <section id="ctab-security" class="ctab-panel hidden"></section>
       </div>
       <div class="control-foot">
@@ -164,6 +270,6 @@
   </div>
 
   <div id="sidebar-backdrop" class="backdrop hidden"></div>
-  <script src="/app.js"></script>
+  <script src="/app.js?v=1.4.59"></script>
 </body>
 </html>

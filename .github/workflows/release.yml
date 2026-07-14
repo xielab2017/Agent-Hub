@@ -32,32 +32,32 @@ jobs:
       - name: Build source archives
         run: |
           TAG="${{ steps.tag.outputs.name }}"
-          STAGE="Hermes-ALI-${TAG#v}"
+          STAGE="Agent-Hub-${TAG#v}"
           mkdir -p dist "$STAGE"
           rsync -a --exclude '.git' --exclude 'dist' --exclude '.github' ./ "$STAGE/"
-          tar -czf "dist/Hermes-ALI-${TAG#v}-src.tar.gz" "$STAGE"
-          (cd "$STAGE" && zip -r "../dist/Hermes-ALI-${TAG#v}-src.zip" .)
+          tar -czf "dist/Agent-Hub-${TAG#v}-src.tar.gz" "$STAGE"
+          (cd "$STAGE" && zip -r "../dist/Agent-Hub-${TAG#v}-src.zip" .)
           ls -la dist
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.tag.outputs.name }}
-          name: Hermes-ALI ${{ steps.tag.outputs.name }}
+          name: Agent Hub ${{ steps.tag.outputs.name }}
           generate_release_notes: true
           files: |
             dist/*.tar.gz
             dist/*.zip
           body: |
-            ## Hermes-ALI ${{ steps.tag.outputs.name }}
+            ## Agent Hub ${{ steps.tag.outputs.name }}
 
-            Lightweight cross-platform Hermes terminal with LAN/IP multi-device access.
+            Multi-agent control console (Hermes / OpenClaw / Direct LLM) with LAN access.
 
             ### Quick start
             ```bash
-            tar -xzf Hermes-ALI-*-src.tar.gz
-            cd Hermes-ALI-*
-            ./start.sh          # macOS / Linux
+            tar -xzf Agent-Hub-*-src.tar.gz
+            cd Agent-Hub-*
+            ./ctl.sh start      # macOS / Linux
             # .\start.ps1       # Windows PowerShell
             ```
 

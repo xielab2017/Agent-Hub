@@ -7,8 +7,9 @@ import socket
 import sys
 from pathlib import Path
 
-VERSION = "1.1.5"
-APP_NAME = "Hermes-ALI"
+VERSION = "1.4.59"
+APP_NAME = "Agent Hub"
+APP_TAGLINE = "Control UI · claws use native homes (~/.hermes · ~/.openclaw · ~/.nanobot)"
 
 # Default bind: all interfaces so phones / other PCs can connect by IP
 DEFAULT_HOST = os.environ.get("HERMES_ALI_HOST", "0.0.0.0")
@@ -43,13 +44,20 @@ def hermes_home() -> Path:
 
 
 def discover_agent_dirs() -> list[Path]:
-    """Candidate directories that may contain run_agent.py."""
+    """Candidate directories that may contain run_agent.py (native ~/.hermes first)."""
+    from .home import ensure_home, runtime_dir
+
+    ensure_home()
     home = hermes_home()
     candidates = [
         home / "hermes-agent",
+        home,
         Path("/usr/local/lib/hermes-agent"),
+        # Legacy Hub parallel cache (read-only fallback)
+        runtime_dir("hermes") / "hermes-agent",
+        runtime_dir("hermes"),
     ]
-    env_dir = os.environ.get("HERMES_ALI_AGENT_DIR", "").strip()
+    env_dir = os.environ.get("HERMES_ALI_AGENT_DIR", "").strip() or os.environ.get("AGENT_CLI_HERMES_DIR", "").strip()
     if env_dir:
         candidates.insert(0, Path(env_dir).expanduser())
     for p in (
@@ -74,8 +82,11 @@ def discover_agent_dirs() -> list[Path]:
 
 
 def ensure_state_dirs() -> None:
+    from .home import ensure_home
+
     SESSIONS_DIR.mkdir(parents=True, exist_ok=True)
     STATE_DIR.mkdir(parents=True, exist_ok=True)
+    ensure_home()
 
 
 def local_ips() -> list[str]:

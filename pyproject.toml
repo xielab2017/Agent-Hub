@@ -1,17 +1,20 @@
 [project]
-name = "hermes-ali"
-version = "1.1.5"
-description = "Lightweight cross-platform Hermes Agent terminal with LAN/IP access"
+name = "agent-hub"
+version = "1.4.59"
+description = "Agent Hub — multi-agent control console for Hermes, OpenClaw, NanoBot and Direct LLM"
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }
-authors = [{ name = "Xie Lab" }]
-keywords = ["hermes", "agent", "terminal", "webui", "sse"]
+authors = [{ name = "Xie Lab", email = "xielab2017@users.noreply.github.com" }]
+keywords = ["agent-hub", "hermes", "openclaw", "agent", "webui", "sse", "campus"]
 
 [project.urls]
-Homepage = "https://github.com/xielab2017/Hermes-ALI"
-Repository = "https://github.com/xielab2017/Hermes-ALI"
-Issues = "https://github.com/xielab2017/Hermes-ALI/issues"
+Homepage = "https://github.com/xielab2017/Agent-Hub"
+Repository = "https://github.com/xielab2017/Agent-Hub"
+Issues = "https://github.com/xielab2017/Agent-Hub/issues"
+Changelog = "https://github.com/xielab2017/Agent-Hub/blob/main/CHANGELOG.md"
 
 [project.scripts]
+agent-hub = "server:main"
 hermes-ali = "server:main"
+agent-cli = "server:main"

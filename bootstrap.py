@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""One-shot launcher for Hermes-ALI (Mac / Linux / Windows)."""
+"""One-shot launcher for Agent Hub (Mac / Linux / Windows)."""
 
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ def maybe_hint_hermes() -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Bootstrap & start Hermes-ALI")
+    parser = argparse.ArgumentParser(description="Bootstrap & start Agent Hub")
     parser.add_argument("--host", default=os.environ.get("HERMES_ALI_HOST", "0.0.0.0"))
     parser.add_argument("--port", type=int, default=int(os.environ.get("HERMES_ALI_PORT", "8765")))
     parser.add_argument("--no-browser", action="store_true")
@@ -41,7 +41,7 @@ def main() -> int:
         os.environ["HERMES_ALI_PASSWORD"] = args.password
 
     print()
-    print("  Hermes-ALI bootstrap")
+    print("  Agent Hub bootstrap")
     print("  ────────────────────")
     print(f"  Python: {find_python()} ({sys.version.split()[0]})")
     maybe_hint_hermes()

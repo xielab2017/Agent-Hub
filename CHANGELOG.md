@@ -1,5 +1,29 @@
 # Changelog
 
+## v1.4.59 — 2026-07-14
+
+Public Agent Hub packaging + Appearance presets.
+
+- README / docs screenshots for GitHub (`xielab2017/Agent-Hub`)
+- Built-in logos: SUAT color + whiteboard only
+- `ctl.sh install-service` durability: idempotent start, no accidental Hub stop on install
+
+## v1.4.58 — 2026-07-14
+
+Subagents ↔ C0/C1/C2/C3 tier models + Soul; parallel auto-pick across tiers.
+
+## v1.4.57 — 2026-07-14
+
+Fix parallel-task switching: parent-only strip, in-place progress, event delegation.
+
+## v1.4.56 — 2026-07-14
+
+Appearance: custom sidebar / empty-state logos (upload or built-in presets).
+
+## v1.4.53–1.4.55
+
+Self-evolution, Excel fill (explicit only), gateway durability / watchdog, UI polish.
+
 ## v1.1.3 — 2026-07-13
 
 Fix API key + live model selection for NVIDIA / OpenRouter / etc.
@@ -23,4 +47,4 @@ Campus Office control center + workflows.
 
 ## v1.0.0 — 2026-07-13
 
-Initial release.
+Initial release (as Hermes-ALI).

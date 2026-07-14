@@ -24,6 +24,10 @@ class Session:
     model: str = ""
     messages: list[dict[str, Any]] = field(default_factory=list)
     pinned: bool = False
+    archived: bool = False
+    # Ephemeral parallel subagent lanes (hidden from sidebar by default)
+    hidden: bool = False
+    parent_id: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -38,6 +42,9 @@ class Session:
             model=data.get("model") or "",
             messages=list(data.get("messages") or []),
             pinned=bool(data.get("pinned")),
+            archived=bool(data.get("archived")),
+            hidden=bool(data.get("hidden")),
+            parent_id=str(data.get("parent_id") or ""),
         )
 
 
@@ -46,7 +53,16 @@ def _path(session_id: str) -> Path:
     return SESSIONS_DIR / f"{safe}.json"
 
 
-def list_sessions() -> list[dict[str, Any]]:
+def _session_active_job(session_id: str) -> dict[str, Any] | None:
+    try:
+        from . import streaming
+
+        return streaming.session_job(session_id)
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def list_sessions(*, include_archived: bool = False, include_hidden: bool = False) -> list[dict[str, Any]]:
     ensure_state_dirs()
     items: list[dict[str, Any]] = []
     with _lock:
@@ -54,6 +70,10 @@ def list_sessions() -> list[dict[str, Any]]:
             try:
                 data = json.loads(path.read_text(encoding="utf-8"))
                 s = Session.from_dict(data)
+                if s.archived and not include_archived:
+                    continue
+                if s.hidden and not include_hidden:
+                    continue
                 items.append(
                     {
                         "id": s.id,
@@ -62,7 +82,11 @@ def list_sessions() -> list[dict[str, Any]]:
                         "updated_at": s.updated_at,
                         "model": s.model,
                         "pinned": s.pinned,
+                        "archived": s.archived,
+                        "hidden": s.hidden,
+                        "parent_id": s.parent_id,
                         "message_count": len(s.messages),
+                        "active_job": _session_active_job(s.id),
                     }
                 )
             except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError):
@@ -90,7 +114,13 @@ def save_session(session: Session) -> None:
         path.write_text(json.dumps(session.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def create_session(title: str = "New chat", model: str = "") -> Session:
+def create_session(
+    title: str = "New chat",
+    model: str = "",
+    *,
+    hidden: bool = False,
+    parent_id: str = "",
+) -> Session:
     now = time.time()
     session = Session(
         id=str(uuid.uuid4()),
@@ -98,6 +128,8 @@ def create_session(title: str = "New chat", model: str = "") -> Session:
         created_at=now,
         updated_at=now,
         model=model or "",
+        hidden=bool(hidden),
+        parent_id=str(parent_id or "").strip(),
     )
     save_session(session)
     return session
@@ -118,6 +150,7 @@ def update_session(
     title: str | None = None,
     model: str | None = None,
     pinned: bool | None = None,
+    archived: bool | None = None,
     messages: list[dict[str, Any]] | None = None,
 ) -> Session | None:
     session = get_session(session_id)
@@ -129,6 +162,8 @@ def update_session(
         session.model = model
     if pinned is not None:
         session.pinned = pinned
+    if archived is not None:
+        session.archived = archived
     if messages is not None:
         session.messages = messages
     session.updated_at = time.time()
@@ -136,11 +171,18 @@ def update_session(
     return session
 
 
+def ensure_message_id(msg: dict[str, Any]) -> dict[str, Any]:
+    if not msg.get("id"):
+        msg = dict(msg)
+        msg["id"] = str(uuid.uuid4())
+    return msg
+
+
 def append_messages(session_id: str, *msgs: dict[str, Any]) -> Session | None:
     session = get_session(session_id)
     if session is None:
         return None
-    session.messages.extend(msgs)
+    session.messages.extend(ensure_message_id(dict(m)) for m in msgs)
     # Auto-title from first user message
     if session.title in ("New chat", "新对话", "") and msgs:
         first = next((m for m in msgs if m.get("role") == "user"), None)
@@ -150,3 +192,26 @@ def append_messages(session_id: str, *msgs: dict[str, Any]) -> Session | None:
     session.updated_at = time.time()
     save_session(session)
     return session
+
+
+def backup_session(session_id: str) -> dict[str, Any]:
+    """Copy session JSON into ~/.agent-cli/backups/sessions/ and return metadata."""
+    from .home import ensure_home
+
+    session = get_session(session_id)
+    if session is None:
+        raise FileNotFoundError(f"session not found: {session_id}")
+    home = ensure_home()
+    dest_dir = Path(home["backups"]) / "sessions"
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    stamp = time.strftime("%Y%m%d-%H%M%S")
+    safe_title = "".join(c if (c.isalnum() or c in "-_") else "_" for c in (session.title or "session"))[:40]
+    dest = dest_dir / f"{stamp}_{safe_title or 'session'}_{session.id[:8]}.json"
+    payload = {
+        "backed_up_at": time.time(),
+        "backed_up_iso": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "session": session.to_dict(),
+    }
+    with _lock:
+        dest.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    return {"ok": True, "path": str(dest), "session_id": session.id, "title": session.title}

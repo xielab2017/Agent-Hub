@@ -144,39 +144,51 @@ PROVIDERS: dict[str, dict[str, Any]] = {
         "hint": "NVIDIA 托管 API 或校园 NIM；密钥用 NVIDIA_API_KEY 环境变量",
         "models": _m(
             fast="meta/llama-3.1-8b-instruct",
-            main="meta/llama-3.1-70b-instruct",
+            main="meta/llama-3.3-70b-instruct",
             vision="meta/llama-3.2-90b-vision-instruct",
-            reasoning="deepseek-ai/deepseek-r1",
+            reasoning="nvidia/nemotron-3-nano-30b-a3b",
             embedding="nvidia/nv-embedqa-e5-v5",
             reranker="",
         ),
         "suggestions": {
             "fast": [
                 "meta/llama-3.1-8b-instruct",
-                "google/gemma-2-9b-it",
-                "qwen/qwen2.5-7b-instruct",
+                "meta/llama-3.2-3b-instruct",
+                "google/gemma-3-4b-it",
+                "nvidia/nvidia-nemotron-nano-9b-v2",
             ],
             "main": [
+                "meta/llama-3.3-70b-instruct",
                 "meta/llama-3.1-70b-instruct",
-                "qwen/qwen2.5-72b-instruct",
+                "nvidia/llama-3.3-nemotron-super-49b-v1.5",
                 "nvidia/llama-3.1-nemotron-70b-instruct",
+                "qwen/qwen3.5-122b-a10b",
+                "deepseek-ai/deepseek-v4-flash",
             ],
             "vision": [
                 "meta/llama-3.2-90b-vision-instruct",
-                "microsoft/phi-3-vision-128k-instruct",
+                "meta/llama-3.2-11b-vision-instruct",
+                "microsoft/phi-4-multimodal-instruct",
+                "nvidia/nemotron-nano-12b-v2-vl",
             ],
             "reasoning": [
-                "deepseek-ai/deepseek-r1",
-                "deepseek-ai/deepseek-r1-distill-llama-70b",
+                "nvidia/nemotron-3-nano-30b-a3b",
+                "nvidia/nemotron-3-super-120b-a12b",
+                "deepseek-ai/deepseek-v4-pro",
+                "nvidia/llama-3.1-nemotron-ultra-253b-v1",
             ],
-            "embedding": ["nvidia/nv-embedqa-e5-v5", "nvidia/nv-embed-v1"],
-            "reranker": ["nvidia/nv-rerankqa-mistral-4b-v3"],
+            "embedding": [
+                "nvidia/nv-embedqa-e5-v5",
+                "nvidia/nv-embed-v1",
+                "nvidia/llama-3.2-nv-embedqa-1b-v1",
+            ],
+            "reranker": [],
         },
         "routing": {
-            "simple": "qwen_fast",
-            "office": "qwen_main",
-            "vision": "qwen_vl",
-            "reasoning": "deepseek_reasoning",
+            "simple": "fast",
+            "office": "main",
+            "vision": "vision",
+            "reasoning": "reasoning",
         },
     },
     "openrouter": {
@@ -204,10 +216,10 @@ PROVIDERS: dict[str, dict[str, Any]] = {
             "reranker": [],
         },
         "routing": {
-            "simple": "qwen_fast",
-            "office": "qwen_main",
-            "vision": "qwen_vl",
-            "reasoning": "deepseek_reasoning",
+            "simple": "fast",
+            "office": "main",
+            "vision": "vision",
+            "reasoning": "reasoning",
         },
     },
     "minimax": {
@@ -279,20 +291,20 @@ PROVIDERS: dict[str, dict[str, Any]] = {
         "base_url": "https://api.deepseek.com/v1",
         "api_key_env": "DEEPSEEK_API_KEY",
         "openai_compatible": True,
-        "hint": "DeepSeek 官方 API",
+        "hint": "DeepSeek 官方 API（api.deepseek.com）— 勿与 NVIDIA 上的 deepseek-ai/* 混淆",
         "models": _m(
-            fast="deepseek-chat",
-            main="deepseek-chat",
+            fast="deepseek-v4-flash",
+            main="deepseek-v4-pro",
             vision="",
-            reasoning="deepseek-reasoner",
+            reasoning="deepseek-v4-pro",
             embedding="",
             reranker="",
         ),
         "suggestions": {
-            "fast": ["deepseek-chat"],
-            "main": ["deepseek-chat"],
+            "fast": ["deepseek-v4-flash", "deepseek-chat"],
+            "main": ["deepseek-v4-pro", "deepseek-chat"],
             "vision": [],
-            "reasoning": ["deepseek-reasoner"],
+            "reasoning": ["deepseek-v4-pro", "deepseek-reasoner"],
             "embedding": [],
             "reranker": [],
         },
@@ -461,6 +473,193 @@ def list_providers() -> list[dict[str, Any]]:
 
 def get_provider(provider_id: str) -> dict[str, Any] | None:
     return PROVIDERS.get((provider_id or "").strip())
+
+
+# Providers that expect org/model ids (NVIDIA NIM, OpenRouter, …)
+_NAMESPACED_PROVIDERS = frozenset(
+    {"nvidia-nim", "nvidia-api", "nvidia-hosted", "openrouter"}
+)
+# Official APIs that reject org prefixes
+_SHORT_NAME_PROVIDERS = frozenset(
+    {"deepseek", "openai", "anthropic", "minimax", "kimi", "local-ollama", "campus-openai-compatible", "gemini"}
+)
+
+_ROUTE_TO_GENERIC = {
+    "simple": "fast",
+    "office": "main",
+    "vision": "vision",
+    "reasoning": "reasoning",
+    "fast": "fast",
+    "main": "main",
+}
+
+
+def _provider_model_candidates(prov: dict[str, Any]) -> list[str]:
+    out: list[str] = []
+    seen: set[str] = set()
+    for v in (prov.get("models") or {}).values():
+        s = str(v or "").strip()
+        if s and s not in seen:
+            seen.add(s)
+            out.append(s)
+    for lst in (prov.get("suggestions") or {}).values():
+        for x in lst or []:
+            s = str(x or "").strip()
+            if s and s not in seen:
+                seen.add(s)
+                out.append(s)
+    return out
+
+
+def coerce_model_for_provider(
+    provider_id: str,
+    model: str,
+    *,
+    route_key: str = "office",
+) -> str:
+    """Align model id with the active provider (fix hybrid / short-name 404s).
+
+    NVIDIA / OpenRouter need ``org/model``; DeepSeek official rejects the org prefix.
+    When hybrid leaves ``model`` empty, fall back to the provider catalog default.
+    """
+    pid = resolve_provider_id(provider_id) if provider_id else ""
+    prov = get_provider(pid) if pid else None
+    m = (model or "").strip()
+    generic = _ROUTE_TO_GENERIC.get((route_key or "office").strip().lower(), "main")
+    defaults = (prov or {}).get("models") or {}
+
+    def _default() -> str:
+        return str(
+            defaults.get(generic) or defaults.get("fast") or defaults.get("main") or ""
+        ).strip()
+
+    if not prov:
+        return m
+
+    if not m:
+        return _default()
+
+    # DeepSeek / OpenAI-style: strip accidental org prefix (NVIDIA uses deepseek-ai/…)
+    if pid in _SHORT_NAME_PROVIDERS and "/" in m:
+        short = m.rsplit("/", 1)[-1].strip()
+        cands = _provider_model_candidates(prov)
+        if short in cands or any(c.endswith(short) for c in cands):
+            return short
+        if pid == "deepseek" and short.startswith("deepseek-"):
+            return short
+        m = short
+
+    # Official DeepSeek: keep v4 ids; never send deepseek-ai/ org prefix to api.deepseek.com
+    if pid == "deepseek":
+        cands = {c.lower() for c in _provider_model_candidates(prov)}
+        low = m.lower()
+        if low in cands:
+            return m
+        if "reason" in low or low.endswith("-r1"):
+            return str(defaults.get("reasoning") or defaults.get("main") or "deepseek-v4-pro")
+        if "pro" in low:
+            return str(defaults.get("main") or "deepseek-v4-pro")
+        if "flash" in low or "chat" in low or "v3" in low or "v4" in low:
+            return str(defaults.get(generic) or defaults.get("fast") or "deepseek-v4-flash")
+        fb = _default()
+        return fb or m
+
+    # Namespaced gateways: promote bare ids via catalog match
+    if pid in _NAMESPACED_PROVIDERS and "/" not in m:
+        short = m.lower()
+        for c in _provider_model_candidates(prov):
+            cl = c.lower()
+            if cl == short or cl.endswith("/" + short):
+                return c
+        for c in _provider_model_candidates(prov):
+            if short in c.lower().rsplit("/", 1)[-1]:
+                return c
+        # Bare id will 404 on NIM — use provider default for this slot
+        fb = _default()
+        if fb:
+            return fb
+
+    return m
+
+
+# Popular-model provider ids → catalog provider ids (when they differ)
+PROVIDER_ALIASES: dict[str, str] = {
+    "moonshot": "kimi",
+    "kimi": "kimi",
+    "dashscope": "openrouter",  # Qwen via OpenRouter if campus URL unset
+    "qwen": "openrouter",
+    "01ai": "openrouter",
+    "xai": "openrouter",
+    "mistral": "openrouter",
+    "cohere": "openrouter",
+    "zhipu": "openrouter",
+    "volcengine": "openrouter",
+    "tencent": "openrouter",
+}
+
+
+def resolve_provider_id(provider: str) -> str:
+    pid = (provider or "").strip()
+    if not pid:
+        return ""
+    if pid in PROVIDERS:
+        return pid
+    alias = PROVIDER_ALIASES.get(pid, "")
+    if alias and alias in PROVIDERS:
+        return alias
+    return pid
+
+
+def apply_recommended_model(
+    cfg: dict[str, Any],
+    *,
+    model_id: str,
+    provider: str = "",
+    role: str = "main",
+    apply_provider: bool = True,
+) -> dict[str, Any]:
+    """Write a recommended model into campus config slots + last_model.
+
+    Does not install runtimes — only configures model ids for the Direct LLM path.
+    """
+    mid = (model_id or "").strip()
+    if not mid:
+        raise ValueError("model_id required")
+    out = deepcopy(cfg)
+    slot = (role or "main").strip().lower()
+    if slot in ("code", "office", "coder"):
+        slot = "main"
+    if slot not in SLOTS:
+        slot = "main"
+
+    resolved_provider = resolve_provider_id(provider)
+    provider_applied = False
+    if apply_provider and resolved_provider and get_provider(resolved_provider):
+        # Switch backend to matching provider but keep filling only this model below
+        try:
+            out = apply_provider_preset(out, resolved_provider, fill_models=False)
+            provider_applied = True
+        except ValueError:
+            provider_applied = False
+
+    models = dict(out.get("models") or {})
+    models[slot] = mid
+    legacy = SLOT_TO_LEGACY.get(slot)
+    if legacy:
+        models[legacy] = mid
+    out["models"] = models
+
+    ali = dict(out.get("ali") or {})
+    ali["last_model"] = mid
+    out["ali"] = ali
+
+    out["_apply_meta"] = {
+        "model_id": mid,
+        "slot": slot,
+        "provider": resolved_provider or provider,
+        "provider_applied": provider_applied,
+    }
+    return out
 
 
 def looks_like_secret(value: str) -> bool:
@@ -647,8 +846,41 @@ def apply_hybrid_preset(cfg: dict[str, Any], preset_id: str) -> dict[str, Any]:
 
 
 def catalog_payload() -> dict[str, Any]:
+    from .digest import POPULAR_AGENT_MODELS
+
+    providers = list_providers()
+    for p in providers:
+        pid = p.get("id") or ""
+        if pid in (
+            "campus-openai-compatible",
+            "deepseek",
+            "kimi",
+            "minimax",
+            "nvidia-nim",
+            "hybrid",
+        ) or "qwen" in pid or "dashscope" in pid or "zhipu" in pid or "volc" in pid:
+            p["region"] = "cn" if pid not in ("nvidia-nim", "hybrid", "campus-openai-compatible") else "both"
+        if pid in ("openai", "anthropic", "gemini", "openrouter", "local-ollama"):
+            p["region"] = "global" if pid != "openrouter" else "both"
+        if pid == "campus-openai-compatible":
+            p["region"] = "both"
+        if pid == "nvidia-nim":
+            p["region"] = "both"
+        if pid == "hybrid":
+            p["region"] = "both"
+        if pid in ("deepseek", "kimi", "minimax"):
+            p["region"] = "cn"
+    # ensure region key
+    for p in providers:
+        p.setdefault("region", "both")
+
     return {
-        "providers": list_providers(),
+        "providers": providers,
+        "regions": {
+            "cn": [p for p in providers if p.get("region") in ("cn", "both")],
+            "global": [p for p in providers if p.get("region") in ("global", "both")],
+        },
+        "popular_agent_models": POPULAR_AGENT_MODELS,
         "hybrid_presets": [
             {"id": k, "label": v["label"], "routes": v["routes"]} for k, v in HYBRID_PRESETS.items()
         ],
