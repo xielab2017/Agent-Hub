@@ -29,6 +29,9 @@ DEFAULT_CAMPUS: dict[str, Any] = {
     "hybrid": {
         # "simple": {"provider": "openai", "model": "gpt-4o-mini"},
     },
+    # Provider-scoped model ids returned by the real /models endpoint.
+    # Kept separate from role bindings so every model picker can share it.
+    "available_models": {},
     "models": {
         "fast": "",
         "main": "",
@@ -134,11 +137,62 @@ def load_campus_config() -> dict[str, Any]:
     return deepcopy(DEFAULT_CAMPUS)
 
 
-def save_campus_config(data: dict[str, Any]) -> dict[str, Any]:
+def resolve_backend_verify_tls(
+    cfg: dict[str, Any],
+    route_info: dict[str, Any] | None = None,
+) -> bool:
+    """Resolve TLS verification for the concrete routed LLM provider.
+
+    Inheritance, most-specific first:
+    route_info.verify_tls → backend.provider_tls[provider] →
+    hybrid[route_key].verify_tls → backend.verify_tls → secure default True.
+    """
+    route = route_info if isinstance(route_info, dict) else {}
+    if isinstance(route.get("verify_tls"), bool):
+        return bool(route["verify_tls"])
+
+    backend = cfg.get("backend") if isinstance(cfg.get("backend"), dict) else {}
+    provider = str(route.get("provider") or route.get("backend_type") or backend.get("type") or "")
+    provider_tls = backend.get("provider_tls")
+    if isinstance(provider_tls, dict) and provider:
+        scoped = provider_tls.get(provider)
+        if isinstance(scoped, bool):
+            return scoped
+        if isinstance(scoped, dict) and isinstance(scoped.get("verify_tls"), bool):
+            return bool(scoped["verify_tls"])
+
+    route_key = str(route.get("route_key") or "")
+    hybrid = cfg.get("hybrid") if isinstance(cfg.get("hybrid"), dict) else {}
+    routed = hybrid.get(route_key) if route_key else None
+    if isinstance(routed, dict) and isinstance(routed.get("verify_tls"), bool):
+        return bool(routed["verify_tls"])
+
+    return bool(backend.get("verify_tls", True))
+
+
+def save_campus_config(
+    data: dict[str, Any], *, preserve_existing: bool = True
+) -> dict[str, Any]:
+    """Persist settings without dropping fields omitted by a partial/stale writer.
+
+    Most callers update one section after loading the current config, but browser
+    tabs and older clients can still submit a config that predates a newly added
+    field. Merge the on-disk document first so those writes cannot silently
+    restore defaults (notably backend.verify_tls). Imports opt out below because
+    they intentionally replace the complete configuration.
+    """
     ensure_state_dirs()
     from .providers import looks_like_secret
 
-    merged = _deep_merge(DEFAULT_CAMPUS, data or {})
+    merged = deepcopy(DEFAULT_CAMPUS)
+    if preserve_existing and CAMPUS_CONFIG_FILE.is_file():
+        try:
+            existing = json.loads(CAMPUS_CONFIG_FILE.read_text(encoding="utf-8"))
+            if isinstance(existing, dict):
+                merged = _deep_merge(merged, existing)
+        except (OSError, json.JSONDecodeError):
+            pass
+    merged = _deep_merge(merged, data or {})
     # Never persist secrets
     backend = merged.get("backend") or {}
     for secret_key in ("api_key", "password", "token", "secret"):
@@ -214,7 +268,7 @@ def import_campus_config(path: str) -> dict[str, Any]:
     data = json.loads(src.read_text(encoding="utf-8"))
     if not isinstance(data, dict):
         raise ValueError("config must be a JSON object")
-    return save_campus_config(data)
+    return save_campus_config(data, preserve_existing=False)
 
 
 def export_campus_config(dest: str) -> str:
@@ -232,7 +286,7 @@ def api_key_status(cfg: dict[str, Any] | None = None) -> dict[str, Any]:
 
 
 def public_settings_view() -> dict[str, Any]:
-    from .providers import catalog_payload
+    from .providers import catalog_payload, model_options_payload
     from . import websearch
 
     cfg = load_campus_config()
@@ -242,6 +296,7 @@ def public_settings_view() -> dict[str, Any]:
         "api_key": api_key_status(cfg),
         "defaults": DEFAULT_CAMPUS,
         "catalog": catalog_payload(),
+        "model_options": model_options_payload(cfg),
         "search": websearch.search_status(),
     }
 

@@ -15,7 +15,7 @@ const FONT_SIZE_LABELS = {
   zh: { 13: "小 13", 14: "中 14", 15: "中大 15", 16: "大 16", 18: "特大 18" },
   en: { 13: "S 13", 14: "M 14", 15: "M+ 15", 16: "L 16", 18: "XL 18" },
 };
-const LOGO_VER = "1.4.59";
+const LOGO_VER = "2.0.0";
 const DEFAULT_LOGO = `/brand/suat-logo-color.png?v=${LOGO_VER}`;
 const LOGO_PRESETS = [
   { id: "suat-color", src: `/brand/suat-logo-color.png?v=${LOGO_VER}`, labelKey: "appearance.logoPresetColor" },
@@ -159,6 +159,7 @@ const I18N = {
     "mode.claw": "Claw 已连接 · Hub↔Claw Soul 融合 · Direct LLM",
     "mode.agent": "Agent 模式 · 工具/Skill",
     "composer.hubChat": "Hub 聊天",
+    "composer.settings": "任务设置",
     "hubChat.agent": "Agent（工具）",
     "hubChat.direct": "快聊",
     "engine.hermes": "Hermes Agent",
@@ -347,6 +348,7 @@ const I18N = {
     "mode.claw": "Claw connected · Hub↔Claw Soul fused · Direct LLM",
     "mode.agent": "Agent mode · tools/skills",
     "composer.hubChat": "Hub chat",
+    "composer.settings": "Task settings",
     "hubChat.agent": "Agent (tools)",
     "hubChat.direct": "Fast chat",
     "engine.hermes": "Hermes Agent",
@@ -715,7 +717,9 @@ function persistPrefsLocal() {
 
 async function persistPrefsServer() {
   try {
-    const view = state.settings || (await api("/api/settings"));
+    // Reload before writing: another tab or an external config edit may have
+    // changed backend settings since state.settings was rendered.
+    const view = await api("/api/settings");
     const cfg = JSON.parse(JSON.stringify((view && view.config) || {}));
     if (!cfg.ali) cfg.ali = {};
     cfg.ali.language = state.prefs.language;
@@ -977,6 +981,332 @@ function showLogin(on) { $("#login-overlay").classList.toggle("hidden", !on); }
 function setSidebarOpen(open) {
   $("#sidebar").classList.toggle("open", open);
   $("#sidebar-backdrop").classList.toggle("hidden", !open);
+}
+
+const SIDEBAR_WIDTH_KEY = "hermes_ali_sidebar_width";
+const SIDEBAR_NARROW_MQ = "(max-width: 860px)";
+
+function clampSidebarWidth(px) {
+  const root = getComputedStyle(document.documentElement);
+  const min = parseFloat(root.getPropertyValue("--sidebar-width-min")) || 180;
+  const max = parseFloat(root.getPropertyValue("--sidebar-width-max")) || 480;
+  const mainMin = parseFloat(root.getPropertyValue("--main-min-width")) || 260;
+  const handle = 6;
+  const roomMax = Math.max(min, window.innerWidth - mainMin - handle);
+  return Math.round(Math.min(max, roomMax, Math.max(min, px)));
+}
+
+function applySidebarWidth(px, { persist = false } = {}) {
+  const w = clampSidebarWidth(px);
+  document.documentElement.style.setProperty("--sidebar-width", `${w}px`);
+  const handle = $("#sidebar-resize");
+  if (handle) {
+    handle.setAttribute("aria-valuenow", String(w));
+    handle.setAttribute("aria-valuemin", "180");
+    handle.setAttribute("aria-valuemax", "480");
+  }
+  if (persist) {
+    try { localStorage.setItem(SIDEBAR_WIDTH_KEY, String(w)); } catch (_) { /* ignore */ }
+  }
+  return w;
+}
+
+function clearSidebarWidthPreference() {
+  try { localStorage.removeItem(SIDEBAR_WIDTH_KEY); } catch (_) { /* ignore */ }
+  document.documentElement.style.removeProperty("--sidebar-width");
+  const handle = $("#sidebar-resize");
+  if (handle) {
+    handle.removeAttribute("aria-valuenow");
+  }
+}
+
+function loadSidebarWidthPreference() {
+  if (window.matchMedia(SIDEBAR_NARROW_MQ).matches) return;
+  let stored = null;
+  try { stored = localStorage.getItem(SIDEBAR_WIDTH_KEY); } catch (_) { stored = null; }
+  const n = stored != null ? Number(stored) : NaN;
+  if (Number.isFinite(n) && n > 0) applySidebarWidth(n);
+}
+
+function setupSidebarResize() {
+  const handle = $("#sidebar-resize");
+  if (!handle) return;
+
+  loadSidebarWidthPreference();
+
+  let dragging = false;
+  let startX = 0;
+  let startW = 0;
+
+  const onMove = (clientX) => {
+    if (!dragging) return;
+    const delta = clientX - startX;
+    applySidebarWidth(startW + delta);
+  };
+
+  const endDrag = (clientX) => {
+    if (!dragging) return;
+    dragging = false;
+    document.body.classList.remove("resizing-sidebar");
+    window.removeEventListener("pointermove", onPointerMove);
+    window.removeEventListener("pointerup", onPointerUp);
+    window.removeEventListener("pointercancel", onPointerUp);
+    if (typeof clientX === "number") onMove(clientX);
+    const cur = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--sidebar-width"));
+    if (Number.isFinite(cur)) applySidebarWidth(cur, { persist: true });
+  };
+
+  const onPointerMove = (e) => onMove(e.clientX);
+  const onPointerUp = (e) => endDrag(e.clientX);
+
+  handle.addEventListener("pointerdown", (e) => {
+    if (window.matchMedia(SIDEBAR_NARROW_MQ).matches) return;
+    if (e.button != null && e.button !== 0) return;
+    e.preventDefault();
+    dragging = true;
+    startX = e.clientX;
+    startW = $("#sidebar")?.getBoundingClientRect().width
+      || parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--sidebar-width"))
+      || 300;
+    document.body.classList.add("resizing-sidebar");
+    try { handle.setPointerCapture(e.pointerId); } catch (_) { /* ignore */ }
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointercancel", onPointerUp);
+  });
+
+  handle.addEventListener("dblclick", () => {
+    if (window.matchMedia(SIDEBAR_NARROW_MQ).matches) return;
+    clearSidebarWidthPreference();
+  });
+
+  handle.addEventListener("keydown", (e) => {
+    if (window.matchMedia(SIDEBAR_NARROW_MQ).matches) return;
+    const step = e.shiftKey ? 24 : 12;
+    const cur = $("#sidebar")?.getBoundingClientRect().width
+      || parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--sidebar-width"))
+      || 300;
+    if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      applySidebarWidth(cur - step, { persist: true });
+    } else if (e.key === "ArrowRight") {
+      e.preventDefault();
+      applySidebarWidth(cur + step, { persist: true });
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      applySidebarWidth(180, { persist: true });
+    } else if (e.key === "End") {
+      e.preventDefault();
+      applySidebarWidth(480, { persist: true });
+    } else if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      clearSidebarWidthPreference();
+    }
+  });
+
+  window.matchMedia(SIDEBAR_NARROW_MQ).addEventListener("change", (ev) => {
+    if (ev.matches) {
+      // Overlay mode: don't leave a fixed inline width fighting the drawer
+      document.documentElement.style.removeProperty("--sidebar-width");
+    } else {
+      loadSidebarWidthPreference();
+    }
+  });
+}
+
+const COMPOSER_ADV_KEY = "hermes_ali_composer_advanced";
+const COMPOSER_HEIGHT_KEY = "hermes_ali_composer_height";
+
+function composerInputMaxPx() {
+  const raw = getComputedStyle(document.documentElement).getPropertyValue("--composer-input-max");
+  const n = parseFloat(raw);
+  return Number.isFinite(n) && n > 0 ? n : 160;
+}
+
+function clampComposerInputHeight(px) {
+  const root = getComputedStyle(document.documentElement);
+  const min = parseFloat(root.getPropertyValue("--composer-input-min")) || 44;
+  const ceil = parseFloat(root.getPropertyValue("--composer-input-max-ceil")) || 360;
+  const room = Math.max(min, Math.floor(window.innerHeight * 0.45));
+  return Math.round(Math.min(ceil, room, Math.max(min, px)));
+}
+
+function applyComposerInputHeight(px, { persist = false, syncTextarea = true } = {}) {
+  const h = clampComposerInputHeight(px);
+  document.documentElement.style.setProperty("--composer-input-max", `${h}px`);
+  const handle = $("#composer-resize");
+  if (handle) {
+    handle.setAttribute("aria-valuenow", String(h));
+    handle.setAttribute("aria-valuemin", "44");
+    handle.setAttribute("aria-valuemax", String(Math.round(Math.min(
+      parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--composer-input-max-ceil")) || 360,
+      window.innerHeight * 0.45
+    ))));
+  }
+  if (syncTextarea) {
+    const el = $("#input");
+    if (el) {
+      el.style.height = "auto";
+      el.style.height = Math.min(el.scrollHeight, h) + "px";
+    }
+  }
+  if (persist) {
+    try { localStorage.setItem(COMPOSER_HEIGHT_KEY, String(h)); } catch (_) { /* ignore */ }
+  }
+  return h;
+}
+
+function clearComposerHeightPreference() {
+  try { localStorage.removeItem(COMPOSER_HEIGHT_KEY); } catch (_) { /* ignore */ }
+  document.documentElement.style.removeProperty("--composer-input-max");
+  const handle = $("#composer-resize");
+  if (handle) handle.removeAttribute("aria-valuenow");
+  const el = $("#input");
+  if (el) {
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, composerInputMaxPx()) + "px";
+  }
+}
+
+function loadComposerHeightPreference() {
+  let stored = null;
+  try { stored = localStorage.getItem(COMPOSER_HEIGHT_KEY); } catch (_) { stored = null; }
+  const n = stored != null ? Number(stored) : NaN;
+  if (Number.isFinite(n) && n > 0) applyComposerInputHeight(n, { syncTextarea: true });
+}
+
+function setupComposerResize() {
+  const handle = $("#composer-resize");
+  if (!handle) return;
+
+  loadComposerHeightPreference();
+
+  let dragging = false;
+  let startY = 0;
+  let startH = 0;
+
+  const onMove = (clientY) => {
+    if (!dragging) return;
+    // Dragging handle upward increases textarea max height
+    const delta = startY - clientY;
+    applyComposerInputHeight(startH + delta, { syncTextarea: true });
+  };
+
+  const endDrag = (clientY) => {
+    if (!dragging) return;
+    dragging = false;
+    document.body.classList.remove("resizing-composer");
+    window.removeEventListener("pointermove", onPointerMove);
+    window.removeEventListener("pointerup", onPointerUp);
+    window.removeEventListener("pointercancel", onPointerUp);
+    if (typeof clientY === "number") onMove(clientY);
+    applyComposerInputHeight(composerInputMaxPx(), { persist: true, syncTextarea: true });
+  };
+
+  const onPointerMove = (e) => onMove(e.clientY);
+  const onPointerUp = (e) => endDrag(e.clientY);
+
+  handle.addEventListener("pointerdown", (e) => {
+    if (e.button != null && e.button !== 0) return;
+    e.preventDefault();
+    dragging = true;
+    startY = e.clientY;
+    startH = composerInputMaxPx();
+    document.body.classList.add("resizing-composer");
+    try { handle.setPointerCapture(e.pointerId); } catch (_) { /* ignore */ }
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointercancel", onPointerUp);
+  });
+
+  handle.addEventListener("dblclick", () => clearComposerHeightPreference());
+
+  handle.addEventListener("keydown", (e) => {
+    const step = e.shiftKey ? 24 : 12;
+    const cur = composerInputMaxPx();
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      applyComposerInputHeight(cur + step, { persist: true });
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      applyComposerInputHeight(cur - step, { persist: true });
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      applyComposerInputHeight(44, { persist: true });
+    } else if (e.key === "End") {
+      e.preventDefault();
+      applyComposerInputHeight(360, { persist: true });
+    } else if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      clearComposerHeightPreference();
+    }
+  });
+}
+
+function isComposerAdvancedOpen() {
+  return !$("#composer-advanced")?.hidden;
+}
+
+function setComposerAdvancedOpen(open, { persist = true } = {}) {
+  const panel = $("#composer-advanced");
+  const btn = $("#btn-composer-adv");
+  const composer = $(".composer");
+  if (!panel || !btn) return;
+  panel.hidden = !open;
+  btn.setAttribute("aria-expanded", open ? "true" : "false");
+  composer?.classList.toggle("is-adv-open", open);
+  if (persist) {
+    try { localStorage.setItem(COMPOSER_ADV_KEY, open ? "1" : "0"); } catch (_) { /* ignore */ }
+  }
+  updateComposerAdvSummary();
+}
+
+function updateComposerAdvSummary() {
+  const summary = $("#composer-adv-summary");
+  const badge = $("#composer-adv-badge");
+  const soul = $("#soul-select");
+  const model = $("#model-select");
+  const route = $("#route-select");
+  const nSkill = (state.selectedSkills || []).length;
+  const nSub = (state.selectedSubagents || []).length;
+  const count = nSkill + nSub;
+  if (badge) {
+    if (count > 0) {
+      badge.textContent = String(count);
+      badge.classList.remove("hidden");
+    } else {
+      badge.textContent = "";
+      badge.classList.add("hidden");
+    }
+  }
+  if (!summary || isComposerAdvancedOpen()) return;
+  const parts = [];
+  const soulLabel = soul?.selectedOptions?.[0]?.textContent?.trim();
+  const modelLabel = model?.selectedOptions?.[0]?.textContent?.trim();
+  const routeLabel = route?.selectedOptions?.[0]?.textContent?.trim();
+  if (soulLabel) parts.push(soulLabel);
+  if (routeLabel) parts.push(routeLabel);
+  if (modelLabel) parts.push(modelLabel);
+  if (nSkill) parts.push(state.prefs.language !== "en" ? `Skill×${nSkill}` : `Skill×${nSkill}`);
+  if (nSub) parts.push(state.prefs.language !== "en" ? `子代理×${nSub}` : `Sub×${nSub}`);
+  summary.textContent = parts.filter(Boolean).join(" · ");
+  summary.title = summary.textContent;
+}
+
+function setupComposerAdvanced() {
+  let stored = null;
+  try { stored = localStorage.getItem(COMPOSER_ADV_KEY); } catch (_) { stored = null; }
+  // Default collapsed unless user previously expanded
+  setComposerAdvancedOpen(stored === "1", { persist: false });
+
+  $("#btn-composer-adv")?.addEventListener("click", () => {
+    setComposerAdvancedOpen(!isComposerAdvancedOpen());
+  });
+
+  ["soul-select", "route-select", "model-select", "chat-mode-select", "thinking-depth-select"].forEach((id) => {
+    $(`#${id}`)?.addEventListener("change", () => updateComposerAdvSummary());
+  });
+  updateComposerAdvSummary();
 }
 
 function escapeHtml(s) {
@@ -2398,6 +2728,7 @@ function renderSoulSelect() {
     return `<option value="${escapeHtml(r.id)}" ${r.id === state.activeSoul ? "selected" : ""}>${escapeHtml(label)}</option>`;
   }).join("") || `<option value="office">office</option>`;
   sel.value = state.activeSoul || "office";
+  updateComposerAdvSummary();
 }
 
 async function setActiveSoul(roleId) {
@@ -2480,24 +2811,25 @@ function renderSkillPicker() {
 
   if (!state.selectedSkills.length) {
     row.innerHTML = `<span class="muted">${escapeHtml(t("skills.none"))}</span>`;
-    return;
+  } else {
+    row.innerHTML = state.selectedSkills.map((id) => {
+      const meta = skillMetaById(id);
+      const label = langZh ? (meta.label || meta.name || id) : (meta.name || meta.label || id);
+      return `<span class="skill-tag" data-skill="${escapeHtml(id)}">
+        <span>${escapeHtml(label)}</span>
+        <button type="button" class="rm-skill" title="${escapeHtml(t("skills.remove"))}" aria-label="remove">×</button>
+      </span>`;
+    }).join("");
+    row.querySelectorAll(".rm-skill").forEach((btn) => {
+      btn.onclick = () => {
+        const id = btn.closest(".skill-tag")?.dataset?.skill;
+        if (!id) return;
+        state.selectedSkills = state.selectedSkills.filter((x) => x !== id);
+        renderSkillPicker();
+      };
+    });
   }
-  row.innerHTML = state.selectedSkills.map((id) => {
-    const meta = skillMetaById(id);
-    const label = langZh ? (meta.label || meta.name || id) : (meta.name || meta.label || id);
-    return `<span class="skill-tag" data-skill="${escapeHtml(id)}">
-      <span>${escapeHtml(label)}</span>
-      <button type="button" class="rm-skill" title="${escapeHtml(t("skills.remove"))}" aria-label="remove">×</button>
-    </span>`;
-  }).join("");
-  row.querySelectorAll(".rm-skill").forEach((btn) => {
-    btn.onclick = () => {
-      const id = btn.closest(".skill-tag")?.dataset?.skill;
-      if (!id) return;
-      state.selectedSkills = state.selectedSkills.filter((x) => x !== id);
-      renderSkillPicker();
-    };
-  });
+  updateComposerAdvSummary();
 }
 
 function addPickedSkill() {
@@ -2565,8 +2897,39 @@ function finishWorkflowProgress(ok = true) {
   }, 1200);
 }
 
-function sanitizeWorkflowText(text) {
+/** Model think / reasoning tags to hide from the main reply bubble. */
+const MODEL_THINK_TAG = "think(?:ing)?|reasoning|redacted_reasoning|thought";
+
+/**
+ * Strip <think>…</think> (and common variants) from assistant text.
+ * Also hides incomplete open tags mid-stream so partial tags never flash in the bubble.
+ */
+function stripModelThinkTags(text) {
   let s = String(text || "");
+  const open = `<\\s*(?:${MODEL_THINK_TAG})\\b[^>]*>`;
+  const close = `<\\s*\\/\\s*(?:${MODEL_THINK_TAG})\\s*>`;
+  const pair = new RegExp(`${open}[\\s\\S]*?${close}`, "gi");
+  let prev = "";
+  while (s !== prev) {
+    prev = s;
+    s = s.replace(pair, "");
+  }
+  // Unclosed block: hide from open tag through end of buffer
+  s = s.replace(new RegExp(`${open}[\\s\\S]*$`, "i"), "");
+  // Trailing stub of an opening/closing tag (e.g. "<thi", "</think")
+  const stub = s.match(/<\s*\/?\s*[A-Za-z_]{0,32}$/);
+  if (stub) {
+    const name = stub[0].replace(/^<\s*\/?\s*/i, "").toLowerCase();
+    const names = ["think", "thinking", "reasoning", "redacted_reasoning", "thought"];
+    if (!name || names.some((n) => n.startsWith(name))) {
+      s = s.slice(0, -stub[0].length);
+    }
+  }
+  return s;
+}
+
+function sanitizeWorkflowText(text) {
+  let s = stripModelThinkTags(text);
   // Hermes reasoning boxes / banners
   s = s.replace(/┌─[\s\S]*?┐[\s\S]*?└─+┘/g, "");
   s = s.replace(/╭─[\s\S]*?╯/g, "");
@@ -2732,10 +3095,107 @@ async function ensureAgentRuntime() {
 
 async function loadSettings() {
   state.settings = await api("/api/settings");
+  state.liveModels = (((state.settings || {}).model_options || {}).options || [])
+    .filter((item) => item && item.source === "fetched")
+    .map((item) => item.model);
   if (state.settings.config && state.settings.config.workspace) {
     $("#workspace-input").value = state.settings.config.workspace;
   }
   syncComposerFromSettings();
+}
+
+function sharedModelOptions(extra = [], payloadOverride = null) {
+  const payload = payloadOverride || (state.settings && state.settings.model_options) || {};
+  const configured = Array.isArray(payload.options) ? payload.options : [];
+  const out = [];
+  const seen = new Set();
+  [...configured, ...(extra || [])].forEach((raw) => {
+    const item = typeof raw === "string" ? { model: raw } : (raw || {});
+    const provider = String(
+      Object.prototype.hasOwnProperty.call(item, "provider") ? item.provider : (payload.provider || "")
+    ).trim();
+    const model = String(item.model || item.id || "").trim();
+    if (!model) return;
+    const key = `${provider}\n${model}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push({
+      provider,
+      model,
+      available: item.available !== false,
+      source: item.source || "configured",
+    });
+  });
+  return out;
+}
+
+function modelBindingValue(provider, model) {
+  if (!model) return "";
+  return `${encodeURIComponent(provider || "")}::${encodeURIComponent(model)}`;
+}
+
+function parseModelBinding(value) {
+  const raw = String(value || "");
+  if (!raw) return { provider: "", model: "" };
+  const at = raw.indexOf("::");
+  if (at < 0) return { provider: "", model: raw };
+  try {
+    return {
+      provider: decodeURIComponent(raw.slice(0, at)),
+      model: decodeURIComponent(raw.slice(at + 2)),
+    };
+  } catch (_) {
+    return { provider: "", model: raw.slice(at + 2) };
+  }
+}
+
+function normalizeAgentRoute(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "auto";
+  return ({
+    auto: "auto", inherit: "auto",
+    simple: "C0", fast: "C0", c0: "C0",
+    office: "C1", main: "C1", c1: "C1",
+    c2: "C2",
+    reasoning: "C3", reason: "C3", c3: "C3",
+    vision: "Vision",
+  })[raw.toLowerCase()] || raw;
+}
+
+function modelBindingOptions(selectedProvider, selectedModel, {
+  allowAuto = false, autoLabel = "", modelPayload = null,
+} = {}) {
+  const current = {
+    provider: String(selectedProvider || "").trim(),
+    model: String(selectedModel || "").trim(),
+    available: false,
+    source: "configured",
+  };
+  const options = sharedModelOptions(current.model ? [current] : [], modelPayload);
+  const selectedValue = modelBindingValue(current.provider, current.model);
+  const auto = allowAuto
+    ? `<option value="" ${!current.model ? "selected" : ""}>${escapeHtml(autoLabel || "Auto")}</option>`
+    : "";
+  return auto + options.map((item) => {
+    const value = modelBindingValue(item.provider, item.model);
+    const stale = item.available === false ? (state.prefs.language === "en" ? " · unavailable (kept)" : " · 已不在目录（保留）") : "";
+    const label = `${item.provider ? item.provider + " · " : ""}${item.model}${stale}`;
+    return `<option value="${escapeHtml(value)}" ${value === selectedValue ? "selected" : ""}>${escapeHtml(label)}</option>`;
+  }).join("");
+}
+
+function modelIdOptions(selectedModel, provider = "") {
+  const selected = String(selectedModel || "").trim();
+  const entries = sharedModelOptions(selected ? [{
+    provider,
+    model: selected,
+    available: false,
+    source: "configured",
+  }] : []).filter((item) => !provider || item.provider === provider || !item.provider);
+  return entries.map((item) => {
+    const stale = item.available === false ? (state.prefs.language === "en" ? " · unavailable (kept)" : " · 已不在目录（保留）") : "";
+    return `<option value="${escapeHtml(item.model)}" ${item.model === selected ? "selected" : ""}>${escapeHtml(item.model + stale)}</option>`;
+  }).join("") || `<option value="${escapeHtml(selected)}">${escapeHtml(selected || "—")}</option>`;
 }
 
 function modelChoicesFromSettings() {
@@ -2746,7 +3206,7 @@ function modelChoicesFromSettings() {
   ["main", "fast", "vision", "reasoning", "qwen_main", "qwen_fast", "qwen_vl", "deepseek_reasoning"].forEach((k) => {
     if (models[k]) ids.push(models[k]);
   });
-  (state.liveModels || []).forEach((m) => ids.push(typeof m === "string" ? m : (m.id || m)));
+  sharedModelOptions().forEach((item) => ids.push(item.model));
   Object.values(models).forEach((m) => { if (m) ids.push(m); });
   const sug = (state.settings && state.settings.model_suggestions) || {};
   Object.values(sug).forEach((arr) => {
@@ -2832,6 +3292,7 @@ function populateModelSelect(selected) {
     `<option value="${escapeHtml(id)}" ${id === cur ? "selected" : ""}>${escapeHtml(SHORT_MODEL(id))}</option>`
   ).join("") || `<option value="">—</option>`;
   if (cur) sel.value = cur;
+  updateComposerAdvSummary();
 }
 
 function updateModeUi() {
@@ -3274,6 +3735,7 @@ function renderSubagentPicker() {
   if (!state.selectedSubagents.length) {
     row.innerHTML = `<span class="muted">${escapeHtml(t("sub.none"))}</span>`;
     state.activeSubagent = "";
+    updateComposerAdvSummary();
     return;
   }
   // Keep active pointing at a selected id
@@ -3307,6 +3769,7 @@ function renderSubagentPicker() {
       applyChatLayout();
     };
   });
+  updateComposerAdvSummary();
 }
 
 function addPickedSubagent() {
@@ -5056,7 +5519,11 @@ async function renderControl() {
         looksLikeSecret(b.api_key_env) ? ((currentProv && currentProv.api_key_env) || "") : (b.api_key_env || ""))}
       ${field("Base URL", "backend.base_url", b.base_url || "")}
       ${field("Timeout (s)", "backend.timeout_seconds", String(b.timeout_seconds || 60), "number")}
+      ${field(langZh ? "校验证书（LLM 后端）" : "Verify TLS (LLM backend)", "backend.verify_tls", b.verify_tls !== false, "checkbox")}
     </div>
+    <p class="muted">${langZh
+      ? "默认安全开启。仅当本机代理使用自签名证书并导致证书校验失败时关闭；此项不影响联网搜索的证书设置。"
+      : "Secure by default. Disable only for a self-signed proxy that causes certificate verification failures; this does not affect search TLS."}</p>
     <label class="field"><span>${langZh ? "API Key（保存在本机 secrets，不会写入 JSON）" : "API Key (local secrets only)"}</span>
       <input type="password" id="api-key-input" placeholder="${keyStatus.present ? (langZh ? "已保存：" : "saved: ") + escapeHtml(keyStatus.masked || "****") : (langZh ? "粘贴 nvapi-… / sk-or-… 等密钥" : "paste API key")}" autocomplete="off" />
     </label>
@@ -5161,7 +5628,7 @@ async function renderControl() {
         cfg.backend.type = pid;
         cfg.backend.api_key_env = envName;
         cfg.backend.base_url = baseUrl;
-        await api("/api/settings", { method: "POST", body: JSON.stringify({ config: cfg }) });
+        await api("/api/settings", { method: "POST", body: JSON.stringify({ config: cfg, backend_update: true }) });
         const data = await api("/api/settings/api-key", {
           method: "POST",
           body: JSON.stringify({ api_key: key, provider: pid, api_key_env: envName, auto_switch: false }),
@@ -5226,7 +5693,7 @@ async function renderControl() {
         cfg.backend.type = pid;
         cfg.backend.base_url = baseUrl;
         cfg.backend.api_key_env = envName;
-        await api("/api/settings", { method: "POST", body: JSON.stringify({ config: cfg }) });
+        await api("/api/settings", { method: "POST", body: JSON.stringify({ config: cfg, backend_update: true }) });
         const data = await api("/api/settings/refresh-models", {
           method: "POST",
           body: JSON.stringify({ provider: pid, base_url: baseUrl, apply_suggestions: true }),
@@ -5255,15 +5722,6 @@ async function renderControl() {
   }
 
   const m = cfg.models || {};
-  const live = state.liveModels || [];
-  const suggestions = {
-    ...(currentProv && currentProv.suggestions ? currentProv.suggestions : {}),
-  };
-  // merge live models into every slot suggestion list
-  ["fast", "main", "vision", "reasoning", "embedding", "reranker"].forEach((slot) => {
-    const base = suggestions[slot] || [];
-    suggestions[slot] = Array.from(new Set([...(base || []), ...live]));
-  });
   const slots = catalog.slots || [
     { id: "fast", legacy: "qwen_fast", tier: "C0", label: "Fast" },
     { id: "main", legacy: "qwen_main", tier: "C1/C2", label: "Main" },
@@ -5276,11 +5734,8 @@ async function renderControl() {
   function modelField(slot) {
     const legacy = slot.legacy;
     const val = m[legacy] || m[slot.id] || "";
-    const opts = suggestions[slot.id] || [];
-    const listId = `suggest-${slot.id}`;
     return `<label class="field"><span>${escapeHtml(slot.label)} <em class="muted">(${escapeHtml(slot.tier)})</em></span>
-      <input list="${listId}" data-key="models.${escapeHtml(legacy)}" value="${escapeHtml(val)}" placeholder="${langZh ? "选择或输入模型 ID" : "pick or type model id"}" />
-      <datalist id="${listId}">${opts.map((o) => `<option value="${escapeHtml(o)}"></option>`).join("")}</datalist>
+      <select data-key="models.${escapeHtml(legacy)}">${modelIdOptions(val, b.type === "hybrid" ? "" : b.type)}</select>
     </label>`;
   }
 
@@ -5302,7 +5757,7 @@ async function renderControl() {
         ).join("");
         return `<div class="field"><span>${escapeHtml(rk.label)}</span>
           <select data-key="hybrid.${rk.key}.provider">${provOpts}</select>
-          <input data-key="hybrid.${rk.key}.model" value="${escapeHtml(entry.model || "")}" placeholder="model id" />
+          <select data-key="hybrid.${rk.key}.model">${modelIdOptions(entry.model || "", entry.provider || "")}</select>
         </div>`;
       }).join("")}</div>`;
   }
@@ -5315,12 +5770,30 @@ async function renderControl() {
     ${hybridHtml}`;
 
   const r = cfg.routing || {};
+  const tierModels = r.tier_models || {};
+  const routeTiers = [
+    ["C0", "C0 · Fast"],
+    ["C1", "C1 · Office"],
+    ["C2", "C2 · Long-form"],
+    ["C3", "C3 · Reasoning"],
+    ["Vision", "Vision"],
+  ];
   $("#ctab-routing").innerHTML = `
+    <p class="muted">${langZh
+      ? "每个等级可跟随旧槽位/自动，或固定到真实 Provider + Model。旧配置会继续生效。"
+      : "Each tier can follow the legacy route/auto binding or pin a real Provider + Model. Old configs remain valid."}</p>
     <div class="grid-2">
-      ${field("simple →", "routing.simple", r.simple || "qwen_fast")}
-      ${field("office →", "routing.office", r.office || "qwen_main")}
-      ${field("vision →", "routing.vision", r.vision || "qwen_vl")}
-      ${field("reasoning →", "routing.reasoning", r.reasoning || "deepseek_reasoning")}
+      ${routeTiers.map(([tier, label]) => {
+        const entry = tierModels[tier] || {};
+        const row = (matrix.matrix || []).find((item) => item.tier === tier) || {};
+        const follow = langZh
+          ? `跟随路由 / 自动（当前 ${row.provider || "—"} · ${row.model || "—"}）`
+          : `Follow route / auto (now ${row.provider || "—"} · ${row.model || "—"})`;
+        return `<label class="field"><span>${escapeHtml(label)}</span>
+          <select data-route-tier="${escapeHtml(tier)}">${modelBindingOptions(
+            entry.provider || "", entry.model || "", { allowAuto: true, autoLabel: follow }
+          )}</select></label>`;
+      }).join("")}
     </div>
     ${field("restricted_external_fallback", "routing.restricted_external_fallback", !!r.restricted_external_fallback, "checkbox")}
     <table class="matrix"><thead><tr><th>Tier</th><th>Examples</th><th>Provider</th><th>Model</th></tr></thead>
@@ -6553,13 +7026,34 @@ async function renderSkillsSoulAgents(langZh) {
 
   const ui = agentsData.ui || {};
   const cc = ui.cc_tabs || {};
-  const models = ((state.settings && state.settings.config) || {}).models || {};
-  const modelOpts = (() => {
-    const ids = [];
-    Object.values(models).forEach((v) => { if (v) ids.push(String(v)); });
-    (state.liveModels || []).forEach((v) => { if (v) ids.push(String(v)); });
-    return [...new Set(ids)].slice(0, 40);
-  })();
+  const modelPayload = agentsData.model_options || (state.settings && state.settings.model_options) || {};
+  const routeRows = Array.isArray(agentsData.routes) ? agentsData.routes : [];
+  const routeLabels = {
+    auto: langZh ? "自动 / 跟随聊天路由" : "Auto / follow chat route",
+    C0: "C0 · Fast", C1: "C1 · Office", C2: "C2 · Long-form",
+    C3: "C3 · Reasoning", Vision: "Vision",
+  };
+  const routeOptionHtml = (selected) => ["auto", "C0", "C1", "C2", "C3", "Vision"].map((route) => {
+    const row = routeRows.find((item) => item.tier === route) || {};
+    const resolved = route === "auto" ? "" : ` · ${row.provider || "—"} · ${row.model || "—"}`;
+    return `<option value="${route}" ${selected === route ? "selected" : ""}>${escapeHtml(routeLabels[route] + resolved)}</option>`;
+  }).join("");
+  const agentBindingSummary = (agent) => {
+    if (agent.model) {
+      return langZh
+        ? `固定模型覆盖：${agent.model_provider || "当前路由厂商"} · ${agent.model}`
+        : `Pinned model override: ${agent.model_provider || "current route provider"} · ${agent.model}`;
+    }
+    const route = normalizeAgentRoute(agent.route != null ? agent.route : agent.model_slot);
+    if (route === "auto") {
+      const mapping = routeRows.map((row) => `${row.tier}=${row.provider || "—"} · ${row.model || "—"}`).join("；");
+      return langZh ? `跟随聊天自动路由；当前映射：${mapping || "执行时解析"}` : `Follows chat auto route; current map: ${mapping || "resolved at run time"}`;
+    }
+    const row = routeRows.find((item) => item.tier === route) || {};
+    return langZh
+      ? `跟随 ${route} 路由 → ${row.provider || "—"} · ${row.model || "—"}`
+      : `Follows ${route} route → ${row.provider || "—"} · ${row.model || "—"}`;
+  };
   $("#ctab-agents").innerHTML = `
     <h4>${langZh ? "主 Agent" : "Main agent"}</h4>
     <p><strong>${escapeHtml((agentsData.main && agentsData.main.label) || "Main")}</strong>
@@ -6578,27 +7072,25 @@ async function renderSkillsSoulAgents(langZh) {
               ${(soulData.core_roles || []).map((r) => `<option value="${escapeHtml(r.id)}" ${(s.soul_role || s.role) === r.id ? "selected" : ""}>${escapeHtml(langZh ? r.label : (r.label_en || r.label))}</option>`).join("")}
             </select>
           </label>
-          <label class="field"><span>${langZh ? "模型档位（对接路由分层）" : "Model tier slot"}</span>
+          <label class="field"><span>${langZh ? "路由方式" : "Route binding"}</span>
             <select data-sub-slot="${i}">
-              ${[
-                ["", langZh ? "（继承路由）" : "(inherit route)"],
-                ["simple", langZh ? "C0 Fast / 快速" : "C0 Fast"],
-                ["office", langZh ? "C1/C2 Main / 办公主模型" : "C1/C2 Main"],
-                ["reasoning", langZh ? "C3 Reasoning / 推理" : "C3 Reasoning"],
-                ["vision", langZh ? "Vision / 多模态" : "Vision"],
-              ].map(([slot, label]) => {
-                const preview = slot === "simple" ? (models.fast || models.qwen_fast || "")
-                  : slot === "office" ? (models.main || models.qwen_main || "")
-                    : slot === "reasoning" ? (models.reasoning || models.deepseek_reasoning || "")
-                      : slot === "vision" ? (models.vision || models.qwen_vl || "") : "";
-                const shown = preview ? `${label} · ${preview}` : label;
-                return `<option value="${slot}" ${(s.model_slot || "") === slot ? "selected" : ""}>${escapeHtml(shown)}</option>`;
-              }).join("")}
+              ${routeOptionHtml(normalizeAgentRoute(s.route != null ? s.route : s.model_slot))}
             </select>
           </label>
-          <label class="field"><span>${langZh ? "专属模型 ID（可空=用档位）" : "Dedicated model id"}</span>
-            <input list="sub-model-list" data-sub-model="${i}" type="text" value="${escapeHtml(s.model || "")}" placeholder="${langZh ? "空则按上面档位自动取当前厂商模型" : "empty = use tier slot model"}" />
+          <label class="field"><span>${langZh ? "模型（自动或指定 Provider + Model）" : "Model (auto or pinned Provider + Model)"}</span>
+            <select data-sub-model="${i}">
+              ${modelBindingOptions(
+                s.model_provider || "",
+                s.model || "",
+                {
+                  allowAuto: true,
+                  autoLabel: langZh ? "不覆盖模型（使用上方路由）" : "No override (use route above)",
+                  modelPayload,
+                }
+              )}
+            </select>
           </label>
+          <div class="muted" data-sub-binding-summary="${i}">${escapeHtml(agentBindingSummary(s))}</div>
           <label class="field"><span>${langZh ? "激活关键词（逗号分隔）" : "Keywords (comma)"}</span>
             <input data-sub-kw="${i}" type="text" value="${escapeHtml((s.keywords || []).join(", "))}" />
           </label>
@@ -6608,11 +7100,22 @@ async function renderSkillsSoulAgents(langZh) {
           <button type="button" class="btn ghost chip" data-sub-del="${i}">${langZh ? "删除" : "Delete"}</button>
         </div>
       </div>`).join("") || `<p class="muted">${langZh ? "暂无" : "Empty"}</p>`}</div>
-    <datalist id="sub-model-list">${modelOpts.map((m) => `<option value="${escapeHtml(m)}"></option>`).join("")}</datalist>
     <div class="grid-2" style="margin-top:10px">
       <label class="field"><span>${langZh ? "新建 Subagent 名称" : "New subagent"}</span><input id="sub-new-label" type="text" /></label>
       <label class="field"><span>Soul</span>
         <select id="sub-new-soul">${(soulData.core_roles || []).map((r) => `<option value="${escapeHtml(r.id)}">${escapeHtml(langZh ? r.label : (r.label_en || r.label))}</option>`).join("")}</select>
+      </label>
+      <label class="field"><span>${langZh ? "默认路由档位" : "Default route tier"}</span>
+        <select id="sub-new-slot">
+          ${routeOptionHtml("auto")}
+        </select>
+      </label>
+      <label class="field"><span>${langZh ? "模型" : "Model"}</span>
+        <select id="sub-new-model">${modelBindingOptions("", "", {
+          allowAuto: true,
+          autoLabel: langZh ? "不覆盖模型（使用上方路由）" : "No override (use route above)",
+          modelPayload,
+        })}</select>
       </label>
     </div>
     <div class="row gap" style="justify-content:flex-start;margin:8px 0 12px">
@@ -6643,6 +7146,24 @@ async function renderSkillsSoulAgents(langZh) {
       <button type="button" class="btn primary" id="btn-agents-save">${langZh ? "保存 Agents 配置" : "Save agents"}</button>
     </div>`;
 
+  (agentsData.subagents || []).forEach((s, i) => {
+    const routeSel = document.querySelector(`[data-sub-slot="${i}"]`);
+    const modelSel = document.querySelector(`[data-sub-model="${i}"]`);
+    const summary = document.querySelector(`[data-sub-binding-summary="${i}"]`);
+    const refreshSummary = () => {
+      if (!summary) return;
+      const binding = parseModelBinding(modelSel?.value || "");
+      summary.textContent = agentBindingSummary({
+        ...s,
+        route: normalizeAgentRoute(routeSel?.value || "auto"),
+        model_provider: binding.provider,
+        model: binding.model,
+      });
+    };
+    routeSel?.addEventListener("change", refreshSummary);
+    modelSel?.addEventListener("change", refreshSummary);
+  });
+
   const btnAg = $("#btn-agents-save");
   if (btnAg) {
     btnAg.onclick = async () => {
@@ -6651,6 +7172,7 @@ async function renderSkillsSoulAgents(langZh) {
         const soulSel = document.querySelector(`[data-sub-soul="${i}"]`);
         const slotSel = document.querySelector(`[data-sub-slot="${i}"]`);
         const modelInp = document.querySelector(`[data-sub-model="${i}"]`);
+        const binding = parseModelBinding(modelInp ? modelInp.value : "");
         const kwInp = document.querySelector(`[data-sub-kw="${i}"]`);
         const kws = (kwInp && kwInp.value || "")
           .split(/[,，]/)
@@ -6660,8 +7182,10 @@ async function renderSkillsSoulAgents(langZh) {
           ...s,
           enabled: box ? box.checked : s.enabled !== false,
           soul_role: soulSel ? soulSel.value : (s.soul_role || s.role || "office"),
-          model_slot: slotSel ? slotSel.value : (s.model_slot || ""),
-          model: modelInp ? modelInp.value.trim() : (s.model || ""),
+          route: normalizeAgentRoute(slotSel ? slotSel.value : (s.route || s.model_slot)),
+          model_slot: normalizeAgentRoute(slotSel ? slotSel.value : (s.route || s.model_slot)),
+          model_provider: binding.model ? binding.provider : "",
+          model: binding.model || "",
           keywords: kws.length ? kws : (s.keywords || []),
         };
       });
@@ -6696,11 +7220,12 @@ async function renderSkillsSoulAgents(langZh) {
     }
     const soul = ($("#sub-new-soul") && $("#sub-new-soul").value) || "office";
     const id = label.toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-|-$/g, "") || `sub-${Date.now()}`;
-    const defaultSlots = ["simple", "office", "reasoning", "vision"];
-    const slot = defaultSlots[(agentsData.subagents || []).length % defaultSlots.length];
+    const binding = parseModelBinding($("#sub-new-model")?.value || "");
+    const slot = normalizeAgentRoute(($("#sub-new-slot") && $("#sub-new-slot").value) || "auto");
     const subagents = [...(agentsData.subagents || []), {
       id, label, label_en: label, role: soul, soul_role: soul, enabled: true, desc: "",
-      model: "", model_slot: slot, keywords: [],
+      model: binding.model || "", model_provider: binding.model ? binding.provider : "",
+      route: slot, model_slot: slot, keywords: [],
     }];
     try {
       await api("/api/agents", {
@@ -6779,6 +7304,14 @@ function collectSettingsFromForm() {
     }
     cur[parts[parts.length - 1]] = val;
   });
+  cfg.routing = cfg.routing || {};
+  cfg.routing.tier_models = cfg.routing.tier_models || {};
+  $$("[data-route-tier]").forEach((el) => {
+    const tier = el.dataset.routeTier || "";
+    const binding = parseModelBinding(el.value);
+    if (binding.model) cfg.routing.tier_models[tier] = binding;
+    else delete cfg.routing.tier_models[tier];
+  });
   if (!cfg.ali) cfg.ali = {};
   cfg.ali.language = state.prefs.language;
   cfg.ali.theme = state.prefs.theme;
@@ -6819,7 +7352,10 @@ async function saveSettings() {
     if (!["auto", "light", "dark"].includes(cfg.ali.theme)) cfg.ali.theme = "auto";
     if (!ACCENTS.includes(cfg.ali.accent)) cfg.ali.accent = "suat";
   }
-  const data = await api("/api/settings", { method: "POST", body: JSON.stringify({ config: cfg }) });
+  const data = await api("/api/settings", {
+    method: "POST",
+    body: JSON.stringify({ config: cfg, backend_update: activeTab === "backend" }),
+  });
   state.settings = data;
   if (cfg.ali) {
     setPrefs({
@@ -6925,6 +7461,9 @@ bindClick("#btn-send", () => sendMessage());
 bindClick("#btn-stop", stopStream);
 bindClick("#btn-menu", () => setSidebarOpen(true));
 bindClick("#sidebar-backdrop", () => setSidebarOpen(false));
+setupSidebarResize();
+setupComposerResize();
+setupComposerAdvanced();
 bindClick("#btn-control", () => openControl(true));
 bindClick("#btn-control-close", () => openControl(false));
 bindClick("#btn-save-settings", () => saveSettings().catch((e) => {
@@ -7082,7 +7621,7 @@ $("#input").addEventListener("input", () => {
   scheduleAutoPreview();
   const el = $("#input");
   el.style.height = "auto";
-  el.style.height = Math.min(el.scrollHeight, 160) + "px";
+  el.style.height = Math.min(el.scrollHeight, composerInputMaxPx()) + "px";
 });
 $("#input").addEventListener("keydown", (e) => {
   if (e.isComposing || e.keyCode === 229) return;

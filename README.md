@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/xielab2017/Agent-Hub/releases"><img alt="version" src="https://img.shields.io/badge/version-1.4.59-rose.svg" /></a>
+  <a href="https://github.com/xielab2017/Agent-Hub/releases"><img alt="version" src="https://img.shields.io/badge/version-2.0.0-rose.svg" /></a>
   <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-MIT-blue.svg" /></a>
   <a href="https://www.python.org/"><img alt="python" src="https://img.shields.io/badge/python-%3E%3D3.9-brightgreen.svg" /></a>
   <a href="https://github.com/xielab2017/Agent-Hub"><img alt="platform" src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg" /></a>
@@ -38,7 +38,7 @@
 
 <p align="center">
   <img src="docs/images/screenshot-chat.jpg" alt="主界面：任务与会话" width="92%" />
-  <br/><em>主界面 · v1.4.59</em>
+  <br/><em>主界面 · v2.0.0</em>
 </p>
 
 <p align="center">
@@ -175,7 +175,7 @@ Agent-Hub/
 
 ## 开发与版本
 
-当前版本：**v1.4.59**
+当前版本：**v2.0.0**
 
 ```bash
 # 健康检查
@@ -184,6 +184,7 @@ curl -s http://127.0.0.1:8765/api/health
 
 简要更新：
 
+- **v2.0.0** — 统一模型目录、路由与 Agent/Subagent 选模；自适应可调布局；代理 TLS 配置持久化
 - **v1.4.59** — 内置 Logo 预设：SUAT 彩标 + 白板；Hub 守护安装加固  
 - **v1.4.58** — 子代理对接 C0–C3 + Soul；并行自动选档位  
 - **v1.4.57** — 并行任务切换与进度条修复  

@@ -1,5 +1,15 @@
 # Changelog
 
+## v2.0.0 — 2026-07-14
+
+Unified model routing, agent configuration, resilient provider settings, and adaptive chat layout.
+
+- One provider/model catalog shared by model settings, C0–C3/Vision routes, Agents, and Subagents
+- Agent route inheritance plus per-agent provider/model overrides with legacy fallback
+- Persistent LLM TLS verification settings for local MITM proxy environments
+- Responsive, resizable sidebar and compact, collapsible task composer
+- Model reasoning tags removed from user-visible reply content
+
 ## v1.4.59 — 2026-07-14
 
 Public Agent Hub packaging + Appearance presets.

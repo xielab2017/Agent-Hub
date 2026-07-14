@@ -366,6 +366,26 @@ def resolve_route(
             if not api_key_env:
                 api_key_env = prov.get("api_key_env") or ""
 
+    # Optional per-tier binding added by the Control Center model picker.
+    # It is deliberately additive: old routing slot configs keep working.
+    tier_models = routing.get("tier_models") or {}
+    tier_entry = tier_models.get(tier) if isinstance(tier_models, dict) else None
+    if isinstance(tier_entry, dict) and str(tier_entry.get("model") or "").strip():
+        selected_provider = str(tier_entry.get("provider") or provider_id or backend_type).strip()
+        selected_model = str(tier_entry.get("model") or "").strip()
+        if selected_provider and selected_provider != "hybrid":
+            provider_id = selected_provider
+            prov = get_provider(provider_id)
+            if prov:
+                base_url = prov.get("base_url") or base_url
+                api_key_env = prov.get("api_key_env") or api_key_env
+            from .providers import coerce_model_for_provider
+
+            selected_model = coerce_model_for_provider(
+                provider_id, selected_model, route_key=route_key
+            )
+        model = selected_model
+
     blocked = False
     block_reason = ""
 
@@ -405,7 +425,7 @@ def resolve_route(
         "tier": tier,
         "route_key": route_key,
         "model": model,
-        "model_slot": (routing.get(route_key) or route_key),
+        "model_slot": tier if isinstance(tier_entry, dict) and tier_entry.get("model") else (routing.get(route_key) or route_key),
         "mode": "hybrid" if use_hybrid else "single",
         "auto": raw in ("auto", ""),
         "provider": provider_id,

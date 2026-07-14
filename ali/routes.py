@@ -39,7 +39,13 @@ from . import (
     workflows,
 )
 from .config import APP_NAME, REPO_ROOT, RUNTIME, STATIC_DIR, VERSION, local_ips
-from .settings import import_campus_config, load_campus_config, public_settings_view, save_campus_config
+from .settings import (
+    import_campus_config,
+    load_campus_config,
+    public_settings_view,
+    resolve_backend_verify_tls,
+    save_campus_config,
+)
 
 
 def _sync_hermes_safe(cfg: dict | None = None) -> dict:
@@ -218,7 +224,18 @@ def handle_get(handler) -> None:
         return _json(handler, 200, catalog_payload())
 
     if path == "/api/routing":
-        return _json(handler, 200, {"matrix": routing.routing_matrix(), "tiers": routing.TIERS})
+        from .providers import model_options_payload
+
+        cfg = load_campus_config()
+        return _json(
+            handler,
+            200,
+            {
+                "matrix": routing.routing_matrix(),
+                "tiers": routing.TIERS,
+                "model_options": model_options_payload(cfg),
+            },
+        )
 
     if path == "/api/workflows":
         return _json(handler, 200, {"presets": workflows.list_presets()})
@@ -438,6 +455,14 @@ def handle_post(handler) -> None:
     if path == "/api/settings":
         body = _read_json(handler)
         cfg = body.get("config") if isinstance(body.get("config"), dict) else body
+        # Backend changes require an explicit intent flag. Older/stale browser
+        # tabs POST a complete cached config when saving appearance/routes and
+        # must never switch provider or re-enable TLS as a side effect.
+        if not bool(body.get("backend_update")):
+            current_backend = (load_campus_config().get("backend") or {})
+            if isinstance(current_backend, dict):
+                cfg = dict(cfg)
+                cfg["backend"] = dict(current_backend)
         saved = save_campus_config(cfg)
         audit.log_event("settings_save", {"keys": list(saved.keys())})
         hermes_sync = _sync_hermes_safe(saved)
@@ -694,12 +719,17 @@ def handle_post(handler) -> None:
             base_url,
             key_info.get("key") or "",
             timeout=float((cfg.get("backend") or {}).get("timeout_seconds") or 30),
-            verify_tls=bool((cfg.get("backend") or {}).get("verify_tls", True)),
+            verify_tls=resolve_backend_verify_tls(cfg, {"provider": provider}),
         )
         if not result.get("ok"):
             return _json(handler, 400, {"error": result.get("error") or "list models failed", **result})
 
         models = result.get("models") or []
+        catalogs = dict(cfg.get("available_models") or {})
+        # Replace only this provider after a successful fetch. Failed fetches
+        # return above and therefore preserve the last known-good catalog.
+        catalogs[provider] = [str(model) for model in models if str(model).strip()]
+        cfg["available_models"] = catalogs
         suggested = llm_client.suggest_slots(models)
         apply_suggest = body.get("apply_suggestions", True)
         if apply_suggest and suggested:

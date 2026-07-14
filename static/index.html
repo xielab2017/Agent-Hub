@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0f1419" />
   <title>Agent Hub</title>
-  <link rel="stylesheet" href="/style.css?v=1.4.59" />
+  <link rel="stylesheet" href="/style.css?v=2.0.0" />
 </head>
 <body>
   <div id="login-overlay" class="overlay hidden">
@@ -22,10 +22,10 @@
     <aside id="sidebar" class="sidebar">
       <div class="sidebar-head">
         <div class="brand">
-          <img class="brand-logo" src="/brand/suat-logo-color.png?v=1.4.59" alt="SUAT" />
+          <img class="brand-logo" src="/brand/suat-logo-color.png?v=2.0.0" alt="SUAT" />
           <div>
             <div class="brand-name">Agent Hub</div>
-            <div class="brand-sub" id="version-label">v1.4.59</div>
+            <div class="brand-sub" id="version-label">v2.0.0</div>
           </div>
         </div>
         <div class="quick-prefs">
@@ -53,6 +53,15 @@
         <div id="conn-info" class="conn-info"></div>
         <div id="agent-badge" class="badge">checking…</div>
       </div>
+      <div
+        id="sidebar-resize"
+        class="sidebar-resize"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize sidebar"
+        title="拖拽调整侧栏宽度 · 双击恢复默认"
+        tabindex="0"
+      ></div>
     </aside>
 
     <main class="main">
@@ -69,7 +78,7 @@
       <div id="chat-panes" class="chat-panes">
         <div id="messages" class="messages">
           <div class="empty-state" id="empty-state">
-            <img class="empty-logo-img" src="/brand/suat-logo-color.png?v=1.4.59" alt="深圳理工大学" />
+            <img class="empty-logo-img" src="/brand/suat-logo-color.png?v=2.0.0" alt="深圳理工大学" />
             <h3 data-i18n="empty.title">校园 Agent Hub</h3>
             <p data-i18n-html="empty.body">描述任务并运行 · Agent Hub 调度 Skill / Agent · 进度条跟踪执行</p>
           </div>
@@ -84,6 +93,14 @@
       </div>
 
       <footer class="composer">
+        <div
+          id="composer-resize"
+          class="composer-resize"
+          role="separator"
+          aria-orientation="horizontal"
+          aria-label="Resize composer"
+          tabindex="0"
+        ></div>
         <div id="stream-status" class="stream-status hidden" aria-live="polite">
           <div class="stream-status-head">
             <span class="stream-status-dot" aria-hidden="true"></span>
@@ -93,82 +110,99 @@
           <div class="stream-status-track"><div id="stream-status-bar" class="stream-status-fill"></div></div>
           <div id="stream-status-hint" class="stream-status-hint muted"></div>
         </div>
-        <div id="skill-bar" class="skill-bar skill-bar-composer" aria-label="Skills">
-          <div class="skill-bar-head">
-            <span data-i18n="skills.picker">Skill</span>
-            <select id="skill-cat-select" title="Category"></select>
-            <select id="skill-sub-select" title="Subcategory"></select>
-            <select id="skill-pick-select" class="skill-pick-select" title="Skill">
-              <option value="">— 选择 Skill —</option>
-            </select>
-            <button type="button" class="btn ghost chip" id="btn-skill-add" data-i18n="skills.add">添加</button>
-            <button type="button" class="btn ghost chip" id="btn-skill-auto" data-i18n="skills.auto">自动匹配</button>
-          </div>
-          <div id="skill-selected" class="skill-selected-row"></div>
-        </div>
-        <div id="subagent-picker" class="skill-bar skill-bar-composer" aria-label="Subagents">
-          <div class="skill-bar-head">
-            <span data-i18n="sub.picker">Subagent</span>
-            <select id="subagent-pick-select" class="skill-pick-select" title="Subagent">
-              <option value="">— 选择子代理 —</option>
-            </select>
-            <button type="button" class="btn ghost chip" id="btn-subagent-add" data-i18n="sub.add">添加</button>
-          </div>
-          <div id="subagent-selected" class="skill-selected-row"></div>
-        </div>
-        <div class="composer-tools">
-          <label>
-            <span data-i18n="composer.soul">Soul</span>
-            <select id="soul-select"></select>
-          </label>
-          <label>
-            <span data-i18n="composer.hubChat">Hub 聊天</span>
-            <select id="hub-chat-mode-select" title="Agent vs Fast chat">
+        <div class="composer-essentials">
+          <button
+            type="button"
+            id="btn-composer-adv"
+            class="btn ghost chip composer-adv-toggle"
+            aria-expanded="false"
+            aria-controls="composer-advanced"
+            title="Skill / Soul / Route / Model"
+          >
+            <span class="composer-adv-chevron" aria-hidden="true">▸</span>
+            <span data-i18n="composer.settings">任务设置</span>
+            <span id="composer-adv-badge" class="composer-adv-badge hidden"></span>
+          </button>
+          <label class="composer-hub-compact" title="Agent vs Fast chat">
+            <span class="sr-only" data-i18n="composer.hubChat">Hub 聊天</span>
+            <select id="hub-chat-mode-select">
               <option value="agent" data-i18n="hubChat.agent">Agent（工具）</option>
               <option value="direct" data-i18n="hubChat.direct">快聊</option>
             </select>
           </label>
-          <label>
-            <span data-i18n="composer.mode">模式</span>
-            <select id="chat-mode-select">
-              <option value="auto">工作流 Auto</option>
-              <option value="single">指定模型</option>
-            </select>
-          </label>
-          <label>
-            <span data-i18n="composer.route">路由</span>
-            <select id="route-select">
-              <option value="auto" data-i18n="route.auto">Auto（自动分级）</option>
-              <option value="simple" data-i18n="route.simple">C0 简单 / Fast</option>
-              <option value="office" data-i18n="route.office">C1 办公 / Main</option>
-              <option value="C2" data-i18n="route.c2">C2 长文（生成+审核）</option>
-              <option value="reasoning" data-i18n="route.reasoning">C3 推理</option>
-              <option value="vision" data-i18n="route.vision">Vision</option>
-              <option value="agent" data-i18n="route.agent">Agent（主模型）</option>
-            </select>
-          </label>
-          <label>
-            <span data-i18n="composer.model">模型</span>
-            <select id="model-select"></select>
-          </label>
-          <label>
-            <span data-i18n="composer.thinkingDepth">思考深度</span>
-            <select id="thinking-depth-select">
-              <option value="light" data-i18n="thinking.light">轻 / Light</option>
-              <option value="medium" selected data-i18n="thinking.medium">中 / Medium</option>
-              <option value="high" data-i18n="thinking.high">高 / High</option>
-              <option value="very_high" data-i18n="thinking.veryHigh">非常高 / Very high</option>
-            </select>
-          </label>
-          <label class="grow workspace-field">
-            <span data-i18n="composer.workspace">工作区</span>
-            <div class="workspace-row">
-              <input id="workspace-input" type="text" data-i18n-placeholder="composer.workspacePh" placeholder="可选：工作目录路径" />
-              <button type="button" id="btn-browse-ws" class="btn ghost" title="Browse">…</button>
+          <span id="composer-adv-summary" class="composer-adv-summary muted"></span>
+        </div>
+        <div id="composer-advanced" class="composer-advanced" hidden>
+          <div id="skill-bar" class="skill-bar skill-bar-composer" aria-label="Skills">
+            <div class="skill-bar-head">
+              <span data-i18n="skills.picker">Skill</span>
+              <select id="skill-cat-select" title="Category"></select>
+              <select id="skill-sub-select" title="Subcategory"></select>
+              <select id="skill-pick-select" class="skill-pick-select" title="Skill">
+                <option value="">— 选择 Skill —</option>
+              </select>
+              <button type="button" class="btn ghost chip" id="btn-skill-add" data-i18n="skills.add">添加</button>
+              <button type="button" class="btn ghost chip" id="btn-skill-auto" data-i18n="skills.auto">自动匹配</button>
             </div>
-            <span id="auto-route-hint" class="auto-hint muted"></span>
-            <div id="ws-grounding" class="ws-grounding muted"></div>
-          </label>
+            <div id="skill-selected" class="skill-selected-row"></div>
+          </div>
+          <div id="subagent-picker" class="skill-bar skill-bar-composer" aria-label="Subagents">
+            <div class="skill-bar-head">
+              <span data-i18n="sub.picker">Subagent</span>
+              <select id="subagent-pick-select" class="skill-pick-select" title="Subagent">
+                <option value="">— 选择子代理 —</option>
+              </select>
+              <button type="button" class="btn ghost chip" id="btn-subagent-add" data-i18n="sub.add">添加</button>
+            </div>
+            <div id="subagent-selected" class="skill-selected-row"></div>
+          </div>
+          <div class="composer-tools">
+            <label>
+              <span data-i18n="composer.soul">Soul</span>
+              <select id="soul-select"></select>
+            </label>
+            <label>
+              <span data-i18n="composer.mode">模式</span>
+              <select id="chat-mode-select">
+                <option value="auto">工作流 Auto</option>
+                <option value="single">指定模型</option>
+              </select>
+            </label>
+            <label>
+              <span data-i18n="composer.route">路由</span>
+              <select id="route-select">
+                <option value="auto" data-i18n="route.auto">Auto（自动分级）</option>
+                <option value="simple" data-i18n="route.simple">C0 简单 / Fast</option>
+                <option value="office" data-i18n="route.office">C1 办公 / Main</option>
+                <option value="C2" data-i18n="route.c2">C2 长文（生成+审核）</option>
+                <option value="reasoning" data-i18n="route.reasoning">C3 推理</option>
+                <option value="vision" data-i18n="route.vision">Vision</option>
+                <option value="agent" data-i18n="route.agent">Agent（主模型）</option>
+              </select>
+            </label>
+            <label>
+              <span data-i18n="composer.model">模型</span>
+              <select id="model-select"></select>
+            </label>
+            <label>
+              <span data-i18n="composer.thinkingDepth">思考深度</span>
+              <select id="thinking-depth-select">
+                <option value="light" data-i18n="thinking.light">轻 / Light</option>
+                <option value="medium" selected data-i18n="thinking.medium">中 / Medium</option>
+                <option value="high" data-i18n="thinking.high">高 / High</option>
+                <option value="very_high" data-i18n="thinking.veryHigh">非常高 / Very high</option>
+              </select>
+            </label>
+            <label class="grow workspace-field">
+              <span data-i18n="composer.workspace">工作区</span>
+              <div class="workspace-row">
+                <input id="workspace-input" type="text" data-i18n-placeholder="composer.workspacePh" placeholder="可选：工作目录路径" />
+                <button type="button" id="btn-browse-ws" class="btn ghost" title="Browse">…</button>
+              </div>
+              <span id="auto-route-hint" class="auto-hint muted"></span>
+              <div id="ws-grounding" class="ws-grounding muted"></div>
+            </label>
+          </div>
         </div>
         <div id="attach-bar" class="attach-bar hidden"></div>
         <div class="composer-row composer-row-ext">
@@ -270,6 +304,6 @@
   </div>
 
   <div id="sidebar-backdrop" class="backdrop hidden"></div>
-  <script src="/app.js?v=1.4.59"></script>
+  <script src="/app.js?v=2.0.0"></script>
 </body>
 </html>

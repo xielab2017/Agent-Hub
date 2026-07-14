@@ -6,6 +6,7 @@ import os
 import re
 import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -141,6 +142,50 @@ def _hermes_provider_name(provider_id: str) -> str:
     return _PROVIDER_MAP.get((provider_id or "").strip(), "custom")
 
 
+def _patch_provider_tls_yaml(path: Path, *, base_url: str, verify_tls: bool) -> None:
+    """Maintain one URL-scoped TLS entry understood by Hermes/httpx.
+
+    Hermes resolves ``providers.*.ssl_verify`` by exact base URL, so this
+    affects only the LLM endpoint selected by Agent Hub. Secure mode removes
+    the managed exception instead of setting any process-global TLS override.
+    """
+    try:
+        import yaml
+    except ImportError as exc:
+        if not verify_tls:
+            raise RuntimeError("PyYAML required to configure Hermes TLS policy") from exc
+        return
+
+    data: dict[str, Any] = {}
+    if path.is_file():
+        loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
+        if isinstance(loaded, dict):
+            data = loaded
+    providers = data.get("providers")
+    if not isinstance(providers, dict):
+        providers = {}
+        data["providers"] = providers
+
+    managed_key = "agent-hub-tls"
+    if verify_tls or not (base_url or "").strip():
+        providers.pop(managed_key, None)
+    else:
+        providers[managed_key] = {
+            "base_url": str(base_url).strip(),
+            "ssl_verify": False,
+        }
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    mode = path.stat().st_mode & 0o777 if path.exists() else 0o600
+    with tempfile.NamedTemporaryFile(
+        "w", encoding="utf-8", dir=str(path.parent), delete=False
+    ) as tmp:
+        yaml.safe_dump(data, tmp, allow_unicode=True, sort_keys=False)
+        tmp_path = Path(tmp.name)
+    os.chmod(tmp_path, mode)
+    os.replace(tmp_path, path)
+
+
 def _write_managed_env(
     *,
     env_name: str,
@@ -148,6 +193,7 @@ def _write_managed_env(
     base_url: str = "",
     model: str = "",
     provider_id: str = "",
+    verify_tls: bool = True,
 ) -> Path:
     home = hermes_managed_home()
     hermes_provider = _hermes_provider_name(provider_id)
@@ -178,6 +224,7 @@ def _write_managed_env(
         provider=hermes_provider,
         base_url=base_url if hermes_provider == "custom" else "",
     )
+    _patch_provider_tls_yaml(cfg_path, base_url=base_url, verify_tls=verify_tls)
     try:
         from . import mcp_hub
 
@@ -194,6 +241,7 @@ def build_hermes_env(
     base_url: str = "",
     model: str = "",
     provider_id: str = "",
+    verify_tls: bool = True,
 ) -> dict[str, str]:
     """Subprocess env with only the active vendor key (no OpenRouter↔NVIDIA bleed)."""
     home = _write_managed_env(
@@ -202,6 +250,7 @@ def build_hermes_env(
         base_url=base_url,
         model=model,
         provider_id=provider_id,
+        verify_tls=verify_tls,
     )
     env = {k: v for k, v in os.environ.items() if k not in _VENDOR_KEY_ENVS}
     env["PYTHONPATH"] = ""
@@ -232,6 +281,7 @@ def run_hermes_chat(
     base_url: str = "",
     workspace: str = "",
     timeout: float = 180,
+    verify_tls: bool = True,
 ) -> dict[str, Any]:
     bin_path = find_hermes_bin()
     if not bin_path:
@@ -245,6 +295,7 @@ def run_hermes_chat(
         base_url=base_url,
         model=model,
         provider_id=provider_id,
+        verify_tls=verify_tls,
     )
     cmd = [str(bin_path), "chat", "-q", prompt, "-Q"]
     if model:
@@ -279,8 +330,11 @@ def run_hermes_chat(
 
 
 def clean_hermes_text(text: str) -> str:
-    """Drop reasoning banners / skill JSON dumps from Hermes CLI output."""
+    """Drop think tags, reasoning banners / skill JSON dumps from Hermes CLI output."""
     s = text or ""
+    think = r"think(?:ing)?|reasoning|redacted_reasoning|thought"
+    s = re.sub(rf"<\s*(?:{think})\b[^>]*>[\s\S]*?<\s*/\s*(?:{think})\s*>", "", s, flags=re.I)
+    s = re.sub(rf"<\s*(?:{think})\b[^>]*>[\s\S]*$", "", s, flags=re.I)
     s = re.sub(r"┌─[\s\S]*?┐[\s\S]*?└─+┘", "", s)
     s = re.sub(r"╭─[\s\S]*?╯", "", s)
     s = re.sub(r"```(?:json|javascript|js)?\s*\{[\s\S]*?\"skill\"\s*:[\s\S]*?\}\s*```", "", s, flags=re.I)
@@ -458,7 +512,7 @@ def sync_hub_to_hermes(
 ) -> dict[str, Any]:
     """Write Hub provider + API key + model into Hermes homes (.env + config.yaml)."""
     from .secrets import resolve_api_key
-    from .settings import load_campus_config
+    from .settings import load_campus_config, resolve_backend_verify_tls
 
     cfg = cfg or load_campus_config()
     backend = cfg.get("backend") or {}
@@ -482,6 +536,7 @@ def sync_hub_to_hermes(
     )
 
     hermes_provider = _hermes_provider_name(pid)
+    verify_tls = resolve_backend_verify_tls(cfg, {"provider": pid, "route_key": "office"})
     errors: list[str] = []
     written: list[str] = []
 
@@ -525,6 +580,7 @@ def sync_hub_to_hermes(
                     base_url=base_url,
                     model=use_model,
                     provider_id=pid,
+                    verify_tls=verify_tls,
                 )
             else:
                 _merge_dotenv(home / ".env", updates)
@@ -533,6 +589,11 @@ def sync_hub_to_hermes(
                     model=use_model,
                     provider=hermes_provider,
                     base_url=base_url,
+                )
+                _patch_provider_tls_yaml(
+                    home / "config.yaml",
+                    base_url=base_url,
+                    verify_tls=verify_tls,
                 )
             written.append(str(home))
         except OSError as exc:

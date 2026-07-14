@@ -610,6 +610,98 @@ def resolve_provider_id(provider: str) -> str:
     return pid
 
 
+def model_options_payload(cfg: dict[str, Any]) -> dict[str, Any]:
+    """Build the shared provider-aware model picker payload.
+
+    Real provider catalogs win. Configured values are always retained and marked
+    unavailable when absent from the latest catalog, so old configs never clear.
+    """
+    backend = cfg.get("backend") if isinstance(cfg.get("backend"), dict) else {}
+    current = str((backend or {}).get("type") or "").strip()
+    mode = str(cfg.get("mode") or "single").strip().lower()
+    saved = cfg.get("available_models")
+    if not isinstance(saved, dict):
+        saved = {}
+
+    configured: list[tuple[str, str]] = []
+    default_provider = current if current != "hybrid" else ""
+    for value in (cfg.get("models") or {}).values():
+        model = str(value or "").strip()
+        if model:
+            configured.append((default_provider, model))
+    for entry in (cfg.get("hybrid") or {}).values():
+        if not isinstance(entry, dict):
+            continue
+        provider = str(entry.get("provider") or "").strip()
+        model = str(entry.get("model") or "").strip()
+        if model:
+            configured.append((provider, model))
+    tier_models = (cfg.get("routing") or {}).get("tier_models") or {}
+    if isinstance(tier_models, dict):
+        for entry in tier_models.values():
+            if not isinstance(entry, dict):
+                continue
+            provider = str(entry.get("provider") or default_provider).strip()
+            model = str(entry.get("model") or "").strip()
+            if model:
+                configured.append((provider, model))
+
+    provider_ids: list[str]
+    if current == "hybrid" or mode == "hybrid":
+        provider_ids = [str(pid) for pid, models in saved.items() if isinstance(models, list)]
+        provider_ids.extend(p for p, _ in configured if p)
+    else:
+        provider_ids = [current] if current else []
+
+    options: list[dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+
+    def add(provider: str, model: str, source: str, available: bool) -> None:
+        pid = str(provider or "").strip()
+        mid = str(model or "").strip()
+        key = (pid, mid)
+        if not mid or key in seen:
+            return
+        seen.add(key)
+        options.append(
+            {
+                "provider": pid,
+                "model": mid,
+                "source": source,
+                "available": bool(available),
+            }
+        )
+
+    # Primary source: last successful live catalog for the relevant provider(s).
+    for pid in dict.fromkeys(provider_ids):
+        for model in saved.get(pid) or []:
+            add(pid, str(model), "fetched", True)
+
+    fetched_keys = set(seen)
+    for pid, model in configured:
+        effective_pid = pid or default_provider
+        add(effective_pid, model, "configured", (effective_pid, model) in fetched_keys)
+
+    # Catalog suggestions are only a fallback when no real catalog is available.
+    if not options:
+        fallback_ids = provider_ids or ([current] if current else [])
+        for pid in dict.fromkeys(fallback_ids):
+            prov = get_provider(pid)
+            if not prov:
+                continue
+            for model in _provider_model_candidates(prov):
+                add(pid, model, "suggested", True)
+
+    return {
+        "provider": current,
+        "mode": "hybrid" if current == "hybrid" or mode == "hybrid" else "single",
+        "options": options,
+        "fetched_providers": [
+            str(pid) for pid, models in saved.items() if isinstance(models, list) and models
+        ],
+    }
+
+
 def apply_recommended_model(
     cfg: dict[str, Any],
     *,

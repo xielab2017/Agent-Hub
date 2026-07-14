@@ -176,6 +176,7 @@ def build_openclaw_env(
     env_name: str = "",
     base_url: str = "",
     provider_id: str = "",
+    verify_tls: bool = True,
 ) -> dict[str, str]:
     """Subprocess env using native OpenClaw home; inject Hub keys for --local."""
     env = {k: v for k, v in os.environ.items()}
@@ -210,6 +211,12 @@ def build_openclaw_env(
         env["MOONSHOT_API_KEY"] = api_key
     if pid == "minimax" and api_key:
         env["MINIMAX_API_KEY"] = api_key
+    if verify_tls:
+        env.pop("NODE_TLS_REJECT_UNAUTHORIZED", None)
+    else:
+        # OpenClaw is a Node subprocess. Scope insecure TLS to this one child
+        # and only when the user explicitly disabled LLM certificate checks.
+        env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0"
     env["NO_COLOR"] = "1"
     return env
 
@@ -224,6 +231,7 @@ def run_openclaw_chat(
     base_url: str = "",
     provider_id: str = "",
     timeout: float = 180,
+    verify_tls: bool = True,
 ) -> dict[str, Any]:
     bin_path = find_openclaw_bin()
     if not bin_path:
@@ -236,6 +244,7 @@ def run_openclaw_chat(
         env_name=env_name,
         base_url=base_url,
         provider_id=provider_id,
+        verify_tls=verify_tls,
     )
     cmd = [
         str(bin_path),

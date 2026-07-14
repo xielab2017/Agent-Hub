@@ -87,6 +87,28 @@ DEFAULT_UI = {
 }
 
 
+def normalize_agent_route(value: Any) -> str:
+    """Return the canonical route stored for an agent binding."""
+    raw = str(value or "").strip()
+    if not raw:
+        return "auto"
+    return {
+        "auto": "auto",
+        "inherit": "auto",
+        "simple": "C0",
+        "fast": "C0",
+        "c0": "C0",
+        "office": "C1",
+        "main": "C1",
+        "c1": "C1",
+        "c2": "C2",
+        "reasoning": "C3",
+        "reason": "C3",
+        "c3": "C3",
+        "vision": "Vision",
+    }.get(raw.lower(), raw)
+
+
 def _normalize_subagent(raw: dict[str, Any], fallback: dict[str, Any] | None = None) -> dict[str, Any]:
     fb = fallback or {}
     out = {**fb, **raw}
@@ -98,7 +120,19 @@ def _normalize_subagent(raw: dict[str, Any], fallback: dict[str, Any] | None = N
     out["enabled"] = out.get("enabled") is not False
     out["desc"] = str(out.get("desc") or "")
     out["model"] = str(out.get("model") or "").strip()
-    out["model_slot"] = str(out.get("model_slot") or fb.get("model_slot") or "").strip()
+    out["model_provider"] = str(out.get("model_provider") or "").strip()
+    # ``model_slot`` is the legacy field used by older Control Center builds.
+    # ``route`` is canonical; mirror it back so old clients keep working.
+    route_value = out.get("route")
+    if route_value is None:
+        route_value = out.get("model_route")
+    if route_value is None:
+        route_value = out.get("model_slot") or fb.get("model_slot")
+    out["route"] = normalize_agent_route(route_value)
+    out["model_slot"] = out["route"]
+    out.pop("model_route", None)
+    for transient in ("resolved_model", "resolved_provider", "resolved_route", "binding_mode"):
+        out.pop(transient, None)
     kws = out.get("keywords")
     if not isinstance(kws, list):
         kws = list(fb.get("keywords") or [])
@@ -107,6 +141,9 @@ def _normalize_subagent(raw: dict[str, Any], fallback: dict[str, Any] | None = N
 
 
 def get_agents() -> dict[str, Any]:
+    from .providers import model_options_payload
+    from .routing import routing_matrix
+
     cfg = load_campus_config()
     ali = cfg.get("ali") if isinstance(cfg.get("ali"), dict) else {}
     agents = ali.get("agents") if isinstance(ali.get("agents"), dict) else {}
@@ -136,6 +173,8 @@ def get_agents() -> dict[str, Any]:
         },
         "subagents": subagents,
         "ui": merged_ui,
+        "model_options": model_options_payload(cfg),
+        "routes": routing_matrix(),
     }
 
 
@@ -168,32 +207,59 @@ def save_agents(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def resolve_subagent_model(sub: dict[str, Any], cfg: dict[str, Any] | None = None) -> str:
-    """Pick a dedicated fast/specialized model for a subagent."""
+    """Resolve an explicit model or a fixed route; auto means no override."""
     explicit = str((sub or {}).get("model") or "").strip()
     if explicit:
         return explicit
     cfg = cfg or load_campus_config()
-    models = cfg.get("models") if isinstance(cfg.get("models"), dict) else {}
-    slot = str((sub or {}).get("model_slot") or "").strip()
-    slot_map = {
-        "simple": ("fast", "qwen_fast", "simple"),
-        "office": ("main", "qwen_main", "office"),
-        "reasoning": ("reasoning", "deepseek_reasoning", "reason"),
-        "vision": ("vision", "qwen_vl", "vision"),
-        # OpenSquilla-facing aliases
-        "c0": ("fast", "qwen_fast", "simple"),
-        "c1": ("main", "qwen_main", "office"),
-        "c2": ("main", "qwen_main", "office"),
-        "c3": ("reasoning", "deepseek_reasoning", "reason"),
-        "fast": ("fast", "qwen_fast", "simple"),
-        "main": ("main", "qwen_main", "office"),
+    route = normalize_agent_route(
+        (sub or {}).get("route")
+        if (sub or {}).get("route") is not None
+        else (sub or {}).get("model_slot")
+    )
+    if route == "auto":
+        return ""
+    from .routing import resolve_route
+
+    return str(resolve_route(route, "", cfg).get("model") or "")
+
+
+def resolve_subagent_binding(
+    sub: dict[str, Any], cfg: dict[str, Any] | None = None
+) -> dict[str, str]:
+    """Resolve the exact binding consumed by chat execution."""
+    cfg = cfg or load_campus_config()
+    route = normalize_agent_route(
+        (sub or {}).get("route")
+        if (sub or {}).get("route") is not None
+        else (sub or {}).get("model_slot")
+    )
+    explicit_model = str((sub or {}).get("model") or "").strip()
+    model = explicit_model
+    provider = str((sub or {}).get("model_provider") or "").strip()
+    route_info: dict[str, Any] = {}
+    if route != "auto":
+        from .routing import resolve_route
+
+        route_info = resolve_route(route, "", cfg)
+        if not provider:
+            provider = str(route_info.get("provider") or route_info.get("backend_type") or "")
+        if not model:
+            model = str(route_info.get("model") or "")
+    if provider and model:
+        from .providers import coerce_model_for_provider
+
+        model = coerce_model_for_provider(
+            provider, model, route_key=str(route_info.get("route_key") or "office")
+        )
+    return {
+        "provider": provider,
+        "model": model,
+        "route": route,
+        "tier": str(route_info.get("tier") or ""),
+        "route_key": str(route_info.get("route_key") or ""),
+        "mode": "model" if explicit_model else ("route" if route != "auto" else "auto"),
     }
-    keys = slot_map.get(slot) or ((slot,) if slot else ("fast", "qwen_fast", "main"))
-    for k in keys:
-        v = str((models or {}).get(k) or "").strip()
-        if v:
-            return v
-    return ""
 
 
 def slot_to_tier(slot: str) -> str:
@@ -301,7 +367,9 @@ def pick_subagents_for_parallel(
         slot = str(item.get("model_slot") or "").strip()
         tier = slot_to_tier(slot) or cycle[i % len(cycle)]
         item["soul_role"] = str(item.get("soul_role") or item.get("role") or "office").strip() or "office"
-        item["resolved_model"] = resolve_subagent_model(item, cfg)
+        binding = resolve_subagent_binding(item, cfg)
+        item["resolved_model"] = binding["model"]
+        item["resolved_provider"] = binding["provider"]
         item["tier"] = tier
         out.append(item)
     return out

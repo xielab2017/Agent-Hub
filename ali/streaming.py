@@ -94,7 +94,7 @@ def _chat_engine_for_runtime(
 def agent_status() -> dict[str, Any]:
     from . import claw_cli, hermes_cli, runtimes, soul as soul_mod
     from .secrets import resolve_api_key
-    from .settings import load_campus_config
+    from .settings import load_campus_config, resolve_backend_verify_tls
 
     cls = get_ai_agent()
     cli = hermes_cli.hermes_cli_status()
@@ -421,11 +421,40 @@ def cancel_stream(session_id: str) -> bool:
 
 
 
-def sanitize_workflow_output(text: str) -> str:
-    """Strip reasoning banners and skill-JSON dumps for workflow UI."""
+_MODEL_THINK_TAG = r"think(?:ing)?|reasoning|redacted_reasoning|thought"
+
+
+def strip_model_think_tags(text: str) -> str:
+    """Remove <think>…</think> (and common variants) from assistant text.
+
+    Also drops incomplete open tags / trailing tag stubs so streaming buffers
+    never leak raw think markup into the user-visible reply.
+    """
     import re
 
     s = text or ""
+    open_re = rf"<\s*(?:{_MODEL_THINK_TAG})\b[^>]*>"
+    close_re = rf"<\s*/\s*(?:{_MODEL_THINK_TAG})\s*>"
+    pair = re.compile(rf"{open_re}[\s\S]*?{close_re}", re.I)
+    prev = None
+    while prev != s:
+        prev = s
+        s = pair.sub("", s)
+    s = re.sub(rf"{open_re}[\s\S]*$", "", s, flags=re.I)
+    stub = re.search(r"<\s*/?\s*[A-Za-z_]{0,32}$", s)
+    if stub:
+        name = re.sub(r"^<\s*/?\s*", "", stub.group(0), flags=re.I).lower()
+        names = ("think", "thinking", "reasoning", "redacted_reasoning", "thought")
+        if not name or any(n.startswith(name) for n in names):
+            s = s[: stub.start()]
+    return s
+
+
+def sanitize_workflow_output(text: str) -> str:
+    """Strip model think tags, reasoning banners, and skill-JSON dumps for UI."""
+    import re
+
+    s = strip_model_think_tags(text or "")
     s = re.sub(r"┌─[\s\S]*?┐[\s\S]*?└─+┘", "", s)
     s = re.sub(r"╭─[\s\S]*?╯", "", s)
     s = re.sub(r"```(?:json|javascript|js)?\s*\{[\s\S]*?\"skill\"\s*:[\s\S]*?\}\s*```", "", s, flags=re.I)
@@ -515,7 +544,19 @@ def start_chat(
 
     # Soul → claw sync is on connect / Control Center, NOT every chat turn (TTFB)
 
-    route_info = routing.resolve_route(route or "auto", msg, cfg)
+    agent_route = (
+        agents_mod.normalize_agent_route(
+            active_sub.get("route")
+            if active_sub and active_sub.get("route") is not None
+            else (active_sub or {}).get("model_slot")
+        )
+        if active_sub
+        else "auto"
+    )
+    # A fixed Agent route is a real execution override, not merely a UI label.
+    # Auto Agents continue to follow the composer/classified route unchanged.
+    effective_route = agent_route if active_sub and agent_route != "auto" else (route or "auto")
+    route_info = routing.resolve_route(effective_route, msg, cfg)
     if route_info.get("blocked"):
         raise ValueError(route_info.get("block_reason") or "route blocked by data_policy")
 
@@ -534,7 +575,20 @@ def start_chat(
         route_info = dict(route_info)
         route_info["simple_chat"] = True
         route_info["quiet_thinking"] = True
-    sub_model = agents_mod.resolve_subagent_model(active_sub, cfg) if active_sub else ""
+    sub_binding = agents_mod.resolve_subagent_binding(active_sub, cfg) if active_sub else {}
+    sub_model = str(sub_binding.get("model") or "")
+    sub_provider = str(sub_binding.get("provider") or "")
+    if active_sub and sub_provider and sub_model:
+        route_info = dict(route_info)
+        route_info["provider"] = sub_provider
+        route_info["backend_type"] = sub_provider
+        if str(cfg.get("data_policy") or "internal").lower() == "restricted" and sub_provider in {
+            "openai", "anthropic", "nvidia-nim", "nvidia-api", "nvidia-hosted",
+            "openrouter", "minimax", "gemini", "deepseek", "kimi", "hybrid",
+        }:
+            raise ValueError(
+                f"data_policy=restricted forbids external provider '{sub_provider}'"
+            )
     if active_sub and sub_model:
         resolved_model = sub_model
     else:
@@ -596,6 +650,8 @@ def start_chat(
         route_info["subagent_id"] = active_sub.get("id")
         route_info["subagent_label"] = active_sub.get("label")
         route_info["subagent_auto"] = not bool(sid)
+        if sub_provider:
+            route_info["subagent_provider"] = sub_provider
     if resolved_model:
         route_info["model"] = resolved_model
 
@@ -1001,7 +1057,17 @@ def _run_agent_streaming(
                 # Credentials already synced on Connect; light touch only when needed
                 if not route_info.get("_hermes_synced"):
                     try:
-                        _hermes_cli.sync_hub_to_hermes(load_campus_config(), model=model or "")
+                        sync_cfg = load_campus_config()
+                        sync_provider = str(
+                            route_info.get("provider")
+                            or (sync_cfg.get("backend") or {}).get("type")
+                            or ""
+                        )
+                        _hermes_cli.sync_hub_to_hermes(
+                            sync_cfg,
+                            model=model or "",
+                            provider_id=sync_provider,
+                        )
                         route_info["_hermes_synced"] = True
                     except Exception:  # noqa: BLE001
                         pass
@@ -1077,6 +1143,9 @@ def _run_agent_streaming(
                 api_key = key_info.get("key") or ""
                 base_url = str(route_info.get("base_url") or (cfg_now.get("backend") or {}).get("base_url") or "").strip()
                 hermes_provider = _hermes_cli._hermes_provider_name(provider)
+                from .settings import resolve_backend_verify_tls
+
+                verify_tls = resolve_backend_verify_tls(cfg_now, route_info)
 
                 import os as _os
 
@@ -1121,6 +1190,7 @@ def _run_agent_streaming(
                             agent = AIAgent(**kwargs, tool_progress_callback=on_tool)
                         except TypeError:
                             agent = AIAgent(**{k: v for k, v in kwargs.items() if k != "tool_progress_callback"})
+                    _apply_hermes_agent_tls(agent, verify_tls)
 
                     if workspace:
                         try:
@@ -1261,10 +1331,13 @@ def _run_agent_streaming(
         if fill_md and fill_md[:40] not in final_text:
             final_text = (fill_md + "\n\n" + final_text).strip()
             _put(q, "token", {"text": "\n\n" + fill_md})
+        # Always strip model <think> tags; workflow mode also drops banners / skill dumps
         if route_info.get("execution_mode") == "workflow":
             cleaned = sanitize_workflow_output(final_text)
             if cleaned != final_text:
                 final_text = cleaned or final_text
+        else:
+            final_text = strip_model_think_tags(final_text).strip()
         # Strip LLM "please provide professor text" when fill already succeeded
         if (route_info.get("excel_fill") or {}).get("ok") and final_text:
             final_text = _strip_ask_for_research(final_text)
@@ -1281,6 +1354,8 @@ def _run_agent_streaming(
                     cleaned = sanitize_workflow_output(final_text)
                     if cleaned != final_text:
                         final_text = cleaned or final_text
+                else:
+                    final_text = strip_model_think_tags(final_text).strip()
         if not final_text:
             final_text = "(no response)"
             _put(q, "token", {"text": final_text})
@@ -1557,6 +1632,7 @@ def _openclaw_cli_reply(
     api_key = key_info.get("key") or ""
     base_url = str(route_info.get("base_url") or (cfg.get("backend") or {}).get("base_url") or "").strip()
     env_name = str(key_info.get("env_name") or "")
+    verify_tls = resolve_backend_verify_tls(cfg, route_info)
 
     if not api_key and provider not in ("local-ollama",):
         return False
@@ -1586,6 +1662,7 @@ def _openclaw_cli_reply(
             base_url=base_url,
             provider_id=provider,
             timeout=timeout,
+            verify_tls=verify_tls,
         )
     except Exception as exc:  # noqa: BLE001
         _put(q, "meta", {"mode": "openclaw-cli", "engine": "openclaw", "error": str(exc)})
@@ -1602,6 +1679,36 @@ def _openclaw_cli_reply(
     return True
 
 
+def _apply_hermes_agent_tls(agent: Any, verify_tls: bool) -> None:
+    """Rebuild Hermes' in-process OpenAI/httpx client with routed TLS policy."""
+    if verify_tls:
+        return
+    client_kwargs = dict(getattr(agent, "_client_kwargs", {}) or {})
+    if not client_kwargs or not hasattr(agent, "_create_openai_client"):
+        raise RuntimeError("Hermes Agent does not expose a configurable HTTP client")
+    client_kwargs["ssl_verify"] = False
+    new_client = agent._create_openai_client(
+        dict(client_kwargs),
+        reason="agent_hub_tls_policy",
+        shared=True,
+    )
+    old_client = getattr(agent, "client", None)
+    agent._client_kwargs = client_kwargs
+    agent.client = new_client
+    if old_client is not None and old_client is not new_client:
+        try:
+            agent._close_openai_client(
+                old_client,
+                reason="agent_hub_tls_policy",
+                shared=True,
+            )
+        except Exception:  # noqa: BLE001
+            try:
+                old_client.close()
+            except Exception:  # noqa: BLE001
+                pass
+
+
 def _hermes_cli_reply(
     q: queue.Queue,
     session_id: str,
@@ -1615,7 +1722,7 @@ def _hermes_cli_reply(
     """Run Hermes via its CLI when in-process AIAgent cannot be imported."""
     from . import hermes_cli
     from .secrets import resolve_api_key
-    from .settings import load_campus_config
+    from .settings import load_campus_config, resolve_backend_verify_tls
     from .providers import key_provider_mismatch
 
     if not hermes_cli.find_hermes_bin():
@@ -1629,6 +1736,7 @@ def _hermes_cli_reply(
     base_url = str(route_info.get("base_url") or (cfg.get("backend") or {}).get("base_url") or "").strip()
     use_model = (model or route_info.get("model") or "").strip()
     env_name = str(key_info.get("env_name") or (cfg.get("backend") or {}).get("api_key_env") or "")
+    verify_tls = resolve_backend_verify_tls(cfg, route_info)
 
     if not api_key and provider not in ("local-ollama",):
         return False
@@ -1667,6 +1775,7 @@ def _hermes_cli_reply(
             base_url=base_url,
             workspace=workspace,
             timeout=float((cfg.get("backend") or {}).get("timeout_seconds") or 180),
+            verify_tls=verify_tls,
         )
     except Exception as exc:  # noqa: BLE001
         _put(q, "meta", {"mode": "hermes-cli", "error": str(exc)})
@@ -1696,7 +1805,7 @@ def _direct_llm_reply(
     from . import llm_client
     from .providers import coerce_model_for_provider, get_provider, key_provider_mismatch
     from .secrets import resolve_api_key
-    from .settings import load_campus_config
+    from .settings import load_campus_config, resolve_backend_verify_tls
 
     cfg = load_campus_config()
     route_info = route_info or {}
@@ -1722,7 +1831,7 @@ def _direct_llm_reply(
         (model or route_info.get("model") or "").strip(),
         route_key=route_key,
     )
-    verify_tls = bool(backend.get("verify_tls", True))
+    verify_tls = resolve_backend_verify_tls(cfg, route_info)
     timeout = float(backend.get("timeout_seconds") or 120)
 
     if not base_url or not use_model:
