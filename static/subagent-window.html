@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark" data-accent="ocean">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>子代理独立窗口 · Agent Hub</title>
+  <link rel="stylesheet" href="/style.css?v=3.0.0" />
+  <style>
+    body { margin: 0; padding: 0; background: var(--bg, #0f1419); color: var(--text, #e7ecf3); font-family: inherit; }
+    .popout { display: flex; flex-direction: column; height: 100vh; }
+    .popout-head {
+      padding: 12px 16px; border-bottom: 1px solid var(--border, #2a323d);
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+      background: var(--panel, #151b22);
+    }
+    .popout-title { font-weight: 600; font-size: 15px; }
+    .popout-goal { color: var(--muted, #8a96a6); font-size: 13px; flex: 1 1 auto; min-width: 200px; }
+    .popout-actions { display: flex; gap: 8px; }
+    .popout-body { flex: 1 1 auto; overflow: auto; padding: 12px 16px; }
+    .popout-lanes { display: flex; flex-direction: column; gap: 10px; }
+    .popout-lane {
+      border: 1px solid var(--border, #2a323d);
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: var(--panel-2, #181f27);
+    }
+    .popout-lane-head {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      margin-bottom: 6px;
+    }
+    .popout-letter { font-weight: 700; opacity: 0.85; }
+    .popout-name { font-weight: 600; }
+    .popout-tag { font-size: 11px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border, #2a323d); color: var(--muted, #8a96a6); }
+    .popout-tag.pending { color: #c8a96a; border-color: #c8a96a55; }
+    .popout-tag.processing { color: #6ab0ff; border-color: #6ab0ff55; }
+    .popout-tag.completed { color: #6acf95; border-color: #6acf9555; }
+    .popout-tag.error { color: #d96a6a; border-color: #d96a6a55; }
+    .popout-progress { font-size: 12px; color: var(--muted, #8a96a6); }
+    .popout-body-lane { white-space: pre-wrap; font-size: 13px; line-height: 1.55; }
+    .popout-empty { color: var(--muted, #8a96a6); text-align: center; padding: 32px 0; }
+    .popout-bar {
+      height: 4px; border-radius: 2px; background: #2a323d; overflow: hidden; margin-top: 6px;
+    }
+    .popout-bar > span { display: block; height: 100%; background: linear-gradient(90deg, #4ea1ff, #6acf95); transition: width 0.3s ease; }
+    .popout-foot {
+      border-top: 1px solid var(--border, #2a323d);
+      padding: 8px 16px; font-size: 12px; color: var(--muted, #8a96a6);
+      display: flex; justify-content: space-between; align-items: center; gap: 8px;
+      background: var(--panel, #151b22);
+    }
+  </style>
+</head>
+<body>
+  <div class="popout">
+    <div class="popout-head">
+      <span class="popout-title">子代理独立窗口</span>
+      <span class="popout-goal" id="popout-goal">等待并行任务…</span>
+      <div class="popout-actions">
+        <button type="button" class="btn ghost chip" id="btn-reconnect">重连</button>
+        <button type="button" class="btn ghost chip" id="btn-close">关闭</button>
+      </div>
+    </div>
+    <div class="popout-body">
+      <div class="popout-lanes" id="popout-lanes">
+        <div class="popout-empty" id="popout-empty">还没有子代理任务 — 触发并行后将在此显示每个子代理的实时进度与输出。</div>
+      </div>
+    </div>
+    <div class="popout-foot">
+      <span id="popout-status">空闲</span>
+      <span id="popout-count">0 / 0</span>
+    </div>
+  </div>
+  <script>
+  (function () {
+    const params = new URLSearchParams(window.location.search);
+    const parentId = params.get("parent") || "";
+    const token = (() => {
+      try { return localStorage.getItem("agent_hub_token") || ""; } catch (_) { return ""; }
+    })();
+    const lanesEl = document.getElementById("popout-lanes");
+    const emptyEl = document.getElementById("popout-empty");
+    const goalEl = document.getElementById("popout-goal");
+    const statusEl = document.getElementById("popout-status");
+    const countEl = document.getElementById("popout-count");
+    const state = { lanes: {}, streams: {}, done: 0, total: 0 };
+
+    function api(path, opts = {}) {
+      const headers = Object.assign({ "Content-Type": "application/json" }, opts.headers || {});
+      if (token) headers.Authorization = "Bearer " + token;
+      return fetch(path, Object.assign({}, opts, { headers })).then((r) => {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      });
+    }
+
+    function laneEl(key) {
+      let el = lanesEl.querySelector('[data-lane="' + cssEscape(key) + '"]');
+      if (el) return el;
+      const wrap = document.createElement("div");
+      wrap.className = "popout-lane";
+      wrap.setAttribute("data-lane", key);
+      wrap.innerHTML = `
+        <div class="popout-lane-head">
+          <span class="popout-letter"></span>
+          <span class="popout-name"></span>
+          <span class="popout-tag pending">pending</span>
+          <span class="popout-progress"></span>
+        </div>
+        <div class="popout-bar"><span style="width:0%"></span></div>
+        <div class="popout-body-lane"></div>
+      `;
+      if (emptyEl) emptyEl.remove();
+      lanesEl.appendChild(wrap);
+      return wrap;
+    }
+
+    function cssEscape(s) { return String(s).replace(/[^a-zA-Z0-9_-]/g, "_"); }
+
+    function updateLane(key, patch) {
+      const el = laneEl(key);
+      const prev = state.lanes[key] || {};
+      const next = Object.assign({}, prev, patch);
+      state.lanes[key] = next;
+      el.querySelector(".popout-letter").textContent = next.letter || "?";
+      el.querySelector(".popout-name").textContent = next.title || next.shortTitle || key;
+      const tag = el.querySelector(".popout-tag");
+      tag.className = "popout-tag " + (next.status || "pending");
+      tag.textContent = next.status || "pending";
+      el.querySelector(".popout-progress").textContent = (next.progress || next.model || "").trim();
+      const bar = el.querySelector(".popout-bar > span");
+      const pct = next.status === "completed" ? 100
+        : next.status === "error" ? 100
+          : Math.max(5, Math.min(95, Number(next.pct) || 25));
+      bar.style.width = pct + "%";
+      if (next.content) {
+        el.querySelector(".popout-body-lane").textContent = next.content;
+      }
+      recount();
+    }
+
+    function recount() {
+      const total = state.total || Object.keys(state.lanes).length || 0;
+      const done = Object.values(state.lanes).filter((l) => l.status === "completed" || l.status === "error").length;
+      countEl.textContent = done + " / " + total;
+    }
+
+    function clearStreams() {
+      Object.values(state.streams).forEach((ctrl) => {
+        try { ctrl.close && ctrl.close(); } catch (_) {}
+      });
+      state.streams = {};
+    }
+
+    function bindLaneStream(childId, key) {
+      if (state.streams[childId]) return;
+      api("/api/sessions/" + encodeURIComponent(childId) + "/job")
+        .then((j) => {
+          if (!j || !j.active || !j.job) {
+            // Already done; we'll load history instead.
+            loadChildHistory(childId, key);
+            return null;
+          }
+          return consumeStream(j.job.stream_id || j.job.id, key);
+        })
+        .catch(() => loadChildHistory(childId, key));
+    }
+
+    function loadChildHistory(childId, key) {
+      api("/api/sessions/" + encodeURIComponent(childId))
+        .then((s) => {
+          const msgs = (s && s.messages) || [];
+          const last = [...msgs].reverse().find((m) => m.role === "assistant");
+          if (last) {
+            updateLane(key, {
+              status: "completed",
+              content: String(last.content || "").slice(0, 8000),
+              pct: 100,
+            });
+          }
+        })
+        .catch(() => {});
+    }
+
+    function consumeStream(streamId, key) {
+      const headers = {};
+      if (token) headers.Authorization = "Bearer " + token;
+      const url = "/api/stream/" + encodeURIComponent(streamId) + "?from=0";
+      state.streams[key] = { close() {} };
+      return fetch(url, { headers })
+        .then(async (res) => {
+          if (!res.ok || !res.body) {
+            state.streams[key] = null;
+            return;
+          }
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder();
+          let buf = "";
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            buf += decoder.decode(value, { stream: true });
+            const parts = buf.split("\n\n");
+            buf = parts.pop() || "";
+            for (const part of parts) {
+              const lines = part.split("\n");
+              let event = "message";
+              let data = "";
+              for (const line of lines) {
+                if (line.startsWith("event:")) event = line.slice(6).trim();
+                if (line.startsWith("data:")) data += line.slice(5).trim();
+              }
+              if (!data) continue;
+              let payload = {};
+              try { payload = JSON.parse(data); } catch (_) {}
+              if (event === "token") {
+                const prev = state.lanes[key] || {};
+                updateLane(key, {
+                  status: "processing",
+                  pct: Math.min(90, (prev.pct || 25) + 2),
+                  content: (prev.content || "") + (payload.text || ""),
+                });
+              } else if (event === "thinking") {
+                statusEl.textContent = payload.text || payload.message || "thinking…";
+              } else if (event === "done") {
+                updateLane(key, { status: "completed", pct: 100 });
+              } else if (event === "error") {
+                updateLane(key, { status: "error", pct: 100 });
+              } else if (event === "meta") {
+                if (payload && payload.model) updateLane(key, { model: payload.model });
+              }
+            }
+          }
+        })
+        .catch(() => {});
+    }
+
+    function registerParent(parentSessionId) {
+      if (!parentSessionId) return;
+      api("/api/sessions/" + encodeURIComponent(parentSessionId))
+        .then((s) => {
+          goalEl.textContent = (s && s.title) ? s.title : ("Session " + parentSessionId.slice(0, 6));
+        })
+        .catch(() => {});
+      // Scan active jobs to discover child lanes
+      api("/api/jobs/active")
+        .then((j) => {
+          const jobs = (j && j.jobs) || [];
+          jobs
+            .filter((jb) => jb.parent_id === parentSessionId || (jb.route && jb.route.multi_subagents))
+            .forEach((jb) => {
+              const key = (jb.lane_key || jb.id || jb.stream_id || "").toString();
+              const lanes = ((jb.route && jb.route.lanes) || []);
+              const meta = lanes.find((l) => (l.id || l.key) === key) || {};
+              state.total = Math.max(state.total, lanes.length || 1);
+              updateLane(key, {
+                title: meta.title || meta.short_title || ("Lane " + (meta.letter || key)),
+                shortTitle: meta.short_title || meta.title || key,
+                letter: meta.letter || "·",
+                model: jb.model || meta.model || "",
+                status: "processing",
+                pct: 10,
+              });
+              bindLaneStream(jb.session_id || jb.id, key);
+            });
+          recount();
+        })
+        .catch(() => {});
+
+      // Listen for cross-window updates
+      window.addEventListener("message", (ev) => {
+        const data = ev.data || {};
+        if (data.type !== "subagent_popout") return;
+        if (data.parent && data.parent !== parentSessionId) return;
+        if (data.event === "plan") {
+          const lanes = data.lanes || [];
+          state.total = lanes.length;
+          lanes.forEach((l) => updateLane(l.key, {
+            title: l.title, shortTitle: l.shortTitle || l.title,
+            letter: l.letter, status: l.status || "pending", pct: 5, model: l.model || "",
+          }));
+          goalEl.textContent = data.goal || goalEl.textContent;
+          statusEl.textContent = "并行任务已规划";
+        } else if (data.event === "status") {
+          updateLane(data.key, { status: data.status, pct: data.pct, progress: data.progress, model: data.model });
+        } else if (data.event === "content") {
+          updateLane(data.key, { content: data.content });
+        } else if (data.event === "done") {
+          updateLane(data.key, { status: "completed", pct: 100 });
+        } else if (data.event === "error") {
+          updateLane(data.key, { status: "error", pct: 100 });
+        } else if (data.event === "goal") {
+          goalEl.textContent = data.goal || goalEl.textContent;
+        }
+      });
+    }
+
+    document.getElementById("btn-reconnect").onclick = () => {
+      clearStreams();
+      Object.keys(state.lanes).forEach((k) => delete state.lanes[k]);
+      lanesEl.innerHTML = '<div class="popout-empty" id="popout-empty">重新连接中…</div>';
+      registerParent(parentId);
+    };
+    document.getElementById("btn-close").onclick = () => window.close();
+
+    if (!parentId) {
+      goalEl.textContent = "未指定父会话 — 在主窗口触发多子代理任务后会自动打开此窗口";
+      statusEl.textContent = "等待中";
+    } else {
+      registerParent(parentId);
+      setInterval(() => {
+        if (window.opener && !window.opener.closed) {
+          try { window.opener.postMessage({ type: "subagent_popout_ping", parent: parentId }, "*"); } catch (_) {}
+        }
+      }, 4000);
+    }
+  })();
+  </script>
+</body>
+</html>
