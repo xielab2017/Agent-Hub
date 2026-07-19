@@ -3,6 +3,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 from ali import config
+from ali import auth
 
 
 def _clear_public_ip_cache() -> None:
@@ -42,3 +43,13 @@ def test_public_url_requires_http_scheme_and_hostname(monkeypatch):
     assert config._public_url() == ""
     monkeypatch.setenv("HERMES_ALI_PUBLIC_URL", "https://agent.example.edu/")
     assert config._public_url() == "https://agent.example.edu"
+
+
+def test_hashed_remote_password_is_supported(monkeypatch):
+    password = "a-strong-local-password"
+    monkeypatch.setattr(auth, "AUTH_PASSWORD", "")
+    monkeypatch.setattr(auth, "AUTH_PASSWORD_SHA256", auth._hash_password(password))
+
+    assert auth.auth_required() is True
+    assert auth.verify_password(password) is True
+    assert auth.verify_password("wrong") is False

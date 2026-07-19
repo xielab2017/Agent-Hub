@@ -9,7 +9,7 @@ import time
 from http.cookies import SimpleCookie
 from typing import Optional
 
-from .config import AUTH_PASSWORD
+from .config import AUTH_PASSWORD, AUTH_PASSWORD_SHA256
 
 COOKIE_NAME = "hermes_ali_token"
 _TOKENS: dict[str, float] = {}  # token -> expiry epoch
@@ -17,7 +17,7 @@ _TOKEN_TTL = 60 * 60 * 24 * 7  # 7 days
 
 
 def auth_required() -> bool:
-    return bool(AUTH_PASSWORD)
+    return bool(AUTH_PASSWORD or AUTH_PASSWORD_SHA256)
 
 
 def _hash_password(password: str) -> str:
@@ -25,9 +25,13 @@ def _hash_password(password: str) -> str:
 
 
 def verify_password(password: str) -> bool:
-    if not AUTH_PASSWORD:
+    if AUTH_PASSWORD:
+        return hmac.compare_digest(_hash_password(password), _hash_password(AUTH_PASSWORD))
+    if AUTH_PASSWORD_SHA256:
+        return hmac.compare_digest(_hash_password(password), AUTH_PASSWORD_SHA256)
+    if not AUTH_PASSWORD and not AUTH_PASSWORD_SHA256:
         return True
-    return hmac.compare_digest(_hash_password(password), _hash_password(AUTH_PASSWORD))
+    return False
 
 
 def issue_token() -> str:

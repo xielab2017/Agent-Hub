@@ -3,6 +3,9 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 STATE_DIR="${HERMES_ALI_STATE_DIR:-$HOME/.hermes/ali}"
+PUBLIC_ENV_FILE="$STATE_DIR/public-access.env"
+PUBLIC_HASH_FILE="$STATE_DIR/public-access.sha256"
+PUBLIC_URL_FILE="$STATE_DIR/public-url"
 PID_FILE="$STATE_DIR/ali.pid"
 LOG_FILE="$STATE_DIR/ali.log"
 HOST="${HERMES_ALI_HOST:-0.0.0.0}"
@@ -11,6 +14,21 @@ LABEL="com.agent-hub.gateway"
 PLIST="$HOME/Library/LaunchAgents/${LABEL}.plist"
 
 mkdir -p "$STATE_DIR"
+
+# Optional machine-local public access configuration. This file is never part
+# of the repository and should remain readable only by the current user.
+if [[ -f "$PUBLIC_ENV_FILE" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$PUBLIC_ENV_FILE"
+  set +a
+fi
+if [[ -z "${HERMES_ALI_PASSWORD:-}" && -z "${HERMES_ALI_PASSWORD_SHA256:-}" && -f "$PUBLIC_HASH_FILE" ]]; then
+  export HERMES_ALI_PASSWORD_SHA256="$(tr -d '[:space:]' <"$PUBLIC_HASH_FILE")"
+fi
+if [[ -z "${HERMES_ALI_PUBLIC_URL:-}" && -f "$PUBLIC_URL_FILE" ]]; then
+  export HERMES_ALI_PUBLIC_URL="$(tr -d '\r\n' <"$PUBLIC_URL_FILE")"
+fi
 
 pick_python() {
   if [[ -n "${HERMES_ALI_PYTHON:-}" && -x "${HERMES_ALI_PYTHON}" ]]; then

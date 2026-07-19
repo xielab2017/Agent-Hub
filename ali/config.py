@@ -24,6 +24,7 @@ DEFAULT_PORT = int(os.environ.get("HERMES_ALI_PORT", "8765"))
 
 # Optional shared password for remote access (empty = no auth)
 AUTH_PASSWORD = os.environ.get("HERMES_ALI_PASSWORD", "").strip()
+AUTH_PASSWORD_SHA256 = os.environ.get("HERMES_ALI_PASSWORD_SHA256", "").strip().lower()
 
 # Optional canonical URL supplied by an HTTPS tunnel or reverse proxy. Public
 # address discovery is deliberately explicit because NAT and proxy headers make
