@@ -76,6 +76,37 @@ chmod +x ctl.sh "Start Agent Hub.command" start.sh
 
 > 关闭浏览器 / Terminal **不会**停止网关。显式停止：`./ctl.sh stop`。
 
+#### macOS 首次启动排查
+
+如果第一次双击 **`Start Agent Hub.command`** 后浏览器只显示：
+
+```json
+{"error":"not found"}
+```
+
+通常不是 v5 程序崩溃，而是 `8765` 端口上已有旧版/残留后台进程，启动脚本检测到端口可用后打开了旧服务。请在当前仓库目录执行：
+
+```bash
+./ctl.sh stop
+./ctl.sh start
+./ctl.sh open
+curl -s http://127.0.0.1:8765/api/health
+```
+
+确认健康检查里显示 `"version": "5.0.0"`。如果仍然不对，可临时换端口验证当前源码：
+
+```bash
+python3 server.py --host 127.0.0.1 --port 9876 --open
+```
+
+再访问 <http://127.0.0.1:9876/>。若新端口正常，说明原来的 `8765` 被旧进程占用，重启电脑或执行 `./ctl.sh stop` 后再启动即可。
+
+从 GitHub 下载 ZIP 后，macOS 也可能丢失执行权限；可重新赋权：
+
+```bash
+chmod +x ctl.sh "Start Agent Hub.command" start.sh
+```
+
 可选（开机自启 + 崩溃自动拉起）：
 
 ```bash
@@ -175,19 +206,22 @@ Agent-Hub/
 
 ## 开发与版本
 
-当前版本：**v3.0.0**（分支 `v3.0`）
+当前版本：**v5.0.0**（分支 `main`）
 
 ```bash
 # 健康检查
 curl -s http://127.0.0.1:8765/api/health
 
-# 检出 V3.0 分支
+# 更新 main 分支
 git fetch origin
-git checkout v3.0
+git checkout main
+git pull
 ```
 
 简要更新：
 
+- **v5.0.0** — 强化 Agent Hub 本地网关、启动器与跨平台使用体验；新增 macOS 首次启动排查说明
+- **v4.0.0** — 发布 Agent Hub v4 系列能力与文档刷新
 - **v3.0.0** — 并行子代理自动规划、共享 `HERMES_HOME`、C0–C3 路由；深度会话 iframe 已退役（能力内化到 Hub）
 - **v2.0.0** — 统一模型目录、路由与 Agent/Subagent 选模；自适应可调布局；代理 TLS 配置持久化
 - **v1.4.59** — 内置 Logo 预设：SUAT 彩标 + 白板；Hub 守护安装加固  
