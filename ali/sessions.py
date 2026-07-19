@@ -14,6 +14,7 @@ from typing import Any
 from .config import SESSIONS_DIR, ensure_state_dirs
 
 _lock = threading.RLock()
+_DEFAULT_SESSION_TITLES = {"", "New chat", "New task", "Untitled", "新对话", "新任务", "未命名"}
 
 
 @dataclass
@@ -214,11 +215,12 @@ def append_messages(session_id: str, *msgs: dict[str, Any]) -> Session | None:
             return None
         session.messages.extend(ensure_message_id(dict(m)) for m in msgs)
         # Auto-title from first user message
-        if session.title in ("New chat", "新对话", "") and msgs:
+        if session.title.strip() in _DEFAULT_SESSION_TITLES and msgs:
             first = next((m for m in msgs if m.get("role") == "user"), None)
             if first and isinstance(first.get("content"), str):
-                text = first["content"].strip().replace("\n", " ")
-                session.title = (text[:48] + "…") if len(text) > 48 else text or session.title
+                text = " ".join(first["content"].strip().split())
+                text = text.split("[Attachments]", 1)[0].strip(" -—:：,，。")
+                session.title = (text[:32] + "…") if len(text) > 32 else text or session.title
         _refresh_memory(session)
         session.updated_at = time.time()
         save_session(session)

@@ -11,6 +11,16 @@ if not exist "%STATE_DIR%" mkdir "%STATE_DIR%"
 set LOG_FILE=%STATE_DIR%\ali.log
 set PID_FILE=%STATE_DIR%\ali.pid
 
+if "%AGENT_HUB_TEST_MODE%"=="1" (
+  where powershell >nul 2>nul || exit /b 1
+  if not exist "%~dp0start.ps1" exit /b 1
+  if not exist "%~dp0server.py" exit /b 1
+  where py >nul 2>nul && exit /b 0
+  where python >nul 2>nul && exit /b 0
+  where python3 >nul 2>nul && exit /b 0
+  exit /b 1
+)
+
 echo ==========================================
 echo   Agent Hub — background gateway
 echo ==========================================

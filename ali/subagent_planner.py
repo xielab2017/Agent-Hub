@@ -616,7 +616,13 @@ def plan_lanes(
     # Avoid spending a planner-model call on ordinary short chat turns.
     # Explicit multi-agent requests and long/compound tasks still use planning.
     direct_signals = ("分别", "并行", "多代理", "子代理", "比较", "综合", "多来源", "分组", "parallel", "subagent", "compare", "synthesize")
-    if not nl_count and not force_parallel and len(msg) <= 180 and not any(x in msg.lower() for x in direct_signals):
+    if (
+        not nl_count
+        and not force_parallel
+        and len(msg) <= 180
+        and not any(x in msg.lower() for x in direct_signals)
+        and not _has_event_signal(msg)
+    ):
         return {
             "ok": True, "need_parallel": False, "needs_search": False,
             "lanes": [], "single_role": None, "source": "short-direct",

@@ -1,0 +1,167 @@
+name: Windows smoke test
+
+on:
+  push:
+    branches: [main, "contrib/**", "codex/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-workflows:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install and run focused tests
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e . pytest
+          python -m pytest -q tests/test_fusion.py tests/test_model_intelligence.py tests/test_public_access.py tests/test_session_auto_title.py
+
+      - name: Validate Windows launchers
+        shell: pwsh
+        run: |
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path .\start.ps1), [ref]$null, [ref]$errors
+          ) | Out-Null
+          if ($errors.Count) { throw ($errors | Out-String) }
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path .\update-agent-hub.ps1), [ref]$null, [ref]$errors
+          ) | Out-Null
+          if ($errors.Count) { throw ($errors | Out-String) }
+          $env:AGENT_HUB_TEST_MODE = "1"
+          foreach ($launcher in @("start-agent-hub.bat", "update-agent-hub.bat", "push-agent-hub.bat")) {
+            cmd /c "call $launcher"
+            if ($LASTEXITCODE -ne 0) { throw "$launcher self-check failed" }
+          }
+
+      - name: Verify service startup
+        shell: pwsh
+        run: |
+          $port = 8877
+          $process = Start-Process powershell -ArgumentList @(
+            "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ".\start.ps1",
+            "-HostAddress", "127.0.0.1", "-Port", "$port", "-NoBrowser"
+          ) -PassThru
+          try {
+            $ready = $false
+            for ($i = 0; $i -lt 40; $i++) {
+              try {
+                $health = Invoke-RestMethod "http://127.0.0.1:$port/api/health" -TimeoutSec 2
+                if ($health.ok) { $ready = $true; break }
+              } catch {}
+              Start-Sleep -Milliseconds 500
+            }
+            if (-not $ready) { throw "Agent Hub health endpoint did not become ready" }
+            if (-not $health.version) { throw "Health response has no version" }
+          } finally {
+            Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+            Get-CimInstance Win32_Process | Where-Object {
+              $_.CommandLine -like "*server.py*--port $port*" -or
+              $_.CommandLine -like "*bootstrap.py*--port $port*"
+            } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+          }
+
+      - name: Verify updater preserves local changes
+        shell: pwsh
+        run: |
+          $source = (Get-Location).Path
+          $root = Join-Path $env:RUNNER_TEMP "agent-hub-update-test"
+          $bare = Join-Path $root "origin.git"
+          $seed = Join-Path $root "seed"
+          $client = Join-Path $root "client"
+          New-Item -ItemType Directory -Force $root | Out-Null
+          git init --bare $bare
+          git clone $source $seed
+          Set-Location $seed
+          git config user.name "Windows CI"
+          git config user.email "windows-ci@example.invalid"
+          git switch -C main HEAD
+          git remote set-url origin $bare
+          git push -u origin main
+          git clone $bare $client
+          Set-Location $seed
+          Set-Content remote-update.txt "from remote"
+          git add remote-update.txt
+          git commit -m "test: remote update"
+          git push origin main
+          Set-Location $client
+          git config user.name "Windows CI"
+          git config user.email "windows-ci@example.invalid"
+          Set-Content local-change.txt "keep me"
+          Copy-Item (Join-Path $source "update-agent-hub.ps1") . -Force
+          powershell -NoProfile -ExecutionPolicy Bypass -File .\update-agent-hub.ps1
+          if ($LASTEXITCODE -ne 0) { throw "Updater failed" }
+          if (-not (Test-Path remote-update.txt)) { throw "Remote update missing" }
+          if ((Get-Content local-change.txt) -ne "keep me") { throw "Local change was not restored" }
+
+      - name: Verify contributor publish creates and pushes branch
+        shell: pwsh
+        run: |
+          $source = (Get-Location).Path
+          $root = Join-Path $env:RUNNER_TEMP "agent-hub-publish-test"
+          $bare = Join-Path $root "origin.git"
+          $work = Join-Path $root "work"
+          New-Item -ItemType Directory -Force $root | Out-Null
+          git init --bare $bare
+          git clone $source $work
+          Set-Location $work
+          git config user.name "Windows CI"
+          git config user.email "windows-ci@example.invalid"
+          git switch -C main HEAD
+          git remote set-url origin $bare
+          git push -u origin main
+          Set-Content windows-publish-test.txt "publish me"
+          @("1", "y", "test: windows contributor publish") |
+            python .\scripts\publish_agent_hub.py
+          if ($LASTEXITCODE -ne 0) { throw "Contributor publisher failed" }
+          $branch = (git branch --show-current).Trim()
+          if ($branch -notlike "contrib/windows-ci/v*") { throw "Unexpected branch: $branch" }
+          git ls-remote --exit-code --heads origin $branch | Out-Null
+          if ($LASTEXITCODE -ne 0) { throw "Published branch is absent from origin" }
+          $old = git show main:ali/config.py | Select-String 'VERSION = "([0-9]+)\.([0-9]+)\.([0-9]+)"'
+          $new = Get-Content ali/config.py | Select-String 'VERSION = "([0-9]+)\.([0-9]+)\.([0-9]+)"'
+          if ([int]$new.Matches[0].Groups[3].Value -ne [int]$old.Matches[0].Groups[3].Value + 1) {
+            throw "Publisher did not increment the patch version"
+          }
+
+      - name: Verify administrator publish updates main
+        shell: pwsh
+        run: |
+          $source = (Get-Location).Path
+          $root = Join-Path $env:RUNNER_TEMP "agent-hub-admin-publish-test"
+          $bare = Join-Path $root "origin.git"
+          $work = Join-Path $root "work"
+          New-Item -ItemType Directory -Force $root | Out-Null
+          git init --bare $bare
+          git clone $source $work
+          Set-Location $work
+          git config user.name "Windows CI"
+          git config user.email "windows-ci@example.invalid"
+          git switch -C main HEAD
+          git remote set-url origin $bare
+          git push -u origin main
+          $before = (git rev-parse HEAD).Trim()
+          Set-Content windows-admin-publish-test.txt "admin publish"
+          $env:AGENT_HUB_TEST_MODE = "1"
+          $env:AGENT_HUB_ADMIN_PASSWORD_SHA256 = python -c "import hashlib; print(hashlib.sha256(b'ci-admin-password').hexdigest())"
+          @("2", "ci-admin-password", "y", "test: windows admin publish") |
+            python .\scripts\publish_agent_hub.py
+          if ($LASTEXITCODE -ne 0) { throw "Administrator publisher failed" }
+          if ((git branch --show-current).Trim() -ne "main") { throw "Administrator publisher left main" }
+          $after = (git rev-parse HEAD).Trim()
+          if ($after -eq $before) { throw "Administrator publisher did not create a commit" }
+          $remoteMain = (git ls-remote origin refs/heads/main).Split()[0]
+          if ($remoteMain -ne $after) { throw "Administrator commit was not pushed to main" }

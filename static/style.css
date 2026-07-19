@@ -1835,7 +1835,8 @@ hr.soft {
   transition: border-color .15s ease, background .15s ease, transform .15s ease;
 }
 .folder-task-row:hover,
-.folder-task-row.active {
+.folder-task-row.active,
+.folder-task-row.selected {
   border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
   background: color-mix(in srgb, var(--accent) 9%, var(--bg-soft));
   transform: translateY(-1px);
@@ -2201,6 +2202,27 @@ hr.soft {
   opacity: .7;
 }
 
+.project-heading-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 2px;
+}
+
+.project-heading-actions .sidebar-icon-btn {
+  width: 26px;
+  height: 26px;
+  min-height: 26px;
+  padding: 5px;
+  color: var(--muted);
+}
+
+.project-heading-actions .sidebar-icon-btn:hover,
+.project-heading-actions .sidebar-icon-btn.active {
+  color: var(--text);
+  background: color-mix(in srgb, var(--text) 7%, transparent);
+}
+
 .projects-section {
   margin-bottom: 0;
 }
@@ -2222,6 +2244,11 @@ hr.soft {
   background: color-mix(in srgb, var(--text) 9%, transparent);
   border-color: transparent;
   box-shadow: inset 2px 0 0 #7a2a8f;
+}
+
+.session-item.selected {
+  background: color-mix(in srgb, var(--accent) 11%, transparent);
+  box-shadow: inset 2px 0 0 var(--accent);
 }
 
 .session-item.running {
@@ -2463,6 +2490,27 @@ hr.soft {
   background: inherit;
 }
 
+.language-switcher {
+  min-height: 34px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 9px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.language-switcher select {
+  max-width: 112px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 22px 4px 7px;
+  background: var(--bg-elev);
+  color: var(--text);
+  font: inherit;
+}
+
 .sidebar-foot #btn-control {
   min-height: 38px;
   padding: 8px 10px;
@@ -2519,6 +2567,71 @@ hr.soft {
   white-space: nowrap;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 9px;
+}
+
+.model-governance-box {
+  margin: 12px 0;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg-elev) 92%, var(--accent) 8%);
+}
+
+.model-governance-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.model-governance-head h4,
+.model-governance-head p {
+  margin: 0 0 4px;
+}
+
+.model-health-list {
+  max-height: 310px;
+  overflow: auto;
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.model-health-row {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+  padding: 7px;
+  border-radius: 6px;
+  background: var(--bg-elev);
+}
+
+.model-health-state {
+  padding: 2px 5px;
+  border-radius: 4px;
+  color: var(--muted);
+  background: var(--bg-soft);
+  text-align: center;
+  font-size: 10px;
+}
+
+.model-health-state.is-healthy { color: var(--ok); }
+.model-health-state.is-degraded,
+.model-health-state.is-timeout { color: var(--warn); }
+.model-health-state.is-unavailable,
+.model-health-state.is-unsupported { color: var(--danger); }
+
+.model-health-main {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.model-health-main strong,
+.model-health-main small {
+  overflow-wrap: anywhere;
 }
 
 .sidebar-foot .badge {

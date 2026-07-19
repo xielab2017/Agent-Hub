@@ -621,6 +621,7 @@ def start_chat(
     subagent_id: str = "",
     web_search: bool | None = None,
     thinking_depth: str = "",
+    max_tokens_override: int | str | None = None,
 ) -> dict[str, Any]:
     """Start a background agent run; returns stream_id for SSE."""
     from . import agents as agents_mod, audit, ecosystem, routing, skills as skills_mod, soul as soul_mod
@@ -704,6 +705,13 @@ def start_chat(
     route_info = routing.apply_thinking_depth(
         route_info, depth_raw, cfg=cfg, chat_mode=chat_mode
     )
+    if max_tokens_override not in (None, ""):
+        try:
+            token_cap = int(max_tokens_override)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("max_tokens_override must be an integer") from exc
+        route_info = dict(route_info)
+        route_info["max_tokens"] = max(128, min(32768, token_cap))
     if simple_chat:
         route_info = dict(route_info)
         route_info["simple_chat"] = True

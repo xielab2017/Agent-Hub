@@ -723,6 +723,8 @@ def model_options_payload(cfg: dict[str, Any]) -> dict[str, Any]:
     saved = cfg.get("available_models")
     if not isinstance(saved, dict):
         saved = {}
+    health_cache = cfg.get("model_health_cache")
+    health_cache = health_cache if isinstance(health_cache, dict) else {}
 
     configured: list[tuple[str, str]] = []
     default_provider = current if current != "hybrid" else ""
@@ -765,13 +767,22 @@ def model_options_payload(cfg: dict[str, Any]) -> dict[str, Any]:
         key = (pid, mid)
         if not mid or key in seen:
             return
+        health = health_cache.get(mid) if isinstance(health_cache.get(mid), dict) else {}
+        health_provider = str(health.get("provider") or "")
+        health_state = str(health.get("state") or health.get("status") or "untested")
+        applies = not health_provider or health_provider == pid
+        blocked_by_health = applies and health_state in {"timeout", "unsupported", "unavailable"}
+        if source == "fetched" and blocked_by_health:
+            return
         seen.add(key)
         options.append(
             {
                 "provider": pid,
                 "model": mid,
                 "source": source,
-                "available": bool(available),
+                "available": bool(available) and not blocked_by_health,
+                "health_state": health_state if applies else "untested",
+                "latency_ms": health.get("latency_ms") if applies else None,
             }
         )
 

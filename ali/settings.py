@@ -14,8 +14,16 @@ from .config import STATE_DIR, ensure_state_dirs
 SETTINGS_FILE = STATE_DIR / "settings.json"
 CAMPUS_CONFIG_FILE = STATE_DIR / "campus-office-ai.json"
 
+MODEL_CATEGORIES = ("C0", "C1", "C2", "C3", "Vision", "Embedding", "Reranker")
+DEFAULT_FUSION_TOKEN_BUDGET: dict[str, Any] = {
+    "total_budget": 12000,
+    "planner": 800,
+    "lanes": 6000,
+    "judge": 3200,
+}
+
 DEFAULT_CAMPUS: dict[str, Any] = {
-    "schema_version": "1.1",
+    "schema_version": "1.2",
     "install_root": "",
     "mode": "single",  # single | hybrid
     "backend": {
@@ -32,6 +40,13 @@ DEFAULT_CAMPUS: dict[str, Any] = {
     # Provider-scoped model ids returned by the real /models endpoint.
     # Kept separate from role bindings so every model picker can share it.
     "available_models": {},
+    "model_health_cache": {},
+    "model_profiles": {},
+    "category_models": {category: "" for category in MODEL_CATEGORIES},
+    "category_auto": {category: True for category in MODEL_CATEGORIES},
+    "fusion_mode": "auto",  # fast | auto | deep
+    "fusion_token_budget": deepcopy(DEFAULT_FUSION_TOKEN_BUDGET),
+    "fusion_judge_model": "",
     "models": {
         "fast": "",
         "main": "",
@@ -90,7 +105,8 @@ DEFAULT_CAMPUS: dict[str, Any] = {
         "hub_fast_chat": False,  # legacy alias: True ⇒ force direct (kept for old configs)
         # recommended | observe | disabled — written into Hermes hub_route_contract.json
         "token_optimizer_mode": "recommended",
-        "language": "zh",  # zh | en
+        "language": "zh",  # currently resolved UI language
+        "language_mode": "auto",  # zh | en | auto
         "theme": "dark",  # dark | light
         "accent": "ocean",  # ocean | forest | amber | rose | slate | teal
         "logo_sidebar": "",  # empty = SUAT default; /brand/... or /brand/custom/...
@@ -127,13 +143,80 @@ def _deep_merge(base: dict, overlay: dict) -> dict:
     return out
 
 
+def _normalize_governance_settings(data: dict[str, Any] | None) -> dict[str, Any]:
+    """Migrate model-governance and fusion fields without dropping old data."""
+    source = deepcopy(data) if isinstance(data, dict) else {}
+    source["schema_version"] = "1.2"
+    routing = source.get("routing") if isinstance(source.get("routing"), dict) else {}
+    tiers = routing.get("tier_models") if isinstance(routing.get("tier_models"), dict) else {}
+
+    category_models = source.get("category_models")
+    category_models = dict(category_models) if isinstance(category_models, dict) else {}
+    legacy_slots = source.get("models") if isinstance(source.get("models"), dict) else {}
+    slot_fallbacks = {
+        "C0": legacy_slots.get("fast") or legacy_slots.get("qwen_fast"),
+        "C1": legacy_slots.get("main") or legacy_slots.get("qwen_main"),
+        "C2": legacy_slots.get("main") or legacy_slots.get("qwen_main"),
+        "C3": legacy_slots.get("reasoning") or legacy_slots.get("deepseek_reasoning"),
+        "Vision": legacy_slots.get("vision") or legacy_slots.get("qwen_vl"),
+        "Embedding": legacy_slots.get("embedding"),
+        "Reranker": legacy_slots.get("reranker"),
+    }
+    for category in MODEL_CATEGORIES:
+        if category not in category_models:
+            tier = tiers.get(category) if isinstance(tiers.get(category), dict) else {}
+            category_models[category] = str(tier.get("model") or slot_fallbacks.get(category) or "")
+        elif not isinstance(category_models[category], str):
+            entry = category_models[category]
+            category_models[category] = str(entry.get("model") or "") if isinstance(entry, dict) else ""
+    source["category_models"] = category_models
+
+    category_auto = source.get("category_auto")
+    if isinstance(category_auto, bool):
+        category_auto = {category: category_auto for category in MODEL_CATEGORIES}
+    else:
+        category_auto = dict(category_auto) if isinstance(category_auto, dict) else {}
+    source["category_auto"] = {
+        category: bool(category_auto.get(category, True)) for category in MODEL_CATEGORIES
+    }
+
+    for key in ("model_health_cache", "model_profiles"):
+        if not isinstance(source.get(key), dict):
+            source[key] = {}
+
+    legacy_fusion = source.get("fusion") if isinstance(source.get("fusion"), dict) else {}
+    ali = source.get("ali") if isinstance(source.get("ali"), dict) else {}
+    mode = str(
+        source.get("fusion_mode")
+        or legacy_fusion.get("mode")
+        or ali.get("fusion_mode")
+        or "auto"
+    ).lower()
+    source["fusion_mode"] = mode if mode in ("fast", "auto", "deep") else "auto"
+
+    budget = source.get("fusion_token_budget")
+    if budget is None:
+        budget = legacy_fusion.get("token_budget", ali.get("fusion_token_budget"))
+    if isinstance(budget, (int, float)) and not isinstance(budget, bool):
+        budget = {"total_budget": max(1, int(budget))}
+    budget = dict(budget) if isinstance(budget, dict) else {}
+    source["fusion_token_budget"] = _deep_merge(DEFAULT_FUSION_TOKEN_BUDGET, budget)
+    source["fusion_judge_model"] = str(
+        source.get("fusion_judge_model")
+        or legacy_fusion.get("judge_model")
+        or ali.get("fusion_judge_model")
+        or ""
+    )
+    return source
+
+
 def load_campus_config() -> dict[str, Any]:
     ensure_state_dirs()
     if CAMPUS_CONFIG_FILE.is_file():
         try:
             data = json.loads(CAMPUS_CONFIG_FILE.read_text(encoding="utf-8"))
             if isinstance(data, dict):
-                merged = _deep_merge(DEFAULT_CAMPUS, data)
+                merged = _deep_merge(DEFAULT_CAMPUS, _normalize_governance_settings(data))
                 routing = merged.get("routing") if isinstance(merged.get("routing"), dict) else {}
                 tiers = routing.get("tier_models") if isinstance(routing.get("tier_models"), dict) else {}
                 if tiers:
@@ -218,10 +301,32 @@ def save_campus_config(
         try:
             existing = json.loads(CAMPUS_CONFIG_FILE.read_text(encoding="utf-8"))
             if isinstance(existing, dict):
-                merged = _deep_merge(merged, existing)
+                merged = _deep_merge(merged, _normalize_governance_settings(existing))
         except (OSError, json.JSONDecodeError):
             pass
-    merged = _deep_merge(merged, data or {})
+    incoming = data if isinstance(data, dict) else {}
+    if not preserve_existing:
+        incoming = _normalize_governance_settings(incoming)
+    merged = _deep_merge(merged, incoming)
+    # A partial legacy writer may still send only the former nested Fusion
+    # block. Honor explicitly supplied legacy values before final normalization.
+    legacy_fusion = incoming.get("fusion") if isinstance(incoming.get("fusion"), dict) else {}
+    incoming_ali = incoming.get("ali") if isinstance(incoming.get("ali"), dict) else {}
+    if "fusion_mode" not in incoming and ("mode" in legacy_fusion or "fusion_mode" in incoming_ali):
+        merged["fusion_mode"] = legacy_fusion.get("mode", incoming_ali.get("fusion_mode"))
+    if "fusion_token_budget" not in incoming and (
+        "token_budget" in legacy_fusion or "fusion_token_budget" in incoming_ali
+    ):
+        merged["fusion_token_budget"] = legacy_fusion.get(
+            "token_budget", incoming_ali.get("fusion_token_budget")
+        )
+    if "fusion_judge_model" not in incoming and (
+        "judge_model" in legacy_fusion or "fusion_judge_model" in incoming_ali
+    ):
+        merged["fusion_judge_model"] = legacy_fusion.get(
+            "judge_model", incoming_ali.get("fusion_judge_model")
+        )
+    merged = _normalize_governance_settings(merged)
     # Never persist secrets
     backend = merged.get("backend") or {}
     for secret_key in ("api_key", "password", "token", "secret"):
@@ -298,6 +403,10 @@ def save_campus_config(
         from . import runtimes as runtimes_mod
 
         ali = dict(ali)
+        language = str(ali.get("language") or "zh").strip().lower()
+        ali["language"] = language if language in ("zh", "en", "auto") else "zh"
+        language_mode = str(ali.get("language_mode") or ali["language"]).strip().lower()
+        ali["language_mode"] = language_mode if language_mode in ("zh", "en", "auto") else "auto"
         ali["thinking_depth"] = routing_mod.normalize_thinking_depth(
             ali.get("thinking_depth"), "medium"
         )
@@ -358,7 +467,71 @@ def public_settings_view() -> dict[str, Any]:
         "defaults": DEFAULT_CAMPUS,
         "catalog": catalog_payload(),
         "model_options": model_options_payload(cfg),
+        "model_governance": public_model_governance_view(cfg),
         "search": websearch.search_status(),
+    }
+
+
+def public_model_governance_view(cfg: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Return health, profiles, and independent category Auto decisions."""
+    config = cfg if isinstance(cfg, dict) else load_campus_config()
+    health_cache = config.get("model_health_cache")
+    health_cache = health_cache if isinstance(health_cache, dict) else {}
+    stored_profiles = config.get("model_profiles")
+    stored_profiles = stored_profiles if isinstance(stored_profiles, dict) else {}
+    category_models = config.get("category_models")
+    category_models = category_models if isinstance(category_models, dict) else {}
+    category_auto = config.get("category_auto")
+    category_auto = category_auto if isinstance(category_auto, dict) else {}
+
+    try:
+        from .model_intelligence import (
+            filter_healthy_models,
+            normalize_health_record,
+            recommend_category_models,
+        )
+
+        normalized_health = {
+            str(model): normalize_health_record(record, model=str(model))
+            for model, record in health_cache.items()
+            if isinstance(record, dict)
+        }
+        profiles = []
+        for model, raw in stored_profiles.items():
+            if not isinstance(raw, dict):
+                continue
+            profile = deepcopy(raw)
+            profile["model"] = str(profile.get("model") or model)
+            if model in normalized_health:
+                profile["health"] = normalized_health[model]
+                profile["health_state"] = normalized_health[model]["state"]
+                profile["healthy"] = normalized_health[model]["healthy"]
+            profiles.append(profile)
+        manual = {
+            category: str(category_models.get(category) or "")
+            for category in MODEL_CATEGORIES
+            if not bool(category_auto.get(category, True))
+        }
+        recommendations = recommend_category_models(profiles, manual_models=manual)
+        selectable = filter_healthy_models(profiles)
+    except (ImportError, TypeError, ValueError):
+        normalized_health = deepcopy(health_cache)
+        profiles = [deepcopy(item) for item in stored_profiles.values() if isinstance(item, dict)]
+        recommendations = {}
+        selectable = []
+
+    return {
+        "health": normalized_health,
+        "profiles": profiles,
+        "selectable_models": [str(item.get("model") or "") for item in selectable],
+        "category_models": {category: str(category_models.get(category) or "") for category in MODEL_CATEGORIES},
+        "category_auto": {category: bool(category_auto.get(category, True)) for category in MODEL_CATEGORIES},
+        "recommendations": recommendations,
+        "fusion": {
+            "mode": config.get("fusion_mode") or "auto",
+            "token_budget": deepcopy(config.get("fusion_token_budget") or DEFAULT_FUSION_TOKEN_BUDGET),
+            "judge_model": str(config.get("fusion_judge_model") or ""),
+        },
     }
 
 

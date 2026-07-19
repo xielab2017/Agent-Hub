@@ -2,11 +2,17 @@
 
 from __future__ import annotations
 
+import ipaddress
 import os
+import shutil
 import socket
+import subprocess
 import sys
+import threading
+import time
 from pathlib import Path
 from urllib.parse import urlparse
+from urllib.request import Request, urlopen
 
 VERSION = "5.0.1"
 APP_NAME = "Agent Hub"
@@ -31,6 +37,53 @@ def _public_url() -> str:
 
 
 PUBLIC_URL = _public_url()
+
+_PUBLIC_IP_CACHE: dict[str, str | float] = {"value": "", "expires": 0.0}
+_PUBLIC_IP_LOCK = threading.Lock()
+_PUBLIC_IP_SERVICES = (
+    "https://api.ipify.org",
+    "https://checkip.amazonaws.com",
+    "https://icanhazip.com",
+)
+
+
+def public_ip() -> str:
+    """Return the detected public IP with a short failure/success cache."""
+    now = time.monotonic()
+    if now < float(_PUBLIC_IP_CACHE["expires"]):
+        return str(_PUBLIC_IP_CACHE["value"])
+    with _PUBLIC_IP_LOCK:
+        now = time.monotonic()
+        if now < float(_PUBLIC_IP_CACHE["expires"]):
+            return str(_PUBLIC_IP_CACHE["value"])
+        value = ""
+        curl = shutil.which("curl")
+        for service in _PUBLIC_IP_SERVICES:
+            try:
+                if curl:
+                    result = subprocess.run(
+                        [curl, "--fail", "--silent", "--show-error", "--max-time", "2", service],
+                        capture_output=True,
+                        check=False,
+                        text=True,
+                        timeout=2.5,
+                    )
+                    if result.returncode != 0:
+                        continue
+                    candidate = result.stdout.strip()
+                else:
+                    request = Request(service, headers={"User-Agent": f"Agent-Hub/{VERSION}"})
+                    with urlopen(request, timeout=1.5) as response:
+                        candidate = response.read(80).decode("ascii").strip()
+                address = ipaddress.ip_address(candidate)
+                if address.is_global:
+                    value = str(address)
+                    break
+            except (OSError, subprocess.SubprocessError, UnicodeError, ValueError):
+                continue
+        _PUBLIC_IP_CACHE["value"] = value
+        _PUBLIC_IP_CACHE["expires"] = now + (600.0 if value else 60.0)
+        return value
 
 # State directory
 def _default_state_dir() -> Path:

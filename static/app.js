@@ -36,8 +36,6 @@ function bindArchiveControls() {
   btn.dataset.bound = "1";
   btn.onclick = async () => {
     state.showArchived = !state.showArchived;
-    btn.classList.toggle("active", state.showArchived);
-    btn.textContent = state.showArchived ? "返回会话" : "归档";
     await refreshSessions();
   };
 }
@@ -45,6 +43,19 @@ function bindArchiveControls() {
 function detectSystemLanguage() {
   const nav = String(navigator.language || navigator.userLanguage || "en").toLowerCase();
   return nav.startsWith("zh") ? "zh" : "en";
+}
+
+function normalizeLanguage(value) {
+  const raw = String(value || "").trim().toLowerCase();
+  if (raw === "zh" || raw.startsWith("zh-")) return "zh";
+  if (raw === "en" || raw.startsWith("en-")) return "en";
+  return "";
+}
+
+function resolveLanguageMode(mode, status = null) {
+  if (mode === "zh" || mode === "en") return mode;
+  const hinted = normalizeLanguage(status?.locale_hint?.language);
+  return hinted || detectSystemLanguage();
 }
 
 function controlLangZh() {
@@ -116,6 +127,8 @@ const I18N = {
     "login.submit": "进入",
     "login.error": "密码错误",
     "nav.newChat": "新任务",
+    "nav.primary": "主要导航",
+    "nav.search": "搜索会话或文件夹",
     "nav.chats": "进行中",
     "nav.workflows": "模板",
     "nav.tasks": "任务",
@@ -123,13 +136,17 @@ const I18N = {
     "nav.schedule": "定时任务",
     "nav.skillsMcp": "Skills 与 MCP",
     "nav.knowledge": "科研知识库",
-    "nav.workspace": "深理工科研空间",
+    "nav.workspace": "科研项目",
     "nav.pinned": "置顶",
+    "nav.pinnedProjects": "置顶项目",
     "nav.projects": "科研项目",
     "nav.recents": "最近",
     "nav.searchResults": "搜索结果",
     "nav.control": "⚙ 控制中心",
+    "sidebar.collapse": "收起侧边栏",
+    "sidebar.resize": "拖拽调整侧栏宽度 · 双击恢复默认",
     "chat.new": "新任务",
+    "chat.newChat": "新对话",
     "empty.title": "校园 Agent Hub",
     "empty.body": "描述任务并运行 · Agent Hub 调度 Skill / Agent · 进度条跟踪执行",
     "skills.picker": "Skill",
@@ -205,7 +222,9 @@ const I18N = {
     "composer.soul": "Soul",
     "composer.route": "路由",
     "composer.mode": "模式",
+    "composer.taskType": "任务类型",
     "composer.model": "模型",
+    "composer.fusion": "融合模式",
     "composer.thinkingDepth": "思考深度",
     "composer.workspace": "工作区",
     "composer.workspacePh": "可选：工作目录路径",
@@ -213,6 +232,48 @@ const I18N = {
     "composer.send": "运行",
     "composer.search": "联网搜索",
     "composer.deepSearch": "深度搜索",
+    "fusion.fast": "Fast · 单模型",
+    "fusion.auto": "Auto · 自适应",
+    "fusion.deep": "Deep · 多模型",
+    "plan.preview": "执行预览",
+    "plan.categoryModel": "类别推荐模型",
+    "project.name": "项目名称",
+    "project.create": "创建",
+    "project.new": "新建项目",
+    "project.actions": "项目操作",
+    "project.rename": "重命名",
+    "project.pin": "置顶项目",
+    "project.unpin": "取消置顶",
+    "project.archive": "归档",
+    "project.restore": "恢复",
+    "project.delete": "删除项目",
+    "project.viewArchive": "查看归档项目",
+    "project.back": "返回当前项目",
+    "session.actions": "任务操作",
+    "session.rename": "重命名",
+    "session.pin": "置顶",
+    "session.unpin": "取消置顶",
+    "session.backup": "下载备份",
+    "session.move": "移动到项目",
+    "session.unclassified": "未分类",
+    "session.archive": "归档",
+    "session.restore": "恢复",
+    "session.delete": "删除",
+    "session.noMatches": "没有匹配的任务或项目",
+    "session.pinnedAbove": "置顶任务显示在上方",
+    "session.projectEmpty": "项目中还没有任务",
+    "session.archived": "已归档",
+    "session.noArchived": "暂无归档任务",
+    "session.empty": "还没有任务",
+    "language.zh": "中文",
+    "language.en": "English",
+    "language.auto": "Auto",
+    "task.auto": "Auto · 自动判断",
+    "task.c0": "C0 · 简单问答",
+    "task.c1": "C1 · 办公写作",
+    "task.c2": "C2 · 编程",
+    "task.c3": "C3 · 深度研究",
+    "task.vision": "Vision · 图片理解",
     "thinking.light": "轻 / Light",
     "thinking.medium": "中 / Medium",
     "thinking.high": "高 / High",
@@ -270,6 +331,8 @@ const I18N = {
     "sub.pick": "— 选择子代理 —",
     "sub.none": "未选子代理（默认主 Agent）",
     "sub.remove": "移除",
+    "sub.popout": "⧉ 子窗口",
+    "sub.popoutTitle": "在独立窗口查看子代理",
     "ground.ok": "已锚定工作区",
     "ground.missing": "未设置工作区 — 模型不得编造目录",
     "ground.optional": "工作区可选（附件仍可用）",
@@ -282,9 +345,12 @@ const I18N = {
     "conn.local": "本机",
     "conn.lan": "局域网",
     "conn.public": "外网",
+    "conn.publicIp": "外网 IP",
     "conn.publicSafe": "HTTPS 与访问密码已启用",
     "conn.publicWarning": "外网访问需要 HTTPS 和访问密码",
+    "conn.publicCandidate": "已检测公网 IP；仍需端口映射、防火墙放行和访问密码",
     "agent.ready": "Agent 就绪",
+    "agent.checking": "检查中…",
     "agent.demo": "演示模式",
     "confirm.vault": "将结果写入 Obsidian AI_Candidates？仅候选区，不会进入正式目录。",
     "vault.ok": "已写入知识库候选区",
@@ -329,6 +395,8 @@ const I18N = {
     "login.submit": "Enter",
     "login.error": "Invalid password",
     "nav.newChat": "New task",
+    "nav.primary": "Primary navigation",
+    "nav.search": "Search tasks or projects",
     "nav.chats": "Active",
     "nav.workflows": "Templates",
     "nav.tasks": "Tasks",
@@ -336,13 +404,17 @@ const I18N = {
     "nav.schedule": "Scheduled",
     "nav.skillsMcp": "Skills & MCP",
     "nav.knowledge": "Research Knowledge",
-    "nav.workspace": "SUAT Research Space",
+    "nav.workspace": "Research Projects",
     "nav.pinned": "Pinned",
+    "nav.pinnedProjects": "Pinned Projects",
     "nav.projects": "Research Projects",
     "nav.recents": "Recents",
     "nav.searchResults": "Search results",
     "nav.control": "⚙ Control Center",
+    "sidebar.collapse": "Collapse sidebar",
+    "sidebar.resize": "Drag to resize sidebar · double-click to reset",
     "chat.new": "New task",
+    "chat.newChat": "New chat",
     "empty.title": "Campus Agent Hub",
     "empty.body": "Describe a task and run · Agent Hub dispatches skills/agents · progress tracked",
     "skills.picker": "Skill",
@@ -418,7 +490,9 @@ const I18N = {
     "composer.soul": "Soul",
     "composer.route": "Route",
     "composer.mode": "Mode",
+    "composer.taskType": "Task type",
     "composer.model": "Model",
+    "composer.fusion": "Fusion",
     "composer.thinkingDepth": "Thinking depth",
     "composer.workspace": "Workspace",
     "composer.workspacePh": "Optional workspace path",
@@ -426,6 +500,48 @@ const I18N = {
     "composer.send": "Run",
     "composer.search": "Web search",
     "composer.deepSearch": "Deep search",
+    "fusion.fast": "Fast · single model",
+    "fusion.auto": "Auto · adaptive",
+    "fusion.deep": "Deep · multi-model",
+    "plan.preview": "Plan preview",
+    "plan.categoryModel": "category recommendation",
+    "project.name": "Project name",
+    "project.create": "Create",
+    "project.new": "New project",
+    "project.actions": "Project actions",
+    "project.rename": "Rename",
+    "project.pin": "Pin project",
+    "project.unpin": "Unpin",
+    "project.archive": "Archive",
+    "project.restore": "Restore",
+    "project.delete": "Delete project",
+    "project.viewArchive": "View archived projects",
+    "project.back": "Back to current projects",
+    "session.actions": "Task actions",
+    "session.rename": "Rename",
+    "session.pin": "Pin",
+    "session.unpin": "Unpin",
+    "session.backup": "Download backup",
+    "session.move": "Move to project",
+    "session.unclassified": "Unclassified",
+    "session.archive": "Archive",
+    "session.restore": "Restore",
+    "session.delete": "Delete",
+    "session.noMatches": "No matching tasks or projects",
+    "session.pinnedAbove": "Pinned tasks appear above",
+    "session.projectEmpty": "No tasks in this project",
+    "session.archived": "Archived",
+    "session.noArchived": "No archived tasks",
+    "session.empty": "No tasks yet",
+    "language.zh": "中文",
+    "language.en": "English",
+    "language.auto": "Auto",
+    "task.auto": "Auto · classify",
+    "task.c0": "C0 · Simple",
+    "task.c1": "C1 · Office & writing",
+    "task.c2": "C2 · Code",
+    "task.c3": "C3 · Deep research",
+    "task.vision": "Vision · Image understanding",
     "thinking.light": "Light",
     "thinking.medium": "Medium",
     "thinking.high": "High",
@@ -483,6 +599,8 @@ const I18N = {
     "sub.pick": "— pick a subagent —",
     "sub.none": "No subagent (main Agent)",
     "sub.remove": "Remove",
+    "sub.popout": "⧉ Popout",
+    "sub.popoutTitle": "View subagents in a separate window",
     "ground.ok": "Workspace grounded",
     "ground.missing": "No workspace — model must not invent trees",
     "ground.optional": "Workspace optional (uploads still work)",
@@ -495,9 +613,12 @@ const I18N = {
     "conn.local": "Local",
     "conn.lan": "LAN",
     "conn.public": "Internet",
+    "conn.publicIp": "Public IP",
     "conn.publicSafe": "HTTPS and access password enabled",
     "conn.publicWarning": "Internet access requires HTTPS and an access password",
+    "conn.publicCandidate": "Public IP detected; port forwarding, firewall access, and a password are still required",
     "agent.ready": "Agent ready",
+    "agent.checking": "Checking…",
     "agent.demo": "Demo mode",
     "confirm.vault": "Write result to Obsidian AI_Candidates? Candidates only — not formal folders.",
     "vault.ok": "Wrote to knowledge inbox",
@@ -558,6 +679,7 @@ const state = {
   showArchived: false,
   workflows: [],
   currentId: null,
+  selectedSessionId: null,
   streaming: false,
   streamingSessionId: "",
   sessionRuns: {}, // id -> { pct, streaming }
@@ -589,7 +711,8 @@ const state = {
   soulRoles: [],
   activeSoul: "office",
   prefs: {
-    language: localStorage.getItem("hermes_ali_lang") || detectSystemLanguage(),
+    languageMode: localStorage.getItem("hermes_ali_lang_mode") || localStorage.getItem("hermes_ali_lang") || "auto",
+    language: resolveLanguageMode(localStorage.getItem("hermes_ali_lang_mode") || localStorage.getItem("hermes_ali_lang") || "auto"),
     theme: localStorage.getItem("hermes_ali_theme") || "auto",
     accent: localStorage.getItem("hermes_ali_accent") || "suat",
     bg: (() => {
@@ -632,8 +755,14 @@ function applyI18n() {
     const key = el.getAttribute("data-i18n-title");
     if (key) el.setAttribute("title", t(key));
   });
+  $$("[data-i18n-aria-label]").forEach((el) => {
+    const key = el.getAttribute("data-i18n-aria-label");
+    if (key) el.setAttribute("aria-label", t(key));
+  });
   const langBtn = $("#btn-lang");
   if (langBtn) langBtn.textContent = lang === "zh" ? "中 / EN" : "EN / 中";
+  const languageMode = $("#language-mode-select");
+  if (languageMode) languageMode.value = state.prefs.languageMode || "auto";
   const themeBtn = $("#btn-theme");
   if (themeBtn) {
     const resolved = resolveAppearance();
@@ -641,6 +770,8 @@ function applyI18n() {
     themeBtn.textContent = mode === "auto" ? "◐ Auto" : (resolved.theme === "dark" ? "☾ Dark" : "☀ Light");
   }
   syncFontSizeControls();
+  const autoModel = $("#model-select option[value='']");
+  if (autoModel) autoModel.textContent = lang === "en" ? "Auto · category recommendation" : "Auto · 使用类别推荐";
 }
 
 function isDaytime(date = new Date()) {
@@ -773,6 +904,7 @@ function applyTheme() {
 
 function persistPrefsLocal() {
   localStorage.setItem("hermes_ali_lang", state.prefs.language);
+  localStorage.setItem("hermes_ali_lang_mode", state.prefs.languageMode || state.prefs.language || "auto");
   localStorage.setItem("hermes_ali_theme", state.prefs.theme);
   localStorage.setItem("hermes_ali_accent", state.prefs.accent);
   localStorage.setItem("hermes_ali_bg", state.prefs.bg);
@@ -793,6 +925,7 @@ async function persistPrefsServer() {
     const cfg = JSON.parse(JSON.stringify((view && view.config) || {}));
     if (!cfg.ali) cfg.ali = {};
     cfg.ali.language = state.prefs.language;
+    cfg.ali.language_mode = state.prefs.languageMode || "auto";
     cfg.ali.theme = state.prefs.theme;
     cfg.ali.accent = state.prefs.accent;
     cfg.ali.bg = state.prefs.bg;
@@ -807,6 +940,12 @@ async function persistPrefsServer() {
 }
 
 function setPrefs(partial, { syncServer = false } = {}) {
+  if (Object.prototype.hasOwnProperty.call(partial, "languageMode")) {
+    const mode = ["zh", "en", "auto"].includes(partial.languageMode) ? partial.languageMode : "auto";
+    partial = { ...partial, languageMode: mode, language: resolveLanguageMode(mode, state.status) };
+  } else if (Object.prototype.hasOwnProperty.call(partial, "language") && ["zh", "en"].includes(partial.language)) {
+    partial = { ...partial, languageMode: partial.language };
+  }
   const langChanged = Object.prototype.hasOwnProperty.call(partial, "language")
     && partial.language !== undefined
     && partial.language !== state.prefs.language;
@@ -981,8 +1120,17 @@ const DEFAULT_SESSION_TITLES = new Set([
 
 function sessionDisplayTitle(s) {
   const title = String((s && s.title) || "").trim();
-  if (!title || DEFAULT_SESSION_TITLES.has(title)) return t("chat.new");
+  if (!title || title === "新任务" || title === "New task" || title === "Untitled") return t("chat.new");
+  if (title === "新会话" || title === "新聊天" || title === "New chat" || title === "New session") return t("chat.newChat");
   return title;
+}
+
+function folderDisplayName(folder) {
+  const name = String((folder && folder.name) || "").trim();
+  const normalized = name.toLowerCase();
+  if (name === "代码" || normalized === "code") return state.prefs.language === "en" ? "Code" : "代码";
+  if (["科研", "研究"].includes(name) || normalized === "research") return state.prefs.language === "en" ? "Research" : "科研";
+  return name;
 }
 
 function refreshChatChromeLanguage() {
@@ -1000,6 +1148,25 @@ function refreshChatChromeLanguage() {
   try { renderSkillPicker(); } catch (_) {}
   try { renderSubagentPicker(); } catch (_) {}
   applyI18n();
+  const stream = state.streamStatus;
+  const streamLabel = $("#stream-status-label");
+  if (streamLabel && stream) {
+    streamLabel.textContent = stream.phase === "done" ? t("stream.done") : (stream.phase === "outputting" ? t("stream.outputting") : t("stream.thinking"));
+  }
+  const streamHint = $("#stream-status-hint");
+  if (streamHint) streamHint.textContent = localizeKnownUiText(streamHint.textContent);
+  if ($("#messages .folder-overview") && state.activeFolderId) renderFolderOverview(state.activeFolderId);
+}
+
+function localizeKnownUiText(text) {
+  const value = String(text || "");
+  const keys = [
+    "stream.hint.match", "stream.hint.dispatch", "stream.hint.execute", "stream.hint.summarize",
+    "stream.running", "stream.thinking", "stream.outputting", "stream.done", "stream.resume",
+    "orch.modeParallel", "orch.routeOpenSquilla", "sublane.synth",
+  ];
+  const key = keys.find((candidate) => value === I18N.zh[candidate] || value === I18N.en[candidate]);
+  return key ? t(key) : value;
 }
 
 function renderAccentDots() {
@@ -1224,6 +1391,32 @@ function setupSidebarResize() {
 
 const COMPOSER_ADV_KEY = "hermes_ali_composer_advanced";
 const COMPOSER_HEIGHT_KEY = "hermes_ali_composer_height";
+const TASK_TYPE_KEY = "hermes_ali_task_type";
+const FUSION_MODE_KEY = "hermes_ali_fusion_mode";
+const MODEL_OVERRIDE_KEY = "hermes_ali_model_override";
+const TASK_ROUTE_MAP = {
+  auto: "auto",
+  C0: "simple",
+  C1: "office",
+  C2: "C2",
+  C3: "reasoning",
+  Vision: "vision",
+};
+
+function composerTaskOptions() {
+  const taskType = $("#task-type-select")?.value || "auto";
+  const fusionMode = $("#fusion-mode-select")?.value || "auto";
+  const thinkingDepth = normalizeThinkingDepth(
+    $("#thinking-depth-select")?.value || state.prefs.thinkingDepth || "medium"
+  );
+  return {
+    task_type: taskType,
+    route: TASK_ROUTE_MAP[taskType] || "auto",
+    fusion_mode: fusionMode,
+    thinking_depth: thinkingDepth,
+    model: ($("#model-select")?.value || "").trim(),
+  };
+}
 
 function composerInputMaxPx() {
   const raw = getComputedStyle(document.documentElement).getPropertyValue("--composer-input-max");
@@ -1374,7 +1567,8 @@ function updateComposerAdvSummary() {
   const badge = $("#composer-adv-badge");
   const soul = $("#soul-select");
   const model = $("#model-select");
-  const route = $("#route-select");
+  const taskType = $("#task-type-select");
+  const fusion = $("#fusion-mode-select");
   const nSkill = (state.selectedSkills || []).length;
   const nSub = (state.selectedSubagents || []).length;
   const count = nSkill + nSub;
@@ -1391,10 +1585,11 @@ function updateComposerAdvSummary() {
   const parts = [];
   const soulLabel = soul?.selectedOptions?.[0]?.textContent?.trim();
   const modelLabel = model?.selectedOptions?.[0]?.textContent?.trim();
-  const routeLabel = route?.selectedOptions?.[0]?.textContent?.trim();
+  const taskLabel = taskType?.selectedOptions?.[0]?.textContent?.trim();
   if (soulLabel) parts.push(soulLabel);
-  if (routeLabel) parts.push(routeLabel);
+  if (taskLabel) parts.push(taskLabel);
   if (modelLabel) parts.push(modelLabel);
+  if (fusion) parts.push(`Fusion ${fusion.selectedOptions?.[0]?.textContent?.split(" · ")[0] || fusion.value}`);
   if (nSkill) parts.push(state.prefs.language !== "en" ? `Skill×${nSkill}` : `Skill×${nSkill}`);
   if (nSub) parts.push(state.prefs.language !== "en" ? `子代理×${nSub}` : `Sub×${nSub}`);
   summary.textContent = parts.filter(Boolean).join(" · ");
@@ -1411,10 +1606,29 @@ function setupComposerAdvanced() {
     setComposerAdvancedOpen(!isComposerAdvancedOpen());
   });
 
-  ["soul-select", "route-select", "model-select", "chat-mode-select", "thinking-depth-select"].forEach((id) => {
+  ["soul-select", "task-type-select", "model-select", "chat-mode-select", "thinking-depth-select"].forEach((id) => {
     $(`#${id}`)?.addEventListener("change", () => updateComposerAdvSummary());
   });
+  $("#fusion-mode-select")?.addEventListener("change", () => updateComposerAdvSummary());
   updateComposerAdvSummary();
+}
+
+function setupTaskControls() {
+  const taskType = localStorage.getItem(TASK_TYPE_KEY) || "auto";
+  if ($("#task-type-select") && TASK_ROUTE_MAP[taskType]) $("#task-type-select").value = taskType;
+  const fusionMode = localStorage.getItem(FUSION_MODE_KEY) || "auto";
+  if ($("#fusion-mode-select")) $("#fusion-mode-select").value = ["fast", "auto", "deep"].includes(fusionMode) ? fusionMode : "auto";
+
+  $("#task-type-select")?.addEventListener("change", (event) => {
+    localStorage.setItem(TASK_TYPE_KEY, event.target.value || "auto");
+    scheduleAutoPreview();
+    updateComposerAdvSummary();
+  });
+  $("#fusion-mode-select")?.addEventListener("change", (event) => {
+    localStorage.setItem(FUSION_MODE_KEY, event.target.value || "auto");
+    scheduleAutoPreview();
+    updateComposerAdvSummary();
+  });
 }
 
 function escapeHtml(s) {
@@ -1774,8 +1988,13 @@ async function boot() {
   try {
     const status = await api("/api/status");
     state.status = status;
+    setPrefs({ languageMode: state.prefs.languageMode || "auto" });
     $("#version-label").textContent = `v${status.version || "1.2.0"}`;
     if (status.ui) {
+      const hasLocalLanguage = localStorage.getItem("hermes_ali_lang_mode") || localStorage.getItem("hermes_ali_lang");
+      if (!hasLocalLanguage) {
+        setPrefs({ languageMode: status.ui.language_mode || status.ui.language || "auto" });
+      }
       const hasLocal =
         localStorage.getItem("hermes_ali_lang") ||
         localStorage.getItem("hermes_ali_theme") ||
@@ -1783,7 +2002,7 @@ async function boot() {
         localStorage.getItem("hermes_ali_bg");
       if (!hasLocal) {
         setPrefs({
-          language: status.ui.language || "zh",
+          languageMode: state.prefs.languageMode || "auto",
           theme: status.ui.theme || "auto",
           accent: status.ui.accent || "suat",
           bg: normalizeBg(status.ui.bg || "auto"),
@@ -1878,15 +2097,21 @@ function renderConn(status) {
   const port = status.port || 8765;
   const ips = status.local_ips || [];
   const publicUrl = String(status.public_url || "").trim();
+  const publicIp = String(status.public_ip || "").trim();
   const publicReady = Boolean(status.public_access && status.public_access.ready);
   const entries = [{ label: t("conn.local"), url: `http://127.0.0.1:${port}`, kind: "local" }];
   ips.slice(0, 2).forEach((ip) => entries.push({ label: t("conn.lan"), url: `http://${ip}:${port}`, kind: "lan" }));
-  if (publicUrl) entries.push({ label: t("conn.public"), url: publicUrl, kind: publicReady ? "public ready" : "public warning" });
+  if (publicUrl) {
+    entries.push({ label: t("conn.public"), url: publicUrl, kind: publicReady ? "public ready" : "public warning", hint: publicReady ? t("conn.publicSafe") : t("conn.publicWarning") });
+  } else if (publicIp) {
+    const host = publicIp.includes(":") ? `[${publicIp}]` : publicIp;
+    entries.push({ label: t("conn.publicIp"), url: `http://${host}:${port}`, kind: "public warning candidate", hint: t("conn.publicCandidate") });
+  }
   const el = $("#conn-info");
   if (!el) return;
-  el.innerHTML = entries.map(({ label, url, kind }) => {
-    const hint = kind.includes("public") ? (publicReady ? t("conn.publicSafe") : t("conn.publicWarning")) : url;
-    return `<a class="conn-row ${escapeHtml(kind)}" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(hint)}"><i aria-hidden="true"></i><span>${escapeHtml(label)}</span><code>${escapeHtml(url.replace(/^https?:\/\//, ""))}</code></a>`;
+  el.innerHTML = entries.map(({ label, url, kind, hint }) => {
+    const rowHint = hint || url;
+    return `<a class="conn-row ${escapeHtml(kind)}" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(rowHint)}"><i aria-hidden="true"></i><span>${escapeHtml(label)}</span><code>${escapeHtml(url.replace(/^https?:\/\//, ""))}</code></a>`;
   }).join("");
 }
 
@@ -2090,14 +2315,12 @@ let _autoRouteSeq = 0;
 async function previewAutoRoute() {
   const hint = $("#auto-route-hint");
   if (!hint) return;
-  const route = $("#route-select")?.value || "auto";
+  const options = composerTaskOptions();
+  const route = options.route;
   const text = $("#input").value.trim();
-  if (route !== "auto") {
-    hint.textContent = "";
-    return;
-  }
   if (!text) {
-    hint.textContent = `${t("auto.hint")}: …`;
+    hint.textContent = `${t("auto.hint")}: ${options.task_type} · Fusion ${options.fusion_mode}`;
+    showTaskPlanPreview(null, options);
     return;
   }
   const seq = ++_autoRouteSeq;
@@ -2106,17 +2329,37 @@ async function previewAutoRoute() {
     _autoRouteController = new AbortController();
     const info = await api("/api/routing/resolve", {
       method: "POST",
-      body: JSON.stringify({ route: "auto", message: text }),
+      body: JSON.stringify({
+        route,
+        message: text,
+        task_type: options.task_type,
+        fusion_mode: options.fusion_mode,
+        thinking_depth: options.thinking_depth,
+      }),
       signal: _autoRouteController.signal,
     });
     if (seq !== _autoRouteSeq) return;
-    hint.textContent = `${t("auto.hint")}: ${info.tier} → ${info.route_key} · ${info.model || "(no model)"}`;
+    const model = options.model || info.model || "Auto";
+    hint.textContent = `${t("auto.hint")}: ${info.tier} → ${info.route_key} · ${model}`;
+    showTaskPlanPreview(info, options);
     setRouteBadge(info);
   } catch (_) {
     if (seq === _autoRouteSeq) hint.textContent = "";
   } finally {
     if (seq === _autoRouteSeq) _autoRouteController = null;
   }
+}
+
+function showTaskPlanPreview(info, options = composerTaskOptions()) {
+  const el = $("#auto-plan-strip");
+  if (!el) return;
+  const langZh = state.prefs.language !== "en";
+  const tier = info?.tier || (options.task_type === "auto" ? "Auto" : options.task_type);
+  const route = info?.route_key || options.route;
+  const model = options.model || info?.model || t("plan.categoryModel");
+  const fusionLabel = { fast: "Fast · 1 lane", auto: "Auto · adaptive", deep: "Deep · multi-model" }[options.fusion_mode] || "Auto";
+  el.innerHTML = `<strong>${escapeHtml(t("plan.preview"))}</strong><span>${escapeHtml(`${options.task_type} → ${tier}/${route}`)}</span><span>${escapeHtml(model)}</span><span>Fusion ${escapeHtml(fusionLabel)}</span>`;
+  el.classList.remove("hidden");
 }
 
 function scheduleAutoPreview() {
@@ -2917,6 +3160,21 @@ function clearSessionRun(id) {
   renderActiveRuns();
 }
 
+function highlightSession(id) {
+  state.selectedSessionId = id || null;
+  document.querySelectorAll(".session-item[data-sid], .folder-task-row[data-sid]").forEach((el) => {
+    el.classList.toggle("selected", Boolean(id) && el.dataset.sid === id);
+    el.setAttribute("aria-selected", Boolean(id) && el.dataset.sid === id ? "true" : "false");
+  });
+}
+
+function closeSessionOverlays() {
+  openControl(false);
+  closeFsBrowser();
+  $("#wf-overlay")?.classList.add("hidden");
+  document.querySelectorAll(".session-actions[open], .folder-actions[open]").forEach((el) => el.removeAttribute("open"));
+}
+
 function bindSessionListDelegation() {
   const list = $("#session-list");
   if (!list || list.dataset.delegated === "1") return;
@@ -2974,11 +3232,13 @@ function bindSessionListDelegation() {
     if (!item || !list.contains(item)) return;
     const sid = item.dataset.sid;
     if (!sid) return;
-    if (sid === state.currentId) {
-      setSidebarOpen(false);
-      return;
-    }
-    selectSession(sid).catch((err) => {
+    highlightSession(sid);
+  });
+  list.addEventListener("dblclick", (e) => {
+    if (e.target.closest(".session-actions")) return;
+    const item = e.target.closest(".session-item[data-sid]");
+    if (!item || !list.contains(item)) return;
+    selectSession(item.dataset.sid).catch((err) => {
       console.warn(err);
       const langZh = state.prefs.language !== "en";
       alert(langZh ? `无法切换会话：${err.message || err}` : `Cannot switch session: ${err.message || err}`);
@@ -2994,17 +3254,17 @@ function renderSessionList() {
   list.innerHTML = "";
   const folderById = new Map((state.folders || []).map((folder) => [folder.id, folder]));
   const groups = new Map();
-  const sessions = state.sessions.filter((s) => state.showArchived ? Boolean(s.archived) : !s.archived);
+  const sessions = state.sessions.filter((s) => !s.hidden && (state.showArchived ? Boolean(s.archived) : !s.archived));
   sessions.forEach((s) => {
     const key = s.folder_id || "";
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(s);
   });
 
-  const section = (label, count, className = "") => {
+  const section = (label, count, className = "", actions = "") => {
     const el = document.createElement("section");
     el.className = `sidebar-session-section ${className}`.trim();
-    el.innerHTML = `<h3><span>${escapeHtml(label)}</span>${Number.isFinite(count) ? `<small>${count}</small>` : ""}</h3>`;
+    el.innerHTML = `<h3><span>${escapeHtml(label)}</span>${Number.isFinite(count) ? `<small>${count}</small>` : ""}${actions}</h3>`;
     list.appendChild(el);
     return el;
   };
@@ -3016,15 +3276,17 @@ function renderSessionList() {
     const item = document.createElement("div");
     item.className = "session-item"
       + (s.id === state.currentId ? " active" : "")
+      + (s.id === state.selectedSessionId ? " selected" : "")
       + (running ? " running" : "")
       + (s.pinned ? " pinned" : "");
     item.dataset.sid = s.id;
+    item.setAttribute("aria-selected", s.id === state.selectedSessionId ? "true" : "false");
     item.setAttribute("role", "button");
     item.tabIndex = 0;
     const title = sessionDisplayTitle(s);
     const moveOptions = (state.folders || [])
       .filter((folder) => !folder.archived)
-      .map((folder) => `<option value="${escapeHtml(folder.id)}" ${s.folder_id === folder.id ? "selected" : ""}>${escapeHtml(folder.name)}</option>`)
+      .map((folder) => `<option value="${escapeHtml(folder.id)}" ${s.folder_id === folder.id ? "selected" : ""}>${escapeHtml(folderDisplayName(folder))}</option>`)
       .join("");
     item.innerHTML = `
       <span class="session-row-icon" aria-hidden="true">
@@ -3039,24 +3301,26 @@ function renderSessionList() {
         ${running ? `<span class="session-status running-tag">${pct}%</span>` : ""}
       </span>
       <details class="session-actions">
-        <summary class="act" title="${langZh ? "任务操作" : "Task actions"}" aria-label="${langZh ? "任务操作" : "Task actions"}">•••</summary>
+        <summary class="act" title="${escapeHtml(t("session.actions"))}" aria-label="${escapeHtml(t("session.actions"))}">•••</summary>
         <div class="session-menu">
-          <button type="button" data-rename="${escapeHtml(s.id)}">${langZh ? "重命名" : "Rename"}</button>
-          <button type="button" data-pin="${escapeHtml(s.id)}">${s.pinned ? (langZh ? "取消置顶" : "Unpin") : (langZh ? "置顶" : "Pin")}</button>
-          <button type="button" data-backup="${escapeHtml(s.id)}">${langZh ? "下载备份" : "Download backup"}</button>
-          <label>${langZh ? "移动到项目" : "Move to project"}<select class="session-folder-select" data-move-folder="${escapeHtml(s.id)}"><option value="">${langZh ? "未分类" : "Unclassified"}</option>${moveOptions}</select></label>
-          <button type="button" data-archive="${escapeHtml(s.id)}">${s.archived ? (langZh ? "恢复" : "Restore") : (langZh ? "归档" : "Archive")}</button>
-          <button type="button" class="danger" data-del="${escapeHtml(s.id)}">${langZh ? "删除" : "Delete"}</button>
+          <button type="button" data-rename="${escapeHtml(s.id)}">${escapeHtml(t("session.rename"))}</button>
+          <button type="button" data-pin="${escapeHtml(s.id)}">${escapeHtml(s.pinned ? t("session.unpin") : t("session.pin"))}</button>
+          <button type="button" data-backup="${escapeHtml(s.id)}">${escapeHtml(t("session.backup"))}</button>
+          <label>${escapeHtml(t("session.move"))}<select class="session-folder-select" data-move-folder="${escapeHtml(s.id)}"><option value="">${escapeHtml(t("session.unclassified"))}</option>${moveOptions}</select></label>
+          <button type="button" data-archive="${escapeHtml(s.id)}">${escapeHtml(s.archived ? t("session.restore") : t("session.archive"))}</button>
+          <button type="button" class="danger" data-del="${escapeHtml(s.id)}">${escapeHtml(t("session.delete"))}</button>
         </div>
       </details>`;
     if (running) item.style.setProperty("--run-pct", `${pct}%`);
     item.addEventListener("keydown", (event) => {
       if (event.target !== item || (event.key !== "Enter" && event.key !== " ")) return;
       event.preventDefault();
-      if (s.id !== state.currentId) {
+      if (event.key === "Enter") {
         selectSession(s.id).catch((err) => console.warn(err));
+        setSidebarOpen(false);
+      } else {
+        highlightSession(s.id);
       }
-      setSidebarOpen(false);
     });
     return item;
   };
@@ -3064,33 +3328,33 @@ function renderSessionList() {
   const query = state.sessionQuery;
   if (query) {
     const matches = sessions.filter((s) => {
-      const folderName = folderById.get(s.folder_id)?.name || "";
-      return sessionDisplayTitle(s).toLowerCase().includes(query) || folderName.toLowerCase().includes(query);
+      const folder = folderById.get(s.folder_id);
+      const folderNames = `${folder?.name || ""} ${folderDisplayName(folder)}`.toLowerCase();
+      return sessionDisplayTitle(s).toLowerCase().includes(query) || folderNames.includes(query);
     });
     const results = section(t("nav.searchResults"), matches.length, "search-results");
-    matches.forEach((s) => results.appendChild(makeSessionItem(s, folderById.get(s.folder_id)?.name || "")));
-    if (!matches.length) results.insertAdjacentHTML("beforeend", `<p class="sidebar-empty">${langZh ? "没有匹配的任务或项目" : "No matching tasks or projects"}</p>`);
+    matches.forEach((s) => results.appendChild(makeSessionItem(s, folderDisplayName(folderById.get(s.folder_id)))));
+    if (!matches.length) results.insertAdjacentHTML("beforeend", `<p class="sidebar-empty">${escapeHtml(t("session.noMatches"))}</p>`);
     return;
   }
 
   const pinned = sessions.filter((s) => s.pinned);
   if (pinned.length) {
     const pinnedSection = section(t("nav.pinned"), pinned.length, "pinned-section");
-    pinned.forEach((s) => pinnedSection.appendChild(makeSessionItem(s, folderById.get(s.folder_id)?.name || "")));
+    pinned.forEach((s) => pinnedSection.appendChild(makeSessionItem(s, folderDisplayName(folderById.get(s.folder_id)))));
   }
 
   const visibleFolders = (state.folders || []).filter((f) => Boolean(f.archived) === Boolean(state.showArchived));
-  if (visibleFolders.length) {
-    section(t("nav.projects"), visibleFolders.length, "projects-section");
-  }
-  visibleFolders.forEach((folder) => {
+  const pinnedFolders = visibleFolders.filter((folder) => folder.pinned);
+  const researchFolders = visibleFolders.filter((folder) => !folder.pinned);
+  const renderFolder = (folder) => {
     const allItems = groups.get(folder.id) || [];
     const items = allItems.filter((s) => !s.pinned);
     const openKey = `agent_hub_folder_open_${folder.id}`;
     const open = localStorage.getItem(openKey) !== "0";
     const header = document.createElement("div");
     header.className = "session-folder" + (folder.id === state.activeFolderId ? " active" : "");
-    header.innerHTML = `<div class="folder-header"><button type="button" class="folder-toggle" data-folder-toggle="${escapeHtml(folder.id)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h6l2 2h10v11H3Z"></path></svg><span>${escapeHtml(folder.name)}</span><small>${allItems.length}</small><i aria-hidden="true">${open ? "⌄" : "›"}</i></button><details class="folder-actions"><summary class="act" title="${langZh ? "项目操作" : "Project actions"}">•••</summary><div class="folder-menu"><button type="button" data-folder-rename="${escapeHtml(folder.id)}">${langZh ? "重命名" : "Rename"}</button><button type="button" data-folder-archive="${escapeHtml(folder.id)}">${folder.archived ? (langZh ? "恢复" : "Restore") : (langZh ? "归档" : "Archive")}</button><button type="button" class="danger" data-folder-delete="${escapeHtml(folder.id)}">${langZh ? "删除项目" : "Delete project"}</button></div></details></div>`;
+    header.innerHTML = `<div class="folder-header"><button type="button" class="folder-toggle" data-folder-toggle="${escapeHtml(folder.id)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h6l2 2h10v11H3Z"></path></svg><span>${escapeHtml(folderDisplayName(folder))}</span><small>${allItems.length}</small><i aria-hidden="true">${open ? "⌄" : "›"}</i></button><details class="folder-actions"><summary class="act" title="${escapeHtml(t("project.actions"))}">•••</summary><div class="folder-menu"><button type="button" data-folder-rename="${escapeHtml(folder.id)}">${escapeHtml(t("project.rename"))}</button><button type="button" data-folder-pin="${escapeHtml(folder.id)}">${escapeHtml(folder.pinned ? t("project.unpin") : t("project.pin"))}</button><button type="button" data-folder-archive="${escapeHtml(folder.id)}">${escapeHtml(folder.archived ? t("project.restore") : t("project.archive"))}</button><button type="button" class="danger" data-folder-delete="${escapeHtml(folder.id)}">${escapeHtml(t("project.delete"))}</button></div></details></div>`;
     header.querySelector("[data-folder-toggle]").onclick = () => {
       state.activeFolderId = folder.id;
       localStorage.setItem("agent_hub_active_folder", folder.id);
@@ -3100,7 +3364,7 @@ function renderSessionList() {
     };
     header.querySelector("[data-folder-rename]")?.addEventListener("click", async (event) => {
       event.stopPropagation();
-      const next = prompt(langZh ? "项目名称" : "Project name", folder.name);
+      const next = prompt(t("project.name"), folderDisplayName(folder));
       if (next == null || !next.trim()) return;
       await api(`/api/folders/${encodeURIComponent(folder.id)}`, { method: "PATCH", body: JSON.stringify({ name: next.trim() }) });
       await refreshSessions();
@@ -3108,6 +3372,11 @@ function renderSessionList() {
     header.querySelector("[data-folder-delete]")?.addEventListener("click", async (event) => {
       event.stopPropagation();
       await api(`/api/folders/${encodeURIComponent(folder.id)}`, { method: "DELETE" });
+      await refreshSessions();
+    });
+    header.querySelector("[data-folder-pin]")?.addEventListener("click", async (event) => {
+      event.stopPropagation();
+      await api(`/api/folders/${encodeURIComponent(folder.id)}`, { method: "PATCH", body: JSON.stringify({ pinned: !folder.pinned }) });
       await refreshSessions();
     });
     header.querySelector("[data-folder-archive]")?.addEventListener("click", async (event) => {
@@ -3120,23 +3389,44 @@ function renderSessionList() {
     if (!items.length) {
       const empty = document.createElement("div");
       empty.className = "folder-empty";
-      empty.textContent = allItems.length
-        ? (langZh ? "置顶任务显示在上方" : "Pinned tasks appear above")
-        : (langZh ? "项目中还没有任务" : "No tasks in this project");
+      empty.textContent = allItems.length ? t("session.pinnedAbove") : t("session.projectEmpty");
       list.appendChild(empty);
       return;
     }
     items.forEach((s) => list.appendChild(makeSessionItem(s)));
-  });
+  };
+
+  if (pinnedFolders.length) {
+    section(t("nav.pinnedProjects"), pinnedFolders.length, "pinned-projects-section");
+    pinnedFolders.forEach(renderFolder);
+  }
+
+  const headingActions = `<span class="project-heading-actions"><button id="btn-toggle-archived" type="button" class="sidebar-icon-btn${state.showArchived ? " active" : ""}" title="${escapeHtml(state.showArchived ? t("project.back") : t("project.viewArchive"))}" aria-label="${escapeHtml(state.showArchived ? t("project.back") : t("project.viewArchive"))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v4H3Z"></path><path d="M5 10v10h14V10"></path><path d="M10 14h4"></path></svg></button><button id="btn-folder-compose" type="button" class="sidebar-icon-btn" title="${escapeHtml(t("project.new"))}" aria-label="${escapeHtml(t("project.new"))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h6l2 2h10v10H3Z"></path><path d="M12 12v5"></path><path d="M9.5 14.5h5"></path></svg></button></span>`;
+  section(t("nav.projects"), researchFolders.length, "projects-section", headingActions);
+  const archiveButton = $("#btn-toggle-archived");
+  if (archiveButton) archiveButton.onclick = async () => {
+    state.showArchived = !state.showArchived;
+    await refreshSessions();
+  };
+  const projectButton = $("#btn-folder-compose");
+  if (projectButton) projectButton.onclick = () => {
+    const form = $("#folder-create-form");
+    if (!form) return;
+    const opening = form.classList.contains("hidden");
+    form.classList.toggle("hidden", !opening);
+    projectButton.classList.toggle("active", opening);
+    if (opening) $("#new-folder-name")?.focus();
+  };
+  researchFolders.forEach(renderFolder);
 
   const recent = (groups.get("") || []).filter((s) => !s.pinned);
   if (recent.length) {
-    const recentSection = section(state.showArchived ? (langZh ? "已归档" : "Archived") : t("nav.recents"), recent.length, "recent-section");
+    const recentSection = section(state.showArchived ? t("session.archived") : t("nav.recents"), recent.length, "recent-section");
     recent.forEach((s) => recentSection.appendChild(makeSessionItem(s)));
   }
 
   if (!sessions.length) {
-    list.innerHTML = `<div class="sidebar-empty">${state.showArchived ? (langZh ? "暂无归档任务" : "No archived tasks") : (langZh ? "还没有任务" : "No tasks yet")}</div>`;
+    list.innerHTML = `<div class="sidebar-empty">${escapeHtml(state.showArchived ? t("session.noArchived") : t("session.empty"))}</div>`;
   }
 }
 
@@ -3813,7 +4103,8 @@ function syncComposerFromSettings() {
   const modeSel = $("#chat-mode-select");
   if (modeSel) modeSel.value = ali.chat_mode === "single" ? "single" : "auto";
   syncRouteLabels();
-  populateModelSelect(ali.last_model || modelsMain(cfg) || "");
+  const storedModel = localStorage.getItem(MODEL_OVERRIDE_KEY);
+  populateModelSelect(storedModel == null ? "" : storedModel);
   const depthSel = $("#thinking-depth-select");
   if (depthSel) {
     const depth = normalizeThinkingDepth(
@@ -3838,13 +4129,17 @@ function modelsMain(cfg) {
 function populateModelSelect(selected) {
   const sel = $("#model-select");
   if (!sel) return;
-  const choices = modelChoicesFromSettings();
-  const cur = selected || sel.value || "";
+  const payloadChoices = sharedModelOptions()
+    .filter((item) => item.available !== false)
+    .map((item) => item.model);
+  const choices = [...new Set((payloadChoices.length ? payloadChoices : modelChoicesFromSettings()).filter(Boolean))];
+  const cur = selected == null ? (sel.value || "") : selected;
   if (cur && !choices.includes(cur)) choices.unshift(cur);
-  sel.innerHTML = choices.map((id) =>
+  const autoLabel = state.prefs.language === "en" ? "Auto · category recommendation" : "Auto · 使用类别推荐";
+  sel.innerHTML = `<option value="">${escapeHtml(autoLabel)}</option>` + choices.map((id) =>
     `<option value="${escapeHtml(id)}" ${id === cur ? "selected" : ""}>${escapeHtml(SHORT_MODEL(id))}</option>`
-  ).join("") || `<option value="">—</option>`;
-  if (cur) sel.value = cur;
+  ).join("");
+  sel.value = cur;
   updateComposerAdvSummary();
 }
 
@@ -3943,6 +4238,8 @@ async function deleteSession(id) {
 async function selectSession(id) {
   if (!id) return;
   // Never land the UI on a hidden lane child — jump to its parent if known
+  const listed = state.sessions.find((s) => s.id === id);
+  if (listed?.hidden && listed.parent_id) id = listed.parent_id;
   const run = state.sessionRuns[id];
   if (run && run.parentId) {
     id = run.parentId;
@@ -3957,11 +4254,9 @@ async function selectSession(id) {
 
   // Optimistic highlight so switching feels instant even if API is slow
   const prevId = state.currentId;
-  if (prevId === id) {
-    setSidebarOpen(false);
-    return;
-  }
+  closeSessionOverlays();
   state.currentId = id;
+  state.selectedSessionId = id;
   renderSessionList();
   renderActiveRuns({ force: true });
   updateSendEnabled();
@@ -4458,12 +4753,12 @@ function renderFolderOverview(folderId) {
   const langZh = state.prefs.language !== "en";
   const folder = (state.folders || []).find((f) => f.id === folderId);
   const sessions = state.sessions
-    .filter((s) => (s.folder_id || "") === folderId)
+    .filter((s) => !s.hidden && (s.folder_id || "") === folderId)
     .sort((a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) || String(b.updated_at || "").localeCompare(String(a.updated_at || "")));
   box.innerHTML = "";
   const section = document.createElement("section");
   section.className = "folder-overview";
-  section.innerHTML = `<div class="folder-overview-head"><span class="eyebrow">${langZh ? "文件夹任务" : "Folder tasks"}</span><h3>${escapeHtml(folder?.name || (langZh ? "未分类" : "Unclassified"))}</h3><p>${langZh ? `共 ${sessions.length} 个任务，选择任务继续对话` : `${sessions.length} tasks. Select one to continue.`}</p></div><div class="folder-overview-list"></div>`;
+  section.innerHTML = `<div class="folder-overview-head"><span class="eyebrow">${langZh ? "项目任务" : "Project tasks"}</span><h3>${escapeHtml(folderDisplayName(folder) || t("session.unclassified"))}</h3><p>${langZh ? `共 ${sessions.length} 个任务；单击选择，双击或按 Enter 打开` : `${sessions.length} tasks; click to select, double-click or press Enter to open`}</p></div><div class="folder-overview-list"></div>`;
   const list = section.querySelector(".folder-overview-list");
   if (!sessions.length) {
     const empty = document.createElement("p");
@@ -4474,9 +4769,19 @@ function renderFolderOverview(folderId) {
     sessions.forEach((s) => {
       const row = document.createElement("button");
       row.type = "button";
-      row.className = "folder-task-row" + (s.id === state.currentId ? " active" : "");
+      row.className = "folder-task-row"
+        + (s.id === state.currentId ? " active" : "")
+        + (s.id === state.selectedSessionId ? " selected" : "");
+      row.dataset.sid = s.id;
+      row.setAttribute("aria-selected", s.id === state.selectedSessionId ? "true" : "false");
       row.innerHTML = `<span class="folder-task-title">${s.pinned ? "★ " : ""}${escapeHtml(sessionDisplayTitle(s))}</span><small>${escapeHtml(s.updated_at || "")}</small>`;
-      row.onclick = () => selectSession(s.id).catch((err) => console.warn(err));
+      row.onclick = () => highlightSession(s.id);
+      row.ondblclick = () => selectSession(s.id).catch((err) => console.warn(err));
+      row.onkeydown = (event) => {
+        if (event.key !== "Enter") return;
+        event.preventDefault();
+        selectSession(s.id).catch((err) => console.warn(err));
+      };
       list.appendChild(row);
     });
   }
@@ -4646,8 +4951,7 @@ function showAutoPlanStrip(planRes) {
   const el = $("#auto-plan-strip");
   if (!el) return;
   if (!planRes || (!planRes.need_parallel && !planRes.single_role)) {
-    el.classList.add("hidden");
-    el.textContent = "";
+    showTaskPlanPreview(null);
     return;
   }
   const langZh = state.prefs.language !== "en";
@@ -4661,6 +4965,7 @@ function showAutoPlanStrip(planRes) {
   if (planRes.search_enabled && (planRes.sources || []).length) {
     bits.push(`${t("plan.search")} ×${(planRes.sources || []).length}`);
   }
+  bits.push(`Fusion ${composerTaskOptions().fusion_mode}`);
   el.innerHTML = `<strong>${escapeHtml(bits[0])}</strong> · ${escapeHtml(bits.slice(1).join(" · "))}`;
   el.classList.remove("hidden");
 }
@@ -4690,6 +4995,8 @@ function planFromServer(planRes) {
       route_key: SLOT_TO_ROUTE[slot] || slot || "",
       model: String(lane.model || lane.resolved_model || "").trim(),
       provider: String(lane.provider || lane.resolved_provider || "").trim(),
+      max_tokens: Number(lane.max_tokens || lane.max_tokens_override || 0),
+      max_tokens_override: Number(lane.max_tokens_override || lane.max_tokens || 0),
       system: lane.system || "",
       search_context: lane.search_context || "",
     };
@@ -4702,6 +5009,9 @@ function planFromServer(planRes) {
     synthesis_focus: planRes.synthesis_focus || "",
     sources: planRes.sources || [],
     search_context: planRes.search_context || "",
+    judge: planRes.judge || null,
+    budget: planRes.budget || null,
+    failure_policy: planRes.failure_policy || null,
   };
 }
 
@@ -5293,6 +5603,8 @@ async function runOneLaneJob(parentSessionId, lane, userText, index, total, assi
     body: JSON.stringify({
       message: prompt,
       route: laneRoute,
+      task_type: common.task_type,
+      fusion_mode: common.fusion_mode,
       model: lane.model || common.model,
       thinking_depth: common.thinking_depth,
       workspace: common.workspace,
@@ -5302,6 +5614,7 @@ async function runOneLaneJob(parentSessionId, lane, userText, index, total, assi
       subagent_id: lane.subagent_id || "",
       system: lane.system || common.lane_system || undefined,
       web_search: common.web_search,
+      max_tokens_override: lane.max_tokens_override || lane.max_tokens || undefined,
       display_message: `[${lane.title}]`,
     }),
   });
@@ -5500,12 +5813,13 @@ async function sendMultiSubagentMessage(text, plan, extra = {}) {
     setWorkflowProgress(8, null, t("orch.routeOpenSquilla"), "thinking");
   }
 
+  const taskOptions = composerTaskOptions();
   const common = {
-    route: "auto",
-    model: ($("#model-select")?.value || "").trim(),
-    thinking_depth: normalizeThinkingDepth(
-      ($("#thinking-depth-select") && $("#thinking-depth-select").value) || state.prefs.thinkingDepth || "medium"
-    ),
+    route: taskOptions.route,
+    task_type: taskOptions.task_type,
+    fusion_mode: taskOptions.fusion_mode,
+    model: taskOptions.model,
+    thinking_depth: taskOptions.thinking_depth,
     workspace: $("#workspace-input").value.trim(),
     skills: state.selectedSkills || [],
     soul_role: "",
@@ -5563,14 +5877,14 @@ async function sendMultiSubagentMessage(text, plan, extra = {}) {
         synthesis_focus: plan.synthesis_focus || "",
         sources: plan.sources || [],
       });
-      let synthModel = common.model;
-      let synthRoute = common.route;
+      let synthModel = (plan.judge && plan.judge.model) || common.model;
+      let synthRoute = (plan.judge && (plan.judge.route_key || plan.judge.tier)) || common.route;
       try {
         const synthInfo = await api("/api/routing/resolve", {
           method: "POST",
-          body: JSON.stringify({ route: "C2", message: text.slice(0, 500) }),
+          body: JSON.stringify({ route: synthRoute || "C2", message: text.slice(0, 500) }),
         });
-        if (synthInfo && synthInfo.model) synthModel = synthInfo.model;
+        if (!synthModel && synthInfo && synthInfo.model) synthModel = synthInfo.model;
         if (synthInfo && (synthInfo.route_key || synthInfo.tier)) {
           synthRoute = synthInfo.route_key || synthInfo.tier || synthRoute;
         }
@@ -5590,6 +5904,7 @@ async function sendMultiSubagentMessage(text, plan, extra = {}) {
           execution_mode: "workflow",
           soul_role: common.soul_role,
           web_search: common.web_search,
+          max_tokens_override: (plan.judge && (plan.judge.max_tokens_override || plan.judge.max_tokens)) || undefined,
           display_message: langZh ? "【主代理汇总】" : "[Parent synthesis]",
         }),
       });
@@ -5768,6 +6083,7 @@ async function sendMessage(overrideText, extra = {}) {
   let text = (overrideText != null ? overrideText : $("#input").value).trim();
   const sessionId = state.currentId;
   if (!text || !sessionId) return;
+  const taskOptions = composerTaskOptions();
 
   // Phase 2: while this session is streaming, Queue or Steer instead of starting a second run.
   if (state.sessionRuns[sessionId]?.streaming && !extra._from_queue) {
@@ -5798,35 +6114,68 @@ async function sendMessage(overrideText, extra = {}) {
   const nlForce = detectNlSubagentCount(text);
 
   let planRes = null;
-  if (!extra._skip_multi) {
-    const plannerNeeded = nlForce >= 2 || userWantsSearch || text.length > 180
+  if (!extra._skip_multi && taskOptions.fusion_mode !== "fast") {
+    const plannerNeeded = taskOptions.fusion_mode === "deep" || nlForce >= 2 || userWantsSearch || text.length > 180
       || /分别|并行|多代理|子代理|比较|综合|多来源|分组|parallel|subagent|compare|synthesize/i.test(text);
     if (!plannerNeeded) {
       planRes = { ok: true, need_parallel: false, needs_search: false, lanes: [], single_role: null, source: "short-direct", search_enabled: false, sources: [] };
       showAutoPlanStrip(planRes);
     } else {
       try {
-      planRes = await api("/api/agents/auto-plan", {
-        method: "POST",
-        timeoutMs: 4500,
-        body: JSON.stringify({
-          message: text,
-          session_id: sessionId,
-          web_search: userWantsSearch ? true : null,
-          force_parallel: nlForce >= 2,
-          force_count: nlForce >= 2 ? nlForce : 0,
-          run_search: true,
-        }),
-      });
-      showAutoPlanStrip(planRes);
+        const forceCount = taskOptions.fusion_mode === "deep" ? Math.max(3, nlForce) : (nlForce >= 2 ? nlForce : 0);
+        const [autoPlan, fusionPlan] = await Promise.all([
+          api("/api/agents/auto-plan", {
+            method: "POST",
+            timeoutMs: 4500,
+            body: JSON.stringify({
+              message: text,
+              session_id: sessionId,
+              task_type: taskOptions.task_type,
+              fusion_mode: taskOptions.fusion_mode,
+              thinking_depth: taskOptions.thinking_depth,
+              web_search: userWantsSearch ? true : null,
+              force_parallel: taskOptions.fusion_mode === "deep" || nlForce >= 2,
+              force_count: forceCount,
+              run_search: true,
+            }),
+          }),
+          api("/api/fusion/plan", {
+            method: "POST",
+            timeoutMs: 4500,
+            body: JSON.stringify({
+              prompt: text,
+              task_type: taskOptions.task_type,
+              fusion_mode: taskOptions.fusion_mode,
+              thinking_depth: taskOptions.thinking_depth,
+              max_lanes: forceCount || 3,
+            }),
+          }),
+        ]);
+        planRes = autoPlan;
+        if (fusionPlan && fusionPlan.enabled) {
+          planRes.need_parallel = true;
+          const fusionLanes = fusionPlan.lanes || [];
+          if (!(planRes.lanes || []).length) planRes.lanes = fusionLanes;
+          planRes.lanes = (planRes.lanes || []).slice(0, fusionLanes.length).map((lane, i) => ({
+            ...lane,
+            ...(fusionLanes[i] || {}),
+            id: lane.id || (fusionLanes[i] && fusionLanes[i].id),
+            role: lane.role || (fusionLanes[i] && fusionLanes[i].role),
+          }));
+          planRes.judge = fusionPlan.judge;
+          planRes.budget = fusionPlan.budget;
+          planRes.failure_policy = fusionPlan.failure_policy;
+          planRes.source = `${planRes.source || "auto-plan"}+fusion`;
+        }
+        showAutoPlanStrip(planRes);
       } catch (_) {
-      planRes = null;
-      showAutoPlanStrip(null);
+        planRes = null;
+        showAutoPlanStrip(null);
       }
     }
   }
 
-  if (planRes && planRes.need_parallel && (planRes.lanes || []).length >= 2 && !extra._skip_multi) {
+  if (planRes && planRes.need_parallel && (planRes.lanes || []).length >= 2 && !extra._skip_multi && taskOptions.fusion_mode !== "fast") {
     if (overrideText == null) $("#input").value = "";
     state.pendingFiles = [];
     renderAttachBar();
@@ -5837,7 +6186,7 @@ async function sendMessage(overrideText, extra = {}) {
 
   // Fallback: explicit NL multi without server plan
   const multiPlan = buildMultiLanePlan(text);
-  if (multiPlan && multiPlan.lanes.length >= 2 && !extra._skip_multi && !planRes) {
+  if (multiPlan && multiPlan.lanes.length >= 2 && !extra._skip_multi && !planRes && taskOptions.fusion_mode !== "fast") {
     if (overrideText == null) $("#input").value = "";
     state.pendingFiles = [];
     renderAttachBar();
@@ -5906,11 +6255,11 @@ async function sendMessage(overrideText, extra = {}) {
       method: "POST",
       body: JSON.stringify({
         message: text,
-        route: "auto",
-        model: ($("#model-select")?.value || "").trim(),
-        thinking_depth: normalizeThinkingDepth(
-          ($("#thinking-depth-select") && $("#thinking-depth-select").value) || state.prefs.thinkingDepth || "medium"
-        ),
+        route: taskOptions.route,
+        task_type: taskOptions.task_type,
+        fusion_mode: taskOptions.fusion_mode,
+        model: taskOptions.model,
+        thinking_depth: taskOptions.thinking_depth,
         workspace: $("#workspace-input").value.trim(),
         skills: state.selectedSkills || [],
         execution_mode: "workflow",
@@ -6277,11 +6626,12 @@ async function renderControl() {
 
   $("#ctab-appearance").innerHTML = `
     <div class="grid-2">
-      ${field(t("appearance.lang"), "ali.language", {
-        selected: state.prefs.language,
+      ${field(t("appearance.lang"), "ali.language_mode", {
+        selected: state.prefs.languageMode || "auto",
         options: [
           { value: "zh", label: "中文" },
           { value: "en", label: "English" },
+          { value: "auto", label: "Auto" },
         ],
       }, "select")}
       ${field(t("appearance.theme"), "ali.theme", {
@@ -6312,8 +6662,8 @@ async function renderControl() {
       }, "select")}
     </div>
     <p class="muted">${controlLangZh()
-      ? "控制中心与侧栏语言开关同步（中 / EN）。"
-      : "Control Center language stays in sync with the sidebar 中 / EN toggle."}</p>
+      ? "控制中心与侧栏语言同步（中文 / English / Auto）。"
+      : "Control Center language stays in sync with the sidebar (Chinese / English / Auto)."}</p>
     <div class="bg-row" id="bg-row-control"></div>
     <div class="accent-row" id="accent-row-control"></div>
     <p class="muted">${escapeHtml(t("appearance.hint"))}</p>
@@ -6385,7 +6735,7 @@ async function renderControl() {
   $$("#ctab-appearance [data-key]").forEach((el) => {
     el.addEventListener("change", () => {
       const key = el.getAttribute("data-key");
-      if (key === "ali.language") setPrefs({ language: el.value }, { syncServer: true });
+      if (key === "ali.language_mode") setPrefs({ languageMode: el.value }, { syncServer: true });
       if (key === "ali.theme") setPrefs({ theme: el.value }, { syncServer: true });
       if (key === "ali.accent") setPrefs({ accent: el.value }, { syncServer: true });
       if (key === "ali.bg") setPrefs({ bg: el.value }, { syncServer: true });
@@ -6608,9 +6958,8 @@ async function renderControl() {
         $("#settings-status").textContent = langZh
           ? `模型已更新（${data.count || 0}）`
           : `Models updated (${data.count || 0})`;
-        renderControl();
+        await renderModelGovernance(langZh);
         syncComposerFromSettings();
-        document.querySelector('.ctab[data-ctab="routing"]')?.click();
       } catch (e) {
         $("#settings-status").textContent = e.message;
         const box = $("#live-models-box");
@@ -6661,11 +7010,13 @@ async function renderControl() {
   }
 
   $("#ctab-models").innerHTML = `
+    <div id="model-governance-box" class="model-governance-box"></div>
     <p class="muted">${langZh
       ? `当前厂商：<strong>${escapeHtml((currentProv && currentProv.label) || b.type || "—")}</strong>。切换后端后点「应用此厂商」可自动填充推荐模型。`
       : `Provider: <strong>${escapeHtml((currentProv && currentProv.label) || b.type || "—")}</strong>. Apply provider to auto-fill recommendations.`}</p>
     <div class="grid-2">${slots.map(modelField).join("")}</div>
     ${hybridHtml}`;
+  renderModelGovernance(langZh).catch(() => {});
 
   const o = cfg.obsidian || {};
   $("#ctab-obsidian").innerHTML = `
@@ -6719,6 +7070,67 @@ async function renderControl() {
     hidden.setAttribute("data-key", "ali.default_route");
     hidden.value = ali.default_route || "office";
     $("#ctab-appearance").appendChild(hidden);
+  }
+}
+
+async function renderModelGovernance(langZh = controlLangZh()) {
+  const box = $("#model-governance-box");
+  if (!box) return;
+  const provider = document.querySelector('[data-key="backend.type"]')?.value
+    || state.settings?.config?.backend?.type
+    || "";
+  let data;
+  try {
+    data = await api("/api/models/governance");
+  } catch (error) {
+    box.innerHTML = `<p class="bad">${escapeHtml(error.message || error)}</p>`;
+    return;
+  }
+  const job = (data.jobs && data.jobs[provider]) || { status: "idle", completed: 0, total: 0 };
+  const health = Object.values(data.health || {}).filter((item) => !item.provider || item.provider === provider);
+  const profiles = new Map((data.profiles || []).map((item) => [item.model, item]));
+  const statusLabel = {
+    healthy: langZh ? "健康" : "Healthy",
+    degraded: langZh ? "降级" : "Degraded",
+    timeout: langZh ? "超时" : "Timeout",
+    unsupported: langZh ? "不支持" : "Unsupported",
+    unavailable: langZh ? "不可用" : "Unavailable",
+    untested: langZh ? "未测试" : "Untested",
+  };
+  const rows = health
+    .sort((a, b) => String(a.model || "").localeCompare(String(b.model || "")))
+    .map((item) => {
+      const profile = profiles.get(item.model) || {};
+      const categories = (profile.recommended_categories || []).join(" · ") || "—";
+      const stateName = item.state || "untested";
+      const latency = item.latency_ms == null ? "—" : `${Math.round(item.latency_ms)} ms`;
+      return `<div class="model-health-row">
+        <span class="model-health-state is-${escapeHtml(stateName)}">${escapeHtml(statusLabel[stateName] || stateName)}</span>
+        <div class="model-health-main"><strong>${escapeHtml(item.model || "")}</strong><small>${escapeHtml(categories)} · ${escapeHtml(latency)}</small>${item.error ? `<small class="bad">${escapeHtml(item.error)}</small>` : ""}</div>
+      </div>`;
+    }).join("");
+  const progress = job.status === "running"
+    ? `${langZh ? "检测中" : "Testing"} ${job.completed || 0}/${job.total || 0}`
+    : (job.status === "complete"
+      ? `${langZh ? "检测完成" : "Complete"} · ${job.healthy || 0} ${langZh ? "可用" : "available"} · ${job.hidden || 0} ${langZh ? "隐藏" : "hidden"}`
+      : (langZh ? "尚未运行检测" : "No health analysis yet"));
+  box.innerHTML = `<div class="model-governance-head"><div><h4>${langZh ? "模型健康与能力画像" : "Model health & capability profiles"}</h4><p class="muted">${escapeHtml(progress)}</p></div><div class="row gap"><button type="button" class="btn ghost chip" id="btn-governance-quick">${langZh ? "快速重测" : "Quick retest"}</button><button type="button" class="btn primary chip" id="btn-governance-deep">${langZh ? "深度分析" : "Deep analysis"}</button></div></div><div class="model-health-list">${rows || `<p class="muted">${langZh ? "拉取 NVIDIA 模型后将自动检测。" : "Health checks start automatically after fetching NVIDIA models."}</p>`}</div>`;
+  const start = async (deep) => {
+    const response = await api("/api/models/governance/refresh", {
+      method: "POST",
+      body: JSON.stringify({ provider, deep, force: true }),
+    });
+    if (response.job) {
+      $("#settings-status").textContent = deep
+        ? (langZh ? "深度分析已启动" : "Deep analysis started")
+        : (langZh ? "快速重测已启动" : "Quick retest started");
+      setTimeout(() => renderModelGovernance(langZh).catch(() => {}), 800);
+    }
+  };
+  $("#btn-governance-quick")?.addEventListener("click", () => start(false).catch((error) => { $("#settings-status").textContent = error.message; }));
+  $("#btn-governance-deep")?.addEventListener("click", () => start(true).catch((error) => { $("#settings-status").textContent = error.message; }));
+  if (job.status === "running" && document.body.contains(box)) {
+    setTimeout(() => renderModelGovernance(langZh).catch(() => {}), 1200);
   }
 }
 
@@ -8059,6 +8471,7 @@ function collectSettingsFromForm() {
   });
   if (!cfg.ali) cfg.ali = {};
   cfg.ali.language = state.prefs.language;
+  cfg.ali.language_mode = state.prefs.languageMode || "auto";
   cfg.ali.theme = state.prefs.theme;
   cfg.ali.accent = state.prefs.accent;
   cfg.ali.bg = state.prefs.bg;
@@ -8104,7 +8517,7 @@ async function saveSettings() {
   state.settings = data;
   if (cfg.ali) {
     setPrefs({
-      language: cfg.ali.language || state.prefs.language,
+      languageMode: cfg.ali.language_mode || cfg.ali.language || state.prefs.languageMode,
       theme: cfg.ali.theme || state.prefs.theme,
       accent: cfg.ali.accent || state.prefs.accent,
       bg: normalizeBg(cfg.ali.bg || state.prefs.bg),
@@ -8226,6 +8639,7 @@ bindSidebarChrome();
 setupSidebarResize();
 setupComposerResize();
 setupComposerAdvanced();
+setupTaskControls();
 bindClick("#btn-control", () => openControl(true));
 bindClick("#btn-control-close", () => openControl(false));
 bindClick("#btn-save-settings", () => saveSettings().catch((e) => {
@@ -8317,7 +8731,12 @@ $("#chat-mode-select")?.addEventListener("change", () => {
   updateModeUi();
   persistChatModeAndModel();
 });
-$("#model-select")?.addEventListener("change", () => persistChatModeAndModel());
+$("#model-select")?.addEventListener("change", (event) => {
+  localStorage.setItem(MODEL_OVERRIDE_KEY, event.target.value || "");
+  scheduleAutoPreview();
+  updateComposerAdvSummary();
+  persistChatModeAndModel();
+});
 $("#thinking-depth-select")?.addEventListener("change", () => {
   state.prefs.thinkingDepth = normalizeThinkingDepth($("#thinking-depth-select").value || "medium");
   persistPrefsLocal();
@@ -8339,8 +8758,11 @@ $("#route-select")?.addEventListener("change", () => {
   }
 });
 
-$("#btn-lang").addEventListener("click", () => {
+$("#btn-lang")?.addEventListener("click", () => {
   setPrefs({ language: state.prefs.language === "zh" ? "en" : "zh" }, { syncServer: true });
+});
+$("#language-mode-select")?.addEventListener("change", (event) => {
+  setPrefs({ languageMode: event.target.value || "auto" }, { syncServer: true });
 });
 $("#btn-web-search")?.addEventListener("click", () => {
   state.webSearch = !state.webSearch;

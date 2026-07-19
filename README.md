@@ -126,6 +126,8 @@ start-agent-hub.bat
 
 或 PowerShell：`.\start.ps1`
 
+仓库的 `Windows smoke test` 工作流会在真实 `windows-latest` 环境持续验证安装、双击启动、健康检查、保留本地修改的更新，以及一般用户/管理员两种推送流程。
+
 ### Linux / 通用命令行
 
 ```bash
@@ -182,7 +184,7 @@ python3 server.py --host 0.0.0.0 --port 8765
 
 侧栏左下角会显示本机地址和可识别的局域网地址。局域网中的其他设备可通过 `http://<局域网IP>:8765` 访问；若无法连接，请检查系统防火墙是否允许 Python/Agent Hub 接收入站连接。
 
-公网地址无法仅凭本机网络可靠地自动判断，因为设备通常位于 NAT、校园网或反向代理之后。推荐使用提供 HTTPS 的可信隧道或反向代理，并同时设置访问密码与对外 URL：
+Agent Hub 会通过 ipify 尝试检测公网 IP，并在侧栏显示黄色的“外网 IP”候选地址。检测到公网 IP 不代表该地址已经可以访问：设备通常位于 NAT、校园网或防火墙之后，还需要端口映射或可信隧道。推荐使用提供 HTTPS 的隧道或反向代理，并同时设置访问密码与正式对外 URL：
 
 ```bash
 export HERMES_ALI_PASSWORD='请换成高强度密码'
@@ -190,7 +192,7 @@ export HERMES_ALI_PUBLIC_URL='https://agent.example.edu'
 ./start.sh
 ```
 
-配置后，侧栏会显示“外网”地址。只有 URL 使用 HTTPS 且启用了 `HERMES_ALI_PASSWORD` 时，界面才会将公网状态标记为就绪。不要把无密码的 `8765` 端口直接映射到公网；正式多人使用时还应在反向代理或零信任网关中配置账号、访问策略和日志审计。
+配置后，正式“外网”地址会替代自动探测的 IP。只有 URL 使用 HTTPS 且启用了 `HERMES_ALI_PASSWORD` 时，界面才会将公网状态标记为就绪。不要把无密码的 `8765` 端口直接映射到公网；正式多人使用时还应在反向代理或零信任网关中配置账号、访问策略和日志审计。
 
 ---
 

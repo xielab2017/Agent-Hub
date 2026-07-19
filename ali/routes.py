@@ -3,8 +3,13 @@
 from __future__ import annotations
 
 import json
+import importlib
+import inspect
 import mimetypes
 import tempfile
+import threading
+import time
+import urllib.request
 import zipfile
 from pathlib import Path
 from typing import Any
@@ -24,7 +29,8 @@ from . import (
     fsutil,
     hermes_cli,
     home,
-   mcp_hub,
+    mcp_hub,
+    model_intelligence,
     nightly_maintenance,
     multipart,
     obsidian,
@@ -43,14 +49,159 @@ from . import (
     websearch,
     workflows,
 )
-from .config import APP_NAME, PUBLIC_URL, REPO_ROOT, RUNTIME, STATIC_DIR, VERSION, local_ips
+from .config import APP_NAME, PUBLIC_URL, REPO_ROOT, RUNTIME, STATIC_DIR, VERSION, local_ips, public_ip
 from .settings import (
     import_campus_config,
     load_campus_config,
+    public_model_governance_view,
     public_settings_view,
     resolve_backend_verify_tls,
     save_campus_config,
 )
+
+
+_COUNTRY_CACHE = {"value": "", "expires": 0.0, "refreshing": False}
+_COUNTRY_CACHE_LOCK = threading.Lock()
+_COUNTRY_CACHE_TTL = 24 * 60 * 60
+_COUNTRY_HEADERS = (
+    "CF-IPCountry",
+    "CloudFront-Viewer-Country",
+    "X-Vercel-IP-Country",
+)
+_ZH_COUNTRIES = frozenset({"CN", "HK", "MO", "TW"})
+
+
+def _country_code(value: Any) -> str:
+    code = str(value or "").strip().upper()
+    return code if len(code) == 2 and code.isascii() and code.isalpha() else ""
+
+
+def _proxy_country_hint(headers: Any) -> str:
+    """Read only provider-owned country headers, never forwarded client IPs."""
+    for name in _COUNTRY_HEADERS:
+        code = _country_code(headers.get(name) if headers is not None else "")
+        if code:
+            return code
+    return ""
+
+
+def _refresh_server_country() -> None:
+    value = ""
+    try:
+        request = urllib.request.Request(
+            "https://ipapi.co/country/",
+            headers={"User-Agent": "Agent-Hub/locale-hint"},
+        )
+        with urllib.request.urlopen(request, timeout=2.0) as response:  # noqa: S310
+            value = _country_code(response.read(16).decode("ascii", errors="ignore"))
+    except (OSError, ValueError):
+        pass
+    with _COUNTRY_CACHE_LOCK:
+        _COUNTRY_CACHE.update({
+            "value": value,
+            "expires": time.monotonic() + (_COUNTRY_CACHE_TTL if value else 10 * 60),
+            "refreshing": False,
+        })
+
+
+def _cached_server_country_hint() -> str:
+    """Return cached country immediately and refresh it off the request thread."""
+    now = time.monotonic()
+    with _COUNTRY_CACHE_LOCK:
+        value = str(_COUNTRY_CACHE.get("value") or "")
+        if now < float(_COUNTRY_CACHE.get("expires") or 0):
+            return value
+        if not _COUNTRY_CACHE.get("refreshing"):
+            _COUNTRY_CACHE["refreshing"] = True
+            threading.Thread(target=_refresh_server_country, daemon=True).start()
+        return value
+
+
+def _resolve_locale_hint(
+    language_mode: Any,
+    headers: Any,
+    *,
+    server_country: str = "",
+) -> dict[str, str]:
+    mode = str(language_mode or "zh").strip().lower()
+    mode = mode if mode in ("zh", "en", "auto") else "zh"
+    if mode != "auto":
+        return {"mode": mode, "resolved": mode, "source": "setting", "country": ""}
+
+    country = _proxy_country_hint(headers)
+    source = "proxy_country" if country else ""
+    if not country:
+        country = _country_code(server_country)
+        source = "server_country" if country else ""
+    if country:
+        return {
+            "mode": "auto",
+            "resolved": "zh" if country in _ZH_COUNTRIES else "en",
+            "source": source,
+            "country": country,
+        }
+
+    accepted = str(headers.get("Accept-Language") if headers is not None else "").lower()
+    resolved = "zh" if any(part.strip().startswith("zh") for part in accepted.split(",")) else "en"
+    if not accepted.strip():
+        resolved = "zh"
+    return {"mode": "auto", "resolved": resolved, "source": "accept_language", "country": ""}
+
+
+def _build_fusion_plan(body: dict[str, Any]) -> dict[str, Any]:
+    """Call the fusion planner while tolerating adjacent branch signatures."""
+    prompt = str(body.get("prompt") or "").strip()
+    if not prompt:
+        raise ValueError("prompt required")
+    cfg = load_campus_config()
+    mode = str(body.get("fusion_mode") or cfg.get("fusion_mode") or "auto").strip().lower()
+    if mode not in ("fast", "auto", "deep"):
+        raise ValueError("fusion_mode must be fast, auto, or deep")
+
+    request = {
+        "prompt": prompt,
+        "task_type": str(body.get("task_type") or "auto"),
+        "fusion_mode": mode,
+        "thinking_depth": str(body.get("thinking_depth") or "medium"),
+    }
+    module = importlib.import_module("ali.fusion")
+    build_plan = getattr(module, "build_plan", None) or getattr(module, "build_fusion_plan", None)
+    if not callable(build_plan):
+        raise RuntimeError("ali.fusion.build_plan/build_fusion_plan is unavailable")
+
+    signature = inspect.signature(build_plan)
+    parameters = signature.parameters
+    request_names = ("request", "payload", "body", "options")
+    if any(name in parameters for name in request_names):
+        kwargs = {next(name for name in request_names if name in parameters): request}
+        if "config" in parameters:
+            kwargs["config"] = cfg
+        elif "cfg" in parameters:
+            kwargs["cfg"] = cfg
+        result = build_plan(**kwargs)
+    else:
+        profiles = cfg.get("model_profiles")
+        profiles = list(profiles.values()) if isinstance(profiles, dict) else []
+        budget = cfg.get("fusion_token_budget")
+        total_budget = budget.get("total_budget") if isinstance(budget, dict) else budget
+        candidates = {
+            **request,
+            "cfg": cfg,
+            "models": profiles,
+            "total_budget": total_budget,
+        }
+        if "config" in parameters:
+            candidates["config"] = cfg
+        accepts_kwargs = any(p.kind == inspect.Parameter.VAR_KEYWORD for p in parameters.values())
+        kwargs = candidates if accepts_kwargs else {key: value for key, value in candidates.items() if key in parameters}
+        result = build_plan(**kwargs)
+    if not isinstance(result, dict):
+        raise TypeError("fusion plan must be a JSON object")
+    judge_model = str(cfg.get("fusion_judge_model") or "").strip()
+    if judge_model and isinstance(result.get("judge"), dict):
+        result = dict(result)
+        result["judge"] = {**result["judge"], "model": judge_model, "source": "configured"}
+    return result
 
 
 def _sync_hermes_safe(cfg: dict | None = None) -> dict:
@@ -184,6 +335,17 @@ def handle_get(handler) -> None:
         st = streaming.agent_status()
         health = workflows.health_snapshot()
         ali = load_campus_config().get("ali") or {}
+        detected_public_ip = public_ip()
+        proxy_country = _proxy_country_hint(handler.headers)
+        language_mode = str(ali.get("language_mode") or ali.get("language") or "zh").strip().lower()
+        server_country = ""
+        if language_mode == "auto" and not proxy_country:
+            server_country = _cached_server_country_hint()
+        locale_hint = _resolve_locale_hint(
+            language_mode,
+            handler.headers,
+            server_country=server_country,
+        )
         return _json(
             handler,
             200,
@@ -195,8 +357,10 @@ def handle_get(handler) -> None:
                 "port": RUNTIME.get("port"),
                 "local_ips": local_ips(),
                 "public_url": PUBLIC_URL,
+                "public_ip": detected_public_ip,
                 "public_access": {
                     "configured": bool(PUBLIC_URL),
+                    "detected": bool(detected_public_ip),
                     "https": PUBLIC_URL.lower().startswith("https://"),
                     "auth_required": auth.auth_required(),
                     "ready": bool(
@@ -205,11 +369,13 @@ def handle_get(handler) -> None:
                         and auth.auth_required()
                     ),
                 },
+                "locale_hint": locale_hint,
                 "agent": st,
                 "health": health,
                 "default_route": "auto" if (ali.get("default_route") in (None, "", "office")) else ali.get("default_route"),
                 "ui": {
                     "language": ali.get("language") or "zh",
+                    "language_mode": ali.get("language_mode") or ali.get("language") or "zh",
                     "theme": ali.get("theme") or "auto",
                     "accent": ali.get("accent") or "suat",
                     "bg": ali.get("bg") or "auto",
@@ -230,6 +396,11 @@ def handle_get(handler) -> None:
 
     if path == "/api/settings":
         return _json(handler, 200, public_settings_view())
+
+    if path == "/api/models/governance":
+        view = public_model_governance_view()
+        view["jobs"] = model_intelligence.governance_job()
+        return _json(handler, 200, view)
 
     if path == "/api/ui/logo":
         return _json(handler, 200, brand_logo.public_logo_state())
@@ -565,6 +736,18 @@ def handle_post(handler) -> None:
             },
         )
 
+    if path == "/api/fusion/plan":
+        body = _read_json(handler)
+        try:
+            plan = _build_fusion_plan(body)
+            return _json(handler, 200, plan)
+        except ValueError as exc:
+            return _json(handler, 400, {"error": str(exc)})
+        except (ImportError, RuntimeError) as exc:
+            return _json(handler, 503, {"error": str(exc), "available": False})
+        except TypeError as exc:
+            return _json(handler, 500, {"error": str(exc)})
+
     if path == "/api/ui/logo":
         try:
             ctype = handler.headers.get("Content-Type") or ""
@@ -827,7 +1010,19 @@ def handle_post(handler) -> None:
             m = dict(cfg.get("models") or {})
             m.update({k: v for k, v in suggested.items() if v})
             cfg["models"] = m
-            cfg = save_campus_config(cfg)
+        cfg = save_campus_config(cfg)
+
+        governance_job = None
+        if provider == "nvidia-nim":
+            governance_job = model_intelligence.start_governance_analysis(
+                provider=provider,
+                models=models,
+                base_url=base_url,
+                api_key=key_info.get("key") or "",
+                verify_tls=resolve_backend_verify_tls(cfg, {"provider": provider}),
+                deep=False,
+                force=False,
+            )
 
         audit.log_event("refresh_models", {"count": len(models), "provider": provider})
         view = public_settings_view()
@@ -840,9 +1035,33 @@ def handle_post(handler) -> None:
                 "count": len(models),
                 "suggested": suggested,
                 "applied": bool(apply_suggest),
+                "governance_job": governance_job,
                 **view,
             },
         )
+
+    if path == "/api/models/governance/refresh":
+        body = _read_json(handler)
+        from .secrets import resolve_api_key
+
+        cfg = load_campus_config()
+        provider = str(body.get("provider") or (cfg.get("backend") or {}).get("type") or "").strip()
+        catalogs = cfg.get("available_models") if isinstance(cfg.get("available_models"), dict) else {}
+        models = body.get("models") if isinstance(body.get("models"), list) else catalogs.get(provider) or []
+        key_info = resolve_api_key(cfg, provider=provider)
+        base_url = str(body.get("base_url") or (cfg.get("backend") or {}).get("base_url") or "").strip()
+        if not base_url or (not key_info.get("present") and provider != "local-ollama"):
+            return _json(handler, 400, {"error": "Provider Base URL and API key are required"})
+        job = model_intelligence.start_governance_analysis(
+            provider=provider,
+            models=models,
+            base_url=base_url,
+            api_key=key_info.get("key") or "",
+            verify_tls=resolve_backend_verify_tls(cfg, {"provider": provider}),
+            deep=bool(body.get("deep")),
+            force=bool(body.get("force", True)),
+        )
+        return _json(handler, 202, {"ok": True, "job": job})
 
     if path == "/api/settings/import":
         body = _read_json(handler)
@@ -974,6 +1193,7 @@ def handle_post(handler) -> None:
                 subagent_id=str(body.get("subagent_id") or ""),
                 web_search=body.get("web_search") if "web_search" in body else None,
                 thinking_depth=str(body.get("thinking_depth") or ""),
+                max_tokens_override=body.get("max_tokens_override", body.get("max_tokens")),
             )
             return _json(handler, 200, result)
         except ValueError as exc:
@@ -1666,7 +1886,13 @@ def handle_patch(handler) -> None:
 
     if len(parts) == 3 and parts[0] == "api" and parts[1] == "folders":
         body = _read_json(handler)
-        item = folders.update_folder(parts[2], body.get("name"), body.get("sort_order"), body.get("archived"))
+        item = folders.update_folder(
+            parts[2],
+            name=body.get("name"),
+            sort_order=body.get("sort_order"),
+            archived=body.get("archived"),
+            pinned=body.get("pinned"),
+        )
         if item is not None and body.get("archived") is not None:
             for session in store.list_sessions(include_archived=True):
                 if session.get("folder_id") == parts[2]:

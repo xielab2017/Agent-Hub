@@ -62,7 +62,10 @@ def verify_admin() -> None:
             "Admin password is not configured on this computer. "
             f"Configure AGENT_HUB_ADMIN_PASSWORD_SHA256 or {admin_hash_path()}."
         )
-    entered = getpass.getpass("管理员密码 / Admin password: ")
+    if os.environ.get("AGENT_HUB_TEST_MODE") == "1":
+        entered = input("管理员密码 / Admin password: ")
+    else:
+        entered = getpass.getpass("管理员密码 / Admin password: ")
     actual = hashlib.sha256(entered.encode("utf-8")).hexdigest()
     if not hmac.compare_digest(actual, expected):
         raise PublishError("管理员密码错误 / Invalid admin password.")
