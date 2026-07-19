@@ -399,6 +399,24 @@ def resolve_route(
             )
         model = selected_model
 
+    # A blank composer model in Auto mode should use the independently scored
+    # category recommendation once the provider has health/profile evidence.
+    # Explicit route bindings stay authoritative, and a profile belonging to
+    # another provider is filtered inside the resolver.
+    model_selection_source = "route_binding" if isinstance(tier_entry, dict) and str(tier_entry.get("model") or "").strip() else "slot_default"
+    if raw in ("auto", "") and not (isinstance(tier_entry, dict) and str(tier_entry.get("model") or "").strip()):
+        try:
+            from .model_intelligence import select_configured_category_model
+
+            selected = select_configured_category_model(cfg, tier, provider=provider_id)
+            recommended_model = str(selected.get("model") or "").strip()
+            if recommended_model:
+                model = recommended_model
+                model_selection_source = "category_auto" if selected.get("auto") else "category_manual"
+        except (TypeError, ValueError):
+            # No compatible, healthy profile yet: retain the configured slot.
+            pass
+
     blocked = False
     block_reason = ""
 
@@ -438,6 +456,7 @@ def resolve_route(
         "tier": tier,
         "route_key": route_key,
         "model": model,
+        "model_selection_source": model_selection_source,
         "model_slot": tier if isinstance(tier_entry, dict) and tier_entry.get("model") else (routing.get(route_key) or route_key),
         "mode": "hybrid" if use_hybrid else "single",
         "auto": raw in ("auto", ""),

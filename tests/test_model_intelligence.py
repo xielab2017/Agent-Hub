@@ -15,6 +15,7 @@ from ali.model_intelligence import (
     quick_health_check,
     recommend_category_models,
     recommend_model,
+    select_configured_category_model,
 )
 
 
@@ -176,6 +177,37 @@ def test_each_category_has_an_independent_auto_decision():
 def test_unknown_category_is_rejected():
     with pytest.raises(ValueError, match="unknown category"):
         recommend_model([], "C9")
+
+
+def test_configured_category_selection_respects_provider_and_manual_choice():
+    nvidia = build_model_profile(
+        "nvidia-research",
+        health=_health("nvidia-research"),
+        metadata={"performance": {"quality_score": 0.8}},
+        measured_capabilities={"chat": True, "reasoning": True, "writing": 0.9, "coding": 0.8},
+    )
+    nvidia["provider"] = "nvidia-nim"
+    foreign = build_model_profile(
+        "foreign-research",
+        health=_health("foreign-research"),
+        metadata={"performance": {"quality_score": 0.99}},
+        measured_capabilities={"chat": True, "reasoning": True, "writing": 0.99, "coding": 0.99},
+    )
+    foreign["provider"] = "other-provider"
+    config = {
+        "model_profiles": {"nvidia-research": nvidia, "foreign-research": foreign},
+        "category_auto": {"C3": True},
+        "category_models": {"C3": "foreign-research"},
+    }
+    auto = select_configured_category_model(config, "C3", provider="nvidia-nim")
+    assert auto["model"] == "nvidia-research"
+    assert auto["auto"] is True
+
+    config["category_auto"]["C3"] = False
+    config["category_models"]["C3"] = "nvidia-research"
+    manual = select_configured_category_model(config, "C3", provider="nvidia-nim")
+    assert manual["model"] == "nvidia-research"
+    assert manual["source"] == "manual"
 
 
 def test_health_freshness_rejects_untested_and_future_records():

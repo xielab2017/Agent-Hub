@@ -550,6 +550,44 @@ def recommend_category_models(
     }
 
 
+def select_configured_category_model(
+    config: Mapping[str, Any],
+    category: str,
+    *,
+    provider: str = "",
+) -> dict[str, Any]:
+    """Resolve the live Auto/manual model for one routing category.
+
+    The settings view already exposes category recommendations; this helper is
+    the execution-side counterpart.  It deliberately limits candidates to the
+    active provider so a stale profile from an old backend cannot redirect a
+    normal single-provider request to another vendor.
+    """
+    profiles_raw = config.get("model_profiles")
+    if not isinstance(profiles_raw, Mapping):
+        profiles_raw = {}
+    active_provider = str(provider or "").strip()
+    profiles = []
+    for model, raw in profiles_raw.items():
+        if not isinstance(raw, Mapping):
+            continue
+        item = dict(raw)
+        item["model"] = str(item.get("model") or model)
+        item_provider = str(item.get("provider") or "").strip()
+        if active_provider and item_provider and item_provider != active_provider:
+            continue
+        profiles.append(item)
+
+    category_auto = config.get("category_auto")
+    category_auto = category_auto if isinstance(category_auto, Mapping) else {}
+    category_models = config.get("category_models")
+    category_models = category_models if isinstance(category_models, Mapping) else {}
+    is_auto = bool(category_auto.get(category, True))
+    manual_model = "" if is_auto else str(category_models.get(category) or "").strip()
+    result = recommend_model(profiles, category, manual_model=manual_model)
+    return {**result, "provider": active_provider, "auto": is_auto}
+
+
 _JOB_LOCK = threading.RLock()
 _JOBS: dict[str, dict[str, Any]] = {}
 
@@ -756,3 +794,35 @@ def start_governance_analysis(
 
     threading.Thread(target=worker, name=f"model-governance-{provider_id}", daemon=True).start()
     return deepcopy(job)
+
+
+def start_startup_governance_refresh() -> dict[str, Any] | None:
+    """Refresh stale cached model health after startup without blocking serve.
+
+    A catalog must already have been fetched by the user.  This avoids an
+    expensive provider-wide model listing during every launch while ensuring
+    cached NVIDIA availability and category choices do not drift forever.
+    """
+    from .secrets import resolve_api_key
+    from .settings import load_campus_config, resolve_backend_verify_tls
+
+    cfg = load_campus_config()
+    backend = cfg.get("backend") if isinstance(cfg.get("backend"), Mapping) else {}
+    provider = str(backend.get("type") or "").strip()
+    catalogs = cfg.get("available_models") if isinstance(cfg.get("available_models"), Mapping) else {}
+    models = catalogs.get(provider) if isinstance(catalogs.get(provider), list) else []
+    if provider != "nvidia-nim" or not models:
+        return None
+    key_info = resolve_api_key(cfg, provider=provider)
+    base_url = str(backend.get("base_url") or "").strip()
+    if not base_url or not key_info.get("present"):
+        return None
+    return start_governance_analysis(
+        provider=provider,
+        models=models,
+        base_url=base_url,
+        api_key=str(key_info.get("key") or ""),
+        verify_tls=resolve_backend_verify_tls(cfg, {"provider": provider}),
+        deep=False,
+        force=False,
+    )

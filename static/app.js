@@ -7009,6 +7009,45 @@ async function renderControl() {
     </label>`;
   }
 
+  const governance = (state.settings && state.settings.model_governance) || {};
+  const categoryModels = cfg.category_models || {};
+  const categoryAuto = cfg.category_auto || {};
+  const categoryRecommendations = governance.recommendations || {};
+  const categoryDefinitions = [
+    { id: "C0", label: langZh ? "C0 轻量任务" : "C0 Lightweight" },
+    { id: "C1", label: langZh ? "C1 办公写作" : "C1 Office & writing" },
+    { id: "C2", label: langZh ? "C2 编程调试" : "C2 Coding" },
+    { id: "C3", label: langZh ? "C3 深度研究" : "C3 Research" },
+    { id: "Vision", label: langZh ? "视觉分析" : "Vision" },
+    { id: "Embedding", label: langZh ? "向量检索" : "Embedding" },
+    { id: "Reranker", label: langZh ? "检索重排" : "Reranker" },
+  ];
+
+  function categoryModelField(category) {
+    const recommendation = categoryRecommendations[category.id] || {};
+    const configured = categoryAuto[category.id] === false ? String(categoryModels[category.id] || "") : "";
+    const healthyProfiles = (governance.profiles || []).filter((profile) => {
+      const health = String(profile?.health_state || profile?.health?.state || "");
+      return ["healthy", "degraded"].includes(health)
+        && Array.isArray(profile?.recommended_categories)
+        && profile.recommended_categories.includes(category.id);
+    });
+    const candidates = [...new Set([
+      configured,
+      String(recommendation.model || ""),
+      ...healthyProfiles.map((profile) => String(profile.model || "")),
+    ].filter(Boolean))];
+    const autoLabel = recommendation.model
+      ? `${langZh ? "自动推荐" : "Auto"}: ${recommendation.model}`
+      : (langZh ? "自动推荐（等待健康检测）" : "Auto (awaiting health check)");
+    return `<label class="field"><span>${escapeHtml(category.label)}</span>
+      <select data-category-model="${escapeHtml(category.id)}">
+        <option value="">${escapeHtml(autoLabel)}</option>
+        ${candidates.map((model) => `<option value="${escapeHtml(model)}" ${model === configured ? "selected" : ""}>${escapeHtml(model)}</option>`).join("")}
+      </select>
+    </label>`;
+  }
+
   const isHybrid = (cfg.mode === "hybrid") || (b.type === "hybrid");
   let hybridHtml = "";
   if (isHybrid) {
@@ -7037,6 +7076,12 @@ async function renderControl() {
     <p class="muted">${langZh
       ? `当前厂商：<strong>${escapeHtml((currentProv && currentProv.label) || b.type || "—")}</strong>。切换后端后点「应用此厂商」可自动填充推荐模型。`
       : `Provider: <strong>${escapeHtml((currentProv && currentProv.label) || b.type || "—")}</strong>. Apply provider to auto-fill recommendations.`}</p>
+    <h4>${langZh ? "系统类别模型" : "System category models"}</h4>
+    <p class="muted">${langZh
+      ? "保持“自动推荐”时，任务会按实时健康检测、能力画像与延迟评分选择模型；选择具体模型即可固定该类别。"
+      : "Auto uses live health, capability profiles, and latency scoring; choose a model to pin that category."}</p>
+    <div class="grid-2">${categoryDefinitions.map(categoryModelField).join("")}</div>
+    <h4>${langZh ? "兼容模型槽位" : "Compatible model slots"}</h4>
     <div class="grid-2">${slots.map(modelField).join("")}</div>
     ${hybridHtml}`;
   renderModelGovernance(langZh).catch(() => {});
@@ -8491,6 +8536,16 @@ function collectSettingsFromForm() {
     const binding = parseModelBinding(el.value);
     if (binding.model) cfg.routing.tier_models[tier] = binding;
     else delete cfg.routing.tier_models[tier];
+  });
+  cfg.category_models = cfg.category_models || {};
+  cfg.category_auto = cfg.category_auto || {};
+  $$('[data-category-model]').forEach((el) => {
+    const category = el.dataset.categoryModel || "";
+    if (!category) return;
+    const selected = String(el.value || "").trim();
+    cfg.category_auto[category] = !selected;
+    if (selected) cfg.category_models[category] = selected;
+    else delete cfg.category_models[category];
   });
   if (!cfg.ali) cfg.ali = {};
   cfg.ali.language = state.prefs.language;
