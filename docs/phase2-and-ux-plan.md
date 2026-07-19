@@ -5,6 +5,24 @@
 
 ---
 
+## 新增更新任务：核心能力同步（P0）
+
+完整任务文档：[`tonight-core-optimization-sync-plan.md`](tonight-core-optimization-sync-plan.md)
+
+状态：**待实施**。该任务纳入本轮更新，并优先于仅涉及界面展示的工作。同步时不得覆盖目标版本已有能力，必须按“数据结构与后端 → 执行链路 → 前端 → 配置迁移”的顺序推进。
+
+| 工作包 | 核心内容 | 完成标志 |
+|--------|----------|----------|
+| 模型治理 | NVIDIA 模型健康检测、缓存、能力画像与不可用模型隐藏 | API 可返回健康状态、能力与分类建议 |
+| 分类 Auto | C0/C1/C2/C3/Vision/Embedding/Reranker 独立 Auto 与人工覆盖 | 每类均可自动推荐或固定模型 |
+| 多模型融合 | Fast/Auto/Deep、Fusion Plan、Judge、失败降级与 Token 预算 | 三种模式均能稳定生成最终结果 |
+| 会话导航 | 文件夹任务总览、单击选中、双击/Enter 进入、隐藏内部子任务 | 普通会话列表不受融合子任务污染 |
+| 迁移与回归 | 新字段增量迁移、四组核心测试、真实浏览器验收 | 旧配置可启动，目标路径全部通过 |
+
+首轮回归至少覆盖：`test_model_intelligence.py`、`test_fusion.py`、`test_sync_routing_tier.py`、`test_session_navigation_ui.py`。详细验收清单、数据结构和 API 示例以完整任务文档为准。
+
+---
+
 ## 0. 目标与原则
 
 ### 产品目标
