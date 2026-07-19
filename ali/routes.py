@@ -253,6 +253,21 @@ def _read_json(handler) -> dict[str, Any]:
         return {}
 
 
+def _optional_bool(value: Any) -> bool | None:
+    """Decode JSON booleans without treating the string ``"false"`` as true."""
+    if value is None or isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)) and value in (0, 1):
+        return bool(value)
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in ("true", "1", "yes", "on"):
+            return True
+        if normalized in ("false", "0", "no", "off", ""):
+            return False
+    raise ValueError("boolean value required")
+
+
 def _path_parts(path: str) -> tuple[str, list[str], dict[str, list[str]]]:
     parsed = urlparse(path)
     parts = [p for p in parsed.path.split("/") if p]
@@ -1886,17 +1901,22 @@ def handle_patch(handler) -> None:
 
     if len(parts) == 3 and parts[0] == "api" and parts[1] == "folders":
         body = _read_json(handler)
+        try:
+            archived = _optional_bool(body.get("archived"))
+            pinned = _optional_bool(body.get("pinned"))
+        except ValueError as exc:
+            return _json(handler, 400, {"error": str(exc)})
         item = folders.update_folder(
             parts[2],
             name=body.get("name"),
             sort_order=body.get("sort_order"),
-            archived=body.get("archived"),
-            pinned=body.get("pinned"),
+            archived=archived,
+            pinned=pinned,
         )
-        if item is not None and body.get("archived") is not None:
+        if item is not None and archived is not None:
             for session in store.list_sessions(include_archived=True):
                 if session.get("folder_id") == parts[2]:
-                    store.update_session(session["id"], archived=bool(body.get("archived")))
+                    store.update_session(session["id"], archived=archived)
         return _json(handler, 200 if item else 404, item or {"error": "not found"})
 
     _json(handler, 404, {"error": "not found"})

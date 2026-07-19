@@ -3175,6 +3175,29 @@ function closeSessionOverlays() {
   document.querySelectorAll(".session-actions[open], .folder-actions[open]").forEach((el) => el.removeAttribute("open"));
 }
 
+async function toggleFolderPin(folderId, fallbackPinned) {
+  const folder = (state.folders || []).find((item) => item.id === folderId);
+  const nextPinned = !Boolean(folder ? folder.pinned : fallbackPinned);
+  document.querySelectorAll(".folder-actions[open]").forEach((details) => details.removeAttribute("open"));
+  try {
+    const updated = await api(`/api/folders/${encodeURIComponent(folderId)}`, {
+      method: "PATCH",
+      body: JSON.stringify({ pinned: nextPinned }),
+    });
+    if (!updated || typeof updated.pinned !== "boolean") {
+      throw new Error(state.prefs.language === "en" ? "Folder pin update was not confirmed" : "项目置顶状态未被服务器确认");
+    }
+    state.folders = (state.folders || []).map((item) => item.id === folderId ? { ...item, ...updated } : item);
+    renderSessionList();
+    await refreshSessions();
+  } catch (error) {
+    const langZh = state.prefs.language !== "en";
+    alert(langZh
+      ? `项目置顶更新失败：${error.message || error}`
+      : `Could not update project pin: ${error.message || error}`);
+  }
+}
+
 function bindSessionListDelegation() {
   const list = $("#session-list");
   if (!list || list.dataset.delegated === "1") return;
@@ -3375,9 +3398,9 @@ function renderSessionList() {
       await refreshSessions();
     });
     header.querySelector("[data-folder-pin]")?.addEventListener("click", async (event) => {
+      event.preventDefault();
       event.stopPropagation();
-      await api(`/api/folders/${encodeURIComponent(folder.id)}`, { method: "PATCH", body: JSON.stringify({ pinned: !folder.pinned }) });
-      await refreshSessions();
+      await toggleFolderPin(folder.id, folder.pinned);
     });
     header.querySelector("[data-folder-archive]")?.addEventListener("click", async (event) => {
       event.stopPropagation();

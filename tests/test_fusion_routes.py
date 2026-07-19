@@ -193,3 +193,20 @@ def test_chat_route_forwards_fusion_token_budget(monkeypatch):
 
     assert handler.status == 200
     assert captured["max_tokens_override"] == 2048
+
+
+def test_folder_pin_route_accepts_false_string_without_repinning(monkeypatch):
+    captured = {}
+
+    def fake_update(folder_id, **kwargs):
+        captured["folder_id"] = folder_id
+        captured.update(kwargs)
+        return {"id": folder_id, "pinned": kwargs["pinned"]}
+
+    monkeypatch.setattr(routes.folders, "update_folder", fake_update)
+    handler = _Handler("/api/folders/folder-1", {"pinned": "false"})
+
+    routes.handle_patch(handler)
+
+    assert handler.status == 200
+    assert captured == {"folder_id": "folder-1", "name": None, "sort_order": None, "archived": None, "pinned": False}
