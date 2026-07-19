@@ -15,7 +15,7 @@ const FONT_SIZE_LABELS = {
   zh: { 13: "小 13", 14: "中 14", 15: "中大 15", 16: "大 16", 18: "特大 18" },
   en: { 13: "S 13", 14: "M 14", 15: "M+ 15", 16: "L 16", 18: "XL 18" },
 };
-const LOGO_VER = "5.0.0";
+const LOGO_VER = "5.0.4";
 const DEFAULT_LOGO = `/brand/suat-logo-color.png?v=${LOGO_VER}`;
 const LOGO_PRESETS = [
   { id: "suat-color", src: `/brand/suat-logo-color.png?v=${LOGO_VER}`, labelKey: "appearance.logoPresetColor" },
@@ -183,6 +183,10 @@ const I18N = {
     "mode.agent": "Agent 模式 · 工具/Skill",
     "composer.hubChat": "Hub 聊天",
     "composer.settings": "任务设置",
+    "composer.fusion": "模型融合",
+    "fusion.fast": "Fast · 单模型",
+    "fusion.auto": "Auto Fusion · 智能融合",
+    "fusion.deep": "Deep Fusion · 多专家",
     "hubChat.agent": "Agent（工具）",
     "hubChat.direct": "快聊",
     "engine.hermes": "Hermes Agent",
@@ -384,6 +388,10 @@ const I18N = {
     "mode.agent": "Agent mode · tools/skills",
     "composer.hubChat": "Hub chat",
     "composer.settings": "Task settings",
+    "composer.fusion": "Model fusion",
+    "fusion.fast": "Fast · single model",
+    "fusion.auto": "Auto Fusion · adaptive",
+    "fusion.deep": "Deep Fusion · experts",
     "hubChat.agent": "Agent (tools)",
     "hubChat.direct": "Fast chat",
     "engine.hermes": "Hermes Agent",
@@ -1364,7 +1372,7 @@ function setupComposerAdvanced() {
     setComposerAdvancedOpen(!isComposerAdvancedOpen());
   });
 
-  ["soul-select", "route-select", "model-select", "chat-mode-select", "thinking-depth-select"].forEach((id) => {
+  ["soul-select", "route-select", "model-select", "fusion-mode-select", "chat-mode-select", "thinking-depth-select"].forEach((id) => {
     $(`#${id}`)?.addEventListener("change", () => updateComposerAdvSummary());
   });
   updateComposerAdvSummary();
@@ -3537,6 +3545,12 @@ function sharedModelOptions(extra = [], payloadOverride = null) {
       model,
       available: item.available !== false,
       source: item.source || "configured",
+      health: item.health || "unchecked",
+      kind: item.kind || "unknown",
+      capabilities: Array.isArray(item.capabilities) ? item.capabilities : [],
+      latency_s: item.latency_s,
+      quality_score: item.quality_score,
+      speed_score: item.speed_score,
     });
   });
   return out;
@@ -3597,7 +3611,23 @@ function modelBindingOptions(selectedProvider, selectedModel, {
   }).join("");
 }
 
-function modelIdOptions(selectedModel, provider = "") {
+function categoryModelOptions(tier, selectedProvider, selectedModel, autoModel = "") {
+  const currentValue = modelBindingValue(selectedProvider, selectedModel);
+  let items = sharedModelOptions().filter((item) => item.available !== false && item.health === "available" && item.kind === "chat");
+  if (tier === "Vision") items = items.filter((item) => (item.capabilities || []).includes("vision"));
+  const recommendedValue = items.find((item) => item.model === autoModel)?.model || autoModel || "";
+  const autoText = state.prefs.language === "en"
+    ? `Auto${recommendedValue ? ` → ${recommendedValue}` : ""}`
+    : `Auto${recommendedValue ? ` → ${recommendedValue}` : ""}`;
+  return `<option value="" ${!selectedModel ? "selected" : ""}>${escapeHtml(autoText)}</option>` + items.map((item) => {
+    const value = modelBindingValue(item.provider, item.model);
+    const caps = (item.capabilities || []).filter((x) => x !== "chat").join("/");
+    const suffix = caps ? ` · ${caps}` : "";
+    return `<option value="${escapeHtml(value)}" ${value === currentValue ? "selected" : ""}>${escapeHtml(item.model + suffix)}</option>`;
+  }).join("");
+}
+
+function modelIdOptions(selectedModel, provider = "", role = "chat") {
   const selected = String(selectedModel || "").trim();
   const entries = sharedModelOptions(selected ? [{
     provider,
@@ -3605,7 +3635,13 @@ function modelIdOptions(selectedModel, provider = "") {
     available: false,
     source: "configured",
   }] : []).filter((item) => !provider || item.provider === provider || !item.provider);
-  return entries.map((item) => {
+  const compatible = entries.filter((item) => {
+    if (item.available === false) return false;
+    if (role === "embedding") return item.kind === "embedding" || item.kind === "unknown";
+    if (role === "reranker") return item.kind === "reranker" || item.kind === "unknown";
+    return item.kind !== "embedding" && item.kind !== "reranker" && item.kind !== "specialized";
+  });
+  return compatible.map((item) => {
     const stale = item.available === false ? (state.prefs.language === "en" ? " · unavailable (kept)" : " · 已不在目录（保留）") : "";
     return `<option value="${escapeHtml(item.model)}" ${item.model === selected ? "selected" : ""}>${escapeHtml(item.model + stale)}</option>`;
   }).join("") || `<option value="${escapeHtml(selected)}">${escapeHtml(selected || "—")}</option>`;
@@ -3642,7 +3678,9 @@ function modelChoicesFromSettings() {
       });
   }
   if (backendType === "nvidia-nim") {
-    return all.filter((id) => String(id).includes("/") || String(id).startsWith("nvidia"));
+    return sharedModelOptions()
+      .filter((item) => item.provider === "nvidia-nim" && item.available !== false && item.health === "available" && item.kind === "chat")
+      .map((item) => item.model);
   }
   return all;
 }
@@ -3675,8 +3713,12 @@ function syncComposerFromSettings() {
   const ali = cfg.ali || {};
   const modeSel = $("#chat-mode-select");
   if (modeSel) modeSel.value = ali.chat_mode === "single" ? "single" : "auto";
+  const fusionSel = $("#fusion-mode-select");
+  if (fusionSel) fusionSel.value = ["fast", "auto", "deep"].includes(ali.fusion_mode) ? ali.fusion_mode : "auto";
   syncRouteLabels();
-  populateModelSelect(ali.last_model || modelsMain(cfg) || "");
+  // Auto chat mode must not silently pin yesterday's last_model. Selecting a
+  // concrete entry remains an explicit per-request override.
+  populateModelSelect(ali.chat_mode === "single" ? (ali.last_model || modelsMain(cfg) || "") : "");
   const depthSel = $("#thinking-depth-select");
   if (depthSel) {
     const depth = normalizeThinkingDepth(
@@ -3701,12 +3743,39 @@ function modelsMain(cfg) {
 function populateModelSelect(selected) {
   const sel = $("#model-select");
   if (!sel) return;
-  const choices = modelChoicesFromSettings();
+  const route = $("#route-select")?.value || "auto";
+  const payload = ((state.settings || {}).model_options || {});
+  const provider = payload.provider || "";
+  const recs = ((payload.recommendations || {})[provider] || {});
+  const routeTier = ({ simple: "C0", office: "C1", reasoning: "C3", vision: "Vision" })[route] || route;
+  let entries = sharedModelOptions().filter((item) => item.available !== false && item.health === "available" && item.kind === "chat");
+  if (routeTier === "Vision") entries = entries.filter((item) => (item.capabilities || []).includes("vision"));
+  const recommended = recs[routeTier] || "";
+  entries.sort((a, b) => {
+    if (a.model === recommended) return -1;
+    if (b.model === recommended) return 1;
+    const wanted = routeTier === "C3" ? "reasoning" : routeTier === "C2" ? "long_context" : "";
+    if (wanted) {
+      const ad = (a.capabilities || []).includes(wanted) ? 1 : 0;
+      const bd = (b.capabilities || []).includes(wanted) ? 1 : 0;
+      if (ad !== bd) return bd - ad;
+    }
+    return String(a.model).localeCompare(String(b.model));
+  });
+  const choices = entries.map((item) => item.model);
   const cur = selected || sel.value || "";
   if (cur && !choices.includes(cur)) choices.unshift(cur);
-  sel.innerHTML = choices.map((id) =>
-    `<option value="${escapeHtml(id)}" ${id === cur ? "selected" : ""}>${escapeHtml(SHORT_MODEL(id))}</option>`
-  ).join("") || `<option value="">—</option>`;
+  const autoTarget = routeTier === "auto" ? "" : recommended;
+  const autoLabel = state.prefs.language === "en"
+    ? `Auto · category recommendation${autoTarget ? ` → ${autoTarget}` : ""}`
+    : `Auto · 使用类别推荐${autoTarget ? ` → ${autoTarget}` : ""}`;
+  sel.innerHTML = `<option value="" ${!cur ? "selected" : ""}>${escapeHtml(autoLabel)}</option>` + choices.map((id) =>
+    (() => {
+      const item = entries.find((x) => x.model === id);
+      const caps = (item?.capabilities || []).filter((x) => x !== "chat").join("/");
+      return `<option value="${escapeHtml(id)}" ${id === cur ? "selected" : ""}>${escapeHtml(SHORT_MODEL(id) + (caps ? ` · ${caps}` : ""))}</option>`;
+    })()
+  ).join("");
   if (cur) sel.value = cur;
   updateComposerAdvSummary();
 }
@@ -3727,6 +3796,7 @@ async function persistChatModeAndModel() {
     const cfg = JSON.parse(JSON.stringify((view && view.config) || {}));
     if (!cfg.ali) cfg.ali = {};
     cfg.ali.chat_mode = ($("#chat-mode-select") && $("#chat-mode-select").value) || "auto";
+    cfg.ali.fusion_mode = ($("#fusion-mode-select") && $("#fusion-mode-select").value) || "auto";
     let lastModel = ($("#model-select") && $("#model-select").value) || "";
     const backendType = ((cfg.backend || {}).type || "").trim();
     // Strip NVIDIA org prefix when backend is official DeepSeek
@@ -3820,10 +3890,14 @@ async function selectSession(id) {
 
   // Optimistic highlight so switching feels instant even if API is slow
   const prevId = state.currentId;
-  if (prevId === id) {
-    setSidebarOpen(false);
-    return;
-  }
+  // A session click is an explicit request to return to its conversation.
+  // This also handles clicking the already-selected task after a folder
+  // overview or modal has temporarily replaced/covered the chat surface.
+  ["#control-overlay", "#fs-overlay", "#wf-overlay"].forEach((selector) => {
+    const overlay = $(selector);
+    if (overlay) overlay.classList.add("hidden");
+  });
+  setSidebarOpen(false);
   state.currentId = id;
   renderSessionList();
   renderActiveRuns({ force: true });
@@ -4339,7 +4413,17 @@ function renderFolderOverview(folderId) {
       row.type = "button";
       row.className = "folder-task-row" + (s.id === state.currentId ? " active" : "");
       row.innerHTML = `<span class="folder-task-title">${s.pinned ? "★ " : ""}${escapeHtml(sessionDisplayTitle(s))}</span><small>${escapeHtml(s.updated_at || "")}</small>`;
-      row.onclick = () => selectSession(s.id).catch((err) => console.warn(err));
+      row.title = langZh ? "单击选择，双击打开对话" : "Click to select, double-click to open chat";
+      row.onclick = () => {
+        list.querySelectorAll(".folder-task-row.selected").forEach((item) => item.classList.remove("selected"));
+        row.classList.add("selected");
+      };
+      row.ondblclick = () => selectSession(s.id).catch((err) => console.warn(err));
+      row.onkeydown = (event) => {
+        if (event.key !== "Enter") return;
+        event.preventDefault();
+        selectSession(s.id).catch((err) => console.warn(err));
+      };
       list.appendChild(row);
     });
   }
@@ -4524,6 +4608,11 @@ function showAutoPlanStrip(planRes) {
   if (planRes.search_enabled && (planRes.sources || []).length) {
     bits.push(`${t("plan.search")} ×${(planRes.sources || []).length}`);
   }
+  if (planRes.fusion_mode) {
+    const fusionLabel = planRes.fusion_mode === "deep" ? "Deep Fusion" : planRes.fusion_mode === "fast" ? "Fast" : "Auto Fusion";
+    const budget = Number(planRes.total_token_budget || 0) || 0;
+    bits.push(`${fusionLabel}${budget ? ` · ≤${budget} tokens` : ""}`);
+  }
   el.innerHTML = `<strong>${escapeHtml(bits[0])}</strong> · ${escapeHtml(bits.slice(1).join(" · "))}`;
   el.classList.remove("hidden");
 }
@@ -4555,6 +4644,7 @@ function planFromServer(planRes) {
       provider: String(lane.provider || lane.resolved_provider || "").trim(),
       system: lane.system || "",
       search_context: lane.search_context || "",
+      token_budget: Number(lane.token_budget || planRes.lane_token_budget || 0) || 0,
     };
   });
   return {
@@ -4565,6 +4655,11 @@ function planFromServer(planRes) {
     synthesis_focus: planRes.synthesis_focus || "",
     sources: planRes.sources || [],
     search_context: planRes.search_context || "",
+    fusion_mode: planRes.fusion_mode || "auto",
+    total_token_budget: Number(planRes.total_token_budget || 0) || 0,
+    lane_token_budget: Number(planRes.lane_token_budget || 0) || 0,
+    synthesis_token_budget: Number(planRes.synthesis_token_budget || 0) || 0,
+    review_required: !!planRes.review_required,
   };
 }
 
@@ -4740,6 +4835,40 @@ async function assignLaneModels(plan, userText) {
       lane.model = "";
     }
   }));
+  // Real multi-model fusion: avoid assigning every expert lane to the same
+  // endpoint. Prefer another healthy model matching the lane's capability.
+  const healthy = sharedModelOptions().filter((item) =>
+    item.available !== false && item.health === "available" && item.kind === "chat"
+    && !(item.capabilities || []).some((c) => c === "safety" || c === "translation")
+  );
+  const used = new Set();
+  plan.lanes.forEach((lane) => {
+    const current = String(lane.model || "");
+    if (current && !used.has(current)) {
+      used.add(current);
+      return;
+    }
+    const tier = String(lane.tier || "");
+    const wanted = tier === "Vision" ? "vision" : tier === "C3" ? "reasoning" : tier === "C2" ? "long_context" : "";
+    const candidates = healthy.filter((item) => !used.has(item.model));
+    candidates.sort((a, b) => {
+      if (wanted) {
+        const am = (a.capabilities || []).includes(wanted) ? 1 : 0;
+        const bm = (b.capabilities || []).includes(wanted) ? 1 : 0;
+        if (am !== bm) return bm - am;
+      }
+      const aq = Number(a.quality_score || 0) + Number(a.speed_score || 0) / 3;
+      const bq = Number(b.quality_score || 0) + Number(b.speed_score || 0) / 3;
+      return bq - aq;
+    });
+    if (candidates[0]) {
+      lane.model = candidates[0].model;
+      lane.provider = candidates[0].provider || lane.provider;
+      used.add(lane.model);
+    } else if (current) {
+      used.add(current);
+    }
+  });
   return plan;
 }
 
@@ -4978,11 +5107,15 @@ function setLaneBody(assistantEl, laneKey, markdown) {
 function buildLanePrompt(userText, lane, index, total) {
   const langZh = state.prefs.language !== "en";
   const modelNote = formatLaneModelLabel(lane);
+  const budget = Number(lane.token_budget || 0) || 0;
+  const budgetLineZh = budget ? `本路输出上限：约 ${budget} tokens。只写可供最终合成使用的事实、判断、风险或方案，避免重复用户原文。\n` : "";
+  const budgetLineEn = budget ? `Output budget: about ${budget} tokens. Only provide synthesis-ready facts, judgments, risks, or proposals; do not repeat the task.\n` : "";
   if (langZh) {
     return (
       `你是并行子代理「${lane.shortTitle}」（${lane.letter}/${total}）。\n` +
       `本路指定模型路由：${modelNote}\n` +
       `职责：${lane.responsibility || lane.shortTitle}\n` +
+      budgetLineZh +
       `只完成自己负责的部分，不要包办其他子代理的工作；用 Markdown，代码必须带语言标签的围栏。\n` +
       `不要寒暄，不要编造「任务调度看板 / 系统模拟实时状态」之类的 UI 叙事（看板由 Hub 界面展示）。直接交付本路结果。\n\n` +
       `【用户总任务】\n${userText}`
@@ -4992,6 +5125,7 @@ function buildLanePrompt(userText, lane, index, total) {
     `You are parallel subagent "${lane.shortTitle}" (${lane.letter}/${total}).\n` +
     `Assigned model route: ${modelNote}\n` +
     `Responsibility: ${lane.responsibility || lane.shortTitle}\n` +
+    budgetLineEn +
     `Only deliver your slice; fenced code with language tags. No chit-chat.\n` +
     `Do NOT invent fake orchestration dashboards / simulated heartbeats (Hub UI shows those).\n\n` +
     `【User task】\n${userText}`
@@ -5002,6 +5136,8 @@ function buildSynthesisPrompt(userText, laneResults, extra = {}) {
   const langZh = state.prefs.language !== "en";
   const focus = String(extra.synthesis_focus || "").trim();
   const sources = Array.isArray(extra.sources) ? extra.sources : [];
+  const reviewRequired = !!extra.review_required;
+  const synthesisBudget = Number(extra.token_budget || 0) || 0;
   const sourceBlock = sources.length
     ? (langZh
       ? `\n【检索来源（必须优先引用；无证据则标明未证实）】\n${sources.map((s) => `- [${s.title || s.url}](${s.url})`).join("\n")}\n`
@@ -5020,6 +5156,8 @@ function buildSynthesisPrompt(userText, laneResults, extra = {}) {
       `2. 再按「来自 子代理 X（模型 …）」分节保留各车道要点（可轻量去重，标注冲突）；\n` +
       `3. 证据不足处明确写「未证实」；\n` +
       `4. 最后给使用顺序/注意事项。\n` +
+      (reviewRequired ? `5. 以 Judge 身份检查各路冲突、事实缺口和错误；不要把低置信度意见直接混入结论。\n` : "") +
+      (synthesisBudget ? `最终输出上限约 ${synthesisBudget} tokens，优先保留结论、证据、冲突和行动项。\n` : "") +
       (focus ? `合成侧重点：${focus}\n` : "") +
       `严禁输出「任务调度启动 / Pending / 系统模拟实时状态更新」等看板式假进度。\n` +
       `语言：中文。\n` +
@@ -5030,6 +5168,8 @@ function buildSynthesisPrompt(userText, laneResults, extra = {}) {
   return (
     `You are the Hub parent agent. Synthesize ${laneResults.length} parallel subagent results.\n` +
    `Short overview, then sections "From Agent X (model …)", call out conflicts, mark unverified claims, then usage notes.\n` +
+    (reviewRequired ? `Act as judge: reject unsupported claims and explicitly resolve disagreements.\n` : "") +
+    (synthesisBudget ? `Final output budget: about ${synthesisBudget} tokens; prioritize conclusions, evidence, conflicts, and actions.\n` : "") +
     (focus ? `Synthesis focus: ${focus}\n` : "") +
     `Do NOT invent fake orchestration dashboards.\n` +
     sourceBlock +
@@ -5158,6 +5298,7 @@ async function runOneLaneJob(parentSessionId, lane, userText, index, total, assi
       route: laneRoute,
       model: lane.model || common.model,
       thinking_depth: common.thinking_depth,
+      max_tokens: lane.token_budget || common.lane_token_budget || undefined,
       workspace: common.workspace,
       skills: common.skills,
       execution_mode: "workflow",
@@ -5373,6 +5514,7 @@ async function sendMultiSubagentMessage(text, plan, extra = {}) {
     skills: state.selectedSkills || [],
     soul_role: "",
     web_search: wantSearch ? true : undefined,
+    lane_token_budget: plan.lane_token_budget || 0,
   };
 
   try {
@@ -5425,6 +5567,8 @@ async function sendMultiSubagentMessage(text, plan, extra = {}) {
       const synthPrompt = buildSynthesisPrompt(text, results, {
         synthesis_focus: plan.synthesis_focus || "",
         sources: plan.sources || [],
+        review_required: plan.review_required,
+        token_budget: plan.synthesis_token_budget,
       });
       let synthModel = common.model;
       let synthRoute = common.route;
@@ -5448,6 +5592,7 @@ async function sendMultiSubagentMessage(text, plan, extra = {}) {
           route: synthRoute,
           model: synthModel,
           thinking_depth: common.thinking_depth,
+          max_tokens: plan.synthesis_token_budget || undefined,
           workspace: common.workspace,
           skills: common.skills,
           execution_mode: "workflow",
@@ -5659,10 +5804,27 @@ async function sendMessage(overrideText, extra = {}) {
     || ($("#btn-deep-search") && $("#btn-deep-search").classList.contains("active") && state.deepSearch && state.webSearch)
   );
   const nlForce = detectNlSubagentCount(text);
+  const fusionMode = ($("#fusion-mode-select")?.value || "auto").trim();
+  let fusionPlan = null;
+  try {
+    fusionPlan = await api("/api/fusion/plan", {
+      method: "POST",
+      timeoutMs: 2500,
+      body: JSON.stringify({ message: text, mode: fusionMode }),
+    });
+  } catch (_) {
+    fusionPlan = {
+      mode: fusionMode, strategy: "single", need_parallel: false,
+      lane_count: 1, total_token_budget: 1800, lane_token_budget: 1800,
+      synthesis_token_budget: 0, review_required: false,
+    };
+  }
 
   let planRes = null;
-  if (!extra._skip_multi) {
-    const plannerNeeded = nlForce >= 2 || userWantsSearch || text.length > 180
+  if (!extra._skip_multi && fusionMode !== "fast") {
+    const fusionForce = !!fusionPlan.need_parallel;
+    const fusionCount = Number(fusionPlan.lane_count || 0) || 0;
+    const plannerNeeded = fusionForce || nlForce >= 2 || userWantsSearch || text.length > 180
       || /分别|并行|多代理|子代理|比较|综合|多来源|分组|parallel|subagent|compare|synthesize/i.test(text);
     if (!plannerNeeded) {
       planRes = { ok: true, need_parallel: false, needs_search: false, lanes: [], single_role: null, source: "short-direct", search_enabled: false, sources: [] };
@@ -5676,8 +5838,8 @@ async function sendMessage(overrideText, extra = {}) {
           message: text,
           session_id: sessionId,
           web_search: userWantsSearch ? true : null,
-          force_parallel: nlForce >= 2,
-          force_count: nlForce >= 2 ? nlForce : 0,
+          force_parallel: fusionForce || nlForce >= 2,
+          force_count: nlForce >= 2 ? nlForce : (fusionForce ? fusionCount : 0),
           run_search: true,
         }),
       });
@@ -5687,6 +5849,18 @@ async function sendMessage(overrideText, extra = {}) {
       showAutoPlanStrip(null);
       }
     }
+  }
+
+  if (planRes) {
+    planRes.fusion_mode = fusionPlan.mode || fusionMode;
+    planRes.total_token_budget = fusionPlan.total_token_budget || 0;
+    planRes.lane_token_budget = fusionPlan.lane_token_budget || 0;
+    planRes.synthesis_token_budget = fusionPlan.synthesis_token_budget || 0;
+    planRes.review_required = !!fusionPlan.review_required;
+    (planRes.lanes || []).forEach((lane) => {
+      lane.token_budget = Number(lane.token_budget || fusionPlan.lane_token_budget || 0) || 0;
+    });
+    showAutoPlanStrip(planRes);
   }
 
   if (planRes && planRes.need_parallel && (planRes.lanes || []).length >= 2 && !extra._skip_multi) {
@@ -5699,8 +5873,14 @@ async function sendMessage(overrideText, extra = {}) {
   }
 
   // Fallback: explicit NL multi without server plan
-  const multiPlan = buildMultiLanePlan(text);
+  const multiPlan = fusionMode === "fast" ? null : buildMultiLanePlan(text);
   if (multiPlan && multiPlan.lanes.length >= 2 && !extra._skip_multi && !planRes) {
+    multiPlan.fusion_mode = fusionPlan.mode || fusionMode;
+    multiPlan.total_token_budget = fusionPlan.total_token_budget || 0;
+    multiPlan.lane_token_budget = fusionPlan.lane_token_budget || 0;
+    multiPlan.synthesis_token_budget = fusionPlan.synthesis_token_budget || 0;
+    multiPlan.review_required = !!fusionPlan.review_required;
+    multiPlan.lanes.forEach((lane) => { lane.token_budget = multiPlan.lane_token_budget; });
     if (overrideText == null) $("#input").value = "";
     state.pendingFiles = [];
     renderAttachBar();
@@ -5769,11 +5949,12 @@ async function sendMessage(overrideText, extra = {}) {
       method: "POST",
       body: JSON.stringify({
         message: text,
-        route: "auto",
+        route: ($("#route-select")?.value || "auto").trim(),
         model: ($("#model-select")?.value || "").trim(),
         thinking_depth: normalizeThinkingDepth(
           ($("#thinking-depth-select") && $("#thinking-depth-select").value) || state.prefs.thinkingDepth || "medium"
         ),
+        max_tokens: Number(fusionPlan && fusionPlan.total_token_budget || 0) || undefined,
         workspace: $("#workspace-input").value.trim(),
         skills: state.selectedSkills || [],
         execution_mode: "workflow",
@@ -6469,8 +6650,8 @@ async function renderControl() {
             : `Fetched <strong>${data.count || 0}</strong> models and applied slot suggestions.<br/><code>${sample}${(data.models || []).length > 12 ? "…" : ""}</code>`;
         }
         $("#settings-status").textContent = langZh
-          ? `模型已更新（${data.count || 0}）`
-          : `Models updated (${data.count || 0})`;
+          ? `健康检查完成：目录 ${data.catalog_count || data.count || 0}，可用于聊天 ${data.available_count ?? data.count ?? 0}`
+          : `Health check complete: ${data.catalog_count || data.count || 0} catalogued, ${data.available_count ?? data.count ?? 0} chat-ready`;
         renderControl();
         syncComposerFromSettings();
         document.querySelector('.ctab[data-ctab="routing"]')?.click();
@@ -6483,24 +6664,35 @@ async function renderControl() {
   }
 
   const m = cfg.models || {};
-  const slots = catalog.slots || [
-    { id: "fast", legacy: "qwen_fast", tier: "C0", label: "Fast" },
-    { id: "main", legacy: "qwen_main", tier: "C1/C2", label: "Main" },
-    { id: "vision", legacy: "qwen_vl", tier: "Vision", label: "Vision" },
-    { id: "reasoning", legacy: "deepseek_reasoning", tier: "C3", label: "Reasoning" },
-    { id: "embedding", legacy: "embedding", tier: "—", label: "Embedding" },
-    { id: "reranker", legacy: "reranker", tier: "—", label: "Reranker" },
+  const tierBindings = ((cfg.routing || {}).tier_models || {});
+  const providerRecs = ((((state.settings || {}).model_options || {}).recommendations || {})[b.type] || {});
+  const tierRows = [
+    { tier: "C0", label: langZh ? "C0 · 快速问答 / 分类" : "C0 · Fast / classification" },
+    { tier: "C1", label: langZh ? "C1 · 日常办公" : "C1 · Daily office" },
+    { tier: "C2", label: langZh ? "C2 · 长文 / 研究" : "C2 · Long-form / research" },
+    { tier: "C3", label: langZh ? "C3 · 推理 / 编程" : "C3 · Reasoning / coding" },
+    { tier: "Vision", label: langZh ? "Vision · 图片 / PDF / 多模态" : "Vision · Image / PDF / multimodal" },
   ];
 
-  function modelField(slot) {
-    const legacy = slot.legacy;
-    const val = m[legacy] || m[slot.id] || "";
-    return `<label class="field"><span>${escapeHtml(slot.label)} <em class="muted">(${escapeHtml(slot.tier)})</em></span>
-      <select data-key="models.${escapeHtml(legacy)}">${modelIdOptions(val, b.type === "hybrid" ? "" : b.type)}</select>
+  function tierModelField(row) {
+    const entry = tierBindings[row.tier] || {};
+    const manual = entry.mode === "manual" || !!entry.model;
+    return `<label class="field"><span>${escapeHtml(row.label)}</span>
+      <select data-route-tier="${escapeHtml(row.tier)}">${categoryModelOptions(
+        row.tier, manual ? (entry.provider || b.type) : "", manual ? (entry.model || "") : "", providerRecs[row.tier] || entry.recommended_model || ""
+      )}</select>
     </label>`;
   }
 
   const isHybrid = (cfg.mode === "hybrid") || (b.type === "hybrid");
+  const profiledModels = sharedModelOptions().filter((item) => item.health === "available");
+  const profileHtml = profiledModels.length ? `<details class="model-analysis" open>
+    <summary>${langZh ? `自动能力分析（${profiledModels.length} 个已通过）` : `Automatic capability analysis (${profiledModels.length} passed)`}</summary>
+    <div class="check-list">${profiledModels.map((item) => {
+      const caps = (item.capabilities || []).filter((x) => x !== "chat").join(" · ") || "chat";
+      const latency = item.latency_s == null ? "—" : `${item.latency_s}s`;
+      return `<div class="check-row"><div><strong>${escapeHtml(item.model)}</strong><div class="muted">${escapeHtml(caps)} · ${langZh ? "质量" : "quality"} ${escapeHtml(String(item.quality_score || "—"))}/5 · ${langZh ? "速度" : "speed"} ${escapeHtml(String(item.speed_score || "—"))}/5</div></div><span class="ok">${escapeHtml(latency)}</span></div>`;
+    }).join("")}</div></details>` : `<p class="muted">${langZh ? "尚无健康检查结果；请在后端页拉取并测试模型。" : "No health results yet; fetch and test models in Backend."}</p>`;
   let hybridHtml = "";
   if (isHybrid) {
     const hy = cfg.hybrid || {};
@@ -6527,7 +6719,14 @@ async function renderControl() {
     <p class="muted">${langZh
       ? `当前厂商：<strong>${escapeHtml((currentProv && currentProv.label) || b.type || "—")}</strong>。切换后端后点「应用此厂商」可自动填充推荐模型。`
       : `Provider: <strong>${escapeHtml((currentProv && currentProv.label) || b.type || "—")}</strong>. Apply provider to auto-fill recommendations.`}</p>
-    <div class="grid-2">${slots.map(modelField).join("")}</div>
+    <h4>${langZh ? "系统类别模型（每类独立 Auto，也可手动覆盖）" : "System category models (independent Auto or manual override)"}</h4>
+    <div class="grid-2">${tierRows.map(tierModelField).join("")}</div>
+    <h4>${langZh ? "检索专用模型" : "Retrieval-only models"}</h4>
+    <div class="grid-2">
+      <label class="field"><span>Embedding</span><select data-key="models.embedding"><option value="">Auto${providerRecs.Embedding ? ` → ${escapeHtml(providerRecs.Embedding)}` : ""}</option>${modelIdOptions(m.embedding || "", b.type, "embedding")}</select></label>
+      <label class="field"><span>Reranker</span><select data-key="models.reranker"><option value="">Auto${providerRecs.Reranker ? ` → ${escapeHtml(providerRecs.Reranker)}` : ""}</option>${modelIdOptions(m.reranker || "", b.type, "reranker")}</select></label>
+    </div>
+    ${profileHtml}
     ${hybridHtml}`;
 
   const o = cfg.obsidian || {};
@@ -7917,8 +8116,12 @@ function collectSettingsFromForm() {
   $$("[data-route-tier]").forEach((el) => {
     const tier = el.dataset.routeTier || "";
     const binding = parseModelBinding(el.value);
-    if (binding.model) cfg.routing.tier_models[tier] = binding;
-    else delete cfg.routing.tier_models[tier];
+    if (binding.model) cfg.routing.tier_models[tier] = { ...binding, mode: "manual" };
+    else cfg.routing.tier_models[tier] = {
+      provider: (cfg.backend || {}).type || "",
+      mode: "auto",
+      recommended_model: (((cfg.model_recommendations || {})[(cfg.backend || {}).type || ""] || {})[tier] || ""),
+    };
   });
   if (!cfg.ali) cfg.ali = {};
   cfg.ali.language = state.prefs.language;
@@ -7927,6 +8130,7 @@ function collectSettingsFromForm() {
   cfg.ali.bg = state.prefs.bg;
   cfg.ali.font_size = normalizeFontSize(state.prefs.fontSize);
   cfg.ali.chat_mode = ($("#chat-mode-select") && $("#chat-mode-select").value) || cfg.ali.chat_mode || "auto";
+  cfg.ali.fusion_mode = ($("#fusion-mode-select") && $("#fusion-mode-select").value) || cfg.ali.fusion_mode || "auto";
   cfg.ali.last_model = ($("#model-select") && $("#model-select").value) || cfg.ali.last_model || "";
   cfg.ali.default_route = ($("#route-select") && $("#route-select").value) || cfg.ali.default_route || "auto";
   cfg.ali.thinking_depth = normalizeThinkingDepth(
@@ -8180,6 +8384,7 @@ $("#chat-mode-select")?.addEventListener("change", () => {
   persistChatModeAndModel();
 });
 $("#model-select")?.addEventListener("change", () => persistChatModeAndModel());
+$("#fusion-mode-select")?.addEventListener("change", () => persistChatModeAndModel());
 $("#thinking-depth-select")?.addEventListener("change", () => {
   state.prefs.thinkingDepth = normalizeThinkingDepth($("#thinking-depth-select").value || "medium");
   persistPrefsLocal();
@@ -8190,6 +8395,7 @@ $("#hub-chat-mode-select")?.addEventListener("change", () => {
   if (state.status) renderAgent(state.status);
 });
 $("#route-select")?.addEventListener("change", () => {
+  populateModelSelect("");
   scheduleAutoPreview();
   persistChatModeAndModel();
   const v = $("#route-select").value;

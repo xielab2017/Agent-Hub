@@ -723,6 +723,9 @@ def model_options_payload(cfg: dict[str, Any]) -> dict[str, Any]:
     saved = cfg.get("available_models")
     if not isinstance(saved, dict):
         saved = {}
+    health_by_provider = cfg.get("model_health")
+    if not isinstance(health_by_provider, dict):
+        health_by_provider = {}
 
     configured: list[tuple[str, str]] = []
     default_provider = current if current != "hybrid" else ""
@@ -766,12 +769,29 @@ def model_options_payload(cfg: dict[str, Any]) -> dict[str, Any]:
         if not mid or key in seen:
             return
         seen.add(key)
+        health = (health_by_provider.get(pid) or {}).get(mid) or {}
+        # Once a provider has health results, failed chat models disappear from
+        # ordinary model pickers. Dedicated models remain available to their
+        # role-specific selectors via kind/capability metadata.
+        checked_provider = bool(health_by_provider.get(pid))
+        if source == "fetched" and pid == "nvidia-nim" and not checked_provider:
+            return
+        if checked_provider and health and not (
+            health.get("chat_compatible") or health.get("state") == "dedicated"
+        ):
+            return
         options.append(
             {
                 "provider": pid,
                 "model": mid,
                 "source": source,
                 "available": bool(available),
+                "health": health.get("state") or ("unchecked" if not health else "unavailable"),
+                "kind": health.get("kind") or "unknown",
+                "capabilities": health.get("capabilities") or [],
+                "latency_s": health.get("latency_s"),
+                "quality_score": health.get("quality_score"),
+                "speed_score": health.get("speed_score"),
             }
         )
 
@@ -802,6 +822,8 @@ def model_options_payload(cfg: dict[str, Any]) -> dict[str, Any]:
         "fetched_providers": [
             str(pid) for pid, models in saved.items() if isinstance(models, list) and models
         ],
+        "health_meta": cfg.get("model_health_meta") or {},
+        "recommendations": cfg.get("model_recommendations") or {},
     }
 
 

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0f1419" />
   <title>Agent Hub</title>
-  <link rel="stylesheet" href="/style.css?v=5.0.0" />
+  <link rel="stylesheet" href="/style.css?v=5.0.4" />
 </head>
 <body>
   <div id="login-overlay" class="overlay hidden">
@@ -22,10 +22,10 @@
     <aside id="sidebar" class="sidebar">
       <div class="sidebar-head">
         <div class="brand">
-          <img class="brand-logo" src="/brand/suat-logo-color.png?v=5.0.0" alt="SUAT" />
+          <img class="brand-logo" src="/brand/suat-logo-color.png?v=5.0.4" alt="SUAT" />
           <div>
             <div class="brand-name">Agent Hub</div>
-          <div class="brand-sub" id="version-label">v5.0.0</div>
+          <div class="brand-sub" id="version-label">v5.0.4</div>
           </div>
         </div>
         <div class="quick-prefs">
@@ -85,7 +85,7 @@
       <div id="chat-panes" class="chat-panes">
         <div id="messages" class="messages">
           <div class="empty-state" id="empty-state">
-          <img class="empty-logo-img" src="/brand/suat-logo-color.png?v=5.0.0" alt="深圳理工大学" />
+          <img class="empty-logo-img" src="/brand/suat-logo-color.png?v=5.0.4" alt="深圳理工大学" />
             <h3 data-i18n="empty.title">校园 Agent Hub</h3>
             <p data-i18n-html="empty.body">描述任务并运行 · Agent Hub 调度 Skill / Agent · 进度条跟踪执行</p>
           </div>
@@ -166,6 +166,25 @@
           </div>
           <div id="auto-plan-strip" class="auto-plan-strip hidden" aria-live="polite"></div>
           <div class="composer-tools">
+            <label>
+              <span data-i18n="composer.fusion">模型融合</span>
+              <select id="fusion-mode-select">
+                <option value="fast" data-i18n="fusion.fast">Fast · 单模型</option>
+                <option value="auto" selected data-i18n="fusion.auto">Auto Fusion · 智能融合</option>
+                <option value="deep" data-i18n="fusion.deep">Deep Fusion · 多专家</option>
+              </select>
+            </label>
+            <label>
+              <span data-i18n="composer.route">任务类型</span>
+              <select id="route-select">
+                <option value="auto" data-i18n="route.auto">Auto（自动判断类型）</option>
+                <option value="C0" data-i18n="route.simple">C0 简单 / Fast</option>
+                <option value="C1" data-i18n="route.office">C1 办公 / Main</option>
+                <option value="C2" data-i18n="route.c2">C2 长文 / 研究</option>
+                <option value="C3" data-i18n="route.reasoning">C3 推理 / 编程</option>
+                <option value="Vision" data-i18n="route.vision">Vision 多模态</option>
+              </select>
+            </label>
             <label>
               <span data-i18n="composer.model">优先模型</span>
               <select id="model-select"></select>
@@ -288,6 +307,6 @@
   </div>
 
   <div id="sidebar-backdrop" class="backdrop hidden"></div>
-  <script src="/app.js?v=5.0.0"></script>
+  <script src="/app.js?v=5.0.4"></script>
 </body>
 </html>

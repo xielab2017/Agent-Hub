@@ -42,6 +42,7 @@ from . import (
     uploads,
     websearch,
     workflows,
+    fusion,
 )
 from .config import APP_NAME, REPO_ROOT, RUNTIME, STATIC_DIR, VERSION, local_ips
 from .settings import (
@@ -205,6 +206,7 @@ def handle_get(handler) -> None:
                     "chat_mode": ali.get("chat_mode") or "auto",
                     "last_model": ali.get("last_model") or "",
                     "thinking_depth": ali.get("thinking_depth") or "medium",
+                    "fusion_mode": ali.get("fusion_mode") or "auto",
                     "hub_chat_mode": ali.get("hub_chat_mode") or "agent",
                     **brand_logo.public_logo_state({"ali": ali}),
                 },
@@ -774,6 +776,7 @@ def handle_post(handler) -> None:
     if path == "/api/settings/refresh-models":
         body = _read_json(handler)
         from . import llm_client
+        from . import model_intelligence
         from .secrets import resolve_api_key
 
         cfg = load_campus_config()
@@ -794,6 +797,51 @@ def handle_post(handler) -> None:
             return _json(handler, 400, {"error": "base_url missing — set Backend Base URL first"})
         if not key_info.get("present") and provider not in ("local-ollama",):
             return _json(handler, 400, {"error": "API key missing — paste key in Control Center and Save key"})
+
+        # NVIDIA's catalog contains stale, inaccessible and dedicated endpoint
+        # entries. A refresh therefore performs a real minimal chat probe and
+        # returns only models that can currently serve Agent Hub conversations.
+        if provider == "nvidia-nim" and body.get("health_check", True):
+            result = model_intelligence.refresh_provider_models(force=True, deep=True)
+            if not result.get("ok"):
+                return _json(handler, 400, {"error": result.get("error") or "model health check failed", **result})
+            models = result.get("models") or []
+            category_recs = result.get("recommendations") or {}
+            suggested = {
+                "fast": category_recs.get("C0") or "",
+                "main": category_recs.get("C1") or "",
+                "vision": category_recs.get("Vision") or "",
+                "reasoning": category_recs.get("C3") or "",
+                "embedding": category_recs.get("Embedding") or "",
+                "reranker": category_recs.get("Reranker") or "",
+            }
+            cfg = load_campus_config()
+            if body.get("apply_suggestions", True) and suggested:
+                m = dict(cfg.get("models") or {})
+                m.update({k: v for k, v in suggested.items() if v})
+                for generic, legacy in (("fast", "qwen_fast"), ("main", "qwen_main"), ("vision", "qwen_vl"), ("reasoning", "deepseek_reasoning")):
+                    if suggested.get(generic):
+                        m[legacy] = suggested[generic]
+                cfg["models"] = m
+                routing_cfg = dict(cfg.get("routing") or {})
+                tiers = dict(routing_cfg.get("tier_models") or {})
+                for tier in ("C0", "C1", "C2", "C3", "Vision"):
+                    # First fetch establishes independent Auto bindings. Manual
+                    # overrides survive later refreshes.
+                    entry = tiers.get(tier)
+                    if not isinstance(entry, dict) or entry.get("mode") == "auto" or not entry.get("model"):
+                        tiers[tier] = {
+                            "provider": provider, "mode": "auto",
+                            "recommended_model": category_recs.get(tier) or "",
+                        }
+                routing_cfg["tier_models"] = tiers
+                cfg["routing"] = routing_cfg
+                save_campus_config(cfg)
+            view = public_settings_view()
+            return _json(handler, 200, {
+                **result, "count": len(models), "suggested": suggested,
+                "applied": bool(body.get("apply_suggestions", True)), **view,
+            })
 
         result = llm_client.list_models(
             base_url,
@@ -849,6 +897,17 @@ def handle_post(handler) -> None:
         )
         return _json(handler, 200, info)
 
+    if path == "/api/fusion/plan":
+        body = _read_json(handler)
+        return _json(
+            handler,
+            200,
+            fusion.plan_fusion(
+                str(body.get("message") or ""),
+                str(body.get("mode") or "auto"),
+            ),
+        )
+
     if path == "/api/workflows/run":
         body = _read_json(handler)
         preset_id = str(body.get("preset_id") or "")
@@ -870,6 +929,7 @@ def handle_post(handler) -> None:
                 skills=list(body.get("skills") or []),
                 execution_mode=str(body.get("execution_mode") or "workflow"),
                 thinking_depth=str(body.get("thinking_depth") or ""),
+                max_tokens_override=body.get("max_tokens"),
             )
             workflows.record_run(preset_id, session_id, built["route"], "started")
             result["preset"] = built["preset"]
@@ -963,6 +1023,7 @@ def handle_post(handler) -> None:
                 subagent_id=str(body.get("subagent_id") or ""),
                 web_search=body.get("web_search") if "web_search" in body else None,
                 thinking_depth=str(body.get("thinking_depth") or ""),
+                max_tokens_override=body.get("max_tokens"),
             )
             return _json(handler, 200, result)
         except ValueError as exc:

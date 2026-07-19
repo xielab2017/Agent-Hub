@@ -262,6 +262,7 @@ def classify_message(text: str) -> str:
     reason_kw = (
         "推理", "证明", "算法", "代码审查", "code review", "架构决策", "debug",
         "复杂度", "实现", "重构", "bug", "traceback", "写代码", "编程", "leetcode",
+        "python", "javascript", "typescript", "代码", "审查", "架构", "安全风险",
         "prove", "optimize", "设计方案",
     )
     if any(k in t for k in reason_kw) or n > 2500:
@@ -335,6 +336,7 @@ def resolve_route(
     api_key_env = backend.get("api_key_env") or ""
     model = _model_for_slot(cfg, route_key)
 
+
     # Hybrid tier map only when backend is Hybrid. A concrete backend.type
     # (e.g. deepseek) must win — leftover hybrid nvidia bindings must not hijack.
     use_hybrid = backend_type == "hybrid" or (
@@ -369,7 +371,20 @@ def resolve_route(
     # It is deliberately additive: old routing slot configs keep working.
     tier_models = routing.get("tier_models") or {}
     tier_entry = tier_models.get(tier) if isinstance(tier_models, dict) else None
-    if isinstance(tier_entry, dict) and str(tier_entry.get("model") or "").strip():
+    if isinstance(tier_entry, dict) and tier_entry.get("mode") == "auto":
+        auto_provider = str(tier_entry.get("provider") or provider_id or backend_type)
+        recommended = str(
+            (((cfg.get("model_recommendations") or {}).get(auto_provider) or {}).get(tier))
+            or tier_entry.get("recommended_model") or ""
+        ).strip()
+        healthy = (((cfg.get("model_health") or {}).get(auto_provider) or {}).get(recommended) or {})
+        if recommended and healthy.get("chat_compatible"):
+            model = recommended
+    if (
+        isinstance(tier_entry, dict)
+        and tier_entry.get("mode") != "auto"
+        and str(tier_entry.get("model") or "").strip()
+    ):
         configured_provider = str(tier_entry.get("provider") or "").strip()
         # A concrete backend is authoritative. Old per-tier bindings from a
         # previous provider must not send a NVIDIA/DeepSeek model to MiniMax.
@@ -398,6 +413,17 @@ def resolve_route(
                 provider_id, selected_model, route_key=route_key
             )
         model = selected_model
+
+    # True Auto runs after configured tier bindings so it can dynamically pick
+    # a healthy request-appropriate model. Explicit routes remain deterministic.
+    if raw in ("auto", "") and routing.get("auto_model_enabled", True):
+        try:
+            from .model_intelligence import choose_auto_model
+            automatic = choose_auto_model(cfg, message, tier)
+            if automatic:
+                model = automatic
+        except Exception:  # noqa: BLE001
+            pass
 
     blocked = False
     block_reason = ""

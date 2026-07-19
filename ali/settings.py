@@ -24,6 +24,8 @@ DEFAULT_CAMPUS: dict[str, Any] = {
         "api_key_env": "CAMPUS_LLM_API_KEY",
         "verify_tls": True,
         "timeout_seconds": 60,
+        "model_probe_timeout_seconds": 15,
+        "model_probe_workers": 8,
     },
     # Per-tier provider override when mode=hybrid
     "hybrid": {
@@ -32,6 +34,10 @@ DEFAULT_CAMPUS: dict[str, Any] = {
     # Provider-scoped model ids returned by the real /models endpoint.
     # Kept separate from role bindings so every model picker can share it.
     "available_models": {},
+    # Provider-scoped live checks and inferred capability profiles.
+    "model_health": {},
+    "model_health_meta": {},
+    "model_recommendations": {},
     "models": {
         "fast": "",
         "main": "",
@@ -50,6 +56,7 @@ DEFAULT_CAMPUS: dict[str, Any] = {
         "vision": "qwen_vl",
         "reasoning": "deepseek_reasoning",
         "restricted_external_fallback": False,
+        "auto_model_enabled": True,
     },
     "obsidian": {
         "vault_path": "",
@@ -83,6 +90,7 @@ DEFAULT_CAMPUS: dict[str, Any] = {
         "default_route": "auto",  # simple | office | vision | reasoning | auto
         "show_route_badge": True,
         "thinking_depth": "medium",  # light | medium | high | very_high
+        "fusion_mode": "auto",  # fast | auto | deep
         "agent_runtime": "auto",  # auto | hermes | openclaw | … (Connect pins a concrete claw)
         "auto_runtime": "hermes",  # what `auto → X` prefers first (user-settable)
         # agent = Hermes/OpenClaw tools (hermes-webui style); direct = Hub HTTP chat only
@@ -301,6 +309,9 @@ def save_campus_config(
         ali["thinking_depth"] = routing_mod.normalize_thinking_depth(
             ali.get("thinking_depth"), "medium"
         )
+        from .fusion import normalize_mode
+
+        ali["fusion_mode"] = normalize_mode(ali.get("fusion_mode"))
         active = str(ali.get("agent_runtime") or "auto").strip() or "auto"
         if active != "auto" and not runtimes_mod.get_runtime(active):
             active = "auto"

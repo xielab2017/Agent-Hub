@@ -1835,6 +1835,7 @@ hr.soft {
   transition: border-color .15s ease, background .15s ease, transform .15s ease;
 }
 .folder-task-row:hover,
+.folder-task-row.selected,
 .folder-task-row.active {
   border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
   background: color-mix(in srgb, var(--accent) 9%, var(--bg-soft));
