@@ -197,6 +197,23 @@ body.resizing-sidebar * {
   z-index: 4;
   pointer-events: auto;
 }
+.session-search {
+  width: 100%;
+  height: 38px;
+  padding: 8px 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
+  border-radius: 10px;
+  background: var(--bg-soft);
+  color: var(--text);
+  text-align: center;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.06);
+}
+.session-search:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent), inset 0 1px 2px rgba(0,0,0,.06);
+}
+.session-search::placeholder { color: var(--muted); opacity: .9; }
 .brand { display: flex; gap: 10px; align-items: center; }
 .brand-logo,
 .empty-logo-img {
@@ -1684,3 +1701,212 @@ hr.soft {
 .auto-plan-strip.hidden { display: none !important; }
 .auto-plan-strip strong { color: var(--text); font-weight: 600; }
 .folder-add { white-space: nowrap; padding-inline: 10px; }
+.folder-tools .input {
+  flex: 0 1 155px;
+  width: 155px;
+  max-width: calc(100% - 106px);
+  min-width: 0;
+  height: 38px;
+  border-color: color-mix(in srgb, var(--accent) 48%, var(--border));
+  background: color-mix(in srgb, var(--accent) 8%, var(--panel));
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.08);
+}
+.folder-add {
+  flex: 0 0 100px;
+  width: 100px;
+  min-height: 38px;
+  min-width: 100px;
+  border: 1px solid color-mix(in srgb, var(--accent) 65%, #000 8%);
+  color: #fff !important;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 86%, #fff 14%), color-mix(in srgb, var(--accent) 78%, #000 22%)) !important;
+  box-shadow: 0 2px 0 color-mix(in srgb, var(--accent) 55%, #000 28%), 0 4px 10px color-mix(in srgb, var(--accent) 22%, transparent);
+  font-weight: 700;
+}
+.folder-add:hover { transform: translateY(-1px); filter: brightness(1.05); }
+.folder-add:active { transform: translateY(1px); box-shadow: 0 1px 0 color-mix(in srgb, var(--accent) 55%, #000 28%); }
+.folder-toggle { border: 0; background: transparent; color: inherit; cursor: pointer; padding: 6px 4px; display: flex; align-items: center; gap: 6px; width: 100%; text-align: left; }
+.folder-toggle span { flex: 1; }
+.folder-toggle small { opacity: .7; font-size: 10px; }
+.folder-empty { padding: 8px 12px 10px; color: var(--muted); font-size: 11px; border-left: 2px solid color-mix(in srgb, var(--accent) 35%, transparent); }
+.session-section-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.session-section-head .chip { padding: 4px 8px; font-size: 11px; }
+.folder-header { display: flex; align-items: center; gap: 2px; }
+.folder-actions { display: flex; gap: 1px; }
+.folder-actions .act { border: 0; background: transparent; color: var(--muted); cursor: pointer; padding: 3px 5px; border-radius: 5px; }
+.folder-actions .act:hover { color: var(--text); background: var(--bg); }
+.folder-actions .danger:hover { color: var(--danger); }
+.session-item .act.selected { color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.session-section-head {
+  margin: 0 14px;
+  padding: 10px 0 4px;
+  font-size: calc(var(--font-size-base) + 2px);
+  letter-spacing: 0;
+  text-transform: none;
+}
+.session-section-head .chip {
+  flex: 0 0 auto;
+  width: 100px;
+  min-width: 100px;
+  height: 38px;
+  padding: 6px 10px;
+  font-size: calc(var(--font-size-base) + 1px);
+  line-height: 1.2;
+}
+.folder-tools { margin: 6px 14px 8px; width: 234px; max-width: calc(100% - 28px); align-items: center; }
+.folder-tools .input {
+  height: 38px;
+  border: 1px solid color-mix(in srgb, var(--accent) 62%, var(--border));
+  border-radius: 10px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 7%, var(--bg)), color-mix(in srgb, var(--accent) 15%, var(--bg-soft)));
+  box-shadow: inset 0 2px 3px rgba(0,0,0,.10), 0 2px 0 color-mix(in srgb, var(--accent) 25%, var(--border));
+  color: var(--text);
+  padding: 8px 10px;
+  text-align: center;
+}
+.folder-tools .input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: inset 0 2px 3px rgba(0,0,0,.08), 0 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent), 0 2px 0 color-mix(in srgb, var(--accent) 35%, var(--border));
+}
+.session-section-head {
+  width: 234px;
+  max-width: calc(100% - 28px);
+  margin-inline: 14px;
+  justify-content: flex-start;
+}
+.session-section-head > span { flex: 1 1 auto; }
+.session-section-head .chip {
+  margin-left: auto;
+  flex: 0 0 100px;
+  width: 100px;
+  min-width: 100px;
+  height: 38px;
+  color: #fff !important;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 86%, #fff 14%), color-mix(in srgb, var(--accent) 78%, #000 22%)) !important;
+  border: 1px solid color-mix(in srgb, var(--accent) 65%, #000 8%);
+  box-shadow: 0 2px 0 color-mix(in srgb, var(--accent) 55%, #000 28%), 0 4px 10px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.session-folder.active .folder-header {
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg-soft));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent);
+}
+.folder-overview {
+  width: 100%;
+  max-width: none;
+  padding: 26px 28px 40px;
+}
+.folder-overview-head {
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.folder-overview-head .eyebrow {
+  color: var(--muted);
+  font-size: 12px;
+}
+.folder-overview-head h3 {
+  margin: 6px 0 4px;
+  font-size: 24px;
+}
+.folder-overview-head p,
+.folder-overview-empty {
+  margin: 0;
+  color: var(--muted);
+}
+.folder-overview-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 18px;
+}
+.folder-task-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 13px 15px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--bg-soft);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease, transform .15s ease;
+}
+.folder-task-row:hover,
+.folder-task-row.active {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  background: color-mix(in srgb, var(--accent) 9%, var(--bg-soft));
+  transform: translateY(-1px);
+}
+.folder-task-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.folder-task-row small {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+/* Keep the navigation and task list on one readable type scale. */
+.sidebar,
+.sidebar button,
+.sidebar input,
+.sidebar select,
+.sidebar textarea,
+.folder-overview,
+.folder-overview button {
+  font-size: var(--font-size-base);
+  line-height: 1.4;
+}
+.session-folder,
+.folder-toggle,
+.folder-empty,
+.session-item,
+.session-item .title,
+.session-item .act,
+.session-folder-select,
+.folder-task-row {
+  font-size: var(--font-size-base);
+}
+.session-status,
+.folder-toggle small,
+.session-folder-select {
+  line-height: 1.3;
+}
+.folder-toggle small,
+.session-status {
+  font-size: calc(var(--font-size-base) - 2px);
+}
+.folder-overview-head p,
+.folder-overview-empty {
+  font-size: var(--font-size-base);
+  line-height: 1.5;
+}
+
+/* Main task controls share the same readable scale as the navigation. */
+.main button,
+.main input,
+.main select,
+.main textarea,
+.main label,
+.main .field span,
+.main .skill-bar-head,
+.main .skill-bar-head select,
+.main .composer-adv-toggle,
+.main .composer-hub-compact select,
+.main .composer-adv-summary {
+  font-size: var(--font-size-base) !important;
+}
+.main .composer-adv-chevron,
+.main .composer-adv-badge {
+  font-size: calc(var(--font-size-base) - 2px) !important;
+}
+.folder-task-row {
+  min-height: 44px;
+}

@@ -15,7 +15,7 @@ const FONT_SIZE_LABELS = {
   zh: { 13: "小 13", 14: "中 14", 15: "中大 15", 16: "大 16", 18: "特大 18" },
   en: { 13: "S 13", 14: "M 14", 15: "M+ 15", 16: "L 16", 18: "XL 18" },
 };
-const LOGO_VER = "4.0.0";
+const LOGO_VER = "5.0.0";
 const DEFAULT_LOGO = `/brand/suat-logo-color.png?v=${LOGO_VER}`;
 const LOGO_PRESETS = [
   { id: "suat-color", src: `/brand/suat-logo-color.png?v=${LOGO_VER}`, labelKey: "appearance.logoPresetColor" },
@@ -28,6 +28,18 @@ function normalizeThinkingDepth(value) {
   if (THINKING_DEPTHS.includes(v)) return v;
   const aliases = { l: "light", med: "medium", m: "medium", h: "high", vh: "very_high", max: "very_high", veryhigh: "very_high" };
   return aliases[v] || "medium";
+}
+
+function bindArchiveControls() {
+  const btn = $("#btn-toggle-archived");
+  if (!btn || btn.dataset.bound === "1") return;
+  btn.dataset.bound = "1";
+  btn.onclick = async () => {
+    state.showArchived = !state.showArchived;
+    btn.classList.toggle("active", state.showArchived);
+    btn.textContent = state.showArchived ? "返回会话" : "归档";
+    await refreshSessions();
+  };
 }
 
 function detectSystemLanguage() {
@@ -516,7 +528,10 @@ const WF_I18N = {
 const state = {
   token: localStorage.getItem("hermes_ali_token") || "",
  sessions: [],
-  folders: [],
+ folders: [],
+  activeFolderId: localStorage.getItem("agent_hub_active_folder") || "",
+  sessionQuery: "",
+  showArchived: false,
   workflows: [],
   currentId: null,
   streaming: false,
@@ -1775,8 +1790,10 @@ async function boot() {
     await ensureAgentRuntime();
     await Promise.all([refreshSessions(), loadWorkflows(), loadSettings(), loadSkillCatalog(), loadSoulRoles()]);
     bindActiveRunsDelegation();
-    bindSessionListDelegation();
-    bindFolderControls();
+   bindSessionListDelegation();
+   bindFolderControls();
+    bindSessionSearch();
+    bindArchiveControls();
     await syncActiveJobs();
     // refresh status after agent auto-activate
     try {
@@ -2111,7 +2128,7 @@ function closeFsBrowser() {
 
 async function refreshSessions() {
   try { state.folders = (await api("/api/folders")).folders || []; } catch (_) { state.folders = []; }
- const data = await api("/api/sessions");
+ const data = await api(`/api/sessions${state.showArchived ? "?archived=1" : ""}`);
   state.sessions = data.sessions || [];
   for (const s of state.sessions) {
     const job = s.active_job;
@@ -2145,6 +2162,16 @@ function bindFolderControls() {
     } finally {
       if (button) button.disabled = false;
     }
+  });
+}
+
+function bindSessionSearch() {
+  const input = $("#session-search");
+  if (!input || input.dataset.bound === "1") return;
+  input.dataset.bound = "1";
+  input.addEventListener("input", () => {
+    state.sessionQuery = String(input.value || "").trim().toLowerCase();
+    renderSessionList();
   });
 }
 
@@ -2400,6 +2427,12 @@ function makeStreamHandlers(sessionId, assistantEl, bodyEl, startRoute, stateBag
       if (viewAlive()) {
         setRouteBadge(r);
         renderEngineBadge(state.streamMeta, r);
+        const { assistantEl: a } = liveAssistant();
+        if (a) {
+          const engine = r.engine || r.chat_engine || r.runtime || r.provider || "Agent";
+          const model = r.model || r.resolved_model || r.tier || "";
+          appendThinking(a, `${engine}${model ? " · " + model : ""} 已接管任务`);
+        }
       }
     },
     onProgress(p) {
@@ -2784,11 +2817,13 @@ function bindSessionListDelegation() {
     await api(`/api/sessions/${encodeURIComponent(select.dataset.moveFolder)}`, { method: "PATCH", body: JSON.stringify({ folder_id: select.value }) });
     await refreshSessions();
   });
-  list.addEventListener("click", (e) => {
+  list.addEventListener("click", async (e) => {
     const actions = e.target.closest(".session-actions");
     if (actions) {
       const rename = e.target.closest("[data-rename]");
       const backup = e.target.closest("[data-backup]");
+      const pin = e.target.closest("[data-pin]");
+      const archive = e.target.closest("[data-archive]");
       const del = e.target.closest("[data-del]");
       if (rename) {
         e.preventDefault();
@@ -2802,6 +2837,20 @@ function bindSessionListDelegation() {
         const sid = backup.dataset.backup;
         const s = state.sessions.find((x) => x.id === sid);
         backupSession(sid, s && s.title);
+      } else if (pin) {
+        e.preventDefault();
+        e.stopPropagation();
+        const sid = pin.dataset.pin;
+        const s = state.sessions.find((x) => x.id === sid);
+        await api(`/api/sessions/${sid}`, { method: "PATCH", body: JSON.stringify({ pinned: !(s && s.pinned) }) });
+        await refreshSessions();
+      } else if (archive) {
+        e.preventDefault();
+        e.stopPropagation();
+        const sid = archive.dataset.archive;
+        const s = state.sessions.find((x) => x.id === sid);
+        await api(`/api/sessions/${sid}`, { method: "PATCH", body: JSON.stringify({ archived: !(s && s.archived) }) });
+        await refreshSessions();
       } else if (del) {
         e.preventDefault();
         e.stopPropagation();
@@ -2839,18 +2888,69 @@ function renderSessionList() {
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(s);
   });
-  const ordered = [...(state.folders || []).map((f) => [f.id, f]), ["", { id: "", name: langZh ? "未分类" : "Unclassified" }]];
+  const visibleFolders = (state.folders || []).filter((f) => Boolean(f.archived) === Boolean(state.showArchived));
+  const ordered = state.showArchived
+    ? visibleFolders.map((f) => [f.id, f])
+    : [...visibleFolders.map((f) => [f.id, f]), ["", { id: "", name: langZh ? "未分类" : "Unclassified", archived: false }]];
   ordered.forEach(([folderId, folder]) => {
-    const items = groups.get(folderId) || [];
-    if (!items.length) return;
+    const allItems = groups.get(folderId) || [];
+    const folderMatches = !!state.sessionQuery && String(folder.name || "").toLowerCase().includes(state.sessionQuery);
+    const items = !state.sessionQuery || folderMatches
+      ? allItems
+      : allItems.filter((s) => sessionDisplayTitle(s).toLowerCase().includes(state.sessionQuery));
+    if (!items.length && (folderId === "" || (state.sessionQuery && !folderMatches))) return;
     const openKey = `agent_hub_folder_open_${folderId || "none"}`;
     const open = localStorage.getItem(openKey) !== "0";
     const header = document.createElement("div");
-    header.className = "session-folder";
-    header.innerHTML = `<button type="button" class="folder-toggle" data-folder-toggle="${escapeHtml(folderId)}">${open ? "▾" : "▸"} ${escapeHtml(folder.name)}</button>`;
-    header.querySelector("button").onclick = () => { localStorage.setItem(openKey, open ? "0" : "1"); renderSessionList(); };
+    header.className = "session-folder" + (folderId === state.activeFolderId ? " active" : "");
+    const folderActions = folderId
+      ? `<span class="folder-actions"><button type="button" class="act" data-folder-rename="${escapeHtml(folderId)}" title="${langZh ? "重命名文件夹" : "Rename folder"}">✎</button><button type="button" class="act" data-folder-archive="${escapeHtml(folderId)}" title="${folder.archived ? (langZh ? "恢复文件夹" : "Restore folder") : (langZh ? "文件夹存档" : "Archive folder")}">${folder.archived ? "↩" : "▣"}</button><button type="button" class="act danger" data-folder-delete="${escapeHtml(folderId)}" title="${langZh ? "删除文件夹" : "Delete folder"}">×</button></span>`
+      : `<span class="folder-actions"><button type="button" class="act danger" data-folder-clear title="${langZh ? "清空未分类任务" : "Clear unclassified tasks"}">×</button></span>`;
+    header.innerHTML = `<div class="folder-header"><button type="button" class="folder-toggle" data-folder-toggle="${escapeHtml(folderId)}">${open ? "▾" : "▸"} <span>${escapeHtml(folder.name)}</span><small>${items.length}</small></button>${folderActions}</div>`;
+    header.querySelector("[data-folder-toggle]").onclick = () => {
+      state.activeFolderId = folderId;
+      localStorage.setItem("agent_hub_active_folder", folderId);
+      localStorage.setItem(openKey, open ? "0" : "1");
+      renderSessionList();
+      renderFolderOverview(folderId);
+    };
+    header.querySelector("[data-folder-rename]")?.addEventListener("click", async (event) => {
+      event.stopPropagation();
+      const next = prompt(langZh ? "文件夹名称" : "Folder name", folder.name);
+      if (next == null || !next.trim()) return;
+      await api(`/api/folders/${encodeURIComponent(folderId)}`, { method: "PATCH", body: JSON.stringify({ name: next.trim() }) });
+      await refreshSessions();
+    });
+    header.querySelector("[data-folder-delete]")?.addEventListener("click", async (event) => {
+      event.stopPropagation();
+      await api(`/api/folders/${encodeURIComponent(folderId)}`, { method: "DELETE" });
+      await refreshSessions();
+    });
+    header.querySelector("[data-folder-archive]")?.addEventListener("click", async (event) => {
+      event.stopPropagation();
+      await api(`/api/folders/${encodeURIComponent(folderId)}`, { method: "PATCH", body: JSON.stringify({ archived: !folder.archived }) });
+      await refreshSessions();
+    });
+    header.querySelector("[data-folder-clear]")?.addEventListener("click", async (event) => {
+      event.stopPropagation();
+      if (!items.length) return;
+      await Promise.all(items.map((s) => api(`/api/sessions/${encodeURIComponent(s.id)}`, { method: "PATCH", body: JSON.stringify({ archived: true }) })));
+      if (items.some((s) => s.id === state.currentId)) {
+        state.currentId = null;
+        $("#messages").innerHTML = "";
+        $("#chat-title").textContent = t("chat.new");
+      }
+      await refreshSessions();
+    });
     list.appendChild(header);
     if (!open) return;
+    if (!items.length) {
+      const empty = document.createElement("div");
+      empty.className = "folder-empty";
+      empty.textContent = langZh ? "文件夹为空，把会话移动到这里" : "Empty folder. Move a chat here.";
+      list.appendChild(empty);
+      return;
+    }
     items.forEach((s) => {
     const run = state.sessionRuns[s.id];
     const running = !!(run && run.streaming);
@@ -2873,7 +2973,9 @@ function renderSessionList() {
       </span>
       <span class="session-actions">
         <button type="button" class="act" data-rename="${escapeHtml(s.id)}" title="${escapeHtml(langZh ? "更改名称" : "Rename")}">✎</button>
-        <button type="button" class="act" data-backup="${escapeHtml(s.id)}" title="${escapeHtml(langZh ? "备份" : "Backup")}">⬇</button>
+       <button type="button" class="act" data-backup="${escapeHtml(s.id)}" title="${escapeHtml(langZh ? "备份" : "Backup")}">⬇</button>
+        <button type="button" class="act ${s.pinned ? "selected" : ""}" data-pin="${escapeHtml(s.id)}" title="${escapeHtml(s.pinned ? (langZh ? "取消置顶" : "Unpin") : (langZh ? "置顶" : "Pin"))}">${s.pinned ? "★" : "☆"}</button>
+        <button type="button" class="act" data-archive="${escapeHtml(s.id)}" title="${escapeHtml(s.archived ? (langZh ? "取消归档" : "Restore") : (langZh ? "归档" : "Archive"))}">${s.archived ? "↩" : "▣"}</button>
        <button type="button" class="act danger" data-del="${escapeHtml(s.id)}" title="${escapeHtml(langZh ? "删除" : "Delete")}">×</button>
         <select class="session-folder-select" data-move-folder="${escapeHtml(s.id)}" title="${escapeHtml(langZh ? "移动到文件夹" : "Move to folder")}"><option value="">${langZh ? "未分类" : "Unclassified"}</option>${(state.folders || []).map((f) => `<option value="${escapeHtml(f.id)}" ${s.folder_id === f.id ? "selected" : ""}>${escapeHtml(f.name)}</option>`).join("")}</select>
       </span>`;
@@ -3664,7 +3766,7 @@ async function createSession() {
   try {
     const s = await api("/api/sessions", {
       method: "POST",
-      body: JSON.stringify({ title: t("chat.new") }),
+      body: JSON.stringify({ title: t("chat.new"), folder_id: state.activeFolderId || "" }),
     });
     if (!s || !s.id) throw new Error(langZh ? "创建失败：无会话 ID" : "Create failed: no session id");
     await refreshSessions();
@@ -3742,6 +3844,8 @@ async function selectSession(id) {
   try {
     const s = await api(`/api/sessions/${id}`);
     if (state.currentId !== id) return; // user switched again
+    state.activeFolderId = s.folder_id || "";
+    localStorage.setItem("agent_hub_active_folder", state.activeFolderId);
     $("#chat-title").textContent = sessionDisplayTitle(s);
     renderMessages(s.messages || []);
 
@@ -4209,6 +4313,37 @@ function applyChatLayout() {
       applyChatLayout();
     });
   });
+}
+
+function renderFolderOverview(folderId) {
+  const box = $("#messages");
+  if (!box) return;
+  const langZh = state.prefs.language !== "en";
+  const folder = (state.folders || []).find((f) => f.id === folderId);
+  const sessions = state.sessions
+    .filter((s) => (s.folder_id || "") === folderId)
+    .sort((a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) || String(b.updated_at || "").localeCompare(String(a.updated_at || "")));
+  box.innerHTML = "";
+  const section = document.createElement("section");
+  section.className = "folder-overview";
+  section.innerHTML = `<div class="folder-overview-head"><span class="eyebrow">${langZh ? "文件夹任务" : "Folder tasks"}</span><h3>${escapeHtml(folder?.name || (langZh ? "未分类" : "Unclassified"))}</h3><p>${langZh ? `共 ${sessions.length} 个任务，选择任务继续对话` : `${sessions.length} tasks. Select one to continue.`}</p></div><div class="folder-overview-list"></div>`;
+  const list = section.querySelector(".folder-overview-list");
+  if (!sessions.length) {
+    const empty = document.createElement("p");
+    empty.className = "folder-overview-empty";
+    empty.textContent = langZh ? "这里还没有任务。点击上方“新任务”即可在当前文件夹下创建。" : "No tasks yet. Use New task above to create one here.";
+    list.appendChild(empty);
+  } else {
+    sessions.forEach((s) => {
+      const row = document.createElement("button");
+      row.type = "button";
+      row.className = "folder-task-row" + (s.id === state.currentId ? " active" : "");
+      row.innerHTML = `<span class="folder-task-title">${s.pinned ? "★ " : ""}${escapeHtml(sessionDisplayTitle(s))}</span><small>${escapeHtml(s.updated_at || "")}</small>`;
+      row.onclick = () => selectSession(s.id).catch((err) => console.warn(err));
+      list.appendChild(row);
+    });
+  }
+  box.appendChild(section);
 }
 
 async function loadAgents() {
@@ -5507,6 +5642,11 @@ async function sendMessage(overrideText, extra = {}) {
     return;
   }
   if (state.sessionRuns[sessionId]?.streaming) return;
+  // Give immediate visual confirmation before the planner/search request returns.
+  if (state.currentId === sessionId) {
+    resetWorkflowProgress(state.prefs.language !== "en" ? "已收到任务，正在准备执行" : "Task received, preparing");
+    setWorkflowProgress(3, null, state.prefs.language !== "en" ? "正在选择 Claw、Agent 与 Skill" : "Selecting Claw, Agent and Skill", "thinking");
+  }
 
   if (state.pendingFiles.length) {
     const paths = state.pendingFiles.map((f) => f.relative || f.name).join(", ");
@@ -5522,7 +5662,13 @@ async function sendMessage(overrideText, extra = {}) {
 
   let planRes = null;
   if (!extra._skip_multi) {
-    try {
+    const plannerNeeded = nlForce >= 2 || userWantsSearch || text.length > 180
+      || /分别|并行|多代理|子代理|比较|综合|多来源|分组|parallel|subagent|compare|synthesize/i.test(text);
+    if (!plannerNeeded) {
+      planRes = { ok: true, need_parallel: false, needs_search: false, lanes: [], single_role: null, source: "short-direct", search_enabled: false, sources: [] };
+      showAutoPlanStrip(planRes);
+    } else {
+      try {
       planRes = await api("/api/agents/auto-plan", {
         method: "POST",
         timeoutMs: 4500,
@@ -5536,9 +5682,10 @@ async function sendMessage(overrideText, extra = {}) {
         }),
       });
       showAutoPlanStrip(planRes);
-    } catch (_) {
+      } catch (_) {
       planRes = null;
       showAutoPlanStrip(null);
+      }
     }
   }
 

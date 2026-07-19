@@ -1655,7 +1655,11 @@ def handle_patch(handler) -> None:
 
     if len(parts) == 3 and parts[0] == "api" and parts[1] == "folders":
         body = _read_json(handler)
-        item = folders.update_folder(parts[2], body.get("name"), body.get("sort_order"))
+        item = folders.update_folder(parts[2], body.get("name"), body.get("sort_order"), body.get("archived"))
+        if item is not None and body.get("archived") is not None:
+            for session in store.list_sessions(include_archived=True):
+                if session.get("folder_id") == parts[2]:
+                    store.update_session(session["id"], archived=bool(body.get("archived")))
         return _json(handler, 200 if item else 404, item or {"error": "not found"})
 
     _json(handler, 404, {"error": "not found"})
