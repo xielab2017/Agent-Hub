@@ -2577,6 +2577,10 @@ hr.soft {
   background: color-mix(in srgb, var(--bg-elev) 92%, var(--accent) 8%);
 }
 
+.model-governance-compact .model-governance-note {
+  margin: 8px 0 0;
+}
+
 .model-governance-head {
   display: flex;
   align-items: flex-start;

@@ -2,8 +2,12 @@ from __future__ import annotations
 
 import json
 import time
+from pathlib import Path
 
 from ali import llm_client, model_intelligence, providers, settings
+
+
+APP_JS = Path(__file__).resolve().parents[1] / "static" / "app.js"
 
 
 class _Response:
@@ -96,3 +100,13 @@ def test_background_health_job_builds_profiles_and_persists_results(monkeypatch)
     assert job["completed"] == 1
     assert stored["model_health_cache"]["vendor/test-model"]["state"] == "healthy"
     assert stored["model_profiles"]["vendor/test-model"]["provider"] == provider
+
+
+def test_health_progress_lives_in_backend_and_models_page_is_results_only():
+    source = APP_JS.read_text(encoding="utf-8")
+
+    assert 'id="backend-governance-box"' in source
+    assert 'id="model-governance-results"' in source
+    assert 'id="model-governance-box"' not in source
+    assert "拉取模型并自动检测" in source
+    assert "最终结果统一显示在“模型”页" in source

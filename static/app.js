@@ -6804,11 +6804,12 @@ async function renderControl() {
       ${keyStatus.source ? ` · ${escapeHtml(keyStatus.source)}` : ""}</p>
     <div class="row gap" style="justify-content:flex-start;flex-wrap:wrap">
       <button type="button" class="btn primary" id="btn-save-key">${langZh ? "保存 API Key" : "Save API Key"}</button>
-      <button type="button" class="btn primary" id="btn-refresh-models">${langZh ? "拉取可用模型" : "Fetch models"}</button>
+      <button type="button" class="btn primary" id="btn-refresh-models">${langZh ? "拉取模型并自动检测" : "Fetch models & auto-test"}</button>
       <button type="button" class="btn ghost" id="btn-apply-provider">${langZh ? "应用厂商默认" : "Apply provider defaults"}</button>
       <button type="button" class="btn ghost" id="btn-sync-hermes-backend">${langZh ? "同步 LLM 到当前 Claw" : "Sync LLM to active Claw"}</button>
     </div>
     <div id="live-models-box" class="muted"></div>
+    <div id="backend-governance-box" class="model-governance-box model-governance-compact"></div>
     ${field(langZh ? "安装 / 根目录" : "Install / workspace root", "install_root", cfg.install_root || "")}
     ${field(langZh ? "默认工作区" : "Default workspace", "workspace", cfg.workspace || "")}
     <hr class="soft" />
@@ -6975,8 +6976,8 @@ async function renderControl() {
         if (box) {
           const sample = (data.models || []).slice(0, 12).map(escapeHtml).join(", ");
           box.innerHTML = langZh
-            ? `已拉取 <strong>${data.count || 0}</strong> 个模型，并自动填入推荐档位。<br/><code>${sample}${(data.models || []).length > 12 ? "…" : ""}</code>`
-            : `Fetched <strong>${data.count || 0}</strong> models and applied slot suggestions.<br/><code>${sample}${(data.models || []).length > 12 ? "…" : ""}</code>`;
+            ? `已拉取 <strong>${data.count || 0}</strong> 个模型，健康检测已自动启动，并已填入推荐档位。<br/><code>${sample}${(data.models || []).length > 12 ? "…" : ""}</code>`
+            : `Fetched <strong>${data.count || 0}</strong> models, started health checks, and applied slot suggestions.<br/><code>${sample}${(data.models || []).length > 12 ? "…" : ""}</code>`;
         }
         $("#settings-status").textContent = langZh
           ? `模型已更新（${data.count || 0}）`
@@ -7072,7 +7073,7 @@ async function renderControl() {
   }
 
   $("#ctab-models").innerHTML = `
-    <div id="model-governance-box" class="model-governance-box"></div>
+    <div id="model-governance-results" class="model-governance-box"></div>
     <p class="muted">${langZh
       ? `当前厂商：<strong>${escapeHtml((currentProv && currentProv.label) || b.type || "—")}</strong>。切换后端后点「应用此厂商」可自动填充推荐模型。`
       : `Provider: <strong>${escapeHtml((currentProv && currentProv.label) || b.type || "—")}</strong>. Apply provider to auto-fill recommendations.`}</p>
@@ -7142,9 +7143,12 @@ async function renderControl() {
 }
 
 async function renderModelGovernance(langZh = controlLangZh()) {
-  let box = $("#model-governance-box");
-  if (!box) return;
-  box.innerHTML = `<p class="muted">${langZh ? "正在读取模型健康状态…" : "Loading model health status…"}</p>`;
+  let progressBox = $("#backend-governance-box");
+  let resultsBox = $("#model-governance-results");
+  if (!progressBox && !resultsBox) return;
+  const loading = `<p class="muted">${langZh ? "正在读取模型健康状态…" : "Loading model health status…"}</p>`;
+  if (progressBox) progressBox.innerHTML = loading;
+  if (resultsBox) resultsBox.innerHTML = loading;
   const provider = document.querySelector('[data-key="backend.type"]')?.value
     || state.settings?.config?.backend?.type
     || "";
@@ -7152,18 +7156,42 @@ async function renderModelGovernance(langZh = controlLangZh()) {
   try {
     data = await api("/api/models/governance");
   } catch (error) {
-    box = $("#model-governance-box");
-    if (!box) return;
-    box.innerHTML = `<p class="bad">${escapeHtml(error.message || error)}</p>`;
+    progressBox = $("#backend-governance-box");
+    resultsBox = $("#model-governance-results");
+    const failure = `<p class="bad">${escapeHtml(error.message || error)}</p>`;
+    if (progressBox) progressBox.innerHTML = failure;
+    if (resultsBox) resultsBox.innerHTML = failure;
     return;
   }
   // The Control Center may re-render while the request is in flight. Resolve
   // the current node again so results never disappear into a detached panel.
-  box = $("#model-governance-box");
-  if (!box) return;
+  progressBox = $("#backend-governance-box");
+  resultsBox = $("#model-governance-results");
+  if (!progressBox && !resultsBox) return;
   const job = (data.jobs && data.jobs[provider]) || { status: "idle", completed: 0, total: 0 };
   const health = Object.values(data.health || {}).filter((item) => !item.provider || item.provider === provider);
   const profiles = new Map((data.profiles || []).map((item) => [item.model, item]));
+  if (state.settings) state.settings.model_governance = data;
+  $$('[data-category-model]').forEach((select) => {
+    const category = select.dataset.categoryModel || "";
+    const selected = String(select.value || "");
+    const recommendation = (data.recommendations || {})[category] || {};
+    const candidates = [...new Set([
+      selected,
+      String(recommendation.model || ""),
+      ...(data.profiles || []).filter((profile) => {
+        const healthState = String(profile?.health_state || profile?.health?.state || "");
+        return ["healthy", "degraded"].includes(healthState)
+          && Array.isArray(profile?.recommended_categories)
+          && profile.recommended_categories.includes(category);
+      }).map((profile) => String(profile.model || "")),
+    ].filter(Boolean))];
+    const autoLabel = recommendation.model
+      ? `${langZh ? "自动推荐" : "Auto"}: ${recommendation.model}`
+      : (langZh ? "自动推荐（等待健康检测）" : "Auto (awaiting health check)");
+    select.innerHTML = `<option value="">${escapeHtml(autoLabel)}</option>${candidates.map((model) => `<option value="${escapeHtml(model)}">${escapeHtml(model)}</option>`).join("")}`;
+    select.value = selected;
+  });
   const statusLabel = {
     healthy: langZh ? "健康" : "Healthy",
     degraded: langZh ? "降级" : "Degraded",
@@ -7186,14 +7214,27 @@ async function renderModelGovernance(langZh = controlLangZh()) {
     }).join("");
   const hasCatalog = Array.isArray((state.settings?.config?.available_models || {})[provider])
     && state.settings.config.available_models[provider].length > 0;
+  const availableCount = health.filter((item) => item.healthy === true || ["healthy", "degraded"].includes(item.state)).length;
+  const unavailableCount = Math.max(0, health.length - availableCount);
   const progress = job.status === "running"
     ? `${langZh ? "检测中" : "Testing"} ${job.completed || 0}/${job.total || 0}`
     : (job.status === "complete"
-      ? `${langZh ? "检测完成" : "Complete"} · ${job.healthy || 0} ${langZh ? "可用" : "available"} · ${job.hidden || 0} ${langZh ? "隐藏" : "hidden"}`
+      ? `${langZh ? "检测完成" : "Complete"} · ${availableCount} ${langZh ? "可用" : "available"} · ${unavailableCount} ${langZh ? "不可用或不兼容" : "unavailable or incompatible"}`
       : (job.status === "error"
         ? `${langZh ? "检测失败" : "Health check failed"}: ${job.error || "unknown error"}`
         : (langZh ? "尚未运行检测" : "No health analysis yet")));
-  box.innerHTML = `<div class="model-governance-head"><div><h4>${langZh ? "模型健康与能力画像" : "Model health & capability profiles"}</h4><p class="muted">${escapeHtml(progress)}</p></div><div class="row gap">${hasCatalog ? `<button type="button" class="btn ghost chip" id="btn-governance-quick">${langZh ? "开始健康检测" : "Run health check"}</button><button type="button" class="btn primary chip" id="btn-governance-deep">${langZh ? "深度分析" : "Deep analysis"}</button>` : `<button type="button" class="btn primary chip" id="btn-governance-fetch">${langZh ? "拉取模型并检测" : "Fetch models & test"}</button>`}</div></div><div class="model-health-list">${rows || `<p class="muted">${hasCatalog ? (langZh ? "点击“开始健康检测”检查模型可用性、延迟和基础能力。" : "Run a health check to verify availability, latency, and baseline capabilities.") : (langZh ? "请先拉取当前供应商的模型目录，随后将自动开始健康检测。" : "Fetch the active provider's model list first; health checks then start automatically.")}</p>`}</div>`;
+  if (progressBox) {
+    progressBox.innerHTML = `<div class="model-governance-head"><div><h4>${langZh ? "模型目录与自动检测" : "Model catalog & automatic checks"}</h4><p class="muted">${escapeHtml(progress)}</p></div><div class="row gap">${hasCatalog ? `<button type="button" class="btn ghost chip" id="btn-governance-quick">${langZh ? "重新检测" : "Retest"}</button><button type="button" class="btn primary chip" id="btn-governance-deep">${langZh ? "深度分析" : "Deep analysis"}</button>` : `<button type="button" class="btn primary chip" id="btn-governance-fetch">${langZh ? "拉取模型并检测" : "Fetch models & test"}</button>`}</div></div><p class="muted model-governance-note">${langZh ? "每次拉取当前供应商的模型目录后，系统会自动检测可用性与延迟；最终结果统一显示在“模型”页。" : "Fetching the active provider's catalog automatically checks availability and latency. Final results appear on the Models page."}</p>`;
+  }
+  if (resultsBox) {
+    const resultSummary = job.status === "running"
+      ? (langZh ? `后台正在更新 ${job.completed || 0}/${job.total || 0}；下方保留上一次完成结果。` : `Updating in the backend ${job.completed || 0}/${job.total || 0}; previous completed results remain below.`)
+      : progress;
+    const emptyResult = hasCatalog
+      ? (langZh ? "健康检测完成后，结果会自动显示在这里。" : "Completed health results will appear here automatically.")
+      : (langZh ? "请先到“后端”页拉取模型并自动检测。" : "Fetch models and run automatic checks from the Backend page first.");
+    resultsBox.innerHTML = `<div class="model-governance-head"><div><h4>${langZh ? "模型健康检测结果" : "Model health results"}</h4><p class="muted">${escapeHtml(resultSummary)}</p></div></div><div class="model-health-list">${rows || `<p class="muted">${emptyResult}</p>`}</div>`;
+  }
   const start = async (deep) => {
     const response = await api("/api/models/governance/refresh", {
       method: "POST",
@@ -7209,7 +7250,7 @@ async function renderModelGovernance(langZh = controlLangZh()) {
   $("#btn-governance-quick")?.addEventListener("click", () => start(false).catch((error) => { $("#settings-status").textContent = error.message; }));
   $("#btn-governance-deep")?.addEventListener("click", () => start(true).catch((error) => { $("#settings-status").textContent = error.message; }));
   $("#btn-governance-fetch")?.addEventListener("click", () => $("#btn-refresh-models")?.click());
-  if (job.status === "running" && document.body.contains(box)) {
+  if (job.status === "running" && ((progressBox && document.body.contains(progressBox)) || (resultsBox && document.body.contains(resultsBox)))) {
     setTimeout(() => renderModelGovernance(langZh).catch(() => {}), 1200);
   }
 }
