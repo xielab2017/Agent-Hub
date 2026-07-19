@@ -2581,6 +2581,38 @@ hr.soft {
   margin: 8px 0 0;
 }
 
+.model-governance-compact {
+  min-height: 112px;
+}
+
+.model-progress {
+  position: relative;
+  width: 100%;
+  height: 8px;
+  margin-top: 8px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--bg-soft);
+}
+
+.model-progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width 240ms ease;
+}
+
+.model-progress.is-indeterminate span {
+  width: 36%;
+  animation: model-progress-indeterminate 1.2s ease-in-out infinite;
+}
+
+@keyframes model-progress-indeterminate {
+  from { transform: translateX(-110%); }
+  to { transform: translateX(310%); }
+}
+
 .model-governance-head {
   display: flex;
   align-items: flex-start;

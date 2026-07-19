@@ -6953,6 +6953,11 @@ async function renderControl() {
       const key = ($("#api-key-input") && $("#api-key-input").value || "").trim();
       try {
         $("#settings-status").textContent = langZh ? "正在拉取模型…" : "Fetching models…";
+        refreshBtn.disabled = true;
+        const monitor = $("#backend-governance-box");
+        if (monitor) {
+          monitor.innerHTML = `<div class="model-governance-head"><div><h4>${langZh ? "模型目录与自动检测" : "Model catalog & automatic checks"}</h4><p class="muted">${langZh ? "正在拉取模型目录…" : "Fetching model catalog…"}</p></div></div><div class="model-progress is-indeterminate" role="progressbar" aria-label="${langZh ? "正在拉取模型目录" : "Fetching model catalog"}"><span></span></div><p class="muted model-governance-note">${langZh ? "目录拉取完成后会立即自动检测模型，不需要再次点击。" : "Health checks start automatically as soon as the catalog is fetched."}</p>`;
+        }
         // save key if pasted
         if (key) {
           await api("/api/settings/api-key", {
@@ -6980,14 +6985,16 @@ async function renderControl() {
             : `Fetched <strong>${data.count || 0}</strong> models, started health checks, and applied slot suggestions.<br/><code>${sample}${(data.models || []).length > 12 ? "…" : ""}</code>`;
         }
         $("#settings-status").textContent = langZh
-          ? `模型已更新（${data.count || 0}）`
-          : `Models updated (${data.count || 0})`;
+          ? `已拉取 ${data.count || 0} 个模型，正在自动检测`
+          : `Fetched ${data.count || 0} models; automatic checks are running`;
         await renderModelGovernance(langZh);
         syncComposerFromSettings();
       } catch (e) {
         $("#settings-status").textContent = e.message;
         const box = $("#live-models-box");
         if (box) box.innerHTML = `<span class="warn-box" style="display:inline-block">${escapeHtml(e.message)}</span>`;
+      } finally {
+        refreshBtn.disabled = false;
       }
     };
   }
@@ -7147,8 +7154,8 @@ async function renderModelGovernance(langZh = controlLangZh()) {
   let resultsBox = $("#model-governance-results");
   if (!progressBox && !resultsBox) return;
   const loading = `<p class="muted">${langZh ? "正在读取模型健康状态…" : "Loading model health status…"}</p>`;
-  if (progressBox) progressBox.innerHTML = loading;
-  if (resultsBox) resultsBox.innerHTML = loading;
+  if (progressBox && !progressBox.hasChildNodes()) progressBox.innerHTML = loading;
+  if (resultsBox && !resultsBox.hasChildNodes()) resultsBox.innerHTML = loading;
   const provider = document.querySelector('[data-key="backend.type"]')?.value
     || state.settings?.config?.backend?.type
     || "";
@@ -7189,8 +7196,11 @@ async function renderModelGovernance(langZh = controlLangZh()) {
     const autoLabel = recommendation.model
       ? `${langZh ? "自动推荐" : "Auto"}: ${recommendation.model}`
       : (langZh ? "自动推荐（等待健康检测）" : "Auto (awaiting health check)");
+    const selectorSignature = `${autoLabel}|${candidates.join("|")}`;
+    if (select.dataset.governanceSignature === selectorSignature) return;
     select.innerHTML = `<option value="">${escapeHtml(autoLabel)}</option>${candidates.map((model) => `<option value="${escapeHtml(model)}">${escapeHtml(model)}</option>`).join("")}`;
     select.value = selected;
+    select.dataset.governanceSignature = selectorSignature;
   });
   const statusLabel = {
     healthy: langZh ? "健康" : "Healthy",
@@ -7216,6 +7226,11 @@ async function renderModelGovernance(langZh = controlLangZh()) {
     && state.settings.config.available_models[provider].length > 0;
   const availableCount = health.filter((item) => item.healthy === true || ["healthy", "degraded"].includes(item.state)).length;
   const unavailableCount = Math.max(0, health.length - availableCount);
+  const progressTotal = Number(job.total || 0);
+  const progressCompleted = Math.min(progressTotal, Number(job.completed || 0));
+  const progressPercent = job.status === "complete"
+    ? 100
+    : (progressTotal > 0 ? Math.round((progressCompleted / progressTotal) * 100) : 0);
   const progress = job.status === "running"
     ? `${langZh ? "检测中" : "Testing"} ${job.completed || 0}/${job.total || 0}`
     : (job.status === "complete"
@@ -7224,7 +7239,8 @@ async function renderModelGovernance(langZh = controlLangZh()) {
         ? `${langZh ? "检测失败" : "Health check failed"}: ${job.error || "unknown error"}`
         : (langZh ? "尚未运行检测" : "No health analysis yet")));
   if (progressBox) {
-    progressBox.innerHTML = `<div class="model-governance-head"><div><h4>${langZh ? "模型目录与自动检测" : "Model catalog & automatic checks"}</h4><p class="muted">${escapeHtml(progress)}</p></div><div class="row gap">${hasCatalog ? `<button type="button" class="btn ghost chip" id="btn-governance-quick">${langZh ? "重新检测" : "Retest"}</button><button type="button" class="btn primary chip" id="btn-governance-deep">${langZh ? "深度分析" : "Deep analysis"}</button>` : `<button type="button" class="btn primary chip" id="btn-governance-fetch">${langZh ? "拉取模型并检测" : "Fetch models & test"}</button>`}</div></div><p class="muted model-governance-note">${langZh ? "每次拉取当前供应商的模型目录后，系统会自动检测可用性与延迟；最终结果统一显示在“模型”页。" : "Fetching the active provider's catalog automatically checks availability and latency. Final results appear on the Models page."}</p>`;
+    const percentText = job.status === "running" ? ` · ${progressPercent}%` : "";
+    progressBox.innerHTML = `<div class="model-governance-head"><div><h4>${langZh ? "模型目录与自动检测" : "Model catalog & automatic checks"}</h4><p class="muted">${escapeHtml(progress + percentText)}</p></div><div class="row gap">${hasCatalog ? `<button type="button" class="btn ghost chip" id="btn-governance-quick" ${job.status === "running" ? "disabled" : ""}>${langZh ? "重新检测" : "Retest"}</button><button type="button" class="btn primary chip" id="btn-governance-deep" ${job.status === "running" ? "disabled" : ""}>${langZh ? "深度分析" : "Deep analysis"}</button>` : `<button type="button" class="btn primary chip" id="btn-governance-fetch">${langZh ? "拉取模型并检测" : "Fetch models & test"}</button>`}</div></div><div class="model-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progressPercent}" aria-label="${langZh ? "模型健康检测进度" : "Model health check progress"}"><span style="width:${progressPercent}%"></span></div><p class="muted model-governance-note">${langZh ? "每次拉取当前供应商的模型目录后，系统会自动检测可用性与延迟；最终结果统一显示在“模型”页。" : "Fetching the active provider's catalog automatically checks availability and latency. Final results appear on the Models page."}</p>`;
   }
   if (resultsBox) {
     const resultSummary = job.status === "running"
@@ -7233,7 +7249,14 @@ async function renderModelGovernance(langZh = controlLangZh()) {
     const emptyResult = hasCatalog
       ? (langZh ? "健康检测完成后，结果会自动显示在这里。" : "Completed health results will appear here automatically.")
       : (langZh ? "请先到“后端”页拉取模型并自动检测。" : "Fetch models and run automatic checks from the Backend page first.");
-    resultsBox.innerHTML = `<div class="model-governance-head"><div><h4>${langZh ? "模型健康检测结果" : "Model health results"}</h4><p class="muted">${escapeHtml(resultSummary)}</p></div></div><div class="model-health-list">${rows || `<p class="muted">${emptyResult}</p>`}</div>`;
+    const resultsSignature = `${provider}|${health.map((item) => `${item.model}:${item.state}:${item.tested_at || ""}`).join("|")}`;
+    if (resultsBox.dataset.resultsSignature !== resultsSignature || !resultsBox.querySelector(".model-results-summary")) {
+      resultsBox.innerHTML = `<div class="model-governance-head"><div><h4>${langZh ? "模型健康检测结果" : "Model health results"}</h4><p class="muted model-results-summary">${escapeHtml(resultSummary)}</p></div></div><div class="model-health-list">${rows || `<p class="muted">${emptyResult}</p>`}</div>`;
+      resultsBox.dataset.resultsSignature = resultsSignature;
+    } else {
+      const summary = resultsBox.querySelector(".model-results-summary");
+      if (summary) summary.textContent = resultSummary;
+    }
   }
   const start = async (deep) => {
     const response = await api("/api/models/governance/refresh", {

@@ -1036,7 +1036,9 @@ def handle_post(handler) -> None:
                 api_key=key_info.get("key") or "",
                 verify_tls=resolve_backend_verify_tls(cfg, {"provider": provider}),
                 deep=False,
-                force=False,
+                # A user-triggered catalog refresh is also an explicit health
+                # refresh. Startup refreshes still reuse fresh cached results.
+                force=True,
             )
 
         audit.log_event("refresh_models", {"count": len(models), "provider": provider})

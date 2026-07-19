@@ -8,6 +8,7 @@ from ali import llm_client, model_intelligence, providers, settings
 
 
 APP_JS = Path(__file__).resolve().parents[1] / "static" / "app.js"
+ROUTES_PY = Path(__file__).resolve().parents[1] / "ali" / "routes.py"
 
 
 class _Response:
@@ -110,3 +111,17 @@ def test_health_progress_lives_in_backend_and_models_page_is_results_only():
     assert 'id="model-governance-box"' not in source
     assert "拉取模型并自动检测" in source
     assert "最终结果统一显示在“模型”页" in source
+    assert 'class="model-progress" role="progressbar"' in source
+    assert 'class="model-progress is-indeterminate"' in source
+    assert "resultsBox.dataset.resultsSignature" in source
+    assert "if (resultsBox && !resultsBox.hasChildNodes())" in source
+
+
+def test_manual_catalog_refresh_forces_a_fresh_health_check():
+    source = ROUTES_PY.read_text(encoding="utf-8")
+    refresh_block = source.split('if path == "/api/settings/refresh-models":', 1)[1].split(
+        'if path == "/api/models/governance/refresh":', 1
+    )[0]
+
+    assert "start_governance_analysis(" in refresh_block
+    assert "force=True" in refresh_block
