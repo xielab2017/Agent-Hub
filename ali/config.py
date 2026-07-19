@@ -6,8 +6,9 @@ import os
 import socket
 import sys
 from pathlib import Path
+from urllib.parse import urlparse
 
-VERSION = "5.0.0"
+VERSION = "5.0.1"
 APP_NAME = "Agent Hub"
 APP_TAGLINE = "Control UI · claws use native homes (~/.hermes · ~/.openclaw · ~/.nanobot)"
 
@@ -17,6 +18,19 @@ DEFAULT_PORT = int(os.environ.get("HERMES_ALI_PORT", "8765"))
 
 # Optional shared password for remote access (empty = no auth)
 AUTH_PASSWORD = os.environ.get("HERMES_ALI_PASSWORD", "").strip()
+
+# Optional canonical URL supplied by an HTTPS tunnel or reverse proxy. Public
+# address discovery is deliberately explicit because NAT and proxy headers make
+# automatic detection unreliable and easy to spoof.
+def _public_url() -> str:
+    value = os.environ.get("HERMES_ALI_PUBLIC_URL", "").strip().rstrip("/")
+    parsed = urlparse(value)
+    if parsed.scheme.lower() not in {"http", "https"} or not parsed.netloc:
+        return ""
+    return value
+
+
+PUBLIC_URL = _public_url()
 
 # State directory
 def _default_state_dir() -> Path:

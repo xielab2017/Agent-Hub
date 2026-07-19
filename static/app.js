@@ -15,7 +15,7 @@ const FONT_SIZE_LABELS = {
   zh: { 13: "小 13", 14: "中 14", 15: "中大 15", 16: "大 16", 18: "特大 18" },
   en: { 13: "S 13", 14: "M 14", 15: "M+ 15", 16: "L 16", 18: "XL 18" },
 };
-const LOGO_VER = "5.0.0";
+const LOGO_VER = "5.0.1";
 const DEFAULT_LOGO = `/brand/suat-logo-color.png?v=${LOGO_VER}`;
 const LOGO_PRESETS = [
   { id: "suat-color", src: `/brand/suat-logo-color.png?v=${LOGO_VER}`, labelKey: "appearance.logoPresetColor" },
@@ -110,15 +110,24 @@ const SHORT_MODEL = (id) => {
 
 const I18N = {
   zh: {
+    "brand.campus": "深圳理工大学",
     "login.hint": "输入访问密码以连接终端",
     "login.password": "密码",
     "login.submit": "进入",
     "login.error": "密码错误",
-    "nav.newChat": "+ 新任务",
+    "nav.newChat": "新任务",
     "nav.chats": "进行中",
     "nav.workflows": "模板",
     "nav.tasks": "任务",
     "nav.sessions": "会话",
+    "nav.schedule": "定时任务",
+    "nav.skillsMcp": "Skills 与 MCP",
+    "nav.knowledge": "科研知识库",
+    "nav.workspace": "深理工科研空间",
+    "nav.pinned": "置顶",
+    "nav.projects": "科研项目",
+    "nav.recents": "最近",
+    "nav.searchResults": "搜索结果",
     "nav.control": "⚙ 控制中心",
     "chat.new": "新任务",
     "empty.title": "校园 Agent Hub",
@@ -272,6 +281,9 @@ const I18N = {
     "wf.run": "运行",
     "conn.local": "本机",
     "conn.lan": "局域网",
+    "conn.public": "外网",
+    "conn.publicSafe": "HTTPS 与访问密码已启用",
+    "conn.publicWarning": "外网访问需要 HTTPS 和访问密码",
     "agent.ready": "Agent 就绪",
     "agent.demo": "演示模式",
     "confirm.vault": "将结果写入 Obsidian AI_Candidates？仅候选区，不会进入正式目录。",
@@ -311,15 +323,24 @@ const I18N = {
     "key.missing": "未设置 — 请用系统环境变量，勿写入 JSON",
   },
   en: {
+    "brand.campus": "SUAT",
     "login.hint": "Enter password to access the terminal",
     "login.password": "Password",
     "login.submit": "Enter",
     "login.error": "Invalid password",
-    "nav.newChat": "+ New task",
+    "nav.newChat": "New task",
     "nav.chats": "Active",
     "nav.workflows": "Templates",
     "nav.tasks": "Tasks",
     "nav.sessions": "Sessions",
+    "nav.schedule": "Scheduled",
+    "nav.skillsMcp": "Skills & MCP",
+    "nav.knowledge": "Research Knowledge",
+    "nav.workspace": "SUAT Research Space",
+    "nav.pinned": "Pinned",
+    "nav.projects": "Research Projects",
+    "nav.recents": "Recents",
+    "nav.searchResults": "Search results",
     "nav.control": "⚙ Control Center",
     "chat.new": "New task",
     "empty.title": "Campus Agent Hub",
@@ -473,6 +494,9 @@ const I18N = {
     "wf.run": "Run",
     "conn.local": "Local",
     "conn.lan": "LAN",
+    "conn.public": "Internet",
+    "conn.publicSafe": "HTTPS and access password enabled",
+    "conn.publicWarning": "Internet access requires HTTPS and an access password",
     "agent.ready": "Agent ready",
     "agent.demo": "Demo mode",
     "confirm.vault": "Write result to Obsidian AI_Candidates? Candidates only — not formal folders.",
@@ -1042,6 +1066,29 @@ function showLogin(on) { $("#login-overlay").classList.toggle("hidden", !on); }
 function setSidebarOpen(open) {
   $("#sidebar").classList.toggle("open", open);
   $("#sidebar-backdrop").classList.toggle("hidden", !open);
+}
+
+const SIDEBAR_COLLAPSED_KEY = "agent_hub_sidebar_collapsed";
+
+function setSidebarCollapsed(collapsed) {
+  if (window.matchMedia("(max-width: 860px)").matches) {
+    setSidebarOpen(false);
+    return;
+  }
+  const app = $("#app");
+  const button = $("#btn-sidebar-collapse");
+  if (!app) return;
+  app.classList.toggle("sidebar-collapsed", Boolean(collapsed));
+  localStorage.setItem(SIDEBAR_COLLAPSED_KEY, collapsed ? "1" : "0");
+  if (button) {
+    const langZh = state.prefs.language !== "en";
+    const label = collapsed
+      ? (langZh ? "展开侧边栏" : "Expand sidebar")
+      : (langZh ? "收起侧边栏" : "Collapse sidebar");
+    button.title = label;
+    button.setAttribute("aria-label", label);
+    button.setAttribute("aria-expanded", collapsed ? "false" : "true");
+  }
 }
 
 const SIDEBAR_WIDTH_KEY = "hermes_ali_sidebar_width";
@@ -1830,9 +1877,17 @@ async function boot() {
 function renderConn(status) {
   const port = status.port || 8765;
   const ips = status.local_ips || [];
-  const lines = [`${t("conn.local")}: http://127.0.0.1:${port}`];
-  ips.slice(0, 2).forEach((ip) => lines.push(`${t("conn.lan")}: http://${ip}:${port}`));
-  $("#conn-info").innerHTML = lines.map(escapeHtml).join("<br>");
+  const publicUrl = String(status.public_url || "").trim();
+  const publicReady = Boolean(status.public_access && status.public_access.ready);
+  const entries = [{ label: t("conn.local"), url: `http://127.0.0.1:${port}`, kind: "local" }];
+  ips.slice(0, 2).forEach((ip) => entries.push({ label: t("conn.lan"), url: `http://${ip}:${port}`, kind: "lan" }));
+  if (publicUrl) entries.push({ label: t("conn.public"), url: publicUrl, kind: publicReady ? "public ready" : "public warning" });
+  const el = $("#conn-info");
+  if (!el) return;
+  el.innerHTML = entries.map(({ label, url, kind }) => {
+    const hint = kind.includes("public") ? (publicReady ? t("conn.publicSafe") : t("conn.publicWarning")) : url;
+    return `<a class="conn-row ${escapeHtml(kind)}" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(hint)}"><i aria-hidden="true"></i><span>${escapeHtml(label)}</span><code>${escapeHtml(url.replace(/^https?:\/\//, ""))}</code></a>`;
+  }).join("");
 }
 
 function clawLabelFor(agent, kind) {
@@ -2163,6 +2218,61 @@ function bindFolderControls() {
       if (button) button.disabled = false;
     }
   });
+}
+
+function openControlTab(tabId) {
+  openControl(true);
+  requestAnimationFrame(() => {
+    document.querySelector(`.ctab[data-ctab="${tabId}"]`)?.click();
+  });
+}
+
+function bindSidebarChrome() {
+  const collapse = $("#btn-sidebar-collapse");
+  if (collapse && collapse.dataset.bound !== "1") {
+    collapse.dataset.bound = "1";
+    collapse.addEventListener("click", () => {
+      const collapsed = $("#app")?.classList.contains("sidebar-collapsed");
+      setSidebarCollapsed(!collapsed);
+    });
+  }
+
+  const projectButton = $("#btn-folder-compose");
+  if (projectButton && projectButton.dataset.bound !== "1") {
+    projectButton.dataset.bound = "1";
+    projectButton.addEventListener("click", () => {
+      const form = $("#folder-create-form");
+      if (!form) return;
+      const opening = form.classList.contains("hidden");
+      form.classList.toggle("hidden", !opening);
+      projectButton.classList.toggle("active", opening);
+      if (opening) $("#new-folder-name")?.focus();
+    });
+  }
+
+  bindClick("#btn-nav-schedule", () => openControlTab("schedule"));
+  bindClick("#btn-nav-skills", () => openControlTab("skills"));
+  bindClick("#btn-nav-knowledge", () => openControlTab("obsidian"));
+  if (document.documentElement.dataset.sidebarMenuDismiss !== "1") {
+    document.documentElement.dataset.sidebarMenuDismiss = "1";
+    document.addEventListener("click", (event) => {
+      const current = event.target.closest(".session-actions, .folder-actions");
+      if (!current) {
+        document.querySelectorAll(".session-actions[open], .folder-actions[open]").forEach((details) => details.removeAttribute("open"));
+        return;
+      }
+      requestAnimationFrame(() => {
+        document.querySelectorAll(".session-actions[open], .folder-actions[open]").forEach((details) => {
+          if (details !== current) details.removeAttribute("open");
+        });
+      });
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      document.querySelectorAll(".session-actions[open], .folder-actions[open]").forEach((details) => details.removeAttribute("open"));
+    });
+  }
+  setSidebarCollapsed(localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "1");
 }
 
 function bindSessionSearch() {
@@ -2882,64 +2992,127 @@ function renderSessionList() {
   if (!list) return;
   const langZh = state.prefs.language !== "en";
   list.innerHTML = "";
+  const folderById = new Map((state.folders || []).map((folder) => [folder.id, folder]));
   const groups = new Map();
-  state.sessions.forEach((s) => {
+  const sessions = state.sessions.filter((s) => state.showArchived ? Boolean(s.archived) : !s.archived);
+  sessions.forEach((s) => {
     const key = s.folder_id || "";
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(s);
   });
+
+  const section = (label, count, className = "") => {
+    const el = document.createElement("section");
+    el.className = `sidebar-session-section ${className}`.trim();
+    el.innerHTML = `<h3><span>${escapeHtml(label)}</span>${Number.isFinite(count) ? `<small>${count}</small>` : ""}</h3>`;
+    list.appendChild(el);
+    return el;
+  };
+
+  const makeSessionItem = (s, context = "") => {
+    const run = state.sessionRuns[s.id];
+    const running = !!(run && run.streaming);
+    const pct = Math.max(0, Math.min(100, Math.round((run && run.pct) || 0)));
+    const item = document.createElement("div");
+    item.className = "session-item"
+      + (s.id === state.currentId ? " active" : "")
+      + (running ? " running" : "")
+      + (s.pinned ? " pinned" : "");
+    item.dataset.sid = s.id;
+    item.setAttribute("role", "button");
+    item.tabIndex = 0;
+    const title = sessionDisplayTitle(s);
+    const moveOptions = (state.folders || [])
+      .filter((folder) => !folder.archived)
+      .map((folder) => `<option value="${escapeHtml(folder.id)}" ${s.folder_id === folder.id ? "selected" : ""}>${escapeHtml(folder.name)}</option>`)
+      .join("");
+    item.innerHTML = `
+      <span class="session-row-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3 1.7-5A7 7 0 0 1 3 12V8a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"></path></svg>
+      </span>
+      <span class="session-main">
+        ${running ? `<span class="session-spinner" aria-hidden="true"></span>` : ""}
+        <span class="session-copy">
+          <span class="title">${escapeHtml(title)}</span>
+          ${context ? `<small>${escapeHtml(context)}</small>` : ""}
+        </span>
+        ${running ? `<span class="session-status running-tag">${pct}%</span>` : ""}
+      </span>
+      <details class="session-actions">
+        <summary class="act" title="${langZh ? "任务操作" : "Task actions"}" aria-label="${langZh ? "任务操作" : "Task actions"}">•••</summary>
+        <div class="session-menu">
+          <button type="button" data-rename="${escapeHtml(s.id)}">${langZh ? "重命名" : "Rename"}</button>
+          <button type="button" data-pin="${escapeHtml(s.id)}">${s.pinned ? (langZh ? "取消置顶" : "Unpin") : (langZh ? "置顶" : "Pin")}</button>
+          <button type="button" data-backup="${escapeHtml(s.id)}">${langZh ? "下载备份" : "Download backup"}</button>
+          <label>${langZh ? "移动到项目" : "Move to project"}<select class="session-folder-select" data-move-folder="${escapeHtml(s.id)}"><option value="">${langZh ? "未分类" : "Unclassified"}</option>${moveOptions}</select></label>
+          <button type="button" data-archive="${escapeHtml(s.id)}">${s.archived ? (langZh ? "恢复" : "Restore") : (langZh ? "归档" : "Archive")}</button>
+          <button type="button" class="danger" data-del="${escapeHtml(s.id)}">${langZh ? "删除" : "Delete"}</button>
+        </div>
+      </details>`;
+    if (running) item.style.setProperty("--run-pct", `${pct}%`);
+    item.addEventListener("keydown", (event) => {
+      if (event.target !== item || (event.key !== "Enter" && event.key !== " ")) return;
+      event.preventDefault();
+      if (s.id !== state.currentId) {
+        selectSession(s.id).catch((err) => console.warn(err));
+      }
+      setSidebarOpen(false);
+    });
+    return item;
+  };
+
+  const query = state.sessionQuery;
+  if (query) {
+    const matches = sessions.filter((s) => {
+      const folderName = folderById.get(s.folder_id)?.name || "";
+      return sessionDisplayTitle(s).toLowerCase().includes(query) || folderName.toLowerCase().includes(query);
+    });
+    const results = section(t("nav.searchResults"), matches.length, "search-results");
+    matches.forEach((s) => results.appendChild(makeSessionItem(s, folderById.get(s.folder_id)?.name || "")));
+    if (!matches.length) results.insertAdjacentHTML("beforeend", `<p class="sidebar-empty">${langZh ? "没有匹配的任务或项目" : "No matching tasks or projects"}</p>`);
+    return;
+  }
+
+  const pinned = sessions.filter((s) => s.pinned);
+  if (pinned.length) {
+    const pinnedSection = section(t("nav.pinned"), pinned.length, "pinned-section");
+    pinned.forEach((s) => pinnedSection.appendChild(makeSessionItem(s, folderById.get(s.folder_id)?.name || "")));
+  }
+
   const visibleFolders = (state.folders || []).filter((f) => Boolean(f.archived) === Boolean(state.showArchived));
-  const ordered = state.showArchived
-    ? visibleFolders.map((f) => [f.id, f])
-    : [...visibleFolders.map((f) => [f.id, f]), ["", { id: "", name: langZh ? "未分类" : "Unclassified", archived: false }]];
-  ordered.forEach(([folderId, folder]) => {
-    const allItems = groups.get(folderId) || [];
-    const folderMatches = !!state.sessionQuery && String(folder.name || "").toLowerCase().includes(state.sessionQuery);
-    const items = !state.sessionQuery || folderMatches
-      ? allItems
-      : allItems.filter((s) => sessionDisplayTitle(s).toLowerCase().includes(state.sessionQuery));
-    if (!items.length && (folderId === "" || (state.sessionQuery && !folderMatches))) return;
-    const openKey = `agent_hub_folder_open_${folderId || "none"}`;
+  if (visibleFolders.length) {
+    section(t("nav.projects"), visibleFolders.length, "projects-section");
+  }
+  visibleFolders.forEach((folder) => {
+    const allItems = groups.get(folder.id) || [];
+    const items = allItems.filter((s) => !s.pinned);
+    const openKey = `agent_hub_folder_open_${folder.id}`;
     const open = localStorage.getItem(openKey) !== "0";
     const header = document.createElement("div");
-    header.className = "session-folder" + (folderId === state.activeFolderId ? " active" : "");
-    const folderActions = folderId
-      ? `<span class="folder-actions"><button type="button" class="act" data-folder-rename="${escapeHtml(folderId)}" title="${langZh ? "重命名文件夹" : "Rename folder"}">✎</button><button type="button" class="act" data-folder-archive="${escapeHtml(folderId)}" title="${folder.archived ? (langZh ? "恢复文件夹" : "Restore folder") : (langZh ? "文件夹存档" : "Archive folder")}">${folder.archived ? "↩" : "▣"}</button><button type="button" class="act danger" data-folder-delete="${escapeHtml(folderId)}" title="${langZh ? "删除文件夹" : "Delete folder"}">×</button></span>`
-      : `<span class="folder-actions"><button type="button" class="act danger" data-folder-clear title="${langZh ? "清空未分类任务" : "Clear unclassified tasks"}">×</button></span>`;
-    header.innerHTML = `<div class="folder-header"><button type="button" class="folder-toggle" data-folder-toggle="${escapeHtml(folderId)}">${open ? "▾" : "▸"} <span>${escapeHtml(folder.name)}</span><small>${items.length}</small></button>${folderActions}</div>`;
+    header.className = "session-folder" + (folder.id === state.activeFolderId ? " active" : "");
+    header.innerHTML = `<div class="folder-header"><button type="button" class="folder-toggle" data-folder-toggle="${escapeHtml(folder.id)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h6l2 2h10v11H3Z"></path></svg><span>${escapeHtml(folder.name)}</span><small>${allItems.length}</small><i aria-hidden="true">${open ? "⌄" : "›"}</i></button><details class="folder-actions"><summary class="act" title="${langZh ? "项目操作" : "Project actions"}">•••</summary><div class="folder-menu"><button type="button" data-folder-rename="${escapeHtml(folder.id)}">${langZh ? "重命名" : "Rename"}</button><button type="button" data-folder-archive="${escapeHtml(folder.id)}">${folder.archived ? (langZh ? "恢复" : "Restore") : (langZh ? "归档" : "Archive")}</button><button type="button" class="danger" data-folder-delete="${escapeHtml(folder.id)}">${langZh ? "删除项目" : "Delete project"}</button></div></details></div>`;
     header.querySelector("[data-folder-toggle]").onclick = () => {
-      state.activeFolderId = folderId;
-      localStorage.setItem("agent_hub_active_folder", folderId);
+      state.activeFolderId = folder.id;
+      localStorage.setItem("agent_hub_active_folder", folder.id);
       localStorage.setItem(openKey, open ? "0" : "1");
       renderSessionList();
-      renderFolderOverview(folderId);
+      renderFolderOverview(folder.id);
     };
     header.querySelector("[data-folder-rename]")?.addEventListener("click", async (event) => {
       event.stopPropagation();
-      const next = prompt(langZh ? "文件夹名称" : "Folder name", folder.name);
+      const next = prompt(langZh ? "项目名称" : "Project name", folder.name);
       if (next == null || !next.trim()) return;
-      await api(`/api/folders/${encodeURIComponent(folderId)}`, { method: "PATCH", body: JSON.stringify({ name: next.trim() }) });
+      await api(`/api/folders/${encodeURIComponent(folder.id)}`, { method: "PATCH", body: JSON.stringify({ name: next.trim() }) });
       await refreshSessions();
     });
     header.querySelector("[data-folder-delete]")?.addEventListener("click", async (event) => {
       event.stopPropagation();
-      await api(`/api/folders/${encodeURIComponent(folderId)}`, { method: "DELETE" });
+      await api(`/api/folders/${encodeURIComponent(folder.id)}`, { method: "DELETE" });
       await refreshSessions();
     });
     header.querySelector("[data-folder-archive]")?.addEventListener("click", async (event) => {
       event.stopPropagation();
-      await api(`/api/folders/${encodeURIComponent(folderId)}`, { method: "PATCH", body: JSON.stringify({ archived: !folder.archived }) });
-      await refreshSessions();
-    });
-    header.querySelector("[data-folder-clear]")?.addEventListener("click", async (event) => {
-      event.stopPropagation();
-      if (!items.length) return;
-      await Promise.all(items.map((s) => api(`/api/sessions/${encodeURIComponent(s.id)}`, { method: "PATCH", body: JSON.stringify({ archived: true }) })));
-      if (items.some((s) => s.id === state.currentId)) {
-        state.currentId = null;
-        $("#messages").innerHTML = "";
-        $("#chat-title").textContent = t("chat.new");
-      }
+      await api(`/api/folders/${encodeURIComponent(folder.id)}`, { method: "PATCH", body: JSON.stringify({ archived: !folder.archived }) });
       await refreshSessions();
     });
     list.appendChild(header);
@@ -2947,60 +3120,24 @@ function renderSessionList() {
     if (!items.length) {
       const empty = document.createElement("div");
       empty.className = "folder-empty";
-      empty.textContent = langZh ? "文件夹为空，把会话移动到这里" : "Empty folder. Move a chat here.";
+      empty.textContent = allItems.length
+        ? (langZh ? "置顶任务显示在上方" : "Pinned tasks appear above")
+        : (langZh ? "项目中还没有任务" : "No tasks in this project");
       list.appendChild(empty);
       return;
     }
-    items.forEach((s) => {
-    const run = state.sessionRuns[s.id];
-    const running = !!(run && run.streaming);
-    const pct = Math.max(0, Math.min(100, Math.round((run && run.pct) || 0)));
-    const btn = document.createElement("div");
-    btn.className = "session-item"
-      + (s.id === state.currentId ? " active" : "")
-      + (running ? " running" : "");
-    btn.dataset.sid = s.id;
-    btn.setAttribute("role", "button");
-    btn.tabIndex = 0;
-    const title = sessionDisplayTitle(s);
-    btn.innerHTML = `
-      <span class="session-main">
-        ${running ? `<span class="session-spinner" aria-hidden="true"></span>` : ""}
-        <span class="title">${escapeHtml(title)}</span>
-        ${running
-          ? `<span class="session-status running-tag">${langZh ? "执行中" : "Running"} ${pct}%</span>`
-          : `<span class="session-status idle-tag">${langZh ? "就绪" : "Idle"}</span>`}
-      </span>
-      <span class="session-actions">
-        <button type="button" class="act" data-rename="${escapeHtml(s.id)}" title="${escapeHtml(langZh ? "更改名称" : "Rename")}">✎</button>
-       <button type="button" class="act" data-backup="${escapeHtml(s.id)}" title="${escapeHtml(langZh ? "备份" : "Backup")}">⬇</button>
-        <button type="button" class="act ${s.pinned ? "selected" : ""}" data-pin="${escapeHtml(s.id)}" title="${escapeHtml(s.pinned ? (langZh ? "取消置顶" : "Unpin") : (langZh ? "置顶" : "Pin"))}">${s.pinned ? "★" : "☆"}</button>
-        <button type="button" class="act" data-archive="${escapeHtml(s.id)}" title="${escapeHtml(s.archived ? (langZh ? "取消归档" : "Restore") : (langZh ? "归档" : "Archive"))}">${s.archived ? "↩" : "▣"}</button>
-       <button type="button" class="act danger" data-del="${escapeHtml(s.id)}" title="${escapeHtml(langZh ? "删除" : "Delete")}">×</button>
-        <select class="session-folder-select" data-move-folder="${escapeHtml(s.id)}" title="${escapeHtml(langZh ? "移动到文件夹" : "Move to folder")}"><option value="">${langZh ? "未分类" : "Unclassified"}</option>${(state.folders || []).map((f) => `<option value="${escapeHtml(f.id)}" ${s.folder_id === f.id ? "selected" : ""}>${escapeHtml(f.name)}</option>`).join("")}</select>
-      </span>`;
-    if (running) {
-      btn.style.setProperty("--run-pct", `${pct}%`);
-    }
-    btn.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        if (s.id === state.currentId) {
-          setSidebarOpen(false);
-          return;
-        }
-        selectSession(s.id).catch((err) => {
-          console.warn(err);
-          if (langZh) alert(`无法切换会话：${err.message || err}`);
-          else alert(`Cannot switch session: ${err.message || err}`);
-        });
-        setSidebarOpen(false);
-      }
-    });
-    list.appendChild(btn);
-    });
+    items.forEach((s) => list.appendChild(makeSessionItem(s)));
   });
-  if (!state.sessions.length) list.innerHTML = `<div class="muted">${langZh ? "暂无会话" : "No chats"}</div>`;
+
+  const recent = (groups.get("") || []).filter((s) => !s.pinned);
+  if (recent.length) {
+    const recentSection = section(state.showArchived ? (langZh ? "已归档" : "Archived") : t("nav.recents"), recent.length, "recent-section");
+    recent.forEach((s) => recentSection.appendChild(makeSessionItem(s)));
+  }
+
+  if (!sessions.length) {
+    list.innerHTML = `<div class="sidebar-empty">${state.showArchived ? (langZh ? "暂无归档任务" : "No archived tasks") : (langZh ? "还没有任务" : "No tasks yet")}</div>`;
+  }
 }
 
 async function renameSession(id, current) {
@@ -8085,6 +8222,7 @@ setInterval(() => {
 }, 1500);
 bindClick("#btn-menu", () => setSidebarOpen(true));
 bindClick("#sidebar-backdrop", () => setSidebarOpen(false));
+bindSidebarChrome();
 setupSidebarResize();
 setupComposerResize();
 setupComposerAdvanced();

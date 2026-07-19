@@ -43,7 +43,7 @@ from . import (
     websearch,
     workflows,
 )
-from .config import APP_NAME, REPO_ROOT, RUNTIME, STATIC_DIR, VERSION, local_ips
+from .config import APP_NAME, PUBLIC_URL, REPO_ROOT, RUNTIME, STATIC_DIR, VERSION, local_ips
 from .settings import (
     import_campus_config,
     load_campus_config,
@@ -194,6 +194,17 @@ def handle_get(handler) -> None:
                 "host": RUNTIME.get("host"),
                 "port": RUNTIME.get("port"),
                 "local_ips": local_ips(),
+                "public_url": PUBLIC_URL,
+                "public_access": {
+                    "configured": bool(PUBLIC_URL),
+                    "https": PUBLIC_URL.lower().startswith("https://"),
+                    "auth_required": auth.auth_required(),
+                    "ready": bool(
+                        PUBLIC_URL
+                        and PUBLIC_URL.lower().startswith("https://")
+                        and auth.auth_required()
+                    ),
+                },
                 "agent": st,
                 "health": health,
                 "default_route": "auto" if (ali.get("default_route") in (None, "", "office")) else ali.get("default_route"),

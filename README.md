@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/xielab2017/Agent-Hub/releases"><img alt="version" src="https://img.shields.io/badge/version-4.0.0-rose.svg" /></a>
+  <a href="https://github.com/xielab2017/Agent-Hub/releases"><img alt="version" src="https://img.shields.io/badge/version-5.0.1-rose.svg" /></a>
   <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-MIT-blue.svg" /></a>
   <a href="https://www.python.org/"><img alt="python" src="https://img.shields.io/badge/python-%3E%3D3.9-brightgreen.svg" /></a>
   <a href="https://github.com/xielab2017/Agent-Hub"><img alt="platform" src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg" /></a>
@@ -93,7 +93,7 @@ chmod +x ctl.sh "Start Agent Hub.command" start.sh
 curl -s http://127.0.0.1:8765/api/health
 ```
 
-确认健康检查里显示 `"version": "5.0.0"`。如果仍然不对，可临时换端口验证当前源码：
+确认健康检查里显示 `"version": "5.0.1"`。如果仍然不对，可临时换端口验证当前源码：
 
 ```bash
 python3 server.py --host 127.0.0.1 --port 9876 --open
@@ -134,6 +134,39 @@ start-agent-hub.bat
 python3 server.py --host 0.0.0.0 --port 8765
 ```
 
+### 双击同步 GitHub 最新版本
+
+通过 `git clone` 安装的仓库可以使用根目录中的更新器。更新器会临时保存未提交的本地修改，使用 fast-forward 模式同步当前分支，再恢复本地修改；不会执行 `reset --hard`。
+
+- **macOS**：双击 **`Update Agent Hub.command`**
+- **Windows**：双击 **`update-agent-hub.bat`**
+- **macOS / Linux 命令行**：运行 `./update.sh`
+
+同步完成后需要重启 Agent Hub 才会加载新代码：
+
+```bash
+# macOS / Linux
+./ctl.sh restart
+```
+
+如果本地修改与 GitHub 新版本冲突，更新器会保留 `git stash` 并提示手动解决，不会删除本地文件。直接从 GitHub 下载的 ZIP 不包含 Git 历史，无法使用该更新器；首次使用建议通过 `git clone` 安装。
+
+### 双击发布修改到 GitHub
+
+仓库根目录还提供跨平台发布器：
+
+- **macOS**：双击 **`Push Agent Hub.command`**
+- **Windows**：双击 **`push-agent-hub.bat`**
+
+发布器会先同步 `main`、保护未提交修改，并自动把版本号第三位加一，例如 `5.0.0` 更新为 `5.0.1`。选择“一般用户”时不需要本地管理员密码，会创建 `contrib/<用户>/v<版本>-<时间>` 分支并推送；选择“管理员”时会验证本机密码配置并直接推送 `main`。
+
+管理员密码不会写入 Git 仓库。可将密码的 SHA-256 保存到以下本机文件，或设置 `AGENT_HUB_ADMIN_PASSWORD_SHA256`：
+
+- macOS/Linux：`~/.hermes/ali/publish-admin.sha256`
+- Windows：`%LOCALAPPDATA%\hermes-ali\publish-admin.sha256`
+
+本地角色选择只是操作防误触，真正权限仍由 GitHub 仓库写入权限、认证和 `main` 分支保护控制。一般用户必须拥有该仓库分支的写入权限；没有写入权限时，应先使用个人 fork。
+
 可选环境变量：
 
 | 变量 | 含义 |
@@ -141,8 +174,23 @@ python3 server.py --host 0.0.0.0 --port 8765
 | `HERMES_ALI_HOST` | 绑定地址（默认 `0.0.0.0`） |
 | `HERMES_ALI_PORT` | 端口（默认 `8765`） |
 | `HERMES_ALI_PASSWORD` | 可选访问密码 |
+| `HERMES_ALI_PUBLIC_URL` | HTTPS 隧道或反向代理提供的外网地址 |
 | `HERMES_ALI_STATE_DIR` | 覆盖 Hub 状态目录 |
 | `HERMES_HOME` | Hermes 原生 home |
+
+### 局域网与外网访问
+
+侧栏左下角会显示本机地址和可识别的局域网地址。局域网中的其他设备可通过 `http://<局域网IP>:8765` 访问；若无法连接，请检查系统防火墙是否允许 Python/Agent Hub 接收入站连接。
+
+公网地址无法仅凭本机网络可靠地自动判断，因为设备通常位于 NAT、校园网或反向代理之后。推荐使用提供 HTTPS 的可信隧道或反向代理，并同时设置访问密码与对外 URL：
+
+```bash
+export HERMES_ALI_PASSWORD='请换成高强度密码'
+export HERMES_ALI_PUBLIC_URL='https://agent.example.edu'
+./start.sh
+```
+
+配置后，侧栏会显示“外网”地址。只有 URL 使用 HTTPS 且启用了 `HERMES_ALI_PASSWORD` 时，界面才会将公网状态标记为就绪。不要把无密码的 `8765` 端口直接映射到公网；正式多人使用时还应在反向代理或零信任网关中配置账号、访问策略和日志审计。
 
 ---
 
@@ -206,7 +254,7 @@ Agent-Hub/
 
 ## 开发与版本
 
-当前版本：**v5.0.0**（分支 `main`）
+当前版本：**v5.0.1**（分支 `main`）
 
 ```bash
 # 健康检查
