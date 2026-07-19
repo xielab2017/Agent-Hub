@@ -45,6 +45,20 @@ def test_real_probe_builds_minimal_chat_request(monkeypatch):
     assert seen["body"]["max_tokens"] == 2
 
 
+def test_catalog_suggestions_keep_retrieval_slots_capability_safe():
+    chat_only = llm_client.suggest_slots(["vendor/chat-8b", "vendor/chat-70b"])
+    assert chat_only["embedding"] == ""
+    assert chat_only["reranker"] == ""
+
+    with_retrieval = llm_client.suggest_slots([
+        "vendor/chat-8b",
+        "vendor/text-embedding-v2",
+        "vendor/search-reranker-v1",
+    ])
+    assert with_retrieval["embedding"] == "vendor/text-embedding-v2"
+    assert with_retrieval["reranker"] == "vendor/search-reranker-v1"
+
+
 def test_unavailable_fetched_model_is_hidden_from_picker():
     cfg = {
         "backend": {"type": "nvidia-nim"},
@@ -103,6 +117,45 @@ def test_background_health_job_builds_profiles_and_persists_results(monkeypatch)
     assert stored["model_profiles"]["vendor/test-model"]["provider"] == provider
 
 
+def test_health_profiles_repair_only_incompatible_model_slots():
+    provider = "test-provider"
+
+    def profile(model, capabilities):
+        return model_intelligence.build_model_profile(
+            model,
+            provider=provider,
+            health={"model": model, "provider": provider, "state": "healthy"},
+            measured_capabilities=capabilities,
+        )
+
+    chat = profile("vendor/chat-8b", {"chat": True, "writing": 0.8, "coding": 0.8})
+    embed = profile("vendor/text-embedding-v2", {"chat": False, "embedding": True})
+    reranker = profile("vendor/search-reranker-v1", {"chat": False, "reranker": True})
+    config = {
+        "backend": {"type": provider},
+        "models": {
+            "fast": "old/unavailable-chat",
+            "qwen_fast": "old/unavailable-chat",
+            "main": "vendor/chat-8b",
+            "qwen_main": "vendor/chat-8b",
+            "embedding": "old/chat-model",
+            "reranker": "old/chat-model",
+        },
+    }
+
+    repaired = model_intelligence.repair_incompatible_model_slots(
+        config,
+        provider=provider,
+        profiles={item["model"]: item for item in (chat, embed, reranker)},
+    )
+
+    assert repaired["models"]["fast"] == "vendor/chat-8b"
+    assert repaired["models"]["qwen_fast"] == "vendor/chat-8b"
+    assert repaired["models"]["main"] == "vendor/chat-8b"
+    assert repaired["models"]["embedding"] == "vendor/text-embedding-v2"
+    assert repaired["models"]["reranker"] == "vendor/search-reranker-v1"
+
+
 def test_health_progress_lives_in_backend_and_models_page_is_results_only():
     source = APP_JS.read_text(encoding="utf-8")
 
@@ -115,6 +168,8 @@ def test_health_progress_lives_in_backend_and_models_page_is_results_only():
     assert 'class="model-progress is-indeterminate"' in source
     assert "resultsBox.dataset.resultsSignature" in source
     assert "if (resultsBox && !resultsBox.hasChildNodes())" in source
+    assert "No healthy compatible model" in source
+    assert 'reranker: ["Reranker"]' in source
 
 
 def test_manual_catalog_refresh_forces_a_fresh_health_check():

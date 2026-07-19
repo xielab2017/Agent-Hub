@@ -119,7 +119,12 @@ def suggest_slots(models: list[str]) -> dict[str, str]:
     """Heuristic pick for C0/C1/Vision/C3/embed from a live model list."""
     lower_map = {m.lower(): m for m in models}
 
-    def pick(preds: list[Callable[[str], bool]], fallback_substrings: list[str] | None = None) -> str:
+    def pick(
+        preds: list[Callable[[str], bool]],
+        fallback_substrings: list[str] | None = None,
+        *,
+        default_to_first: bool = True,
+    ) -> str:
         for m in models:
             ml = m.lower()
             if any(p(ml) for p in preds):
@@ -129,11 +134,17 @@ def suggest_slots(models: list[str]) -> dict[str, str]:
                 for ml, orig in lower_map.items():
                     if sub in ml:
                         return orig
-        return models[0] if models else ""
+        return models[0] if models and default_to_first else ""
 
     embed = pick(
         [lambda s: "embed" in s],
         ["embed"],
+        default_to_first=False,
+    )
+    reranker = pick(
+        [lambda s: "rerank" in s],
+        ["rerank"],
+        default_to_first=False,
     )
     vision = pick(
         [lambda s: any(x in s for x in ("vision", "vl", "llava", "gpt-4o", "gemini-2.0-flash", "4o"))],
@@ -167,7 +178,7 @@ def suggest_slots(models: list[str]) -> dict[str, str]:
         "vision": vision or main or fast,
         "reasoning": reasoning or main or fast,
         "embedding": embed,
-        "reranker": "",
+        "reranker": reranker,
         "qwen_fast": fast,
         "qwen_main": main or fast,
         "qwen_vl": vision or main or fast,

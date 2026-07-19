@@ -588,6 +588,58 @@ def select_configured_category_model(
     return {**result, "provider": active_provider, "auto": is_auto}
 
 
+def repair_incompatible_model_slots(
+    config: Mapping[str, Any],
+    *,
+    provider: str,
+    profiles: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Replace stale or capability-incompatible legacy model slots.
+
+    Healthy manual choices are preserved. Slots are changed only when their
+    current model is unavailable for the active provider or does not support
+    the slot's required category.
+    """
+    repaired = deepcopy(dict(config))
+    backend = repaired.get("backend") if isinstance(repaired.get("backend"), Mapping) else {}
+    if str(backend.get("type") or "").strip() != str(provider or "").strip():
+        return repaired
+
+    provider_profiles: list[dict[str, Any]] = []
+    by_model: dict[str, dict[str, Any]] = {}
+    for model, raw in profiles.items():
+        if not isinstance(raw, Mapping):
+            continue
+        profile = dict(raw)
+        profile["model"] = str(profile.get("model") or model)
+        if str(profile.get("provider") or "").strip() != provider:
+            continue
+        provider_profiles.append(profile)
+        by_model[profile["model"]] = profile
+
+    models = dict(repaired.get("models") or {})
+    slot_categories = (
+        (("fast", "qwen_fast"), "C0"),
+        (("main", "qwen_main"), "C1"),
+        (("vision", "qwen_vl"), "Vision"),
+        (("reasoning", "deepseek_reasoning"), "C3"),
+        (("embedding",), "Embedding"),
+        (("reranker",), "Reranker"),
+    )
+    for keys, category in slot_categories:
+        current = next((str(models.get(key) or "").strip() for key in keys if models.get(key)), "")
+        current_profile = by_model.get(current) or {}
+        current_categories = current_profile.get("recommended_categories") or []
+        current_valid = bool(current_profile.get("healthy")) and category in current_categories
+        if current_valid:
+            continue
+        replacement = str(recommend_model(provider_profiles, category).get("model") or "")
+        for key in keys:
+            models[key] = replacement
+    repaired["models"] = models
+    return repaired
+
+
 _JOB_LOCK = threading.RLock()
 _JOBS: dict[str, dict[str, Any]] = {}
 
@@ -788,6 +840,11 @@ def start_governance_analysis(
             latest_profiles.update(profiles)
             latest["model_health_cache"] = latest_health
             latest["model_profiles"] = latest_profiles
+            latest = repair_incompatible_model_slots(
+                latest,
+                provider=provider_id,
+                profiles=latest_profiles,
+            )
             save_campus_config(latest)
             with _JOB_LOCK:
                 job.update({"status": "complete", "finished_at": _now()})

@@ -4047,18 +4047,29 @@ function modelBindingOptions(selectedProvider, selectedModel, {
   }).join("");
 }
 
-function modelIdOptions(selectedModel, provider = "") {
+function modelIdOptions(selectedModel, provider = "", categories = []) {
   const selected = String(selectedModel || "").trim();
-  const entries = sharedModelOptions(selected ? [{
+  const governanceProfiles = ((state.settings || {}).model_governance || {}).profiles || [];
+  const compatible = new Set(governanceProfiles.filter((profile) => {
+    const health = String(profile?.health_state || profile?.health?.state || "");
+    const profileProvider = String(profile?.provider || "");
+    const recommended = Array.isArray(profile?.recommended_categories) ? profile.recommended_categories : [];
+    return (!provider || !profileProvider || profileProvider === provider)
+      && ["healthy", "degraded"].includes(health)
+      && (!categories.length || categories.some((category) => recommended.includes(category)));
+  }).map((profile) => String(profile.model || "")));
+  let entries = sharedModelOptions(selected ? [{
     provider,
     model: selected,
     available: false,
     source: "configured",
   }] : []).filter((item) => !provider || item.provider === provider || !item.provider);
+  if (categories.length && governanceProfiles.length) {
+    entries = entries.filter((item) => compatible.has(item.model));
+  }
   return entries.map((item) => {
-    const stale = item.available === false ? (state.prefs.language === "en" ? " · unavailable (kept)" : " · 已不在目录（保留）") : "";
-    return `<option value="${escapeHtml(item.model)}" ${item.model === selected ? "selected" : ""}>${escapeHtml(item.model + stale)}</option>`;
-  }).join("") || `<option value="${escapeHtml(selected)}">${escapeHtml(selected || "—")}</option>`;
+    return `<option value="${escapeHtml(item.model)}" ${item.model === selected ? "selected" : ""}>${escapeHtml(item.model)}</option>`;
+  }).join("") || `<option value="">${state.prefs.language === "en" ? "No healthy compatible model" : "暂无健康兼容模型"}</option>`;
 }
 
 function modelChoicesFromSettings() {
@@ -7012,8 +7023,12 @@ async function renderControl() {
   function modelField(slot) {
     const legacy = slot.legacy;
     const val = m[legacy] || m[slot.id] || "";
+    const slotCategories = {
+      fast: ["C0"], main: ["C1", "C2"], vision: ["Vision"],
+      reasoning: ["C3"], embedding: ["Embedding"], reranker: ["Reranker"],
+    }[slot.id] || [];
     return `<label class="field"><span>${escapeHtml(slot.label)} <em class="muted">(${escapeHtml(slot.tier)})</em></span>
-      <select data-key="models.${escapeHtml(legacy)}">${modelIdOptions(val, b.type === "hybrid" ? "" : b.type)}</select>
+      <select data-key="models.${escapeHtml(legacy)}">${modelIdOptions(val, b.type === "hybrid" ? "" : b.type, slotCategories)}</select>
     </label>`;
   }
 
