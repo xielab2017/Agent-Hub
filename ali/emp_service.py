@@ -45,6 +45,10 @@ PLAN_TOOLS = {
     "emp.prepare.taxonomy",
     "emp.analyze.alpha",
     "emp.visualize.alpha",
+    "emp.prepare.normalize",
+    "emp.analyze.differential",
+    "emp.analyze.enrichment",
+    "emp.analyze.association",
 }
 TERMINAL_JOB_STATES = {"done", "error", "cancelled"}
 
@@ -283,8 +287,10 @@ class EmpService:
         return plan
 
     def validate_plan(self, plan: AnalysisPlan) -> None:
-        if plan.workflow != "microbiome_16s" or plan.emp_mode != "local-api":
-            raise ValueError("unsupported Phase 1 workflow or EMP mode")
+        if plan.emp_mode not in {"local-api", "remote-api", "r-direct"}:
+            raise ValueError("unsupported EMP mode")
+        if plan.workflow not in {"microbiome_16s", "transcriptomics", "metabolomics", "metagenomics", "clinical"}:
+            raise ValueError("unsupported EMP workflow")
         if not plan.steps:
             raise ValueError("analysis plan has no steps")
         ids = {step.id for step in plan.steps}
@@ -312,6 +318,13 @@ class EmpService:
 
         for step_id in ids:
             visit(step_id)
+
+    def save_plan(self, plan: AnalysisPlan) -> AnalysisPlan:
+        """Persist a plan after strict local tool/DAG validation."""
+        self.validate_plan(plan)
+        self._validate_plan_dataset(plan)
+        _atomic_json(self.plans_dir / f"{plan.plan_id}.json", plan.to_dict())
+        return plan
 
     def get_plan(self, plan_id: str) -> AnalysisPlan:
         return AnalysisPlan.from_dict(_load_json(self.plans_dir / f"{_safe_name(plan_id)}.json"))
@@ -342,6 +355,37 @@ class EmpService:
                 hub_session_id=plan.hub_session_id,
                 fingerprint=fingerprint,
                 message="Queued",
+                step_states={step.id: "pending" for step in plan.steps},
+            )
+            self._save_job(job)
+            thread = threading.Thread(target=self._execute_plan, args=(job.job_id,), daemon=True)
+            self._threads[job.job_id] = thread
+            thread.start()
+            return job
+
+    def retry_job(self, job_id: str, *, hub_session_id: str) -> EmpJob:
+        from .emp_planning import retry_closure
+
+        with self._lock:
+            previous = self.get_job(job_id, hub_session_id=hub_session_id)
+            if previous.status != "error":
+                raise ValueError("only failed EMP jobs can be retried")
+            plan = self.get_plan(previous.plan_id)
+            failed_step = previous.step_id or (plan.steps[0].id if plan.steps else "")
+            selected = retry_closure(plan, [failed_step]) if failed_step else [step.id for step in plan.steps]
+            job = EmpJob(
+                job_id=new_id("empjob"),
+                plan_id=plan.plan_id,
+                hub_session_id=hub_session_id,
+                fingerprint=f"{plan.fingerprint()}:retry:{new_id('attempt')}",
+                message="Retry queued",
+                emp_session_id=previous.emp_session_id,
+                artifact_ids=list(previous.artifact_ids),
+                retry_step_ids=selected,
+                step_states={
+                    step.id: ("pending" if step.id in selected else previous.step_states.get(step.id, "done"))
+                    for step in plan.steps
+                },
             )
             self._save_job(job)
             thread = threading.Thread(target=self._execute_plan, args=(job.job_id,), daemon=True)
@@ -377,42 +421,59 @@ class EmpService:
             capabilities = client.capabilities()
             self._check_cancel(job)
 
-            data, metadata = self._manifest_inputs(manifest, plan.hub_session_id)
-            self._update_job(job, progress=10, message="Previewing input data", step_id="import")
-            client.preview_path({"data_path": str(data), "metadata_path": str(metadata), "data_type": "tax"})
-            self._check_cancel(job)
-            imported = client.import_path({
-                "data_path": str(data),
-                "metadata_path": str(metadata),
-                "experiment_name": plan.experiment_name,
-                "data_type": "tax",
-                "assay_name": "counts",
-                "start_level": "Species",
-                "tax_sep": ";",
-            })
-            emp_session_id = str(imported.get("session_id") or "")
+            if plan.emp_mode != "local-api":
+                raise EmpClientError("EMP_VERSION_INCOMPATIBLE", f"{plan.emp_mode} plans use their dedicated adapter")
+            imported: dict[str, Any] = {"reused_session": bool(job.emp_session_id)}
+            emp_session_id = job.emp_session_id
             if not emp_session_id:
-                raise EmpClientError("EMP_RESULT_MISSING", "session_id missing after import")
-            job.emp_session_id = emp_session_id
-            self._save_mapping(plan, emp_session_id)
-
-            progress = {"validate": 30, "taxonomy_prepare": 50, "alpha": 72, "alpha_plot": 88}
-            outputs: dict[str, dict[str, Any]] = {"capabilities": capabilities, "import": imported}
-            for step in plan.steps:
+                data, metadata = self._manifest_inputs(manifest, plan.hub_session_id)
+                self._update_job(job, progress=10, message="Previewing input data", step_id="import")
+                data_type = "tax" if plan.workflow == "microbiome_16s" else "normal"
+                client.preview_path({"data_path": str(data), "metadata_path": str(metadata), "data_type": data_type})
                 self._check_cancel(job)
-                self._update_job(job, progress=progress.get(step.id, 60), message=f"Running {step.id}", step_id=step.id)
-                params = {**step.params, "session_id": emp_session_id, "experiment": plan.experiment_name}
+                imported = client.import_path({
+                    "data_path": str(data),
+                    "metadata_path": str(metadata),
+                    "experiment_name": plan.experiment_name,
+                    "data_type": data_type,
+                    "assay_name": "counts",
+                    "start_level": "Species",
+                    "tax_sep": ";",
+                })
+                emp_session_id = str(imported.get("session_id") or "")
+                if not emp_session_id:
+                    raise EmpClientError("EMP_RESULT_MISSING", "session_id missing after import")
+                job.emp_session_id = emp_session_id
+                self._save_mapping(plan, emp_session_id)
+
+            steps = [step for step in plan.steps if not job.retry_step_ids or step.id in job.retry_step_ids]
+            step_count = max(1, len(steps))
+            outputs: dict[str, dict[str, Any]] = {"capabilities": capabilities, "import": imported}
+            for step_index, step in enumerate(steps):
+                self._check_cancel(job)
+                step_progress = 25 + int((step_index / step_count) * 65)
+                self._update_job(job, progress=step_progress, message=f"Running {step.id}", step_id=step.id)
+                job.step_states[step.id] = "running"
+                self._save_job(job)
+                params = {
+                    **step.params,
+                    "_workflow": plan.workflow,
+                    "session_id": emp_session_id,
+                    "experiment": plan.experiment_name,
+                }
                 result = client.run_step(step.tool, params)
                 if step.id == "validate":
                     checks = (result.get("validation") or {}).get("checks") or {}
                     if checks and not all(bool(value) for value in checks.values()):
                         raise EmpClientError("EMP_DATA_VALIDATION_FAILED", "one or more EMP validation checks failed", details=result)
                 outputs[step.id] = result
-                if step.id == "alpha":
-                    artifact = self._write_json_artifact(job, step.id, "alpha_diversity.json", result)
+                if step.tool != "emp.visualize.alpha":
+                    artifact = self._write_json_artifact(job, step.id, f"{_safe_name(step.id)}.json", result)
                     job.artifact_ids.append(artifact.artifact_id)
-                elif step.id == "alpha_plot":
+                if step.tool == "emp.visualize.alpha":
                     self._save_plot_artifacts(job, plan, result, client)
+                job.step_states[step.id] = "done"
+                self._save_job(job)
 
             if plan.output.get("generate_report", True):
                 report = self._write_report(job, plan, manifest, outputs)
@@ -610,6 +671,8 @@ class EmpService:
         else:
             job.status = "error"
             job.message = str(error.get("user_message_en") or error.get("message") or "EMP job failed")
+            if job.step_id:
+                job.step_states[job.step_id] = "error"
         job.error = error
         job.updated_at = utc_timestamp()
         self._save_job(job)

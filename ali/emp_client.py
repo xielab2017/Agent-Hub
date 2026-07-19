@@ -111,6 +111,27 @@ class EmpClient:
         "emp.visualize.alpha": "/api/visualize/alpha",
     }
 
+    WORKFLOW_STEP_ENDPOINTS = {
+        ("microbiome_16s", "emp.workflow.validate"): "/api/workflows/microbiome_16s/validate",
+        ("transcriptomics", "emp.workflow.validate"): "/api/workflows/transcriptomics/validate",
+        ("metabolomics", "emp.workflow.validate"): "/api/workflows/metabolomics/validate",
+        ("metagenomics", "emp.workflow.validate"): "/api/workflows/metagenomics/validate",
+        ("clinical", "emp.workflow.validate"): "/api/clinical/vars_standalone/{session_id}",
+        ("microbiome_16s", "emp.prepare.taxonomy"): "/api/workflows/microbiome_16s/prepare/taxonomy",
+        ("transcriptomics", "emp.prepare.normalize"): "/api/workflows/transcriptomics/preprocess",
+        ("metabolomics", "emp.prepare.normalize"): "/api/workflows/metabolomics/preprocess",
+        ("metagenomics", "emp.prepare.normalize"): "/api/workflows/metagenomics/preprocess",
+        ("microbiome_16s", "emp.analyze.alpha"): "/api/analyze/alpha",
+        ("microbiome_16s", "emp.analyze.differential"): "/api/analyze/differential",
+        ("transcriptomics", "emp.analyze.differential"): "/api/workflows/transcriptomics/analyze/differential",
+        ("metabolomics", "emp.analyze.differential"): "/api/workflows/metabolomics/analyze/differential",
+        ("metagenomics", "emp.analyze.differential"): "/api/workflows/metagenomics/analyze/differential",
+        ("transcriptomics", "emp.analyze.enrichment"): "/api/workflows/transcriptomics/analyze/gsea",
+        ("metabolomics", "emp.analyze.enrichment"): "/api/analyze/enrichment",
+        ("metagenomics", "emp.analyze.enrichment"): "/api/workflows/metagenomics/analyze/enrichment",
+        ("clinical", "emp.analyze.association"): "/api/clinical/cor",
+    }
+
     def __init__(
         self,
         base_url: str,
@@ -239,11 +260,45 @@ class EmpClient:
         values = result.get("experiments") or []
         return values if isinstance(values, list) else []
 
-    def run_step(self, tool: str, params: dict[str, Any]) -> dict[str, Any]:
-        endpoint = self.STEP_ENDPOINTS.get(tool)
+    @classmethod
+    def prepare_step_request(cls, tool: str, params: dict[str, Any]) -> tuple[str, str, dict[str, Any]]:
+        values = dict(params)
+        workflow = str(values.pop("_workflow", "") or values.get("workflow") or "microbiome_16s")
+        endpoint = cls.WORKFLOW_STEP_ENDPOINTS.get((workflow, tool)) or cls.STEP_ENDPOINTS.get(tool)
         if endpoint is None:
             raise ValueError(f"unregistered EMP tool: {tool}")
-        return self._request("POST", endpoint, params)
+        values.pop("workflow", None)
+        values.pop("min_group_size", None)
+        values.pop("source_step", None)
+        if "reference_level" in values:
+            values["ref_group"] = values.pop("reference_level")
+        if "test_level" in values:
+            values["test_group"] = values.pop("test_level")
+        if tool == "emp.prepare.normalize" and workflow in {"metabolomics", "metagenomics"}:
+            values["normalize_method"] = values.pop("method")
+        if tool == "emp.analyze.differential" and workflow == "transcriptomics":
+            values["method"] = {"deseq2": "DESeq2", "edger": "edgeR", "limma_voom": "limma"}.get(
+                str(values.get("method") or "").lower(), values.get("method")
+            )
+        if tool == "emp.analyze.enrichment" and workflow == "transcriptomics":
+            values["database"] = "KEGG" if values.pop("method", "gsea") == "gsea" else "GO"
+        elif tool == "emp.analyze.enrichment":
+            values["database"] = values.pop("method", None)
+        if tool == "emp.analyze.association":
+            values["traits"] = [values.pop("outcome_var")]
+            values["method"] = "spearman"
+            values.pop("group_var", None)
+            values.pop("model_family", None)
+            values["p_adjust"] = values.pop("adjust_method", "BH")
+            values["clinical_source"] = "standalone"
+        if "{session_id}" in endpoint:
+            endpoint = endpoint.format(session_id=urllib.parse.quote(str(values.get("session_id") or ""), safe=""))
+            return "GET", endpoint, {}
+        return "POST", endpoint, values
+
+    def run_step(self, tool: str, params: dict[str, Any]) -> dict[str, Any]:
+        method, endpoint, values = self.prepare_step_request(tool, params)
+        return self._request(method, endpoint, values if method == "POST" else None)
 
     def get_job(self, job_id: str) -> dict[str, Any]:
         return self._request("GET", f"/api/jobs/{urllib.parse.quote(job_id)}")

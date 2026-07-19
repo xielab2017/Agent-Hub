@@ -48,6 +48,19 @@ class FakeEmpClient:
         return "EMPSESSION"
 
 
+class FailOnceEmpClient(FakeEmpClient):
+    def __init__(self) -> None:
+        super().__init__()
+        self.failed = False
+
+    def run_step(self, tool, params):
+        if tool == "emp.analyze.alpha" and not self.failed:
+            self.calls.append(tool)
+            self.failed = True
+            raise RuntimeError("transient alpha failure")
+        return super().run_step(tool, params)
+
+
 def _setup(tmp_path: Path):
     workspace = tmp_path / "workspace"
     workspace.mkdir()
@@ -105,6 +118,7 @@ def test_confirm_gate_dedup_and_artifact_persistence(tmp_path: Path) -> None:
     completed = _wait(service, job.job_id)
     assert completed.status == "done"
     assert completed.progress == 100
+    assert set(completed.step_states.values()) == {"done"}
     assert service.run_plan(plan.plan_id).job_id == completed.job_id
     artifacts = service.list_artifacts(job_id=completed.job_id)
     assert {item.mime_type for item in artifacts} >= {"application/json", "image/png", "application/pdf", "text/markdown"}
@@ -179,3 +193,28 @@ def test_confirmed_plan_rejects_changed_input_file(tmp_path: Path) -> None:
     )
     with pytest.raises(ValueError, match="changed after scanning"):
         service.run_plan(plan.plan_id)
+
+
+def test_failed_job_retries_from_failed_step_without_reimport(tmp_path: Path) -> None:
+    workspace, _fake, config, _service = _setup(tmp_path)
+    fake = FailOnceEmpClient()
+    service = EmpService(
+        state_dir=tmp_path / "retry-state",
+        config_loader=lambda: config,
+        client_factory=lambda _cfg: fake,
+    )
+    manifest = service.scan(str(workspace), hub_session_id="hub-retry")
+    plan = service.create_16s_plan(manifest.manifest_id, hub_session_id="hub-retry", group_var="Group")
+    service.confirm_plan(plan.plan_id)
+    failed = _wait(service, service.run_plan(plan.plan_id).job_id)
+    assert failed.status == "error"
+    assert failed.step_id == "alpha"
+    assert failed.step_states["alpha"] == "error"
+    assert fake.calls.count("import") == 1
+
+    retried = _wait(service, service.retry_job(failed.job_id, hub_session_id="hub-retry").job_id)
+    assert retried.status == "done"
+    assert retried.retry_step_ids == ["alpha", "alpha_plot"]
+    assert retried.step_states["validate"] == "done"
+    assert retried.step_states["alpha"] == "done"
+    assert fake.calls.count("import") == 1

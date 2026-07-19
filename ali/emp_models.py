@@ -206,6 +206,8 @@ class EmpJob:
     emp_session_id: str = ""
     error: dict[str, Any] = field(default_factory=dict)
     artifact_ids: list[str] = field(default_factory=list)
+    retry_step_ids: list[str] = field(default_factory=list)
+    step_states: dict[str, str] = field(default_factory=dict)
     cancel_requested: bool = False
     created_at: float = field(default_factory=utc_timestamp)
     updated_at: float = field(default_factory=utc_timestamp)
@@ -220,6 +222,8 @@ class EmpJob:
             raise ValueError("job must be an object")
         values = dict(data)
         values["artifact_ids"] = [str(item) for item in values.get("artifact_ids") or []]
+        values["retry_step_ids"] = [str(item) for item in values.get("retry_step_ids") or []]
+        values["step_states"] = {str(key): str(value) for key, value in (values.get("step_states") or {}).items()}
         values["error"] = dict(values.get("error") or {})
         return cls(**{key: values[key] for key in cls.__dataclass_fields__ if key in values})
 

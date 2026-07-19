@@ -71,3 +71,30 @@ def test_only_registered_step_tools_are_callable() -> None:
     client = EmpClient("http://127.0.0.1:8000", transport=_transport({"success": True}))
     with pytest.raises(ValueError):
         client.run_step("emp.user_r.run", {})
+
+
+def test_workflow_step_uses_registered_endpoint_and_translates_groups() -> None:
+    seen = []
+
+    def transport(request, _timeout):
+        seen.append((request.full_url, json.loads(request.data.decode("utf-8"))))
+        return 200, {}, b'{"success":true,"n_rows":1}'
+
+    client = EmpClient("http://127.0.0.1:8000", transport=transport)
+    result = client.run_step("emp.analyze.differential", {
+        "_workflow": "transcriptomics",
+        "workflow": "transcriptomics",
+        "session_id": "EMP1",
+        "experiment": "rna",
+        "group_var": "Group",
+        "reference_level": "control",
+        "test_level": "treated",
+        "method": "deseq2",
+        "adjust_method": "BH",
+        "alpha": 0.05,
+    })
+    assert result["n_rows"] == 1
+    assert seen[0][0].endswith("/api/workflows/transcriptomics/analyze/differential")
+    assert seen[0][1]["ref_group"] == "control"
+    assert seen[0][1]["test_group"] == "treated"
+    assert "workflow" not in seen[0][1]

@@ -2711,6 +2711,7 @@ hr.soft {
 .emp-overlap span { padding: 8px; background: var(--bg-soft); border-radius: 4px; color: var(--muted); font-size: 11px; }
 .emp-overlap strong { display: block; margin-top: 2px; color: var(--text); font-size: 15px; }
 .emp-pairing-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; align-items: end; gap: 8px; margin-bottom: 12px; }
+.emp-remote-transfer { display: grid; grid-template-columns: minmax(0, 1fr) 150px auto; align-items: end; gap: 8px; margin-top: 12px; }
 .emp-file-list { display: grid; gap: 4px; max-height: 220px; overflow: auto; }
 .emp-file-row { display: grid; grid-template-columns: 78px minmax(0, 1fr); align-items: start; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); }
 .emp-file-row strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
@@ -2735,6 +2736,8 @@ hr.soft {
 .emp-run-steps li.active i { background: var(--warn); }
 .emp-run-steps li.done { color: var(--ok); }
 .emp-run-steps li.done i { background: var(--ok); }
+.emp-run-steps li.error { color: var(--danger); }
+.emp-run-steps li.error i { background: var(--danger); }
 .emp-artifact-list { display: grid; gap: 0; }
 .emp-artifact-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--border); }
 .emp-artifact-row > div:first-child { min-width: 0; display: grid; grid-template-columns: 58px minmax(0, 1fr); align-items: center; gap: 8px; }
@@ -2749,6 +2752,7 @@ hr.soft {
   .emp-artifact-row { align-items: stretch; flex-direction: column; }
   .emp-scan-row { grid-template-columns: 1fr; }
   .emp-pairing-row { grid-template-columns: 1fr; }
+  .emp-remote-transfer { grid-template-columns: 1fr; }
   .emp-overlap { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .emp-plan-steps { grid-template-columns: 1fr 1fr; }
   .emp-run-steps { grid-template-columns: 1fr 1fr; }

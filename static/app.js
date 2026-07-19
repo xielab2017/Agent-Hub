@@ -690,7 +690,7 @@ const state = {
   streamConsumers: {},
   streamBuffers: {}, // sessionId -> live SSE buffer (survives session switches)
   settings: null,
-  emp: { sessionId: "", manifest: null, plan: null, job: null, pollTimer: null, pollToken: 0 },
+  emp: { sessionId: "", manifest: null, plan: null, job: null, endpoints: [], remoteSessionId: "", remoteEndpointId: "", planEndpointId: "local-default", projectId: "", boundJobId: "", pollTimer: null, pollToken: 0 },
   pendingWf: null,
   lastAssistantText: "",
   liveModels: [],
@@ -4303,7 +4303,7 @@ async function selectSession(id) {
   closeSessionOverlays();
   if (state.emp.sessionId !== id) {
     if (state.emp.pollTimer) clearTimeout(state.emp.pollTimer);
-    state.emp = { sessionId: id, manifest: null, plan: null, job: null, pollTimer: null, pollToken: state.emp.pollToken + 1 };
+    state.emp = { sessionId: id, manifest: null, plan: null, job: null, endpoints: [], remoteSessionId: "", remoteEndpointId: "", planEndpointId: "local-default", projectId: "", boundJobId: "", pollTimer: null, pollToken: state.emp.pollToken + 1 };
   }
   state.currentId = id;
   state.selectedSessionId = id;
@@ -6679,6 +6679,34 @@ function empMetadataHeaders(manifest) {
   return (file?.preview && file.preview[0]) || [];
 }
 
+function empScientificFields(manifest, langZh) {
+  const workflow = ["microbiome_16s", "transcriptomics", "metabolomics", "metagenomics", "clinical"].includes(manifest.omics_type)
+    ? manifest.omics_type : "microbiome_16s";
+  const metadata = (manifest.files || []).find((item) => ["metadata", "clinical"].includes(item.role));
+  const headers = empMetadataHeaders(manifest).filter((name) => name !== manifest.sample_id_column);
+  const group = headers[0] || "Group";
+  const groupIndex = empMetadataHeaders(manifest).indexOf(group);
+  const levels = [...new Set((metadata?.preview || []).slice(1).map((row) => row[groupIndex]).filter(Boolean))];
+  const reference = levels[0] || "control";
+  const test = levels[1] || "treated";
+  const field = (label, id, options, selected = "") => `<label class="field"><span>${label}</span><select id="${id}">${options.map((value) => `<option value="${escapeHtml(value)}" ${value === selected ? "selected" : ""}>${escapeHtml(value)}</option>`).join("")}</select></label>`;
+  const textField = (label, id, value) => `<label class="field"><span>${label}</span><input id="${id}" value="${escapeHtml(value)}"/></label>`;
+  const common = field(langZh ? "分组变量" : "Group variable", "emp-group-var", headers, group);
+  if (workflow === "clinical") {
+    return `${common}${field(langZh ? "结局变量" : "Outcome variable", "emp-outcome-var", headers.filter((name) => name !== group), headers.find((name) => name !== group) || "")}${field(langZh ? "模型族" : "Model family", "emp-model-family", ["gaussian", "binomial", "cox"], "gaussian")}`;
+  }
+  const comparisons = `${textField(langZh ? "参考组" : "Reference level", "emp-reference-level", reference)}${textField(langZh ? "比较组" : "Test level", "emp-test-level", test)}`;
+  if (workflow === "microbiome_16s") {
+    return `${common}${comparisons}${field("Taxonomy level", "emp-taxonomy-level", ["Phylum", "Class", "Order", "Family", "Genus", "Species"], "Genus")}${field(langZh ? "Alpha 指标" : "Alpha metric", "emp-alpha-metric", ["shannon", "simpson", "observed", "chao1"], "shannon")}${field(langZh ? "差异方法" : "Differential method", "emp-differential-method", ["wilcoxon", "aldex2"], "wilcoxon")}`;
+  }
+  const choices = workflow === "transcriptomics"
+    ? [["deseq2", "tmm", "log2"], ["deseq2", "edger", "limma_voom"], ["gsea", "ora"]]
+    : workflow === "metabolomics"
+      ? [["median", "quantile", "log2"], ["limma", "wilcoxon"], ["ora", "pathway"]]
+      : [["tss", "clr"], ["aldex2", "wilcoxon"], ["ora", "pathway"]];
+  return `${common}${comparisons}${field(langZh ? "标准化" : "Normalization", "emp-normalization", choices[0], choices[0][0])}${field(langZh ? "差异方法" : "Differential method", "emp-differential-method", choices[1], choices[1][0])}${field(langZh ? "富集方法" : "Enrichment method", "emp-enrichment-method", choices[2], choices[2][0])}${field(langZh ? "物种" : "Organism", "emp-organism", ["hsa", "mmu", "rno"], "hsa")}`;
+}
+
 function renderEmpManifest(manifest, langZh) {
   const host = $("#emp-manifest");
   if (!host || !manifest) return;
@@ -6693,6 +6721,10 @@ function renderEmpManifest(manifest, langZh) {
   const selectedAssay = (manifest.files || []).find((file) => file.role === "assay")?.path || "";
   const selectedMetadata = (manifest.files || []).find((file) => file.role === "metadata")?.path || "";
   const fileOptions = (selected) => tables.map((file) => `<option value="${escapeHtml(file.path)}" ${file.path === selected ? "selected" : ""}>${escapeHtml(file.path)}</option>`).join("");
+  const remoteEndpoints = (state.emp.endpoints || []).filter((item) => item.mode === "remote-api");
+  const endpointOptions = remoteEndpoints.map((item) => `<option value="${escapeHtml(item.endpoint_id)}">${escapeHtml(item.endpoint_id)} · ${escapeHtml(item.base_url)}</option>`).join("");
+  const workflow = ["microbiome_16s", "transcriptomics", "metabolomics", "metagenomics", "clinical"].includes(manifest.omics_type) ? manifest.omics_type : "microbiome_16s";
+  const executionEndpoints = `<option value="local-default">${langZh ? "本机 EMP" : "Local EMP"}</option>${endpointOptions}`;
   host.innerHTML = `
     <div class="emp-section-head"><div><h4>${langZh ? "数据清单" : "Dataset manifest"}</h4><p class="muted"><code>${escapeHtml(manifest.manifest_id)}</code></p></div><span class="emp-state is-ready">${escapeHtml(manifest.omics_type || "unknown")}</span></div>
     <div class="emp-overlap"><span>${langZh ? "矩阵样本" : "Assay"} <strong>${overlap.assay ?? "—"}</strong></span><span>${langZh ? "元数据样本" : "Metadata"} <strong>${overlap.metadata ?? "—"}</strong></span><span>${langZh ? "匹配" : "Matched"} <strong>${overlap.matched ?? "—"}</strong></span></div>
@@ -6700,13 +6732,51 @@ function renderEmpManifest(manifest, langZh) {
     <div class="emp-file-list">${rows}</div>
     ${warnings ? `<ul class="emp-warnings">${warnings}</ul>` : ""}
     <div class="grid-2 emp-plan-fields">
-      <label class="field"><span>${langZh ? "分组变量" : "Group variable"}</span><select id="emp-group-var">${empMetadataHeaders(manifest).filter((name) => name !== manifest.sample_id_column).map((name) => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join("")}</select></label>
-      <label class="field"><span>Taxonomy level</span><select id="emp-taxonomy-level">${["Phylum", "Class", "Order", "Family", "Genus", "Species"].map((name) => `<option value="${name}" ${name === "Genus" ? "selected" : ""}>${name}</option>`).join("")}</select></label>
-      <label class="field"><span>${langZh ? "Alpha 指标" : "Alpha metric"}</span><select id="emp-alpha-metric"><option value="shannon">Shannon</option><option value="simpson">Simpson</option><option value="observed">Observed</option><option value="chao1">Chao1</option></select></label>
+      <label class="field"><span>${langZh ? "识别工作流" : "Detected workflow"}</span><select id="emp-workflow"><option value="${workflow}">${workflow}</option></select></label>
+      <label class="field"><span>${langZh ? "运行位置" : "Run location"}</span><select id="emp-plan-endpoint">${executionEndpoints}</select></label>
+      ${empScientificFields(manifest, langZh)}
     </div>
-    <button type="button" class="btn primary emp-primary-action" id="btn-emp-create-plan">${langZh ? "生成分析计划" : "Create analysis plan"}</button>`;
+    <div class="row emp-primary-action"><button type="button" class="btn primary" id="btn-emp-create-plan">${langZh ? "生成分析计划" : "Create analysis plan"}</button><button type="button" class="btn ghost" id="btn-emp-save-project">${langZh ? "保存到联合项目" : "Save to joint project"}</button></div>
+    ${remoteEndpoints.length ? `<div class="emp-remote-transfer"><label class="field"><span>${langZh ? "远程 EMP" : "Remote EMP"}</span><select id="emp-remote-endpoint">${endpointOptions}</select></label><label class="field"><span>${langZh ? "数据策略" : "Data policy"}</span><select id="emp-data-policy"><option value="public">public</option><option value="internal" selected>internal</option><option value="restricted">restricted</option></select></label><button type="button" class="btn ghost" id="btn-emp-remote-upload">${langZh ? "确认并上传" : "Approve & upload"}</button></div>` : ""}`;
   $("#btn-emp-apply-pairing")?.addEventListener("click", applyEmpPairing);
   $("#btn-emp-create-plan")?.addEventListener("click", createEmpPlan);
+  $("#btn-emp-save-project")?.addEventListener("click", saveEmpProject);
+  $("#btn-emp-remote-upload")?.addEventListener("click", approveAndUploadEmpManifest);
+}
+
+async function saveEmpProject() {
+  const manifest = state.emp.manifest;
+  if (!manifest || !state.currentId) return;
+  try {
+    const created = await api("/api/emp/projects", { method: "POST", body: JSON.stringify({ session_id: state.currentId, name: manifest.experiment_name || "EMP project" }) });
+    await api(`/api/emp/projects/${encodeURIComponent(created.project.project_id)}/manifests`, { method: "POST", body: JSON.stringify({ session_id: state.currentId, manifest_id: manifest.manifest_id }) });
+    state.emp.projectId = created.project.project_id;
+    $("#settings-status").textContent = controlLangZh() ? "已保存联合分析项目" : "Joint analysis project saved";
+  } catch (error) { $("#settings-status").textContent = error.message || String(error); }
+}
+
+async function approveAndUploadEmpManifest() {
+  const manifest = state.emp.manifest;
+  const endpointId = $("#emp-remote-endpoint")?.value || "";
+  const dataPolicy = $("#emp-data-policy")?.value || "internal";
+  if (!manifest || !state.currentId || !endpointId) return;
+  const totalBytes = (manifest.files || []).reduce((sum, item) => sum + Number(item.size || 0), 0);
+  const message = controlLangZh()
+    ? `将 ${(manifest.files || []).length} 个文件（${totalBytes.toLocaleString()} B）上传到 ${endpointId}。数据将离开本机，是否继续？`
+    : `Upload ${(manifest.files || []).length} files (${totalBytes.toLocaleString()} B) to ${endpointId}. Data will leave this computer. Continue?`;
+  if (!window.confirm(message)) return;
+  const button = $("#btn-emp-remote-upload");
+  if (button) button.disabled = true;
+  try {
+    const approved = await api("/api/emp/approvals", { method: "POST", body: JSON.stringify({ manifest_id: manifest.manifest_id, endpoint_id: endpointId, session_id: state.currentId, data_policy: dataPolicy }) });
+    const imported = await api("/api/emp/remote/import", { method: "POST", body: JSON.stringify({ manifest_id: manifest.manifest_id, endpoint_id: endpointId, session_id: state.currentId, data_policy: dataPolicy, approval_token: approved.approval.token }) });
+    state.emp.remoteSessionId = imported.result?.session_id || "";
+    state.emp.remoteEndpointId = endpointId;
+    const planEndpoint = $("#emp-plan-endpoint");
+    if (planEndpoint) planEndpoint.value = endpointId;
+    $("#settings-status").textContent = controlLangZh() ? "远程 EMP 导入完成" : "Remote EMP import completed";
+  } catch (error) { $("#settings-status").textContent = error.message || String(error); }
+  finally { if (button) button.disabled = false; }
 }
 
 async function applyEmpPairing() {
@@ -6742,7 +6812,7 @@ function renderEmpPlan(plan, langZh) {
   host.innerHTML = `
     <div class="emp-section-head"><div><h4>${langZh ? "待确认分析计划" : "Analysis plan awaiting confirmation"}</h4><p class="muted"><code>${escapeHtml(plan.plan_id)}</code></p></div><span class="emp-state is-warn">${langZh ? "需要确认" : "Confirmation required"}</span></div>
     <ol class="emp-plan-steps">${steps}</ol>
-    <p class="muted">${langZh ? "运行位置：本机。原始数据不会发送给 LLM，也不会离开本机。" : "Runs locally. Raw matrices are not sent to the LLM or off this computer."}</p>
+    <p class="muted">${plan.emp_mode === "remote-api" ? (langZh ? "运行位置：已配置的远程 EMP。运行前必须先完成明确的数据上传审批。" : "Runs on the configured remote EMP. Explicit upload approval is required first.") : (langZh ? "运行位置：本机。原始数据不会发送给 LLM，也不会离开本机。" : "Runs locally. Raw matrices are not sent to the LLM or off this computer.")}</p>
     <button type="button" class="btn primary emp-primary-action" id="btn-emp-confirm-run">${langZh ? "确认并运行" : "Confirm and run"}</button>`;
   $("#btn-emp-confirm-run")?.addEventListener("click", confirmAndRunEmpPlan);
 }
@@ -6752,18 +6822,14 @@ function paintEmpJob(job, langZh) {
   if (!host || !job) return;
   state.emp.job = job;
   const pct = Math.max(0, Math.min(100, Number(job.progress || 0)));
-  const stepDefs = [
-    ["import", langZh ? "导入" : "Import", 10],
-    ["validate", langZh ? "校验" : "Validate", 30],
-    ["taxonomy_prepare", "Taxonomy", 50],
-    ["alpha", "Alpha", 72],
-    ["alpha_plot", langZh ? "图表与报告" : "Plot & report", 88],
-  ];
+  const planSteps = state.emp.plan?.steps || [];
+  const stepDefs = [["import", langZh ? "导入" : "Import"], ...planSteps.map((step) => [step.id, step.id])];
   const terminal = ["done", "error", "cancelled"].includes(job.status);
-  const items = stepDefs.map(([id, label, threshold]) => {
-    const active = job.step_id === id && !terminal;
-    const done = pct > threshold || job.status === "done";
-    return `<li class="${active ? "active" : done ? "done" : "pending"}"><i></i><span>${escapeHtml(label)}</span></li>`;
+  const items = stepDefs.map(([id, label]) => {
+    const persisted = job.step_states?.[id] || "";
+    const status = id === "import" ? (pct >= 25 ? "done" : job.step_id === "import" ? "running" : "pending") : persisted;
+    const className = status === "running" ? "active" : status === "done" ? "done" : status === "error" ? "error" : "pending";
+    return `<li class="${className}"><i></i><span>${escapeHtml(label)}</span></li>`;
   }).join("");
   const error = job.error || {};
   const errorText = state.prefs.language === "en" ? error.user_message_en : error.user_message_zh;
@@ -6818,6 +6884,20 @@ function startEmpJobPolling(jobId) {
       paintEmpJob(job, langZh);
       if (["done", "error", "cancelled"].includes(job.status)) {
         state.emp.pollTimer = null;
+        if (job.status === "done" && state.emp.projectId && state.emp.manifest && state.emp.boundJobId !== job.job_id) {
+          try {
+            await api(`/api/emp/projects/${encodeURIComponent(state.emp.projectId)}/sessions`, {
+              method: "POST",
+              body: JSON.stringify({
+                session_id: sid,
+                endpoint_id: state.emp.plan?.emp_mode === "remote-api" ? state.emp.planEndpointId : "local-default",
+                emp_session_id: job.emp_session_id,
+                manifest_id: state.emp.manifest.manifest_id,
+              }),
+            });
+            state.emp.boundJobId = job.job_id;
+          } catch (error) { $("#settings-status").textContent = error.message || String(error); }
+        }
         await renderEmpArtifacts(job.job_id, langZh);
       } else {
         state.emp.pollTimer = setTimeout(poll, 1200);
@@ -6838,18 +6918,33 @@ async function createEmpPlan() {
   const button = $("#btn-emp-create-plan");
   if (button) button.disabled = true;
   try {
-    const data = await api("/api/emp/plans", {
+    const workflow = $("#emp-workflow")?.value || manifest.omics_type;
+    const endpointId = $("#emp-plan-endpoint")?.value || "local-default";
+    const parameters = {
+      emp_mode: endpointId === "local-default" ? "local-api" : "remote-api",
+      group_var: $("#emp-group-var")?.value || "",
+      reference_level: $("#emp-reference-level")?.value || "",
+      test_level: $("#emp-test-level")?.value || "",
+      adjust_method: "BH",
+      alpha: 0.05,
+    };
+    if (workflow === "microbiome_16s") Object.assign(parameters, { taxonomy_level: $("#emp-taxonomy-level")?.value || "Genus", alpha_metric: $("#emp-alpha-metric")?.value || "shannon", differential_method: $("#emp-differential-method")?.value || "wilcoxon" });
+    else if (workflow === "clinical") Object.assign(parameters, { outcome_var: $("#emp-outcome-var")?.value || "", model_family: $("#emp-model-family")?.value || "gaussian" });
+    else Object.assign(parameters, { normalization: $("#emp-normalization")?.value || "", differential_method: $("#emp-differential-method")?.value || "", enrichment_method: $("#emp-enrichment-method")?.value || "", organism: $("#emp-organism")?.value || "hsa" });
+    const data = await api("/api/emp/plans/compile", {
       method: "POST",
       body: JSON.stringify({
         manifest_id: manifest.manifest_id,
         session_id: state.currentId,
-        group_var: $("#emp-group-var")?.value || "",
-        taxonomy_level: $("#emp-taxonomy-level")?.value || "Genus",
-        alpha_metric: $("#emp-alpha-metric")?.value || "shannon",
+        workflow,
+        endpoint_id: endpointId,
+        experiment: manifest.experiment_name || "study",
         language: langZh ? "zh" : "en",
+        parameters,
       }),
     });
     state.emp.plan = data.plan;
+    state.emp.planEndpointId = endpointId;
     renderEmpPlan(data.plan, langZh);
   } catch (error) {
     $("#emp-plan").innerHTML = `<p class="emp-error">${escapeHtml(error.message || String(error))}</p>`;
@@ -6866,7 +6961,16 @@ async function confirmAndRunEmpPlan() {
   try {
     const body = JSON.stringify({ session_id: state.currentId || "" });
     await api(`/api/emp/plans/${encodeURIComponent(plan.plan_id)}/confirm`, { method: "POST", body });
-    const data = await api(`/api/emp/plans/${encodeURIComponent(plan.plan_id)}/run`, { method: "POST", body });
+    let data;
+    if (plan.emp_mode === "remote-api") {
+      if (!state.emp.remoteSessionId || state.emp.remoteEndpointId !== state.emp.planEndpointId) throw new Error(controlLangZh() ? "请先将数据审批上传到计划所选的远程 EMP" : "Approve and upload the dataset to the remote EMP selected by this plan first");
+      data = await api(`/api/emp/plans/${encodeURIComponent(plan.plan_id)}/run-remote`, {
+        method: "POST",
+        body: JSON.stringify({ session_id: state.currentId || "", endpoint_id: state.emp.remoteEndpointId, emp_session_id: state.emp.remoteSessionId }),
+      });
+    } else {
+      data = await api(`/api/emp/plans/${encodeURIComponent(plan.plan_id)}/run`, { method: "POST", body });
+    }
     state.emp.job = data.job;
     paintEmpJob(data.job, controlLangZh());
     startEmpJobPolling(data.job.job_id);
@@ -6893,6 +6997,7 @@ async function renderEmpPanel(langZh) {
   const cfg = ((state.settings?.config || {}).emp) || {};
   let status = { enabled: cfg.enabled === true, reachable: false, compatible: false };
   try { status = await api("/api/emp/status"); } catch (_) {}
+  try { state.emp.endpoints = (await api("/api/emp/endpoints")).endpoints || []; } catch (_) { state.emp.endpoints = []; }
   const endpoint = cfg.local_api_base || "http://127.0.0.1:8000";
   box.innerHTML = `
     <div class="emp-hero">
@@ -6903,10 +7008,15 @@ async function renderEmpPanel(langZh) {
       ${field(langZh ? "启用 EMP" : "Enable EMP", "emp.enabled", cfg.enabled === true, "checkbox")}
       ${field(langZh ? "运行模式" : "Run mode", "emp.mode", { selected: cfg.mode || "auto", options: [{ value: "auto", label: "Auto → local-api" }, { value: "local-api", label: "local-api" }] }, "select")}
       ${field(langZh ? "本机 API 地址" : "Local API endpoint", "emp.local_api_base", endpoint)}
+      ${field(langZh ? "启用远程 EMP" : "Enable remote EMP", "emp.remote_enabled", cfg.remote_enabled === true, "checkbox")}
+      ${field(langZh ? "远程 HTTPS 地址" : "Remote HTTPS endpoint", "emp.remote_api_base", cfg.remote_api_base || "")}
+      ${field(langZh ? "远程 Token 引用" : "Remote token reference", "emp.api_token_env", cfg.api_token_env || "EMP_API_TOKEN")}
       ${field(langZh ? "请求超时（秒）" : "Request timeout (seconds)", "emp.request_timeout_seconds", String(cfg.request_timeout_seconds || 60), "number")}
       ${field(langZh ? "额外允许目录（逗号分隔）" : "Additional allowed roots (comma-separated)", "emp.allowed_roots", (cfg.allowed_roots || []).join(", "))}
+      ${field(langZh ? "允许受限数据远程传输" : "Allow restricted remote data", "emp.allow_restricted_remote", cfg.allow_restricted_remote === true, "checkbox")}
+      ${field(langZh ? "启用 R Direct（实验性）" : "Enable R Direct (experimental)", "emp.allow_r_direct", cfg.allow_r_direct === true, "checkbox")}
     </div>
-    <div class="row emp-toolbar"><button type="button" class="btn ghost" id="btn-emp-save-check">${langZh ? "保存并检查连接" : "Save & check connection"}</button><code>${escapeHtml(endpoint)}</code></div>
+    <div class="row emp-toolbar"><button type="button" class="btn ghost" id="btn-emp-save-check">${langZh ? "保存并检查连接" : "Save & check connection"}</button><button type="button" class="btn ghost" id="btn-emp-r-preflight">${langZh ? "检查 R Direct" : "Check R Direct"}</button><code>${escapeHtml(endpoint)}</code></div>
     <div class="emp-workflow">
       <div class="emp-scan-row"><label class="field"><span>${langZh ? "本地数据目录" : "Local data directory"}</span><div class="path-row"><input id="emp-scan-path" type="text" value="${escapeHtml((state.settings?.config || {}).workspace || "")}" placeholder="/path/to/16s/data"/><button type="button" class="btn ghost" id="btn-emp-browse" title="${langZh ? "选择目录" : "Choose directory"}">…</button></div></label><button type="button" class="btn primary" id="btn-emp-scan" ${status.compatible ? "" : "disabled"}>${langZh ? "扫描组学数据" : "Scan omics data"}</button></div>
       <div id="emp-manifest" class="emp-stage"></div>
@@ -6916,6 +7026,14 @@ async function renderEmpPanel(langZh) {
     </div>`;
   $("#btn-emp-save-check")?.addEventListener("click", async () => {
     try { await saveSettings(); } catch (error) { $("#settings-status").textContent = error.message || String(error); }
+  });
+  $("#btn-emp-r-preflight")?.addEventListener("click", async () => {
+    try {
+      const result = await api("/api/emp/r-direct/preflight", { method: "POST", body: "{}" });
+      $("#settings-status").textContent = result.ready
+        ? (langZh ? `R Direct 已就绪 · ${result.rscript}` : `R Direct ready · ${result.rscript}`)
+        : (langZh ? "R Direct 未启用或 Rscript 不可用" : "R Direct disabled or Rscript unavailable");
+    } catch (error) { $("#settings-status").textContent = error.message || String(error); }
   });
   $("#btn-emp-browse")?.addEventListener("click", () => openFsBrowser($("#emp-scan-path")?.value || "", "#emp-scan-path"));
   $("#btn-emp-scan")?.addEventListener("click", async () => {

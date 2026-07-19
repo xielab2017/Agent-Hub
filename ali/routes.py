@@ -22,6 +22,7 @@ from . import (
     brand_logo,
     digest,
     ecosystem,
+    emp_advanced,
     emp_tools,
     evolution,
     excel_fill,
@@ -431,6 +432,34 @@ def handle_get(handler) -> None:
     if path == "/api/emp/tools":
         return _json(handler, 200, {"ok": True, "tools": emp_tools.tool_catalog()})
 
+    if path == "/api/emp/endpoints":
+        try:
+            return _json(handler, 200, {"ok": True, "endpoints": emp_advanced.public_endpoint_catalog()})
+        except ValueError as exc:
+            return _json(handler, 400, {"ok": False, "error": str(exc)})
+
+    if path == "/api/emp/projects":
+        sid = (qs.get("session_id") or [""])[0]
+        if not sid:
+            return _json(handler, 400, {"ok": False, "error": "session_id is required"})
+        projects = emp_advanced.PROJECT_STORE.list(hub_session_id=sid)
+        return _json(handler, 200, {"ok": True, "projects": [item.to_dict() for item in projects]})
+
+    if len(parts) == 4 and parts[:3] == ["api", "emp", "projects"]:
+        sid = (qs.get("session_id") or [""])[0]
+        try:
+            project = emp_advanced.PROJECT_STORE.get(parts[3], hub_session_id=sid)
+            return _json(handler, 200, {"ok": True, "project": project.to_dict()})
+        except ValueError as exc:
+            return _json(handler, 404, {"ok": False, "error": str(exc)})
+
+    if len(parts) == 5 and parts[:3] == ["api", "emp", "projects"] and parts[4] == "sample-map":
+        sid = (qs.get("session_id") or [""])[0]
+        try:
+            return _json(handler, 200, {"ok": True, "sample_map": emp_advanced.project_sample_map(parts[3], sid)})
+        except ValueError as exc:
+            return _json(handler, 400, {"ok": False, "error": str(exc)})
+
     if path == "/api/emp/jobs":
         sid = (qs.get("session_id") or [""])[0]
         if not sid:
@@ -823,6 +852,130 @@ def handle_post(handler) -> None:
         except (DiscoveryError, EmpClientError, ValueError) as exc:
             return _emp_error(handler, exc)
 
+    if path == "/api/emp/approvals":
+        body = _read_json(handler)
+        try:
+            approval = emp_advanced.issue_remote_approval(
+                manifest_id=str(body.get("manifest_id") or ""),
+                endpoint_id=str(body.get("endpoint_id") or ""),
+                hub_session_id=str(body.get("session_id") or ""),
+                data_policy=str(body.get("data_policy") or "internal"),
+            )
+            audit.log_event("emp_external_upload_approved", {
+                "session_id": approval["hub_session_id"],
+                "endpoint_id": approval["endpoint_id"],
+                "manifest_fingerprint": approval["manifest_fingerprint"],
+                "file_count": approval["file_count"],
+                "total_bytes": approval["total_bytes"],
+                "expires_at": approval["expires_at"],
+            })
+            return _json(handler, 201, {"ok": True, "approval": approval})
+        except (OSError, ValueError) as exc:
+            return _json(handler, 400, {"ok": False, "error": str(exc)})
+
+    if path == "/api/emp/remote/import":
+        body = _read_json(handler)
+        try:
+            result = emp_advanced.execute_remote_import(
+                manifest_id=str(body.get("manifest_id") or ""),
+                endpoint_id=str(body.get("endpoint_id") or ""),
+                hub_session_id=str(body.get("session_id") or ""),
+                data_policy=str(body.get("data_policy") or "internal"),
+                approval_token=str(body.get("approval_token") or ""),
+            )
+            audit.log_event("emp_external_upload_completed", {
+                "session_id": body.get("session_id"),
+                "endpoint_id": body.get("endpoint_id"),
+                "manifest_id": body.get("manifest_id"),
+            })
+            return _json(handler, 200, {"ok": True, "result": result})
+        except Exception as exc:  # normalized remote errors never include the bearer token
+            return _json(handler, 400, {"ok": False, "error": str(exc)})
+
+    if path == "/api/emp/projects":
+        body = _read_json(handler)
+        try:
+            project = emp_advanced.create_project(str(body.get("name") or ""), str(body.get("session_id") or ""))
+            return _json(handler, 201, {"ok": True, "project": project})
+        except ValueError as exc:
+            return _json(handler, 400, {"ok": False, "error": str(exc)})
+
+    if len(parts) == 5 and parts[:3] == ["api", "emp", "projects"] and parts[4] == "manifests":
+        body = _read_json(handler)
+        try:
+            project = emp_advanced.add_project_manifest(
+                parts[3], str(body.get("session_id") or ""), str(body.get("manifest_id") or "")
+            )
+            return _json(handler, 200, {"ok": True, "project": project})
+        except ValueError as exc:
+            return _json(handler, 400, {"ok": False, "error": str(exc)})
+
+    if len(parts) == 5 and parts[:3] == ["api", "emp", "projects"] and parts[4] == "sessions":
+        body = _read_json(handler)
+        try:
+            project = emp_advanced.bind_project_session(
+                parts[3],
+                str(body.get("session_id") or ""),
+                str(body.get("endpoint_id") or ""),
+                str(body.get("emp_session_id") or ""),
+                str(body.get("manifest_id") or ""),
+            )
+            return _json(handler, 200, {"ok": True, "project": project})
+        except ValueError as exc:
+            return _json(handler, 400, {"ok": False, "error": str(exc)})
+
+    if len(parts) == 5 and parts[:3] == ["api", "emp", "projects"] and parts[4] == "report":
+        body = _read_json(handler)
+        try:
+            artifact = emp_advanced.generate_project_report(
+                parts[3], str(body.get("session_id") or ""), str(body.get("language") or "zh")
+            )
+            return _json(handler, 201, {"ok": True, "artifact": artifact})
+        except ValueError as exc:
+            return _json(handler, 400, {"ok": False, "error": str(exc)})
+
+    if path == "/api/emp/plans/compile":
+        body = _read_json(handler)
+        try:
+            endpoint_id = str(body.get("endpoint_id") or "local-default")
+            result = emp_advanced.compile_manifest_plan(
+                manifest_id=str(body.get("manifest_id") or ""),
+                hub_session_id=str(body.get("session_id") or ""),
+                workflow=str(body.get("workflow") or ""),
+                session_id=str(body.get("emp_session_id") or "pending"),
+                experiment=str(body.get("experiment") or "study"),
+                parameters=dict(body.get("parameters") or {}),
+                capabilities=emp_advanced.endpoint_capabilities(endpoint_id),
+                language=str(body.get("language") or "zh"),
+            )
+            return _json(handler, 200, {"ok": True, **result})
+        except (EmpClientError, OSError, ValueError) as exc:
+            return _emp_error(handler, exc)
+
+    if path == "/api/emp/r-direct/preflight":
+        _read_json(handler)
+        return _json(handler, 200, {"ok": True, **emp_advanced.r_direct_runner().preflight()})
+
+    if path == "/api/emp/r-direct/run":
+        body = _read_json(handler)
+        try:
+            operation = str(body.get("operation") or "")
+            result = emp_advanced.r_direct_runner().run(operation, dict(body.get("params") or {}))
+            audit.log_event("emp_r_direct_run", {
+                "session_id": body.get("session_id"),
+                "operation": operation,
+                "success": result.success,
+            })
+            return _json(handler, 200, {"ok": True, "result": {
+                "success": result.success,
+                "operation": result.operation,
+                "data": result.data,
+                "artifacts": list(result.artifacts),
+                "versions": result.versions or {},
+            }})
+        except (OSError, RuntimeError, ValueError) as exc:
+            return _json(handler, 400, {"ok": False, "error": str(exc)})
+
     if path == "/api/emp/preview":
         body = _read_json(handler)
         try:
@@ -895,6 +1048,25 @@ def handle_post(handler) -> None:
         except (EmpClientError, ValueError) as exc:
             return _emp_error(handler, exc)
 
+    if len(parts) == 5 and parts[:3] == ["api", "emp", "plans"] and parts[4] == "run-remote":
+        body = _read_json(handler)
+        try:
+            job = emp_advanced.start_remote_plan(
+                plan_id=parts[3],
+                endpoint_id=str(body.get("endpoint_id") or ""),
+                emp_session_id=str(body.get("emp_session_id") or ""),
+                hub_session_id=str(body.get("session_id") or ""),
+            )
+            audit.log_event("emp_remote_plan_run", {
+                "session_id": body.get("session_id"),
+                "plan_id": parts[3],
+                "endpoint_id": body.get("endpoint_id"),
+                "job_id": job["job_id"],
+            })
+            return _json(handler, 202, {"ok": True, "job": job})
+        except (EmpClientError, OSError, RuntimeError, ValueError) as exc:
+            return _emp_error(handler, exc)
+
     if len(parts) == 5 and parts[:3] == ["api", "emp", "jobs"] and parts[4] == "cancel":
         body = _read_json(handler)
         try:
@@ -904,6 +1076,23 @@ def handle_post(handler) -> None:
             job = get_emp_service().cancel_job(parts[3], hub_session_id=sid)
             audit.log_event("emp_job_cancel", {"session_id": job.hub_session_id, "job_id": job.job_id})
             return _json(handler, 200, {"ok": True, "job": job.to_dict()})
+        except (EmpClientError, ValueError) as exc:
+            return _emp_error(handler, exc)
+
+    if len(parts) == 5 and parts[:3] == ["api", "emp", "jobs"] and parts[4] == "retry":
+        body = _read_json(handler)
+        try:
+            sid = str(body.get("session_id") or "")
+            if not sid:
+                raise ValueError("session_id is required")
+            job = get_emp_service().retry_job(parts[3], hub_session_id=sid)
+            audit.log_event("emp_job_retry", {
+                "session_id": sid,
+                "previous_job_id": parts[3],
+                "job_id": job.job_id,
+                "steps": job.retry_step_ids,
+            })
+            return _json(handler, 202, {"ok": True, "job": job.to_dict()})
         except (EmpClientError, ValueError) as exc:
             return _emp_error(handler, exc)
 
