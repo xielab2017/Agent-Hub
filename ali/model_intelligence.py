@@ -737,7 +737,10 @@ def start_governance_analysis(
                     provider=provider_id,
                     capability=primary_capability,
                 )
-                checks: dict[str, Any] = {primary_capability: record}
+                # Keep an independent snapshot. Reusing ``record`` here would
+                # make record -> capability_checks -> record circular and
+                # prevent the settings JSON from being persisted.
+                checks: dict[str, Any] = {primary_capability: dict(record)}
                 if deep and record["healthy"] and primary_capability == "chat":
                     predicted = _name_capabilities(model)
                     capabilities = ["reasoning", "tool_calling"]
@@ -761,7 +764,7 @@ def start_governance_analysis(
                     model,
                     provider=provider_id,
                     health=record,
-                    actual_capabilities=actual,
+                    measured_capabilities=actual,
                 )
                 return model, record, profile
 

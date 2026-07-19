@@ -7190,7 +7190,9 @@ async function renderModelGovernance(langZh = controlLangZh()) {
     ? `${langZh ? "检测中" : "Testing"} ${job.completed || 0}/${job.total || 0}`
     : (job.status === "complete"
       ? `${langZh ? "检测完成" : "Complete"} · ${job.healthy || 0} ${langZh ? "可用" : "available"} · ${job.hidden || 0} ${langZh ? "隐藏" : "hidden"}`
-      : (langZh ? "尚未运行检测" : "No health analysis yet"));
+      : (job.status === "error"
+        ? `${langZh ? "检测失败" : "Health check failed"}: ${job.error || "unknown error"}`
+        : (langZh ? "尚未运行检测" : "No health analysis yet")));
   box.innerHTML = `<div class="model-governance-head"><div><h4>${langZh ? "模型健康与能力画像" : "Model health & capability profiles"}</h4><p class="muted">${escapeHtml(progress)}</p></div><div class="row gap">${hasCatalog ? `<button type="button" class="btn ghost chip" id="btn-governance-quick">${langZh ? "开始健康检测" : "Run health check"}</button><button type="button" class="btn primary chip" id="btn-governance-deep">${langZh ? "深度分析" : "Deep analysis"}</button>` : `<button type="button" class="btn primary chip" id="btn-governance-fetch">${langZh ? "拉取模型并检测" : "Fetch models & test"}</button>`}</div></div><div class="model-health-list">${rows || `<p class="muted">${hasCatalog ? (langZh ? "点击“开始健康检测”检查模型可用性、延迟和基础能力。" : "Run a health check to verify availability, latency, and baseline capabilities.") : (langZh ? "请先拉取当前供应商的模型目录，随后将自动开始健康检测。" : "Fetch the active provider's model list first; health checks then start automatically.")}</p>`}</div>`;
   const start = async (deep) => {
     const response = await api("/api/models/governance/refresh", {

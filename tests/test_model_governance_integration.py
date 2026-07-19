@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import json
+import time
 
-from ali import llm_client, model_intelligence, providers
+from ali import llm_client, model_intelligence, providers, settings
 
 
 class _Response:
@@ -54,3 +55,44 @@ def test_unavailable_fetched_model_is_hidden_from_picker():
 
     assert [item["model"] for item in payload["options"]] == ["nvidia/good"]
     assert payload["options"][0]["health_state"] == "healthy"
+
+
+def test_background_health_job_builds_profiles_and_persists_results(monkeypatch):
+    provider = "integration-test-provider"
+    stored = {"model_health_cache": {}, "model_profiles": {}}
+
+    def load_config():
+        return json.loads(json.dumps(stored))
+
+    def save_config(config):
+        stored.clear()
+        stored.update(json.loads(json.dumps(config)))
+        return config
+
+    monkeypatch.setattr(settings, "load_campus_config", load_config)
+    monkeypatch.setattr(settings, "save_campus_config", save_config)
+    monkeypatch.setattr(
+        model_intelligence,
+        "_probe_openai_capability",
+        lambda *_args, **_kwargs: {"ok": True, "content": "OK"},
+    )
+
+    model_intelligence.start_governance_analysis(
+        provider=provider,
+        models=["vendor/test-model"],
+        base_url="https://example.invalid/v1",
+        api_key="secret",
+        force=True,
+    )
+    deadline = time.monotonic() + 2
+    while time.monotonic() < deadline:
+        job = model_intelligence.governance_job(provider)
+        if job["status"] != "running":
+            break
+        time.sleep(0.01)
+
+    assert not job.get("error"), job["error"]
+    assert job["status"] == "complete", job
+    assert job["completed"] == 1
+    assert stored["model_health_cache"]["vendor/test-model"]["state"] == "healthy"
+    assert stored["model_profiles"]["vendor/test-model"]["provider"] == provider
