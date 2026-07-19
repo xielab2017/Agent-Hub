@@ -45,6 +45,24 @@ def test_real_probe_builds_minimal_chat_request(monkeypatch):
     assert seen["body"]["max_tokens"] == 2
 
 
+def test_generic_chat_response_does_not_confirm_reasoning(monkeypatch):
+    monkeypatch.setattr(
+        llm_client,
+        "_request",
+        lambda *_args, **_kwargs: _Response({"choices": [{"message": {"content": "OK"}}]}),
+    )
+
+    result = model_intelligence._probe_openai_capability(
+        "https://example.invalid/v1",
+        "secret",
+        "qwen-mt-lite",
+        "reasoning",
+    )
+
+    assert result["ok"] is False
+    assert result["capability_confirmed"] is False
+
+
 def test_catalog_suggestions_keep_retrieval_slots_capability_safe():
     chat_only = llm_client.suggest_slots(["vendor/chat-8b", "vendor/chat-70b"])
     assert chat_only["embedding"] == ""

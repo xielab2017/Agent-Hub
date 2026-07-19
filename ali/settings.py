@@ -489,6 +489,7 @@ def public_model_governance_view(cfg: dict[str, Any] | None = None) -> dict[str,
             filter_healthy_models,
             normalize_health_record,
             recommend_category_models,
+            upgrade_model_profile,
         )
 
         normalized_health = {
@@ -500,20 +501,20 @@ def public_model_governance_view(cfg: dict[str, Any] | None = None) -> dict[str,
         for model, raw in stored_profiles.items():
             if not isinstance(raw, dict):
                 continue
-            profile = deepcopy(raw)
-            profile["model"] = str(profile.get("model") or model)
-            if model in normalized_health:
-                profile["health"] = normalized_health[model]
-                profile["health_state"] = normalized_health[model]["state"]
-                profile["healthy"] = normalized_health[model]["healthy"]
+            profile = upgrade_model_profile(str(model), raw, health=normalized_health.get(model))
             profiles.append(profile)
         manual = {
             category: str(category_models.get(category) or "")
             for category in MODEL_CATEGORIES
             if not bool(category_auto.get(category, True))
         }
-        recommendations = recommend_category_models(profiles, manual_models=manual)
-        selectable = filter_healthy_models(profiles)
+        active_provider = str((config.get("backend") or {}).get("type") or "").strip()
+        active_profiles = [
+            profile for profile in profiles
+            if not active_provider or not profile.get("provider") or profile.get("provider") == active_provider
+        ]
+        recommendations = recommend_category_models(active_profiles, manual_models=manual)
+        selectable = filter_healthy_models(active_profiles)
     except (ImportError, TypeError, ValueError):
         normalized_health = deepcopy(health_cache)
         profiles = [deepcopy(item) for item in stored_profiles.values() if isinstance(item, dict)]

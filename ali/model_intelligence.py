@@ -33,6 +33,7 @@ CATEGORIES = ("C0", "C1", "C2", "C3", "Vision", "Embedding", "Reranker")
 PROBE_CAPABILITIES = ("chat", "vision", "embedding", "reranker", "tool_calling", "reasoning")
 DEFAULT_CACHE_TTL_SECONDS = 24 * 60 * 60
 CACHE_SCHEMA_VERSION = 1
+PROFILE_SCHEMA_VERSION = 2
 
 _CAPABILITY_KEYS = (
     "chat",
@@ -176,12 +177,15 @@ def quick_health_check(
         result = {"ok": False, "error": f"{type(exc).__name__}: {exc}"}
     latency_ms = max(0.0, (clock() - started) * 1000.0)
     result.setdefault("capability", capability)
-    return health_record_from_probe(
+    record = health_record_from_probe(
         model,
         result,
         provider=provider,
         latency_ms=latency_ms,
     )
+    if "capability_confirmed" in result:
+        record["capability_confirmed"] = bool(result["capability_confirmed"])
+    return record
 
 
 def probe_model_capabilities(
@@ -329,12 +333,17 @@ def _name_capabilities(model: str) -> dict[str, Any]:
     """Conservative fallback only; metadata and measured results override it."""
     name = model.lower()
     retrieval = "embed" in name or "rerank" in name
+    translation = any(token in name for token in ("-mt-", "_mt_", "translate", "translation"))
+    speech = any(token in name for token in ("tts", "asr", "speech", "whisper"))
+    moderation = any(token in name for token in ("moderation", "guard", "safety"))
+    ocr = "ocr" in name
+    specialized_non_chat = retrieval or translation or speech or moderation or ocr
     vision = any(token in name for token in ("vision", "-vl", "/vl", "llava", "multimodal"))
     reasoning = any(token in name for token in ("reason", "thinking", "nemotron", "deepseek-r1", "o1", "o3", "o4"))
     coding = 0.8 if any(token in name for token in ("code", "coder", "codestral", "deepseek")) else 0.45
-    writing = 0.7 if any(token in name for token in ("instruct", "chat", "qwen", "llama")) else 0.5
+    writing = 0.7 if not specialized_non_chat and any(token in name for token in ("instruct", "chat", "qwen", "llama")) else 0.0
     return {
-        "chat": not retrieval,
+        "chat": not specialized_non_chat,
         "vision": vision,
         "embedding": "embed" in name,
         "reranker": "rerank" in name,
@@ -384,7 +393,9 @@ def recommend_categories(profile: Mapping[str, Any]) -> list[str]:
         return ["Reranker"]
     categories: list[str] = []
     if capabilities.get("chat"):
-        categories.extend(("C0", "C1"))
+        categories.append("C0")
+    if capabilities.get("chat") and _unit(capabilities.get("writing")) >= 0.6:
+        categories.append("C1")
     if _unit(capabilities.get("coding")) >= 0.65:
         categories.append("C2")
     if capabilities.get("reasoning"):
@@ -430,6 +441,7 @@ def build_model_profile(
         "cost_score": _unit(performance_source.get("cost_score"), 0.5),
     }
     profile: dict[str, Any] = {
+        "schema_version": PROFILE_SCHEMA_VERSION,
         "model": model,
         "provider": provider,
         "healthy": normalized_health["healthy"],
@@ -447,6 +459,31 @@ def build_model_profile(
     for key, value in override.items():
         if key not in ("capabilities", "performance", "recommended_categories"):
             profile[key] = deepcopy(value)
+    return profile
+
+
+def upgrade_model_profile(
+    model: str,
+    raw: Mapping[str, Any],
+    *,
+    health: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Upgrade generated legacy profiles while preserving manual category data."""
+    profile = deepcopy(dict(raw))
+    profile["model"] = str(profile.get("model") or model)
+    if health is not None:
+        normalized = normalize_health_record(
+            health,
+            model=profile["model"],
+            provider=str(profile.get("provider") or health.get("provider") or ""),
+        )
+        profile.update({"health": normalized, "health_state": normalized["state"], "healthy": normalized["healthy"]})
+    if profile.get("schema_version") != PROFILE_SCHEMA_VERSION and isinstance(profile.get("capabilities"), Mapping):
+        return build_model_profile(
+            profile["model"],
+            provider=str(profile.get("provider") or (profile.get("health") or {}).get("provider") or ""),
+            health=profile.get("health"),
+        )
     return profile
 
 
@@ -571,8 +608,7 @@ def select_configured_category_model(
     for model, raw in profiles_raw.items():
         if not isinstance(raw, Mapping):
             continue
-        item = dict(raw)
-        item["model"] = str(item.get("model") or model)
+        item = upgrade_model_profile(str(model), raw)
         item_provider = str(item.get("provider") or "").strip()
         if active_provider and item_provider and item_provider != active_provider:
             continue
@@ -610,8 +646,7 @@ def repair_incompatible_model_slots(
     for model, raw in profiles.items():
         if not isinstance(raw, Mapping):
             continue
-        profile = dict(raw)
-        profile["model"] = str(profile.get("model") or model)
+        profile = upgrade_model_profile(str(model), raw)
         if str(profile.get("provider") or "").strip() != provider:
             continue
         provider_profiles.append(profile)
@@ -689,7 +724,7 @@ def _probe_openai_capability(
                     "parameters": {"type": "object", "properties": {}},
                 },
             }]
-            body["tool_choice"] = "auto"
+            body["tool_choice"] = {"type": "function", "function": {"name": "health_check"}}
         elif capability == "vision":
             body["messages"] = [{
                 "role": "user",
@@ -708,13 +743,28 @@ def _probe_openai_capability(
             verify_tls=verify_tls,
         ) as response:
             payload = json.loads(response.read().decode("utf-8", errors="replace"))
+        choices = payload.get("choices") if isinstance(payload.get("choices"), list) else []
+        first = choices[0] if choices and isinstance(choices[0], dict) else {}
+        message = first.get("message") if isinstance(first.get("message"), dict) else {}
         if capability == "embedding":
             ok = bool(payload.get("data"))
         elif capability == "reranker":
             ok = bool(payload.get("rankings") or payload.get("data"))
+        elif capability == "tool_calling":
+            ok = bool(message.get("tool_calls") or first.get("tool_calls"))
+        elif capability == "reasoning":
+            ok = bool(
+                message.get("reasoning_content")
+                or message.get("reasoning")
+                or first.get("reasoning_content")
+                or first.get("reasoning")
+            )
         else:
-            ok = bool(payload.get("choices"))
-        return {"ok": ok, "content": "ok" if ok else "", "error": "" if ok else "empty response"}
+            ok = bool(choices)
+        result = {"ok": ok, "content": "ok" if ok else "", "error": "" if ok else "capability not confirmed"}
+        if capability in ("reasoning", "tool_calling", "vision"):
+            result["capability_confirmed"] = ok
+        return result
     except TimeoutError as exc:
         return {"ok": False, "timeout": True, "error": str(exc)}
     except Exception as exc:  # noqa: BLE001
@@ -808,10 +858,15 @@ def start_governance_analysis(
                             capability=capability,
                         )
                 record["capability_checks"] = checks
-                actual = {
-                    cap: bool(check.get("healthy"))
-                    for cap, check in checks.items()
-                }
+                predicted = _name_capabilities(model)
+                actual = {}
+                if primary_capability != "chat" or predicted.get("chat"):
+                    actual[primary_capability] = bool(record.get("healthy"))
+                for capability, check in checks.items():
+                    if capability == primary_capability:
+                        continue
+                    if check.get("capability_confirmed") is True:
+                        actual[capability] = True
                 profile = build_model_profile(
                     model,
                     provider=provider_id,

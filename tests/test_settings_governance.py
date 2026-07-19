@@ -96,6 +96,43 @@ def test_public_governance_view_uses_healthy_profiles():
     assert view["recommendations"]["C1"]["model"] == "good"
 
 
+def test_public_governance_recommendations_are_scoped_to_active_provider():
+    cfg = settings._normalize_governance_settings({
+        "backend": {"type": "provider-a"},
+        "model_health_cache": {
+            "model-a": {"provider": "provider-a", "state": "healthy", "tested_at": 10},
+            "model-b": {"provider": "provider-b", "state": "healthy", "tested_at": 10},
+        },
+        "model_profiles": {
+            "model-a": {
+                "schema_version": 2,
+                "model": "model-a",
+                "provider": "provider-a",
+                "healthy": True,
+                "health_state": "healthy",
+                "recommended_categories": ["C3"],
+                "capabilities": {"reasoning": True},
+                "performance": {"quality_score": 0.5},
+            },
+            "model-b": {
+                "schema_version": 2,
+                "model": "model-b",
+                "provider": "provider-b",
+                "healthy": True,
+                "health_state": "healthy",
+                "recommended_categories": ["C3"],
+                "capabilities": {"reasoning": True},
+                "performance": {"quality_score": 1.0},
+            },
+        },
+    })
+
+    view = settings.public_model_governance_view(cfg)
+
+    assert view["recommendations"]["C3"]["model"] == "model-a"
+    assert view["selectable_models"] == ["model-a"]
+
+
 def test_language_modes_preserve_legacy_values_and_accept_auto(monkeypatch, tmp_path):
     path = _settings_file(monkeypatch, tmp_path)
     path.write_text(json.dumps({"ali": {"language": "en"}}))

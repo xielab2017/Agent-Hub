@@ -7051,12 +7051,12 @@ async function renderControl() {
     const configured = categoryAuto[category.id] === false ? String(categoryModels[category.id] || "") : "";
     const healthyProfiles = (governance.profiles || []).filter((profile) => {
       const health = String(profile?.health_state || profile?.health?.state || "");
-      return ["healthy", "degraded"].includes(health)
+      return (!b.type || !profile?.provider || profile.provider === b.type)
+        && ["healthy", "degraded"].includes(health)
         && Array.isArray(profile?.recommended_categories)
         && profile.recommended_categories.includes(category.id);
     });
     const candidates = [...new Set([
-      configured,
       String(recommendation.model || ""),
       ...healthyProfiles.map((profile) => String(profile.model || "")),
     ].filter(Boolean))];
@@ -7199,11 +7199,11 @@ async function renderModelGovernance(langZh = controlLangZh()) {
     const selected = String(select.value || "");
     const recommendation = (data.recommendations || {})[category] || {};
     const candidates = [...new Set([
-      selected,
       String(recommendation.model || ""),
       ...(data.profiles || []).filter((profile) => {
         const healthState = String(profile?.health_state || profile?.health?.state || "");
-        return ["healthy", "degraded"].includes(healthState)
+        return (!provider || !profile?.provider || profile.provider === provider)
+          && ["healthy", "degraded"].includes(healthState)
           && Array.isArray(profile?.recommended_categories)
           && profile.recommended_categories.includes(category);
       }).map((profile) => String(profile.model || "")),

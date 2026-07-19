@@ -114,7 +114,7 @@ def test_profile_uses_metadata_and_measured_evidence_before_name_fallback():
     )
     assert profile["capabilities"]["vision"] is False
     assert profile["capabilities"]["reasoning"] is True
-    assert profile["recommended_categories"] == ["C0", "C1", "C2", "C3"]
+    assert profile["recommended_categories"] == ["C0", "C2", "C3"]
     assert profile["performance"]["quality_score"] == 0.8
 
 
@@ -130,6 +130,30 @@ def test_manual_profile_override_is_explicit_and_final():
     )
     assert profile["recommended_categories"] == ["C1"]
     assert profile["note"] == "verified by administrator"
+
+
+def test_specialized_and_general_models_are_not_overclassified():
+    translator = build_model_profile(
+        "qwen-mt-lite",
+        health=_health("qwen-mt-lite"),
+    )
+    general = build_model_profile(
+        "vendor/general-chat",
+        health=_health("vendor/general-chat"),
+    )
+    coder = build_model_profile(
+        "vendor/qwen-coder",
+        health=_health("vendor/qwen-coder"),
+    )
+    ocr = build_model_profile(
+        "vendor/qwen-vl-ocr",
+        health=_health("vendor/qwen-vl-ocr"),
+    )
+
+    assert translator["recommended_categories"] == []
+    assert general["recommended_categories"] == ["C0", "C1"]
+    assert coder["recommended_categories"] == ["C0", "C1", "C2"]
+    assert ocr["recommended_categories"] == ["Vision"]
 
 
 def test_unhealthy_models_are_hidden_from_normal_selection():
@@ -210,6 +234,31 @@ def test_configured_category_selection_respects_provider_and_manual_choice():
     manual = select_configured_category_model(config, "C3", provider="nvidia-nim")
     assert manual["model"] == "nvidia-research"
     assert manual["source"] == "manual"
+
+
+def test_live_selection_upgrades_legacy_overclassified_profiles():
+    legacy_translator = {
+        "model": "qwen-mt-lite",
+        "provider": "dashscope",
+        "healthy": True,
+        "health_state": "healthy",
+        "health": {"model": "qwen-mt-lite", "provider": "dashscope", "state": "healthy"},
+        "capabilities": {"chat": True, "reasoning": True, "writing": 0.7},
+        "recommended_categories": ["C0", "C1", "C3"],
+    }
+    reasoner = build_model_profile(
+        "deepseek-r1",
+        provider="dashscope",
+        health={"model": "deepseek-r1", "provider": "dashscope", "state": "healthy"},
+    )
+    config = {
+        "model_profiles": {"qwen-mt-lite": legacy_translator, "deepseek-r1": reasoner},
+        "category_auto": {"C3": True},
+    }
+
+    selected = select_configured_category_model(config, "C3", provider="dashscope")
+
+    assert selected["model"] == "deepseek-r1"
 
 
 def test_startup_refresh_supports_any_configured_non_hybrid_provider(monkeypatch):
