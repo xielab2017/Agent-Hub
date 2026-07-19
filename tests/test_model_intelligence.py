@@ -4,6 +4,8 @@ import json
 
 import pytest
 
+from ali import secrets, settings
+import ali.model_intelligence as model_intelligence
 from ali.model_intelligence import (
     CATEGORIES,
     ModelIntelligenceCache,
@@ -208,6 +210,24 @@ def test_configured_category_selection_respects_provider_and_manual_choice():
     manual = select_configured_category_model(config, "C3", provider="nvidia-nim")
     assert manual["model"] == "nvidia-research"
     assert manual["source"] == "manual"
+
+
+def test_startup_refresh_supports_any_configured_non_hybrid_provider(monkeypatch):
+    config = {
+        "backend": {"type": "openai", "base_url": "https://example.invalid/v1"},
+        "available_models": {"openai": ["gpt-test"]},
+    }
+    captured = {}
+    monkeypatch.setattr(settings, "load_campus_config", lambda: config)
+    monkeypatch.setattr(settings, "resolve_backend_verify_tls", lambda *_args: True)
+    monkeypatch.setattr(secrets, "resolve_api_key", lambda *_args, **_kwargs: {"present": True, "key": "secret"})
+    monkeypatch.setattr(model_intelligence, "start_governance_analysis", lambda **kwargs: captured.update(kwargs) or {"status": "running"})
+
+    result = model_intelligence.start_startup_governance_refresh()
+
+    assert result == {"status": "running"}
+    assert captured["provider"] == "openai"
+    assert captured["models"] == ["gpt-test"]
 
 
 def test_health_freshness_rejects_untested_and_future_records():

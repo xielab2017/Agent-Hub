@@ -1028,7 +1028,7 @@ def handle_post(handler) -> None:
         cfg = save_campus_config(cfg)
 
         governance_job = None
-        if provider == "nvidia-nim":
+        if provider and provider != "hybrid" and models:
             governance_job = model_intelligence.start_governance_analysis(
                 provider=provider,
                 models=models,
@@ -1067,6 +1067,8 @@ def handle_post(handler) -> None:
         base_url = str(body.get("base_url") or (cfg.get("backend") or {}).get("base_url") or "").strip()
         if not base_url or (not key_info.get("present") and provider != "local-ollama"):
             return _json(handler, 400, {"error": "Provider Base URL and API key are required"})
+        if not provider or provider == "hybrid" or not models:
+            return _json(handler, 400, {"error": "No fetched models to test — refresh the active provider's model list first"})
         job = model_intelligence.start_governance_analysis(
             provider=provider,
             models=models,

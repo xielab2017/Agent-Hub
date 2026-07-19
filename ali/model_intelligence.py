@@ -801,7 +801,7 @@ def start_startup_governance_refresh() -> dict[str, Any] | None:
 
     A catalog must already have been fetched by the user.  This avoids an
     expensive provider-wide model listing during every launch while ensuring
-    cached NVIDIA availability and category choices do not drift forever.
+    cached model availability and category choices do not drift forever.
     """
     from .secrets import resolve_api_key
     from .settings import load_campus_config, resolve_backend_verify_tls
@@ -811,7 +811,7 @@ def start_startup_governance_refresh() -> dict[str, Any] | None:
     provider = str(backend.get("type") or "").strip()
     catalogs = cfg.get("available_models") if isinstance(cfg.get("available_models"), Mapping) else {}
     models = catalogs.get(provider) if isinstance(catalogs.get(provider), list) else []
-    if provider != "nvidia-nim" or not models:
+    if not provider or provider == "hybrid" or not models:
         return None
     key_info = resolve_api_key(cfg, provider=provider)
     base_url = str(backend.get("base_url") or "").strip()
