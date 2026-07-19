@@ -14,7 +14,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
-VERSION = "5.0.1"
+VERSION = "5.0.6"
 APP_NAME = "Agent Hub"
 APP_TAGLINE = "Control UI · claws use native homes (~/.hermes · ~/.openclaw · ~/.nanobot)"
 

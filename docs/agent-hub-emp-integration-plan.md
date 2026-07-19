@@ -1,6 +1,6 @@
 # Agent Hub x EasyMultiProfiler 联合分析实施方案
 
-> 文档状态：Proposed  
+> 文档状态：Phase 1 implemented
 > 文档版本：v1.0  
 > 更新日期：2026-07-19  
 > 目标版本：Agent Hub v5.x / EasyMultiProfiler Web v7.x  
@@ -1018,3 +1018,15 @@ Phase 1 完成条件以本文档“Phase 1：本机 EMP API MVP”的验收标�
 - `restricted` 数据是否允许上传到实验室内网 EMP。
 - 报告首选格式，建议首版 Markdown + 原始 artifact，后续增加 DOCX/PDF。
 
+## 28. v5.0.6 实施记录
+
+2026-07-20 已完成 Phase 0 基线与 Phase 1 本机 16S MVP：
+
+- EMP 提供 `GET /api/capabilities`、受控 path preview/import、平台用户数据目录及可配置持久 session/job 根。
+- Agent Hub 提供 `emp_models.py`、`emp_discovery.py`、`emp_client.py`、`emp_service.py` 和 `emp_tools.py`。
+- 所有本机 EMP 调用限制为配置的 loopback origin；工具目录不包含任意 URL 或 R 执行接口。
+- 控制中心增加中英文“联合分析”页，支持扫描、参数选择、计划确认、固定进度、取消与 artifact。
+- 真实 16S 数据完成 132 assay 样本、130 metadata 样本、130 匹配样本的导入与 Alpha 流程。
+- 自动测试覆盖 allowed roots、symlink escape、跨平台路径语义、错误归一化、确认门禁、输入变更失效和防重。已完成任务及产物可在重启后恢复；Phase 1 的同步 EMP 编排若在进程中断时运行，会进入可重试错误，不宣称继续轮询。
+
+本版本明确未实现：远程 EMP 上传与认证、RNA-seq/其他组学计划、跨组学联合解释、bundle、EMP job cancel endpoint 和 R Direct。它们仍按 Phase 2–5 推进。

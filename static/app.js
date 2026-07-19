@@ -15,7 +15,7 @@ const FONT_SIZE_LABELS = {
   zh: { 13: "小 13", 14: "中 14", 15: "中大 15", 16: "大 16", 18: "特大 18" },
   en: { 13: "S 13", 14: "M 14", 15: "M+ 15", 16: "L 16", 18: "XL 18" },
 };
-const LOGO_VER = "5.0.1";
+const LOGO_VER = "5.0.6";
 const DEFAULT_LOGO = `/brand/suat-logo-color.png?v=${LOGO_VER}`;
 const LOGO_PRESETS = [
   { id: "suat-color", src: `/brand/suat-logo-color.png?v=${LOGO_VER}`, labelKey: "appearance.logoPresetColor" },
@@ -292,6 +292,7 @@ const I18N = {
     "control.backend": "后端",
     "control.search": "搜索",
     "control.models": "模型",
+    "control.emp": "联合分析",
     "control.routing": "路由",
     "control.obsidian": "知识库",
     "control.schedule": "定时任务",
@@ -560,6 +561,7 @@ const I18N = {
     "control.backend": "Backend",
     "control.search": "Search",
     "control.models": "Models",
+    "control.emp": "Joint analysis",
     "control.routing": "Routing",
     "control.obsidian": "Knowledge",
     "control.schedule": "Schedule",
@@ -688,6 +690,7 @@ const state = {
   streamConsumers: {},
   streamBuffers: {}, // sessionId -> live SSE buffer (survives session switches)
   settings: null,
+  emp: { sessionId: "", manifest: null, plan: null, job: null, pollTimer: null, pollToken: 0 },
   pendingWf: null,
   lastAssistantText: "",
   liveModels: [],
@@ -1222,7 +1225,16 @@ async function api(path, opts = {}) {
     }
     const ct = res.headers.get("content-type") || "";
     const data = ct.includes("application/json") ? await res.json() : null;
-    if (!res.ok) throw new Error((data && data.error) || res.statusText || "request failed");
+    if (!res.ok) {
+      const rawError = data && data.error;
+      const message = typeof rawError === "string"
+        ? rawError
+        : (rawError && (state.prefs.language === "en" ? rawError.user_message_en : rawError.user_message_zh))
+          || (rawError && rawError.message)
+          || res.statusText
+          || "request failed";
+      throw new Error(message);
+    }
     return data;
   } finally {
     if (timeoutId) clearTimeout(timeoutId);
@@ -4289,6 +4301,10 @@ async function selectSession(id) {
   // Optimistic highlight so switching feels instant even if API is slow
   const prevId = state.currentId;
   closeSessionOverlays();
+  if (state.emp.sessionId !== id) {
+    if (state.emp.pollTimer) clearTimeout(state.emp.pollTimer);
+    state.emp = { sessionId: id, manifest: null, plan: null, job: null, pollTimer: null, pollToken: state.emp.pollToken + 1 };
+  }
   state.currentId = id;
   state.selectedSessionId = id;
   renderSessionList();
@@ -6651,6 +6667,292 @@ async function renderSearchPanel(langZh) {
   });
 }
 
+function empStatusLabel(status, langZh) {
+  if (!status?.enabled) return langZh ? "未启用" : "Disabled";
+  if (status.compatible) return langZh ? "本机 EMP 已连接" : "Local EMP connected";
+  if (status.reachable) return langZh ? "EMP 版本不兼容" : "EMP version incompatible";
+  return langZh ? "等待本机 EMP" : "Waiting for local EMP";
+}
+
+function empMetadataHeaders(manifest) {
+  const file = (manifest?.files || []).find((item) => ["metadata", "clinical"].includes(item.role));
+  return (file?.preview && file.preview[0]) || [];
+}
+
+function renderEmpManifest(manifest, langZh) {
+  const host = $("#emp-manifest");
+  if (!host || !manifest) return;
+  const overlap = manifest.sample_overlap || {};
+  const rows = (manifest.files || []).map((file) => `
+    <div class="emp-file-row">
+      <span class="emp-role">${escapeHtml(file.role || "unknown")}</span>
+      <div><strong>${escapeHtml(file.path || "")}</strong><div class="muted">${Number(file.size || 0).toLocaleString()} B · ${file.rows ?? "—"} × ${file.columns ?? "—"}</div></div>
+    </div>`).join("");
+  const warnings = (manifest.warnings || []).map((warning) => `<li>${escapeHtml(warning)}</li>`).join("");
+  const tables = (manifest.files || []).filter((file) => [".csv", ".tsv", ".txt"].some((suffix) => String(file.path || "").toLowerCase().endsWith(suffix)));
+  const selectedAssay = (manifest.files || []).find((file) => file.role === "assay")?.path || "";
+  const selectedMetadata = (manifest.files || []).find((file) => file.role === "metadata")?.path || "";
+  const fileOptions = (selected) => tables.map((file) => `<option value="${escapeHtml(file.path)}" ${file.path === selected ? "selected" : ""}>${escapeHtml(file.path)}</option>`).join("");
+  host.innerHTML = `
+    <div class="emp-section-head"><div><h4>${langZh ? "数据清单" : "Dataset manifest"}</h4><p class="muted"><code>${escapeHtml(manifest.manifest_id)}</code></p></div><span class="emp-state is-ready">${escapeHtml(manifest.omics_type || "unknown")}</span></div>
+    <div class="emp-overlap"><span>${langZh ? "矩阵样本" : "Assay"} <strong>${overlap.assay ?? "—"}</strong></span><span>${langZh ? "元数据样本" : "Metadata"} <strong>${overlap.metadata ?? "—"}</strong></span><span>${langZh ? "匹配" : "Matched"} <strong>${overlap.matched ?? "—"}</strong></span></div>
+    <div class="emp-pairing-row"><label class="field"><span>Assay</span><select id="emp-assay-file">${fileOptions(selectedAssay)}</select></label><label class="field"><span>Metadata</span><select id="emp-metadata-file">${fileOptions(selectedMetadata)}</select></label><button type="button" class="btn ghost" id="btn-emp-apply-pairing">${langZh ? "应用配对" : "Apply pairing"}</button></div>
+    <div class="emp-file-list">${rows}</div>
+    ${warnings ? `<ul class="emp-warnings">${warnings}</ul>` : ""}
+    <div class="grid-2 emp-plan-fields">
+      <label class="field"><span>${langZh ? "分组变量" : "Group variable"}</span><select id="emp-group-var">${empMetadataHeaders(manifest).filter((name) => name !== manifest.sample_id_column).map((name) => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join("")}</select></label>
+      <label class="field"><span>Taxonomy level</span><select id="emp-taxonomy-level">${["Phylum", "Class", "Order", "Family", "Genus", "Species"].map((name) => `<option value="${name}" ${name === "Genus" ? "selected" : ""}>${name}</option>`).join("")}</select></label>
+      <label class="field"><span>${langZh ? "Alpha 指标" : "Alpha metric"}</span><select id="emp-alpha-metric"><option value="shannon">Shannon</option><option value="simpson">Simpson</option><option value="observed">Observed</option><option value="chao1">Chao1</option></select></label>
+    </div>
+    <button type="button" class="btn primary emp-primary-action" id="btn-emp-create-plan">${langZh ? "生成分析计划" : "Create analysis plan"}</button>`;
+  $("#btn-emp-apply-pairing")?.addEventListener("click", applyEmpPairing);
+  $("#btn-emp-create-plan")?.addEventListener("click", createEmpPlan);
+}
+
+async function applyEmpPairing() {
+  const manifest = state.emp.manifest;
+  if (!manifest || !state.currentId) return;
+  const button = $("#btn-emp-apply-pairing");
+  if (button) button.disabled = true;
+  try {
+    const data = await api(`/api/emp/manifests/${encodeURIComponent(manifest.manifest_id)}/pairing`, {
+      method: "POST",
+      body: JSON.stringify({
+        session_id: state.currentId,
+        assay_path: $("#emp-assay-file")?.value || "",
+        metadata_path: $("#emp-metadata-file")?.value || "",
+      }),
+    });
+    state.emp.manifest = data.manifest;
+    state.emp.plan = null;
+    renderEmpManifest(data.manifest, controlLangZh());
+    $("#emp-plan").innerHTML = "";
+  } catch (error) {
+    $("#settings-status").textContent = error.message || String(error);
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
+
+function renderEmpPlan(plan, langZh) {
+  const host = $("#emp-plan");
+  if (!host || !plan) return;
+  const steps = (plan.steps || []).map((step, index) => `
+    <li><span>${index + 1}</span><div><strong>${escapeHtml(step.id)}</strong><small>${escapeHtml(step.tool)}</small><small>${escapeHtml(JSON.stringify(step.params || {}))}</small></div></li>`).join("");
+  host.innerHTML = `
+    <div class="emp-section-head"><div><h4>${langZh ? "待确认分析计划" : "Analysis plan awaiting confirmation"}</h4><p class="muted"><code>${escapeHtml(plan.plan_id)}</code></p></div><span class="emp-state is-warn">${langZh ? "需要确认" : "Confirmation required"}</span></div>
+    <ol class="emp-plan-steps">${steps}</ol>
+    <p class="muted">${langZh ? "运行位置：本机。原始数据不会发送给 LLM，也不会离开本机。" : "Runs locally. Raw matrices are not sent to the LLM or off this computer."}</p>
+    <button type="button" class="btn primary emp-primary-action" id="btn-emp-confirm-run">${langZh ? "确认并运行" : "Confirm and run"}</button>`;
+  $("#btn-emp-confirm-run")?.addEventListener("click", confirmAndRunEmpPlan);
+}
+
+function paintEmpJob(job, langZh) {
+  const host = $("#emp-run-state");
+  if (!host || !job) return;
+  state.emp.job = job;
+  const pct = Math.max(0, Math.min(100, Number(job.progress || 0)));
+  const stepDefs = [
+    ["import", langZh ? "导入" : "Import", 10],
+    ["validate", langZh ? "校验" : "Validate", 30],
+    ["taxonomy_prepare", "Taxonomy", 50],
+    ["alpha", "Alpha", 72],
+    ["alpha_plot", langZh ? "图表与报告" : "Plot & report", 88],
+  ];
+  const terminal = ["done", "error", "cancelled"].includes(job.status);
+  const items = stepDefs.map(([id, label, threshold]) => {
+    const active = job.step_id === id && !terminal;
+    const done = pct > threshold || job.status === "done";
+    return `<li class="${active ? "active" : done ? "done" : "pending"}"><i></i><span>${escapeHtml(label)}</span></li>`;
+  }).join("");
+  const error = job.error || {};
+  const errorText = state.prefs.language === "en" ? error.user_message_en : error.user_message_zh;
+  host.innerHTML = `
+    <div class="emp-section-head"><div><h4>${langZh ? "运行状态" : "Run status"}</h4><p class="muted">${escapeHtml(job.message || "")}</p></div><span class="emp-state is-${escapeHtml(job.status || "pending")}">${escapeHtml(job.status || "pending")}</span></div>
+    <div class="emp-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><span style="width:${pct}%"></span></div>
+    <div class="emp-progress-label"><span>${escapeHtml(job.step_id || (langZh ? "准备" : "Preparing"))}</span><strong>${pct}%</strong></div>
+    <ol class="emp-run-steps">${items}</ol>
+    ${errorText ? `<p class="emp-error">${escapeHtml(errorText)}</p>` : ""}
+    ${!terminal ? `<button type="button" class="btn ghost" id="btn-emp-cancel">${langZh ? "取消任务" : "Cancel job"}</button>` : ""}`;
+  $("#btn-emp-cancel")?.addEventListener("click", cancelEmpJob);
+}
+
+async function renderEmpArtifacts(jobId, langZh) {
+  const host = $("#emp-artifacts");
+  if (!host || !jobId) return;
+  try {
+    const sid = state.currentId || "";
+    const data = await api(`/api/emp/artifacts?job_id=${encodeURIComponent(jobId)}&session_id=${encodeURIComponent(sid)}`);
+    const artifacts = data.artifacts || [];
+    host.innerHTML = artifacts.length ? `
+      <div class="emp-section-head"><div><h4>${langZh ? "分析产物" : "Analysis artifacts"}</h4><p class="muted">${artifacts.length} ${langZh ? "项" : "items"}</p></div></div>
+      <div class="emp-artifact-list">${artifacts.map((item) => `
+        <div class="emp-artifact-row"><div><span class="emp-role">${escapeHtml(item.kind)}</span><strong>${escapeHtml(item.name)}</strong><small>${Number(item.size || 0).toLocaleString()} B</small></div>
+          <div class="row"><a class="btn ghost" href="/api/emp/artifacts/${encodeURIComponent(item.artifact_id)}/download?session_id=${encodeURIComponent(sid)}" target="_blank" rel="noopener">${langZh ? "打开" : "Open"}</a><button type="button" class="btn ghost" data-emp-context="${escapeHtml(item.artifact_id)}" data-emp-name="${escapeHtml(item.name)}">${langZh ? "加入对话" : "Add to chat"}</button></div></div>`).join("")}</div>` : "";
+    host.querySelectorAll("[data-emp-context]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const input = $("#input");
+        if (!input) return;
+        const ref = `[EMP artifact: ${button.dataset.empName}; id=${button.dataset.empContext}]`;
+        input.value = `${input.value.trim()}${input.value.trim() ? "\n" : ""}${ref}`;
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.focus();
+      });
+    });
+  } catch (error) {
+    host.innerHTML = `<p class="emp-error">${escapeHtml(error.message || String(error))}</p>`;
+  }
+}
+
+function startEmpJobPolling(jobId) {
+  if (state.emp.pollTimer) clearTimeout(state.emp.pollTimer);
+  const token = ++state.emp.pollToken;
+  const sid = state.currentId || "";
+  const langZh = controlLangZh();
+  const poll = async () => {
+    if (token !== state.emp.pollToken || sid !== state.currentId) return;
+    try {
+      const data = await api(`/api/emp/jobs/${encodeURIComponent(jobId)}?session_id=${encodeURIComponent(sid)}`);
+      if (token !== state.emp.pollToken || sid !== state.currentId) return;
+      const job = data.job;
+      paintEmpJob(job, langZh);
+      if (["done", "error", "cancelled"].includes(job.status)) {
+        state.emp.pollTimer = null;
+        await renderEmpArtifacts(job.job_id, langZh);
+      } else {
+        state.emp.pollTimer = setTimeout(poll, 1200);
+      }
+    } catch (error) {
+      const host = $("#emp-run-state");
+      if (host) host.innerHTML = `<p class="emp-error">${escapeHtml(error.message || String(error))}</p>`;
+      state.emp.pollTimer = null;
+    }
+  };
+  poll();
+}
+
+async function createEmpPlan() {
+  const langZh = controlLangZh();
+  const manifest = state.emp.manifest;
+  if (!manifest || !state.currentId) return;
+  const button = $("#btn-emp-create-plan");
+  if (button) button.disabled = true;
+  try {
+    const data = await api("/api/emp/plans", {
+      method: "POST",
+      body: JSON.stringify({
+        manifest_id: manifest.manifest_id,
+        session_id: state.currentId,
+        group_var: $("#emp-group-var")?.value || "",
+        taxonomy_level: $("#emp-taxonomy-level")?.value || "Genus",
+        alpha_metric: $("#emp-alpha-metric")?.value || "shannon",
+        language: langZh ? "zh" : "en",
+      }),
+    });
+    state.emp.plan = data.plan;
+    renderEmpPlan(data.plan, langZh);
+  } catch (error) {
+    $("#emp-plan").innerHTML = `<p class="emp-error">${escapeHtml(error.message || String(error))}</p>`;
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
+
+async function confirmAndRunEmpPlan() {
+  const plan = state.emp.plan;
+  if (!plan) return;
+  const button = $("#btn-emp-confirm-run");
+  if (button) button.disabled = true;
+  try {
+    const body = JSON.stringify({ session_id: state.currentId || "" });
+    await api(`/api/emp/plans/${encodeURIComponent(plan.plan_id)}/confirm`, { method: "POST", body });
+    const data = await api(`/api/emp/plans/${encodeURIComponent(plan.plan_id)}/run`, { method: "POST", body });
+    state.emp.job = data.job;
+    paintEmpJob(data.job, controlLangZh());
+    startEmpJobPolling(data.job.job_id);
+  } catch (error) {
+    $("#emp-run-state").innerHTML = `<p class="emp-error">${escapeHtml(error.message || String(error))}</p>`;
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
+
+async function cancelEmpJob() {
+  if (!state.emp.job?.job_id) return;
+  try {
+    const data = await api(`/api/emp/jobs/${encodeURIComponent(state.emp.job.job_id)}/cancel`, { method: "POST", body: JSON.stringify({ session_id: state.currentId || "" }) });
+    paintEmpJob(data.job, controlLangZh());
+  } catch (error) {
+    $("#settings-status").textContent = error.message || String(error);
+  }
+}
+
+async function renderEmpPanel(langZh) {
+  const box = $("#ctab-emp");
+  if (!box) return;
+  const cfg = ((state.settings?.config || {}).emp) || {};
+  let status = { enabled: cfg.enabled === true, reachable: false, compatible: false };
+  try { status = await api("/api/emp/status"); } catch (_) {}
+  const endpoint = cfg.local_api_base || "http://127.0.0.1:8000";
+  box.innerHTML = `
+    <div class="emp-hero">
+      <div><p class="emp-kicker">EasyMultiProfiler</p><h3>${langZh ? "多组学联合分析" : "Multi-omics joint analysis"}</h3><p>${langZh ? "Agent Hub 规划与追踪，EMP 完成 R 统计计算和可视化。" : "Agent Hub plans and tracks; EMP performs R statistics and visualization."}</p></div>
+      <span class="emp-state ${status.compatible ? "is-ready" : "is-warn"}">${escapeHtml(empStatusLabel(status, langZh))}</span>
+    </div>
+    <div class="emp-settings grid-2">
+      ${field(langZh ? "启用 EMP" : "Enable EMP", "emp.enabled", cfg.enabled === true, "checkbox")}
+      ${field(langZh ? "运行模式" : "Run mode", "emp.mode", { selected: cfg.mode || "auto", options: [{ value: "auto", label: "Auto → local-api" }, { value: "local-api", label: "local-api" }] }, "select")}
+      ${field(langZh ? "本机 API 地址" : "Local API endpoint", "emp.local_api_base", endpoint)}
+      ${field(langZh ? "请求超时（秒）" : "Request timeout (seconds)", "emp.request_timeout_seconds", String(cfg.request_timeout_seconds || 60), "number")}
+      ${field(langZh ? "额外允许目录（逗号分隔）" : "Additional allowed roots (comma-separated)", "emp.allowed_roots", (cfg.allowed_roots || []).join(", "))}
+    </div>
+    <div class="row emp-toolbar"><button type="button" class="btn ghost" id="btn-emp-save-check">${langZh ? "保存并检查连接" : "Save & check connection"}</button><code>${escapeHtml(endpoint)}</code></div>
+    <div class="emp-workflow">
+      <div class="emp-scan-row"><label class="field"><span>${langZh ? "本地数据目录" : "Local data directory"}</span><div class="path-row"><input id="emp-scan-path" type="text" value="${escapeHtml((state.settings?.config || {}).workspace || "")}" placeholder="/path/to/16s/data"/><button type="button" class="btn ghost" id="btn-emp-browse" title="${langZh ? "选择目录" : "Choose directory"}">…</button></div></label><button type="button" class="btn primary" id="btn-emp-scan" ${status.compatible ? "" : "disabled"}>${langZh ? "扫描组学数据" : "Scan omics data"}</button></div>
+      <div id="emp-manifest" class="emp-stage"></div>
+      <div id="emp-plan" class="emp-stage"></div>
+      <div id="emp-run-state" class="emp-stage emp-run-state"></div>
+      <div id="emp-artifacts" class="emp-stage"></div>
+    </div>`;
+  $("#btn-emp-save-check")?.addEventListener("click", async () => {
+    try { await saveSettings(); } catch (error) { $("#settings-status").textContent = error.message || String(error); }
+  });
+  $("#btn-emp-browse")?.addEventListener("click", () => openFsBrowser($("#emp-scan-path")?.value || "", "#emp-scan-path"));
+  $("#btn-emp-scan")?.addEventListener("click", async () => {
+    const button = $("#btn-emp-scan");
+    if (button) button.disabled = true;
+    $("#emp-manifest").innerHTML = `<div class="emp-loading"><span></span>${langZh ? "正在扫描文件与样本匹配…" : "Scanning files and sample matches…"}</div>`;
+    try {
+      const data = await api("/api/emp/scan", { method: "POST", body: JSON.stringify({ path: $("#emp-scan-path")?.value || "", session_id: state.currentId || "", max_depth: 2 }) });
+      state.emp.manifest = data.manifest;
+      state.emp.plan = null;
+      state.emp.job = null;
+      state.emp.pollToken += 1;
+      if (state.emp.pollTimer) clearTimeout(state.emp.pollTimer);
+      state.emp.pollTimer = null;
+      renderEmpManifest(data.manifest, langZh);
+      $("#emp-plan").innerHTML = "";
+      $("#emp-run-state").innerHTML = "";
+      $("#emp-artifacts").innerHTML = "";
+    } catch (error) {
+      $("#emp-manifest").innerHTML = `<p class="emp-error">${escapeHtml(error.message || String(error))}</p>`;
+    } finally {
+      if (button) button.disabled = false;
+    }
+  });
+  if (state.emp.manifest) renderEmpManifest(state.emp.manifest, langZh);
+  if (state.emp.plan) renderEmpPlan(state.emp.plan, langZh);
+  try {
+    const jobs = await api(`/api/emp/jobs?session_id=${encodeURIComponent(state.currentId || "")}`);
+    const latest = (jobs.jobs || [])[0];
+    if (latest) {
+      paintEmpJob(latest, langZh);
+      if (["pending", "running"].includes(latest.status)) startEmpJobPolling(latest.job_id);
+      else await renderEmpArtifacts(latest.job_id, langZh);
+    }
+  } catch (_) {}
+}
+
 async function renderControl() {
   applyControlCenterLanguage();
   await loadSettings();
@@ -7138,6 +7440,7 @@ async function renderControl() {
   await renderMcpPanel(langZh);
   await renderSkillsSoulAgents(langZh);
   await renderSearchPanel(langZh);
+  await renderEmpPanel(langZh);
 
   const importBtn = $("#btn-import-cfg");
   if (importBtn) {
@@ -8608,7 +8911,11 @@ function collectSettingsFromForm() {
     if (key === "obsidian.allowed_roots") {
       val = String(val).split(",").map((s) => s.trim()).filter(Boolean);
     }
+    if (key === "emp.allowed_roots") {
+      val = String(val).split(",").map((s) => s.trim()).filter(Boolean);
+    }
     if (key === "backend.timeout_seconds") val = Number(val) || 60;
+    if (key === "emp.request_timeout_seconds") val = Number(val) || 60;
     if (key === "backend.api_key_env" && looksLikeSecret(val)) {
       val = "";
     }

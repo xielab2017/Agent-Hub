@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/xielab2017/Agent-Hub/releases"><img alt="version" src="https://img.shields.io/badge/version-5.0.1-rose.svg" /></a>
+  <a href="https://github.com/xielab2017/Agent-Hub/releases"><img alt="version" src="https://img.shields.io/badge/version-5.0.6-rose.svg" /></a>
   <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-MIT-blue.svg" /></a>
   <a href="https://www.python.org/"><img alt="python" src="https://img.shields.io/badge/python-%3E%3D3.9-brightgreen.svg" /></a>
   <a href="https://github.com/xielab2017/Agent-Hub"><img alt="platform" src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg" /></a>
@@ -93,7 +93,7 @@ chmod +x ctl.sh "Start Agent Hub.command" start.sh
 curl -s http://127.0.0.1:8765/api/health
 ```
 
-确认健康检查里显示 `"version": "5.0.1"`。如果仍然不对，可临时换端口验证当前源码：
+确认健康检查里显示 `"version": "5.0.6"`。如果仍然不对，可临时换端口验证当前源码：
 
 ```bash
 python3 server.py --host 127.0.0.1 --port 9876 --open
@@ -233,6 +233,42 @@ export HERMES_ALI_PUBLIC_URL='https://agent.example.edu'
 
 中英、浅/深色、主题色；Logo 可上传或选内置品牌（SUAT 彩标 / 白板）。
 
+### EasyMultiProfiler 联合分析
+
+v5.0.6 提供实验性的本机 16S 纵向流程：扫描本地数据目录、识别 assay/metadata、核对样本、确认结构化计划、调用 EMP 完成 taxonomy 与 Alpha 多样性分析，并把 JSON、PNG、PDF 和 Markdown 报告登记为会话产物。
+
+先在 EasyMultiProfiler-Web 仓库启动 API；路径导入只允许 `EMP_ALLOWED_ROOTS` 中的目录：
+
+```bash
+cd /path/to/EasyMultiProfiler-Web
+EMP_ALLOWED_ROOTS=/absolute/path/to/your/project \
+Rscript webapp/backend/run_api.R
+```
+
+Windows PowerShell：
+
+```powershell
+$env:EMP_ALLOWED_ROOTS = "C:\Research\Project"
+Rscript webapp\backend\run_api.R
+```
+
+然后打开 Agent Hub 的“控制中心 → 联合分析”，启用 EMP，保留默认地址 `http://127.0.0.1:8000`，保存并检查连接。首次版本只支持 `local-api` 和固定 16S 流程；远程上传、RNA-seq/多工作流规划及 R Direct 尚未启用。
+
+常见问题：
+
+- 显示“等待本机 EMP”：确认 EMP API 已启动，端口与控制中心一致。
+- 显示“路径不允许”：把数据项目根目录加入 EMP 的 `EMP_ALLOWED_ROOTS`，重新启动 EMP。
+- Agent Hub 重启：已完成 job、mapping 和 artifact 会恢复；中断中的本机编排会标记为可重试错误，避免静默重复提交。
+- 回滚：在控制中心关闭 EMP，或设置配置项 `emp.enabled=false`；聊天、模型与其他功能不受影响。
+
+开发环境可运行双服务 smoke：
+
+```bash
+python3 scripts/emp_e2e_smoke.py \
+  --hub http://127.0.0.1:8765 \
+  --workspace /path/to/EasyMultiProfiler-Web/tests
+```
+
 ---
 
 ## 仓库结构
@@ -256,7 +292,7 @@ Agent-Hub/
 
 ## 开发与版本
 
-当前版本：**v5.0.1**（分支 `main`）
+当前版本：**v5.0.6**（分支 `v5.0.6`）
 
 ```bash
 # 健康检查
@@ -270,6 +306,7 @@ git pull
 
 简要更新：
 
+- **v5.0.6** — Agent Hub x EasyMultiProfiler 本机 16S MVP：受控数据扫描、计划确认、持久 job/artifact、稳定进度和中英文 UI
 - **v5.0.0** — 强化 Agent Hub 本地网关、启动器与跨平台使用体验；新增 macOS 首次启动排查说明
 - **v4.0.0** — 发布 Agent Hub v4 系列能力与文档刷新
 - **v3.0.0** — 并行子代理自动规划、共享 `HERMES_HOME`、C0–C3 路由；深度会话 iframe 已退役（能力内化到 Hub）

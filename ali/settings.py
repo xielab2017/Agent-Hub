@@ -94,6 +94,21 @@ DEFAULT_CAMPUS: dict[str, Any] = {
     },
     "data_policy": "internal",  # internal | restricted | public
     "workspace": "",
+    "emp": {
+        "enabled": False,
+        "mode": "auto",
+        "local_api_base": "http://127.0.0.1:8000",
+        "remote_api_base": "",
+        "api_token_env": "EMP_API_TOKEN",
+        "request_timeout_seconds": 60,
+        "job_timeout_minutes": 120,
+        "poll_interval_seconds": 2,
+        "allowed_roots": [],
+        "artifact_root": "",
+        "remote_upload_limit_mb": 2048,
+        "allow_r_direct": False,
+        "require_remote_upload_approval": True,
+    },
     "ali": {
         "default_route": "auto",  # simple | office | vision | reasoning | auto
         "show_route_badge": True,

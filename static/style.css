@@ -2659,6 +2659,102 @@ hr.soft {
 .model-health-state.is-unavailable,
 .model-health-state.is-unsupported { color: var(--danger); }
 
+.emp-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.emp-hero h3,
+.emp-hero p,
+.emp-section-head h4,
+.emp-section-head p { margin: 0; }
+
+.emp-hero h3 { font-size: 18px; }
+.emp-hero > div > p:last-child { margin-top: 6px; color: var(--muted); }
+.emp-kicker { color: var(--accent); font-size: 11px; font-weight: 700; text-transform: uppercase; }
+
+.emp-state {
+  flex: 0 0 auto;
+  padding: 4px 7px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--muted);
+  background: var(--bg-soft);
+  font-size: 11px;
+}
+
+.emp-state.is-ready,
+.emp-state.is-done { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 45%, var(--border)); }
+.emp-state.is-warn,
+.emp-state.is-pending,
+.emp-state.is-running { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 45%, var(--border)); }
+.emp-state.is-error,
+.emp-state.is-cancelled { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 45%, var(--border)); }
+
+.emp-settings { padding-top: 4px; }
+.emp-settings .field:last-child { grid-column: 1 / -1; }
+.emp-toolbar { justify-content: flex-start; flex-wrap: wrap; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+.emp-toolbar code { min-width: 0; overflow: hidden; color: var(--muted); text-overflow: ellipsis; white-space: nowrap; }
+.emp-workflow { display: grid; gap: 0; }
+.emp-scan-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 10px; padding: 16px 0; }
+.emp-stage { min-height: 0; padding: 0; border-top: 1px solid transparent; }
+.emp-stage:not(:empty) { min-height: 112px; padding: 16px 0; border-top-color: var(--border); }
+.emp-run-state:not(:empty) { min-height: 216px; }
+.emp-section-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.emp-section-head > * { min-width: 0; }
+.emp-section-head code { font-size: 10px; }
+.emp-overlap { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 10px; }
+.emp-overlap span { padding: 8px; background: var(--bg-soft); border-radius: 4px; color: var(--muted); font-size: 11px; }
+.emp-overlap strong { display: block; margin-top: 2px; color: var(--text); font-size: 15px; }
+.emp-pairing-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; align-items: end; gap: 8px; margin-bottom: 12px; }
+.emp-file-list { display: grid; gap: 4px; max-height: 220px; overflow: auto; }
+.emp-file-row { display: grid; grid-template-columns: 78px minmax(0, 1fr); align-items: start; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.emp-file-row strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+.emp-role { display: inline-block; width: fit-content; padding: 2px 5px; border-radius: 3px; color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); font-size: 10px; }
+.emp-warnings { margin: 10px 0; padding-left: 20px; color: var(--warn); font-size: 12px; }
+.emp-plan-fields { margin-top: 14px; }
+.emp-primary-action { align-self: flex-start; margin-top: 12px; }
+.emp-plan-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 0 0 12px; padding: 0; list-style: none; }
+.emp-plan-steps li { min-width: 0; display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 6px; padding: 8px; background: var(--bg-soft); border-radius: 4px; }
+.emp-plan-steps li > span { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; color: var(--bg-elev); background: var(--accent); font-size: 10px; }
+.emp-plan-steps strong,
+.emp-plan-steps small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.emp-plan-steps strong { font-size: 11px; }
+.emp-plan-steps small { color: var(--muted); font-size: 9px; }
+.emp-progress { width: 100%; height: 8px; overflow: hidden; border-radius: 4px; background: var(--bg-soft); }
+.emp-progress span { display: block; height: 100%; border-radius: inherit; background: var(--accent); transition: width 240ms ease; }
+.emp-progress-label { display: flex; justify-content: space-between; margin-top: 5px; color: var(--muted); font-size: 11px; }
+.emp-run-steps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; margin: 16px 0; padding: 0; list-style: none; }
+.emp-run-steps li { min-width: 0; display: flex; align-items: center; gap: 5px; color: var(--muted); font-size: 10px; }
+.emp-run-steps i { width: 7px; height: 7px; flex: 0 0 auto; border-radius: 50%; background: var(--border); }
+.emp-run-steps li.active { color: var(--text); }
+.emp-run-steps li.active i { background: var(--warn); }
+.emp-run-steps li.done { color: var(--ok); }
+.emp-run-steps li.done i { background: var(--ok); }
+.emp-artifact-list { display: grid; gap: 0; }
+.emp-artifact-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+.emp-artifact-row > div:first-child { min-width: 0; display: grid; grid-template-columns: 58px minmax(0, 1fr); align-items: center; gap: 8px; }
+.emp-artifact-row strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+.emp-artifact-row small { grid-column: 2; color: var(--muted); }
+.emp-loading { min-height: 80px; display: flex; align-items: center; justify-content: center; gap: 9px; color: var(--muted); }
+.emp-loading span { width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 800ms linear infinite; }
+.emp-error { padding: 9px; overflow-wrap: anywhere; color: var(--danger); background: color-mix(in srgb, var(--danger) 7%, transparent); border-left: 3px solid var(--danger); font-size: 12px; }
+
+@media (max-width: 700px) {
+  .emp-hero,
+  .emp-artifact-row { align-items: stretch; flex-direction: column; }
+  .emp-scan-row { grid-template-columns: 1fr; }
+  .emp-pairing-row { grid-template-columns: 1fr; }
+  .emp-overlap { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .emp-plan-steps { grid-template-columns: 1fr 1fr; }
+  .emp-run-steps { grid-template-columns: 1fr 1fr; }
+  .emp-artifact-row .row { justify-content: flex-start; }
+}
+
 .model-health-main {
   min-width: 0;
   display: grid;

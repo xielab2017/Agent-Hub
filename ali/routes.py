@@ -22,6 +22,7 @@ from . import (
     brand_logo,
     digest,
     ecosystem,
+    emp_tools,
     evolution,
     excel_fill,
    feedback,
@@ -49,6 +50,9 @@ from . import (
     websearch,
     workflows,
 )
+from .emp_client import EmpClientError
+from .emp_discovery import DiscoveryError
+from .emp_service import get_emp_service
 from .config import APP_NAME, PUBLIC_URL, REPO_ROOT, RUNTIME, STATIC_DIR, VERSION, local_ips, public_ip
 from .settings import (
     import_campus_config,
@@ -268,6 +272,15 @@ def _optional_bool(value: Any) -> bool | None:
     raise ValueError("boolean value required")
 
 
+def _emp_error(handler, exc: Exception) -> None:
+    if isinstance(exc, EmpClientError):
+        status = 503 if exc.error_code == "EMP_UNAVAILABLE" else 502
+        if exc.error_code in {"EMP_PATH_NOT_ALLOWED", "EMP_DATA_VALIDATION_FAILED"}:
+            status = 400
+        return _json(handler, status, {"ok": False, "error": exc.to_dict()})
+    return _json(handler, 400, {"ok": False, "error": str(exc)})
+
+
 def _path_parts(path: str) -> tuple[str, list[str], dict[str, list[str]]]:
     parsed = urlparse(path)
     parts = [p for p in parsed.path.split("/") if p]
@@ -411,6 +424,47 @@ def handle_get(handler) -> None:
 
     if path == "/api/settings":
         return _json(handler, 200, public_settings_view())
+
+    if path == "/api/emp/status":
+        return _json(handler, 200, {"ok": True, **get_emp_service().status()})
+
+    if path == "/api/emp/tools":
+        return _json(handler, 200, {"ok": True, "tools": emp_tools.tool_catalog()})
+
+    if path == "/api/emp/jobs":
+        sid = (qs.get("session_id") or [""])[0]
+        if not sid:
+            return _json(handler, 400, {"ok": False, "error": "session_id is required"})
+        jobs = get_emp_service().list_jobs(hub_session_id=sid)
+        return _json(handler, 200, {"ok": True, "jobs": [job.to_dict() for job in jobs]})
+
+    if len(parts) == 4 and parts[:3] == ["api", "emp", "jobs"]:
+        try:
+            sid = (qs.get("session_id") or [""])[0]
+            if not sid:
+                return _json(handler, 400, {"ok": False, "error": "session_id is required"})
+            job = get_emp_service().get_job(parts[3], hub_session_id=sid)
+            return _json(handler, 200, {"ok": True, "job": job.to_dict()})
+        except ValueError as exc:
+            return _json(handler, 404, {"ok": False, "error": str(exc)})
+
+    if path == "/api/emp/artifacts":
+        sid = (qs.get("session_id") or [""])[0]
+        if not sid:
+            return _json(handler, 400, {"ok": False, "error": "session_id is required"})
+        job_id = (qs.get("job_id") or [""])[0]
+        artifacts = get_emp_service().list_artifacts(hub_session_id=sid, job_id=job_id)
+        return _json(handler, 200, {"ok": True, "artifacts": [item.to_dict() for item in artifacts]})
+
+    if len(parts) == 5 and parts[:3] == ["api", "emp", "artifacts"] and parts[4] == "download":
+        try:
+            sid = (qs.get("session_id") or [""])[0]
+            if not sid:
+                return _json(handler, 400, {"ok": False, "error": "session_id is required"})
+            _artifact, artifact_path = get_emp_service().artifact_file(parts[3], hub_session_id=sid)
+            return _serve_file(handler, artifact_path, root=get_emp_service().artifact_root())
+        except (OSError, ValueError) as exc:
+            return _json(handler, 404, {"ok": False, "error": str(exc)})
 
     if path == "/api/models/governance":
         view = public_model_governance_view()
@@ -750,6 +804,108 @@ def handle_post(handler) -> None:
                 **view,
             },
         )
+
+    if path == "/api/emp/scan":
+        body = _read_json(handler)
+        try:
+            manifest = get_emp_service().scan(
+                str(body.get("path") or ""),
+                hub_session_id=str(body.get("session_id") or ""),
+                max_depth=int(body.get("max_depth") or 2),
+                experiment_name=str(body.get("experiment_name") or ""),
+            )
+            audit.log_event("emp_dataset_scan", {
+                "session_id": body.get("session_id"),
+                "manifest_id": manifest.manifest_id,
+                "file_count": len(manifest.files),
+            })
+            return _json(handler, 200, {"ok": True, "manifest": manifest.to_dict()})
+        except (DiscoveryError, EmpClientError, ValueError) as exc:
+            return _emp_error(handler, exc)
+
+    if path == "/api/emp/preview":
+        body = _read_json(handler)
+        try:
+            preview = get_emp_service().preview_manifest(
+                str(body.get("manifest_id") or ""), str(body.get("session_id") or "")
+            )
+            return _json(handler, 200, {"ok": True, "preview": preview})
+        except (DiscoveryError, EmpClientError, ValueError) as exc:
+            return _emp_error(handler, exc)
+
+    if path == "/api/emp/plans":
+        body = _read_json(handler)
+        try:
+            plan = get_emp_service().create_16s_plan(
+                str(body.get("manifest_id") or ""),
+                hub_session_id=str(body.get("session_id") or ""),
+                group_var=str(body.get("group_var") or ""),
+                taxonomy_level=str(body.get("taxonomy_level") or "Genus"),
+                alpha_metric=str(body.get("alpha_metric") or "shannon"),
+                language=str(body.get("language") or "zh"),
+            )
+            audit.log_event("emp_plan_create", {
+                "session_id": body.get("session_id"),
+                "manifest_id": body.get("manifest_id"),
+                "plan_id": plan.plan_id,
+            })
+            return _json(handler, 200, {"ok": True, "plan": plan.to_dict()})
+        except (DiscoveryError, EmpClientError, ValueError) as exc:
+            return _emp_error(handler, exc)
+
+    if len(parts) == 5 and parts[:3] == ["api", "emp", "manifests"] and parts[4] == "pairing":
+        body = _read_json(handler)
+        try:
+            manifest = get_emp_service().update_manifest_pairing(
+                parts[3],
+                hub_session_id=str(body.get("session_id") or ""),
+                assay_path=str(body.get("assay_path") or ""),
+                metadata_path=str(body.get("metadata_path") or ""),
+            )
+            audit.log_event("emp_dataset_pairing", {
+                "session_id": body.get("session_id"),
+                "manifest_id": manifest.manifest_id,
+                "matched": manifest.sample_overlap.get("matched"),
+            })
+            return _json(handler, 200, {"ok": True, "manifest": manifest.to_dict()})
+        except (DiscoveryError, EmpClientError, ValueError) as exc:
+            return _emp_error(handler, exc)
+
+    if len(parts) == 5 and parts[:3] == ["api", "emp", "plans"] and parts[4] == "confirm":
+        body = _read_json(handler)
+        try:
+            plan = get_emp_service().get_plan(parts[3])
+            if not body.get("session_id") or plan.hub_session_id != str(body.get("session_id")):
+                raise ValueError("analysis plan does not belong to this session")
+            plan = get_emp_service().confirm_plan(parts[3])
+            audit.log_event("emp_plan_confirm", {"session_id": plan.hub_session_id, "plan_id": plan.plan_id})
+            return _json(handler, 200, {"ok": True, "plan": plan.to_dict()})
+        except (EmpClientError, ValueError) as exc:
+            return _emp_error(handler, exc)
+
+    if len(parts) == 5 and parts[:3] == ["api", "emp", "plans"] and parts[4] == "run":
+        body = _read_json(handler)
+        try:
+            plan = get_emp_service().get_plan(parts[3])
+            if not body.get("session_id") or plan.hub_session_id != str(body.get("session_id")):
+                raise ValueError("analysis plan does not belong to this session")
+            job = get_emp_service().run_plan(parts[3])
+            audit.log_event("emp_plan_run", {"session_id": job.hub_session_id, "plan_id": job.plan_id, "job_id": job.job_id})
+            return _json(handler, 202, {"ok": True, "job": job.to_dict()})
+        except (EmpClientError, ValueError) as exc:
+            return _emp_error(handler, exc)
+
+    if len(parts) == 5 and parts[:3] == ["api", "emp", "jobs"] and parts[4] == "cancel":
+        body = _read_json(handler)
+        try:
+            sid = str(body.get("session_id") or "")
+            if not sid:
+                raise ValueError("session_id is required")
+            job = get_emp_service().cancel_job(parts[3], hub_session_id=sid)
+            audit.log_event("emp_job_cancel", {"session_id": job.hub_session_id, "job_id": job.job_id})
+            return _json(handler, 200, {"ok": True, "job": job.to_dict()})
+        except (EmpClientError, ValueError) as exc:
+            return _emp_error(handler, exc)
 
     if path == "/api/fusion/plan":
         body = _read_json(handler)

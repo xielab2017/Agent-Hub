@@ -1,5 +1,16 @@
 # Changelog
 
+## v5.0.6 — 2026-07-20
+
+Agent Hub x EasyMultiProfiler local 16S MVP.
+
+- Added bounded omics discovery, versioned manifests/plans/jobs/artifacts and secure allowed-root validation.
+- Added a loopback-only EMP client, API capability negotiation, normalized bilingual errors and typed tool schemas.
+- Added explicit plan confirmation, input fingerprinting, duplicate-run protection, persistent session mapping, and clear retry state after an interrupted local orchestration.
+- Added the Control Center joint-analysis workflow with stable progress, cancellation and artifact access.
+- Extended EMP Web with `/api/capabilities`, protected path preview/import and persistent session/job roots.
+- Verified the real 16S flow across both services, including taxonomy preparation, Alpha results and PNG/PDF output.
+
 ## v4.0.0 — 2026-07-19
 
 Agent Hub experience and autonomy upgrade: structured Markdown delivery, silent main-window orchestration, session folders with isolated cross-session context, and safe nightly maintenance proposals.
