@@ -704,7 +704,7 @@ const state = {
   streamConsumers: {},
   streamBuffers: {}, // sessionId -> live SSE buffer (survives session switches)
   settings: null,
-  emp: { sessionId: "", manifest: null, plan: null, job: null, endpoints: [], remoteSessionId: "", remoteEndpointId: "", planEndpointId: "local-default", projectId: "", boundJobId: "", pollTimer: null, pollToken: 0 },
+  emp: { sessionId: "", manifest: null, plan: null, job: null, endpoints: [], remoteSessionId: "", remoteEndpointId: "", planEndpointId: "local-default", projectId: "", boundJobId: "", selectedFile: "", pollTimer: null, pollToken: 0 },
   trellis: { status: null, suggestedFor: "", preview: null },
   pendingWf: null,
   lastAssistantText: "",
@@ -2394,7 +2394,7 @@ function scheduleAutoPreview() {
   _autoTimer = setTimeout(previewAutoRoute, 280);
 }
 
-let fsState = { path: "", parent: null, target: null };
+let fsState = { path: "", parent: null, target: null, allowFiles: false, selectFileAsParent: false, onSelect: null };
 
 function formatFileSize(bytes) {
   if (!Number.isFinite(bytes) || bytes < 0) return "";
@@ -2409,8 +2409,11 @@ function formatFileSize(bytes) {
   return `${value >= 10 ? value.toFixed(0) : value.toFixed(1)} ${units[index]}`;
 }
 
-async function openFsBrowser(startPath, targetSelector) {
+async function openFsBrowser(startPath, targetSelector, options = {}) {
   fsState.target = targetSelector || "#workspace-input";
+  fsState.allowFiles = options.allowFiles === true;
+  fsState.selectFileAsParent = options.selectFileAsParent === true;
+  fsState.onSelect = typeof options.onSelect === "function" ? options.onSelect : null;
   $("#fs-overlay").classList.remove("hidden");
   $("#fs-title").textContent = t("fs.title");
   $("#btn-fs-use").textContent = t("fs.use");
@@ -2418,6 +2421,18 @@ async function openFsBrowser(startPath, targetSelector) {
   $("#btn-fs-up").textContent = t("fs.up");
   const start = startPath || ($(fsState.target) && $(fsState.target).value.trim()) || "";
   await loadFs(start);
+}
+
+async function selectFsPath(path, isDir) {
+  const directoryPath = isDir ? path : fsState.path;
+  const selectedPath = !isDir && fsState.selectFileAsParent ? directoryPath : path;
+  const target = $(fsState.target || "#workspace-input");
+  if (target) target.value = selectedPath;
+  if (fsState.onSelect) {
+    await fsState.onSelect({ path, isDir, directoryPath, selectedPath });
+  }
+  closeFsBrowser();
+  if ((fsState.target || "") === "#workspace-input") scheduleWorkspaceGrounding();
 }
 
 async function loadFs(path) {
@@ -2448,12 +2463,11 @@ async function loadFs(path) {
     b.innerHTML = `<span class="fs-item-icon" aria-hidden="true">${e.is_dir ? "📁" : "📄"}</span><span class="fs-item-name">${escapeHtml(e.name)}</span>${e.is_dir ? "" : `<span class="fs-item-meta">${escapeHtml(formatFileSize(e.size))}</span>`}`;
     if (e.is_dir) {
       b.addEventListener("click", () => loadFs(e.path));
-      b.addEventListener("dblclick", () => {
-        const target = $(fsState.target || "#workspace-input");
-        if (target) target.value = e.path;
-        closeFsBrowser();
-        if ((fsState.target || "") === "#workspace-input") scheduleWorkspaceGrounding();
-      });
+      b.addEventListener("dblclick", () => selectFsPath(e.path, true).catch((error) => alert(error.message || String(error))));
+    } else if (fsState.allowFiles) {
+      b.disabled = false;
+      b.title = state.prefs.language === "en" ? "Select this data file" : "选择此数据文件";
+      b.addEventListener("click", () => selectFsPath(e.path, false).catch((error) => alert(error.message || String(error))));
     } else {
       b.disabled = true;
       b.title = state.prefs.language === "en" ? "Files are shown for reference; choose a folder" : "文件仅供查看，请选择文件夹";
@@ -4395,7 +4409,7 @@ async function selectSession(id) {
   closeSessionOverlays();
   if (state.emp.sessionId !== id) {
     if (state.emp.pollTimer) clearTimeout(state.emp.pollTimer);
-    state.emp = { sessionId: id, manifest: null, plan: null, job: null, endpoints: [], remoteSessionId: "", remoteEndpointId: "", planEndpointId: "local-default", projectId: "", boundJobId: "", pollTimer: null, pollToken: state.emp.pollToken + 1 };
+    state.emp = { sessionId: id, manifest: null, plan: null, job: null, endpoints: [], remoteSessionId: "", remoteEndpointId: "", planEndpointId: "local-default", projectId: "", boundJobId: "", selectedFile: "", pollTimer: null, pollToken: state.emp.pollToken + 1 };
   }
   state.currentId = id;
   if (prevId !== id) state.trellis.preview = null;
@@ -6776,6 +6790,31 @@ function empCapabilityHint(status, langZh) {
     : "EMP is online, but local path import is not enabled. You can scan now; configure an allowed data root in EMP before running.";
 }
 
+async function persistEmpAllowedRoot(root) {
+  const normalized = String(root || "").trim();
+  if (!normalized) return;
+  const rootsInput = document.querySelector('[data-key="emp.allowed_roots"]');
+  if (rootsInput) {
+    const roots = String(rootsInput.value || "").split(",").map((item) => item.trim()).filter(Boolean);
+    if (!roots.includes(normalized)) roots.push(normalized);
+    rootsInput.value = roots.join(", ");
+  }
+  await saveSettings();
+}
+
+async function authorizeEmpDataSelection(selection, langZh) {
+  const root = String(selection?.directoryPath || "").trim();
+  if (!root) return;
+  state.emp.selectedFile = selection.isDir ? "" : String(selection.path || "");
+  await persistEmpAllowedRoot(root);
+  const hint = $("#emp-selected-file");
+  if (hint) {
+    hint.textContent = state.emp.selectedFile
+      ? `${langZh ? "已选择文件" : "Selected file"}: ${state.emp.selectedFile}`
+      : `${langZh ? "已授权扫描目录" : "Authorized scan directory"}: ${root}`;
+  }
+}
+
 function empMetadataHeaders(manifest) {
   const file = (manifest?.files || []).find((item) => ["metadata", "clinical"].includes(item.role));
   return (file?.preview && file.preview[0]) || [];
@@ -7121,7 +7160,7 @@ async function renderEmpPanel(langZh) {
     </div>
     <div class="row emp-toolbar"><button type="button" class="btn ghost" id="btn-emp-save-check">${langZh ? "保存并检查连接" : "Save & check connection"}</button><button type="button" class="btn ghost" id="btn-emp-r-preflight">${langZh ? "检查 R Direct" : "Check R Direct"}</button><code>${escapeHtml(endpoint)}</code></div>
     <div class="emp-workflow">
-      <div class="emp-scan-row"><label class="field"><span>${langZh ? "本地数据目录" : "Local data directory"}</span><div class="path-row"><input id="emp-scan-path" type="text" value="${escapeHtml((state.settings?.config || {}).workspace || "")}" placeholder="/path/to/16s/data"/><button type="button" class="btn ghost" id="btn-emp-browse" title="${langZh ? "选择目录" : "Choose directory"}">…</button></div></label><button type="button" class="btn primary" id="btn-emp-scan" ${status.ready ? "" : "disabled"}>${langZh ? "扫描组学数据" : "Scan omics data"}</button></div>
+      <div class="emp-scan-row"><label class="field"><span>${langZh ? "本地数据文件或目录" : "Local data file or directory"}</span><div class="path-row"><input id="emp-scan-path" type="text" value="${escapeHtml((state.settings?.config || {}).workspace || "")}" placeholder="/path/to/omics/data"/><button type="button" class="btn ghost" id="btn-emp-browse" title="${langZh ? "选择文件或目录" : "Choose file or directory"}">…</button></div><span id="emp-selected-file" class="muted">${state.emp.selectedFile ? `${langZh ? "已选择文件" : "Selected file"}: ${escapeHtml(state.emp.selectedFile)}` : ""}</span></label><button type="button" class="btn primary" id="btn-emp-scan" ${status.ready ? "" : "disabled"}>${langZh ? "扫描组学数据" : "Scan omics data"}</button></div>
       <div id="emp-manifest" class="emp-stage"></div>
       <div id="emp-plan" class="emp-stage"></div>
       <div id="emp-run-state" class="emp-stage emp-run-state"></div>
@@ -7138,13 +7177,23 @@ async function renderEmpPanel(langZh) {
         : (langZh ? "R Direct 未启用或 Rscript 不可用" : "R Direct disabled or Rscript unavailable");
     } catch (error) { $("#settings-status").textContent = error.message || String(error); }
   });
-  $("#btn-emp-browse")?.addEventListener("click", () => openFsBrowser($("#emp-scan-path")?.value || "", "#emp-scan-path"));
+  $("#btn-emp-browse")?.addEventListener("click", () => openFsBrowser(
+    $("#emp-scan-path")?.value || "",
+    "#emp-scan-path",
+    {
+      allowFiles: true,
+      selectFileAsParent: true,
+      onSelect: (selection) => authorizeEmpDataSelection(selection, langZh),
+    },
+  ));
   $("#btn-emp-scan")?.addEventListener("click", async () => {
     const button = $("#btn-emp-scan");
     if (button) button.disabled = true;
     $("#emp-manifest").innerHTML = `<div class="emp-loading"><span></span>${langZh ? "正在扫描文件与样本匹配…" : "Scanning files and sample matches…"}</div>`;
     try {
-      const data = await api("/api/emp/scan", { method: "POST", body: JSON.stringify({ path: $("#emp-scan-path")?.value || "", session_id: state.currentId || "", max_depth: 2 }) });
+      const scanPath = $("#emp-scan-path")?.value || "";
+      await persistEmpAllowedRoot(scanPath);
+      const data = await api("/api/emp/scan", { method: "POST", body: JSON.stringify({ path: scanPath, session_id: state.currentId || "", max_depth: 2 }) });
       state.emp.manifest = data.manifest;
       state.emp.plan = null;
       state.emp.job = null;
@@ -7156,7 +7205,11 @@ async function renderEmpPanel(langZh) {
       $("#emp-run-state").innerHTML = "";
       $("#emp-artifacts").innerHTML = "";
     } catch (error) {
-      $("#emp-manifest").innerHTML = `<p class="emp-error">${escapeHtml(error.message || String(error))}</p>`;
+      const rawMessage = error.message || String(error);
+      const message = rawMessage.includes("outside the allowed roots")
+        ? (langZh ? "该路径尚未获得联合分析授权，请重新使用右侧按钮选择文件或目录。" : "This path is not authorized for joint analysis. Choose the file or directory again with the browse button.")
+        : rawMessage;
+      $("#emp-manifest").innerHTML = `<p class="emp-error">${escapeHtml(message)}</p>`;
     } finally {
       if (button) button.disabled = false;
     }
@@ -9441,11 +9494,10 @@ $("#btn-browse-ws")?.addEventListener("click", () => openFsBrowser().catch((e) =
 $("#btn-fs-close")?.addEventListener("click", closeFsBrowser);
 $("#btn-fs-use")?.addEventListener("click", () => {
   if (fsState.path) {
-    const target = $(fsState.target || "#workspace-input");
-    if (target) target.value = fsState.path;
+    selectFsPath(fsState.path, true).catch((error) => alert(error.message || String(error)));
+    return;
   }
   closeFsBrowser();
-  if ((fsState.target || "#workspace-input") === "#workspace-input") scheduleWorkspaceGrounding();
 });
 $("#workspace-input")?.addEventListener("input", scheduleWorkspaceGrounding);
 $("#workspace-input")?.addEventListener("change", scheduleWorkspaceGrounding);
