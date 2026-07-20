@@ -99,12 +99,50 @@ def _wait(service: EmpService, job_id: str) -> EmpJob:
     raise AssertionError("job did not finish")
 
 
-def test_disabled_integration_does_not_contact_emp(tmp_path: Path) -> None:
+def test_disabled_integration_reports_online_but_not_ready(tmp_path: Path) -> None:
+    fake = FakeEmpClient()
     service = EmpService(
         state_dir=tmp_path / "state",
         config_loader=lambda: {"workspace": str(tmp_path), "emp": {"enabled": False}},
+        client_factory=lambda _cfg: fake,
     )
-    assert service.status()["enabled"] is False
+    status = service.status()
+    assert status["enabled"] is False
+    assert status["reachable"] is True
+    assert status["compatible"] is True
+    assert status["ready"] is False
+    assert fake.calls == ["capabilities"]
+
+
+def test_enabled_compatible_integration_is_ready(tmp_path: Path) -> None:
+    fake = FakeEmpClient()
+    service = EmpService(
+        state_dir=tmp_path / "state",
+        config_loader=lambda: {"workspace": str(tmp_path), "emp": {"enabled": True}},
+        client_factory=lambda _cfg: fake,
+    )
+    assert service.status()["ready"] is True
+
+
+def test_path_import_is_reported_without_rejecting_supported_workflow(tmp_path: Path) -> None:
+    fake = FakeEmpClient()
+    fake.capabilities = lambda: {
+        "success": True,
+        "api_version": "1.0",
+        "features": {"path_import": False},
+        "workflows": ["microbiome_16s"],
+    }
+    service = EmpService(
+        state_dir=tmp_path / "state",
+        config_loader=lambda: {"workspace": str(tmp_path), "emp": {"enabled": True}},
+        client_factory=lambda _cfg: fake,
+    )
+
+    status = service.status()
+
+    assert status["compatible"] is True
+    assert status["ready"] is True
+    assert status["path_import_available"] is False
 
 
 def test_confirm_gate_dedup_and_artifact_persistence(tmp_path: Path) -> None:

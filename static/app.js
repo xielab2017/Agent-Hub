@@ -2396,6 +2396,19 @@ function scheduleAutoPreview() {
 
 let fsState = { path: "", parent: null, target: null };
 
+function formatFileSize(bytes) {
+  if (!Number.isFinite(bytes) || bytes < 0) return "";
+  if (bytes < 1024) return `${bytes} B`;
+  const units = ["KB", "MB", "GB", "TB"];
+  let value = bytes / 1024;
+  let index = 0;
+  while (value >= 1024 && index < units.length - 1) {
+    value /= 1024;
+    index += 1;
+  }
+  return `${value >= 10 ? value.toFixed(0) : value.toFixed(1)} ${units[index]}`;
+}
+
 async function openFsBrowser(startPath, targetSelector) {
   fsState.target = targetSelector || "#workspace-input";
   $("#fs-overlay").classList.remove("hidden");
@@ -2431,15 +2444,20 @@ async function loadFs(path) {
   (data.entries || []).forEach((e) => {
     const b = document.createElement("button");
     b.type = "button";
-    b.className = "fs-item";
-    b.textContent = `📁 ${e.name}`;
-    b.addEventListener("click", () => loadFs(e.path));
-    b.addEventListener("dblclick", () => {
-      const target = $(fsState.target || "#workspace-input");
-      if (target) target.value = e.path;
-      closeFsBrowser();
-      if ((fsState.target || "") === "#workspace-input") scheduleWorkspaceGrounding();
-    });
+    b.className = `fs-item${e.is_dir ? "" : " is-file"}`;
+    b.innerHTML = `<span class="fs-item-icon" aria-hidden="true">${e.is_dir ? "📁" : "📄"}</span><span class="fs-item-name">${escapeHtml(e.name)}</span>${e.is_dir ? "" : `<span class="fs-item-meta">${escapeHtml(formatFileSize(e.size))}</span>`}`;
+    if (e.is_dir) {
+      b.addEventListener("click", () => loadFs(e.path));
+      b.addEventListener("dblclick", () => {
+        const target = $(fsState.target || "#workspace-input");
+        if (target) target.value = e.path;
+        closeFsBrowser();
+        if ((fsState.target || "") === "#workspace-input") scheduleWorkspaceGrounding();
+      });
+    } else {
+      b.disabled = true;
+      b.title = state.prefs.language === "en" ? "Files are shown for reference; choose a folder" : "文件仅供查看，请选择文件夹";
+    }
     list.appendChild(b);
   });
   if (!(data.entries || []).length) {
@@ -6745,10 +6763,17 @@ async function renderSearchPanel(langZh) {
 }
 
 function empStatusLabel(status, langZh) {
-  if (!status?.enabled) return langZh ? "未启用" : "Disabled";
-  if (status.compatible) return langZh ? "本机 EMP 已连接" : "Local EMP connected";
+  if (status?.ready) return langZh ? "本机 EMP 已连接" : "Local EMP connected";
+  if (status?.compatible && !status?.enabled) return langZh ? "本机 EMP 在线 · 待启用" : "Local EMP online · enable to use";
   if (status.reachable) return langZh ? "EMP 版本不兼容" : "EMP version incompatible";
   return langZh ? "等待本机 EMP" : "Waiting for local EMP";
+}
+
+function empCapabilityHint(status, langZh) {
+  if (!status?.reachable || status?.path_import_available) return "";
+  return langZh
+    ? "EMP 已在线；本地路径导入尚未开放。可先扫描目录，运行前请在 EMP 配置允许的数据根目录。"
+    : "EMP is online, but local path import is not enabled. You can scan now; configure an allowed data root in EMP before running.";
 }
 
 function empMetadataHeaders(manifest) {
@@ -7072,15 +7097,16 @@ async function renderEmpPanel(langZh) {
   const box = $("#ctab-emp");
   if (!box) return;
   const cfg = ((state.settings?.config || {}).emp) || {};
-  let status = { enabled: cfg.enabled === true, reachable: false, compatible: false };
+  let status = { enabled: cfg.enabled === true, reachable: false, compatible: false, ready: false };
   try { status = await api("/api/emp/status"); } catch (_) {}
   try { state.emp.endpoints = (await api("/api/emp/endpoints")).endpoints || []; } catch (_) { state.emp.endpoints = []; }
   const endpoint = cfg.local_api_base || "http://127.0.0.1:8000";
   box.innerHTML = `
     <div class="emp-hero">
       <div><p class="emp-kicker">EasyMultiProfiler</p><h3>${langZh ? "多组学联合分析" : "Multi-omics joint analysis"}</h3><p>${langZh ? "Agent Hub 规划与追踪，EMP 完成 R 统计计算和可视化。" : "Agent Hub plans and tracks; EMP performs R statistics and visualization."}</p></div>
-      <span class="emp-state ${status.compatible ? "is-ready" : "is-warn"}">${escapeHtml(empStatusLabel(status, langZh))}</span>
+      <span class="emp-state ${status.reachable ? "is-ready" : "is-warn"}">${escapeHtml(empStatusLabel(status, langZh))}</span>
     </div>
+    ${empCapabilityHint(status, langZh) ? `<p class="emp-capability-hint">${escapeHtml(empCapabilityHint(status, langZh))}</p>` : ""}
     <div class="emp-settings grid-2">
       ${field(langZh ? "启用 EMP" : "Enable EMP", "emp.enabled", cfg.enabled === true, "checkbox")}
       ${field(langZh ? "运行模式" : "Run mode", "emp.mode", { selected: cfg.mode || "auto", options: [{ value: "auto", label: "Auto → local-api" }, { value: "local-api", label: "local-api" }] }, "select")}
@@ -7095,7 +7121,7 @@ async function renderEmpPanel(langZh) {
     </div>
     <div class="row emp-toolbar"><button type="button" class="btn ghost" id="btn-emp-save-check">${langZh ? "保存并检查连接" : "Save & check connection"}</button><button type="button" class="btn ghost" id="btn-emp-r-preflight">${langZh ? "检查 R Direct" : "Check R Direct"}</button><code>${escapeHtml(endpoint)}</code></div>
     <div class="emp-workflow">
-      <div class="emp-scan-row"><label class="field"><span>${langZh ? "本地数据目录" : "Local data directory"}</span><div class="path-row"><input id="emp-scan-path" type="text" value="${escapeHtml((state.settings?.config || {}).workspace || "")}" placeholder="/path/to/16s/data"/><button type="button" class="btn ghost" id="btn-emp-browse" title="${langZh ? "选择目录" : "Choose directory"}">…</button></div></label><button type="button" class="btn primary" id="btn-emp-scan" ${status.compatible ? "" : "disabled"}>${langZh ? "扫描组学数据" : "Scan omics data"}</button></div>
+      <div class="emp-scan-row"><label class="field"><span>${langZh ? "本地数据目录" : "Local data directory"}</span><div class="path-row"><input id="emp-scan-path" type="text" value="${escapeHtml((state.settings?.config || {}).workspace || "")}" placeholder="/path/to/16s/data"/><button type="button" class="btn ghost" id="btn-emp-browse" title="${langZh ? "选择目录" : "Choose directory"}">…</button></div></label><button type="button" class="btn primary" id="btn-emp-scan" ${status.ready ? "" : "disabled"}>${langZh ? "扫描组学数据" : "Scan omics data"}</button></div>
       <div id="emp-manifest" class="emp-stage"></div>
       <div id="emp-plan" class="emp-stage"></div>
       <div id="emp-run-state" class="emp-stage emp-run-state"></div>

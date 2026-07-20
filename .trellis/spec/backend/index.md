@@ -20,6 +20,7 @@ This directory contains guidelines for backend development. Fill in each file wi
 | [Quality Guidelines](./quality-guidelines.md) | Code standards, forbidden patterns | To fill |
 | [Logging Guidelines](./logging-guidelines.md) | Structured logging, log levels | To fill |
 | [Trellis Integration](./trellis-integration.md) | Controlled task state, API, path safety, and prompt context | Active |
+| [EMP Integration](./emp-integration.md) | EMP status semantics, capability reporting, and filesystem picker boundary | Active |
 
 ---
 

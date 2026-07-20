@@ -117,6 +117,9 @@ class EmpService:
 
     def client(self) -> EmpClient:
         cfg = self._require_enabled()
+        return self._client_from_config(cfg)
+
+    def _client_from_config(self, cfg: dict[str, Any]) -> EmpClient:
         if self._client_factory is not None:
             return self._client_factory(cfg)
         return EmpClient(
@@ -154,19 +157,25 @@ class EmpService:
             "endpoint": str(cfg.get("local_api_base") or "http://127.0.0.1:8000"),
             "reachable": False,
             "compatible": False,
+            "ready": False,
+            "path_import_available": False,
             "capabilities": {},
         }
-        if not payload["enabled"]:
-            return payload
         try:
-            capabilities = self.client().capabilities()
+            capabilities = self._client_from_config(cfg).capabilities()
             features = capabilities.get("features") if isinstance(capabilities.get("features"), dict) else {}
             workflows = capabilities.get("workflows") if isinstance(capabilities.get("workflows"), list) else []
-            compatible = features.get("path_import") is True and "microbiome_16s" in workflows
-            payload.update({"reachable": True, "compatible": compatible, "capabilities": capabilities})
+            compatible = "microbiome_16s" in workflows
+            payload.update({
+                "reachable": True,
+                "compatible": compatible,
+                "ready": payload["enabled"] and compatible,
+                "path_import_available": features.get("path_import") is True,
+                "capabilities": capabilities,
+            })
             if not compatible:
                 payload["error"] = EmpClientError(
-                    "EMP_VERSION_INCOMPATIBLE", "EMP must support path_import and microbiome_16s"
+                    "EMP_VERSION_INCOMPATIBLE", "EMP must support the microbiome_16s workflow"
                 ).to_dict()
         except EmpClientError as exc:
             payload["error"] = exc.to_dict()

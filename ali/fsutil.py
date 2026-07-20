@@ -32,21 +32,22 @@ def list_dir(path: str = "", *, show_hidden: bool = False) -> dict[str, Any]:
                 continue
             try:
                 is_dir = child.is_dir()
+                is_file = child.is_file()
             except OSError:
                 continue
-            if not is_dir:
-                continue  # folders only for workspace picker
-            entries.append(
-                {
-                    "name": name,
-                    "path": str(child.resolve()),
-                    "is_dir": True,
-                }
-            )
+            if not is_dir and not is_file:
+                continue
+            entry = {"name": name, "path": str(child.resolve()), "is_dir": is_dir}
+            if is_file:
+                try:
+                    entry["size"] = child.stat().st_size
+                except OSError:
+                    entry["size"] = None
+            entries.append(entry)
     except PermissionError:
         return {"ok": False, "error": "permission denied", "path": str(root), "entries": []}
 
-    entries.sort(key=lambda e: e["name"].lower())
+    entries.sort(key=lambda e: (not e["is_dir"], e["name"].casefold()))
     parent = str(root.parent.resolve()) if root != root.parent else None
     homes = []
     home = str(Path.home())
