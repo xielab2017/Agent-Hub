@@ -79,6 +79,7 @@ class DatasetManifest:
     orientation: str = "unknown"
     sample_id_column: str = ""
     sample_overlap: dict[str, Any] = field(default_factory=dict)
+    metadata_summary: dict[str, Any] = field(default_factory=dict)
     warnings: list[str] = field(default_factory=list)
     created_at: float = field(default_factory=utc_timestamp)
     manifest_version: str = MANIFEST_VERSION
@@ -105,6 +106,7 @@ class DatasetManifest:
             orientation=_text(data, "orientation") or "unknown",
             sample_id_column=_text(data, "sample_id_column"),
             sample_overlap=dict(data.get("sample_overlap") or {}),
+            metadata_summary=dict(data.get("metadata_summary") or {}),
             warnings=[str(item) for item in _list(data, "warnings")],
             created_at=float(data.get("created_at") or utc_timestamp()),
             manifest_version=version,

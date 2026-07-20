@@ -159,6 +159,8 @@ class EmpService:
             "compatible": False,
             "ready": False,
             "path_import_available": False,
+            "arbitrary_r_enabled": False,
+            "analysis_ready": False,
             "capabilities": {},
         }
         try:
@@ -166,11 +168,16 @@ class EmpService:
             features = capabilities.get("features") if isinstance(capabilities.get("features"), dict) else {}
             workflows = capabilities.get("workflows") if isinstance(capabilities.get("workflows"), list) else []
             compatible = "microbiome_16s" in workflows
+            path_import_available = features.get("path_import") is True
+            arbitrary_r_enabled = features.get("arbitrary_r") is True
+            ready = payload["enabled"] and compatible
             payload.update({
                 "reachable": True,
                 "compatible": compatible,
-                "ready": payload["enabled"] and compatible,
-                "path_import_available": features.get("path_import") is True,
+                "ready": ready,
+                "path_import_available": path_import_available,
+                "arbitrary_r_enabled": arbitrary_r_enabled,
+                "analysis_ready": ready and path_import_available and not arbitrary_r_enabled,
                 "capabilities": capabilities,
             })
             if not compatible:
@@ -595,7 +602,10 @@ class EmpService:
     ) -> EmpArtifact:
         language = str(plan.output.get("language") or "zh")
         alpha = outputs.get("alpha") or {}
+        differential = outputs.get("differential") or {}
         capabilities = outputs.get("capabilities") or {}
+        critical = plan.output.get("critical_parameters") or {}
+        overlap = manifest.sample_overlap or {}
         taxonomy = next((step.params.get("collapse_level") for step in plan.steps if step.id == "taxonomy_prepare"), "")
         alpha_metric = next((step.params.get("method") for step in plan.steps if step.id == "alpha"), "")
         sources = []
@@ -616,6 +626,9 @@ class EmpService:
                 f"- Taxonomy level: `{taxonomy}`",
                 f"- Alpha metric: `{alpha_metric}`",
                 f"- Alpha rows: {int(alpha.get('n_rows') or 0)}",
+                f"- Comparison: `{critical.get('reference_level') or 'not set'}` vs `{critical.get('test_level') or 'not set'}` by `{critical.get('group_var') or 'not set'}`",
+                f"- Differential method / rows: `{critical.get('differential_method') or 'not set'}` / {int(differential.get('n_rows') or 0)}",
+                f"- Sample overlap (assay / metadata / matched): {int(overlap.get('assay') or 0)} / {int(overlap.get('metadata') or 0)} / {int(overlap.get('matched') or 0)}",
                 "", "## Source artifacts", "", *(sources or ["- No source artifact was registered."]),
                 "", "## Interpretation boundary", "",
                 "This file records computed outputs and provenance. It does not alter or replace EMP statistical results.",
@@ -631,6 +644,9 @@ class EmpService:
                 f"- Taxonomy 层级：`{taxonomy}`",
                 f"- Alpha 指标：`{alpha_metric}`",
                 f"- Alpha 结果行数：{int(alpha.get('n_rows') or 0)}",
+                f"- 组间比较：`{critical.get('reference_level') or '未设置'}` vs `{critical.get('test_level') or '未设置'}`，分组变量 `{critical.get('group_var') or '未设置'}`",
+                f"- 差异方法 / 结果行数：`{critical.get('differential_method') or '未设置'}` / {int(differential.get('n_rows') or 0)}",
+                f"- 样本匹配（assay / metadata / matched）：{int(overlap.get('assay') or 0)} / {int(overlap.get('metadata') or 0)} / {int(overlap.get('matched') or 0)}",
                 "", "## 来源产物", "", *(sources or ["- 未登记来源产物。"]),
                 "", "## 解释边界", "",
                 "本文件只记录计算输出与来源，不修改或替代 EMP 的统计结果。",

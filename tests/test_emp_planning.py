@@ -97,6 +97,12 @@ def test_compiler_emits_valid_typed_dag_for_each_workflow(workflow: str) -> None
     assert plan.output["critical_parameters"]["group_var"] == "Group"
     assert plan.output["group_counts"] == {"control": 3, "treated": 3}
     assert all(step.tool in STEP_TOOL_SCHEMAS for step in plan.steps)
+    if workflow == "microbiome_16s":
+        assert [step.id for step in plan.steps] == [
+            "validate", "taxonomy_prepare", "alpha", "alpha_plot", "differential",
+        ]
+        assert plan.steps[3].tool == "emp.visualize.alpha"
+        assert plan.steps[3].depends_on == ["alpha"]
     compiler.validate(plan, manifest)
 
 
@@ -132,6 +138,30 @@ def test_scientific_validation_checks_group_column_levels_and_minimum_samples() 
     bad_level["test_level"] = "absent"
     with pytest.raises(PlanningError, match="absent from metadata"):
         compiler.compile(_manifest("microbiome_16s"), hub_session_id="hub-1", parameters=bad_level)
+
+
+def test_compiler_uses_bounded_metadata_summary_without_raw_rows() -> None:
+    manifest = _manifest("microbiome_16s", rows=[["SampleID", "Group", "Outcome"]])
+    manifest.metadata_summary = {
+        "columns": ["SampleID", "Group", "Outcome"],
+        "categorical": {
+            "Group": {
+                "levels": [
+                    {"value": "control", "count": 3},
+                    {"value": "treated", "count": 3},
+                ],
+                "truncated": False,
+            }
+        },
+        "rows_scanned": 6,
+        "truncated": False,
+    }
+    plan = AnalysisPlanCompiler(_capabilities()).compile(
+        manifest,
+        hub_session_id="hub-summary",
+        parameters=_parameters("microbiome_16s"),
+    )
+    assert plan.output["group_counts"] == {"control": 3, "treated": 3}
 
 
 def test_plan_validation_rejects_unknown_params_tools_and_cycles() -> None:

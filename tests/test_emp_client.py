@@ -98,3 +98,27 @@ def test_workflow_step_uses_registered_endpoint_and_translates_groups() -> None:
     assert seen[0][1]["ref_group"] == "control"
     assert seen[0][1]["test_group"] == "treated"
     assert "workflow" not in seen[0][1]
+
+
+def test_alpha_plot_preserves_selected_group_level_names() -> None:
+    seen = []
+
+    def transport(request, _timeout):
+        seen.append(json.loads(request.data.decode("utf-8")))
+        return 200, {}, b'{"success":true}'
+
+    client = EmpClient("http://127.0.0.1:8000", transport=transport)
+    client.run_step("emp.visualize.alpha", {
+        "_workflow": "microbiome_16s",
+        "session_id": "EMP1",
+        "experiment": "study",
+        "group": "Group",
+        "reference_level": "control",
+        "test_level": "treated",
+        "metric": "shannon",
+    })
+
+    assert seen[0]["reference_level"] == "control"
+    assert seen[0]["test_level"] == "treated"
+    assert "ref_group" not in seen[0]
+    assert "test_group" not in seen[0]

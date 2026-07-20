@@ -43,6 +43,11 @@ def test_scan_manifest_and_secret_exclusion(tmp_path: Path) -> None:
     assert manifest.orientation == "features_in_rows"
     assert manifest.sample_id_column == "SampleID"
     assert manifest.sample_overlap["matched"] == 3
+    assert manifest.metadata_summary["columns"] == ["SampleID", "Group"]
+    assert manifest.metadata_summary["categorical"]["Group"]["levels"] == [
+        {"value": "A", "count": 2},
+        {"value": "B", "count": 1},
+    ]
     assert {item.role for item in manifest.files} >= {"assay", "metadata"}
     assert all(".env" not in item.path and ".git" not in item.path for item in manifest.files)
     assert all(item.sha256 for item in manifest.files)
@@ -76,6 +81,9 @@ def test_manifest_pairing_can_be_corrected(tmp_path: Path) -> None:
     )
     assert selected.file_for_role("metadata").path == "wrong_metadata.csv"
     assert selected.sample_overlap["matched"] == 0
+    assert selected.metadata_summary["categorical"]["Group"]["levels"] == [
+        {"value": "C", "count": 1},
+    ]
     with pytest.raises(DiscoveryError):
         select_manifest_pairing(manifest, assay_path="missing.csv", metadata_path="metadata.csv")
 
@@ -106,3 +114,23 @@ def test_scan_depth_limit(tmp_path: Path) -> None:
     (deep / "abundance.csv").write_text("Feature,S1\nA,1\n", encoding="utf-8")
     with pytest.raises(DiscoveryError):
         scan_dataset(root, allowed_roots=[tmp_path], max_depth=2)
+
+
+def test_high_cardinality_metadata_values_are_not_persisted(tmp_path: Path) -> None:
+    root = tmp_path / "study"
+    root.mkdir()
+    samples = [f"S{i}" for i in range(1, 61)]
+    (root / "16s_abundance.csv").write_text(
+        "Feature," + ",".join(samples) + "\nTaxa_A," + ",".join("1" for _ in samples) + "\n",
+        encoding="utf-8",
+    )
+    (root / "metadata.csv").write_text(
+        "SampleID,Group,PrivateLabel\n"
+        + "\n".join(f"{sample},{'A' if index < 30 else 'B'},label-{index}" for index, sample in enumerate(samples))
+        + "\n",
+        encoding="utf-8",
+    )
+    manifest = scan_dataset(root, allowed_roots=[tmp_path])
+    categorical = manifest.metadata_summary["categorical"]
+    assert list(categorical) == ["Group"]
+    assert manifest.file_for_role("metadata").preview == [["SampleID", "Group", "PrivateLabel"]]

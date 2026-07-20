@@ -111,6 +111,7 @@ def test_disabled_integration_reports_online_but_not_ready(tmp_path: Path) -> No
     assert status["reachable"] is True
     assert status["compatible"] is True
     assert status["ready"] is False
+    assert status["analysis_ready"] is False
     assert fake.calls == ["capabilities"]
 
 
@@ -121,7 +122,10 @@ def test_enabled_compatible_integration_is_ready(tmp_path: Path) -> None:
         config_loader=lambda: {"workspace": str(tmp_path), "emp": {"enabled": True}},
         client_factory=lambda _cfg: fake,
     )
-    assert service.status()["ready"] is True
+    status = service.status()
+    assert status["ready"] is True
+    assert status["analysis_ready"] is True
+    assert status["arbitrary_r_enabled"] is False
 
 
 def test_path_import_is_reported_without_rejecting_supported_workflow(tmp_path: Path) -> None:
@@ -143,6 +147,28 @@ def test_path_import_is_reported_without_rejecting_supported_workflow(tmp_path: 
     assert status["compatible"] is True
     assert status["ready"] is True
     assert status["path_import_available"] is False
+    assert status["analysis_ready"] is False
+
+
+def test_arbitrary_r_is_reported_as_not_analysis_ready(tmp_path: Path) -> None:
+    fake = FakeEmpClient()
+    fake.capabilities = lambda: {
+        "success": True,
+        "api_version": "1.0",
+        "features": {"path_import": True, "arbitrary_r": True},
+        "workflows": ["microbiome_16s"],
+    }
+    service = EmpService(
+        state_dir=tmp_path / "state",
+        config_loader=lambda: {"workspace": str(tmp_path), "emp": {"enabled": True}},
+        client_factory=lambda _cfg: fake,
+    )
+
+    status = service.status()
+
+    assert status["ready"] is True
+    assert status["arbitrary_r_enabled"] is True
+    assert status["analysis_ready"] is False
 
 
 def test_confirm_gate_dedup_and_artifact_persistence(tmp_path: Path) -> None:

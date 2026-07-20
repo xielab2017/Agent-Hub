@@ -15,7 +15,7 @@ const FONT_SIZE_LABELS = {
   zh: { 13: "小 13", 14: "中 14", 15: "中大 15", 16: "大 16", 18: "特大 18" },
   en: { 13: "S 13", 14: "M 14", 15: "M+ 15", 16: "L 16", 18: "XL 18" },
 };
-const LOGO_VER = "5.0.6";
+const LOGO_VER = "5.0.7";
 const DEFAULT_LOGO = `/brand/suat-logo-color.png?v=${LOGO_VER}`;
 const LOGO_PRESETS = [
   { id: "suat-color", src: `/brand/suat-logo-color.png?v=${LOGO_VER}`, labelKey: "appearance.logoPresetColor" },
@@ -6777,6 +6777,7 @@ async function renderSearchPanel(langZh) {
 }
 
 function empStatusLabel(status, langZh) {
+  if (status?.analysis_ready) return langZh ? "本机 EMP 已就绪" : "Local EMP ready";
   if (status?.ready) return langZh ? "本机 EMP 已连接" : "Local EMP connected";
   if (status?.compatible && !status?.enabled) return langZh ? "本机 EMP 在线 · 待启用" : "Local EMP online · enable to use";
   if (status.reachable) return langZh ? "EMP 版本不兼容" : "EMP version incompatible";
@@ -6784,10 +6785,19 @@ function empStatusLabel(status, langZh) {
 }
 
 function empCapabilityHint(status, langZh) {
-  if (!status?.reachable || status?.path_import_available) return "";
-  return langZh
-    ? "EMP 已在线；本地路径导入尚未开放。可先扫描目录，运行前请在 EMP 配置允许的数据根目录。"
-    : "EMP is online, but local path import is not enabled. You can scan now; configure an allowed data root in EMP before running.";
+  if (!status?.reachable || status?.analysis_ready) return "";
+  const hints = [];
+  if (!status?.path_import_available) {
+    hints.push(langZh
+      ? "本地路径导入尚未开放，请在 EMP 配置允许的数据根目录"
+      : "Local path import is disabled; configure an allowed data root in EMP");
+  }
+  if (status?.arbitrary_r_enabled) {
+    hints.push(langZh
+      ? "任意 R 执行接口仍开启，请设置 EMP_ENABLE_USER_R=false"
+      : "Arbitrary R execution is enabled; set EMP_ENABLE_USER_R=false");
+  }
+  return hints.join(langZh ? "；" : "; ");
 }
 
 async function persistEmpAllowedRoot(root) {
@@ -6816,27 +6826,45 @@ async function authorizeEmpDataSelection(selection, langZh) {
 }
 
 function empMetadataHeaders(manifest) {
+  const summaryHeaders = manifest?.metadata_summary?.columns;
+  if (Array.isArray(summaryHeaders) && summaryHeaders.length) return summaryHeaders;
   const file = (manifest?.files || []).find((item) => ["metadata", "clinical"].includes(item.role));
   return (file?.preview && file.preview[0]) || [];
+}
+
+function empCategoricalProfiles(manifest) {
+  const profiles = manifest?.metadata_summary?.categorical;
+  return profiles && typeof profiles === "object" ? profiles : {};
+}
+
+function empGroupLevels(manifest, group) {
+  const levels = empCategoricalProfiles(manifest)?.[group]?.levels;
+  if (!Array.isArray(levels)) return [];
+  return levels.map((item) => ({
+    value: String(item?.value || ""),
+    count: Number(item?.count || 0),
+  })).filter((item) => item.value && item.count > 0);
 }
 
 function empScientificFields(manifest, langZh) {
   const workflow = ["microbiome_16s", "transcriptomics", "metabolomics", "metagenomics", "clinical"].includes(manifest.omics_type)
     ? manifest.omics_type : "microbiome_16s";
-  const metadata = (manifest.files || []).find((item) => ["metadata", "clinical"].includes(item.role));
   const headers = empMetadataHeaders(manifest).filter((name) => name !== manifest.sample_id_column);
-  const group = headers[0] || "Group";
-  const groupIndex = empMetadataHeaders(manifest).indexOf(group);
-  const levels = [...new Set((metadata?.preview || []).slice(1).map((row) => row[groupIndex]).filter(Boolean))];
-  const reference = levels[0] || "control";
-  const test = levels[1] || "treated";
-  const field = (label, id, options, selected = "") => `<label class="field"><span>${label}</span><select id="${id}">${options.map((value) => `<option value="${escapeHtml(value)}" ${value === selected ? "selected" : ""}>${escapeHtml(value)}</option>`).join("")}</select></label>`;
-  const textField = (label, id, value) => `<label class="field"><span>${label}</span><input id="${id}" value="${escapeHtml(value)}"/></label>`;
-  const common = field(langZh ? "分组变量" : "Group variable", "emp-group-var", headers, group);
+  const categorical = empCategoricalProfiles(manifest);
+  const groupOptions = Object.keys(categorical).filter((name) => empGroupLevels(manifest, name).length > 0);
+  const groups = groupOptions.length ? groupOptions : headers;
+  const group = groups.includes("Group") ? "Group" : (groups[0] || "");
+  const levels = empGroupLevels(manifest, group);
+  const reference = levels[0]?.value || "";
+  const test = levels[1]?.value || "";
+  const field = (label, id, options, selected = "", labels = {}) => `<label class="field"><span>${label}</span><select id="${id}">${options.map((value) => `<option value="${escapeHtml(value)}" ${value === selected ? "selected" : ""}>${escapeHtml(labels[value] || value)}</option>`).join("")}</select></label>`;
+  const levelLabels = Object.fromEntries(levels.map((item) => [item.value, `${item.value} (${item.count})`]));
+  const common = field(langZh ? "分组变量" : "Group variable", "emp-group-var", groups, group);
   if (workflow === "clinical") {
     return `${common}${field(langZh ? "结局变量" : "Outcome variable", "emp-outcome-var", headers.filter((name) => name !== group), headers.find((name) => name !== group) || "")}${field(langZh ? "模型族" : "Model family", "emp-model-family", ["gaussian", "binomial", "cox"], "gaussian")}`;
   }
-  const comparisons = `${textField(langZh ? "参考组" : "Reference level", "emp-reference-level", reference)}${textField(langZh ? "比较组" : "Test level", "emp-test-level", test)}`;
+  const levelValues = levels.map((item) => item.value);
+  const comparisons = `${field(langZh ? "参考组" : "Reference level", "emp-reference-level", levelValues, reference, levelLabels)}${field(langZh ? "比较组" : "Test level", "emp-test-level", levelValues, test, levelLabels)}`;
   if (workflow === "microbiome_16s") {
     return `${common}${comparisons}${field("Taxonomy level", "emp-taxonomy-level", ["Phylum", "Class", "Order", "Family", "Genus", "Species"], "Genus")}${field(langZh ? "Alpha 指标" : "Alpha metric", "emp-alpha-metric", ["shannon", "simpson", "observed", "chao1"], "shannon")}${field(langZh ? "差异方法" : "Differential method", "emp-differential-method", ["wilcoxon", "aldex2"], "wilcoxon")}`;
   }
@@ -6848,9 +6876,23 @@ function empScientificFields(manifest, langZh) {
   return `${common}${comparisons}${field(langZh ? "标准化" : "Normalization", "emp-normalization", choices[0], choices[0][0])}${field(langZh ? "差异方法" : "Differential method", "emp-differential-method", choices[1], choices[1][0])}${field(langZh ? "富集方法" : "Enrichment method", "emp-enrichment-method", choices[2], choices[2][0])}${field(langZh ? "物种" : "Organism", "emp-organism", ["hsa", "mmu", "rno"], "hsa")}`;
 }
 
+function syncEmpComparisonLevels(manifest) {
+  const group = $("#emp-group-var")?.value || "";
+  const levels = empGroupLevels(manifest, group);
+  const options = levels.map((item) => `<option value="${escapeHtml(item.value)}">${escapeHtml(item.value)} (${item.count})</option>`).join("");
+  const reference = $("#emp-reference-level");
+  const test = $("#emp-test-level");
+  if (reference) reference.innerHTML = options;
+  if (test) {
+    test.innerHTML = options;
+    if (levels.length > 1) test.value = levels[1].value;
+  }
+}
+
 function renderEmpManifest(manifest, langZh) {
   const host = $("#emp-manifest");
-  if (!host || !manifest) return;
+  const parametersHost = $("#emp-parameters");
+  if (!host || !parametersHost || !manifest) return;
   const overlap = manifest.sample_overlap || {};
   const rows = (manifest.files || []).map((file) => `
     <div class="emp-file-row">
@@ -6867,11 +6909,12 @@ function renderEmpManifest(manifest, langZh) {
   const workflow = ["microbiome_16s", "transcriptomics", "metabolomics", "metagenomics", "clinical"].includes(manifest.omics_type) ? manifest.omics_type : "microbiome_16s";
   const executionEndpoints = `<option value="local-default">${langZh ? "本机 EMP" : "Local EMP"}</option>${endpointOptions}`;
   host.innerHTML = `
-    <div class="emp-section-head"><div><h4>${langZh ? "数据清单" : "Dataset manifest"}</h4><p class="muted"><code>${escapeHtml(manifest.manifest_id)}</code></p></div><span class="emp-state is-ready">${escapeHtml(manifest.omics_type || "unknown")}</span></div>
+    <div class="emp-section-head"><p class="muted"><code>${escapeHtml(manifest.manifest_id)}</code></p><span class="emp-state is-ready">${escapeHtml(manifest.omics_type || "unknown")}</span></div>
     <div class="emp-overlap"><span>${langZh ? "矩阵样本" : "Assay"} <strong>${overlap.assay ?? "—"}</strong></span><span>${langZh ? "元数据样本" : "Metadata"} <strong>${overlap.metadata ?? "—"}</strong></span><span>${langZh ? "匹配" : "Matched"} <strong>${overlap.matched ?? "—"}</strong></span></div>
     <div class="emp-pairing-row"><label class="field"><span>Assay</span><select id="emp-assay-file">${fileOptions(selectedAssay)}</select></label><label class="field"><span>Metadata</span><select id="emp-metadata-file">${fileOptions(selectedMetadata)}</select></label><button type="button" class="btn ghost" id="btn-emp-apply-pairing">${langZh ? "应用配对" : "Apply pairing"}</button></div>
     <div class="emp-file-list">${rows}</div>
-    ${warnings ? `<ul class="emp-warnings">${warnings}</ul>` : ""}
+    ${warnings ? `<ul class="emp-warnings">${warnings}</ul>` : ""}`;
+  parametersHost.innerHTML = `
     <div class="grid-2 emp-plan-fields">
       <label class="field"><span>${langZh ? "识别工作流" : "Detected workflow"}</span><select id="emp-workflow"><option value="${workflow}">${workflow}</option></select></label>
       <label class="field"><span>${langZh ? "运行位置" : "Run location"}</span><select id="emp-plan-endpoint">${executionEndpoints}</select></label>
@@ -6883,6 +6926,8 @@ function renderEmpManifest(manifest, langZh) {
   $("#btn-emp-create-plan")?.addEventListener("click", createEmpPlan);
   $("#btn-emp-save-project")?.addEventListener("click", saveEmpProject);
   $("#btn-emp-remote-upload")?.addEventListener("click", approveAndUploadEmpManifest);
+  $("#emp-group-var")?.addEventListener("change", () => syncEmpComparisonLevels(manifest));
+  updateEmpWorkflowStages(langZh);
 }
 
 async function saveEmpProject() {
@@ -6936,8 +6981,9 @@ async function applyEmpPairing() {
     });
     state.emp.manifest = data.manifest;
     state.emp.plan = null;
+    state.emp.job = null;
+    resetEmpWorkflowStages(controlLangZh(), { keepManifest: true });
     renderEmpManifest(data.manifest, controlLangZh());
-    $("#emp-plan").innerHTML = "";
   } catch (error) {
     $("#settings-status").textContent = error.message || String(error);
   } finally {
@@ -6956,6 +7002,7 @@ function renderEmpPlan(plan, langZh) {
     <p class="muted">${plan.emp_mode === "remote-api" ? (langZh ? "运行位置：已配置的远程 EMP。运行前必须先完成明确的数据上传审批。" : "Runs on the configured remote EMP. Explicit upload approval is required first.") : (langZh ? "运行位置：本机。原始数据不会发送给 LLM，也不会离开本机。" : "Runs locally. Raw matrices are not sent to the LLM or off this computer.")}</p>
     <button type="button" class="btn primary emp-primary-action" id="btn-emp-confirm-run">${langZh ? "确认并运行" : "Confirm and run"}</button>`;
   $("#btn-emp-confirm-run")?.addEventListener("click", confirmAndRunEmpPlan);
+  updateEmpWorkflowStages(langZh);
 }
 
 function paintEmpJob(job, langZh) {
@@ -6982,6 +7029,7 @@ function paintEmpJob(job, langZh) {
     ${errorText ? `<p class="emp-error">${escapeHtml(errorText)}</p>` : ""}
     ${!terminal ? `<button type="button" class="btn ghost" id="btn-emp-cancel">${langZh ? "取消任务" : "Cancel job"}</button>` : ""}`;
   $("#btn-emp-cancel")?.addEventListener("click", cancelEmpJob);
+  updateEmpWorkflowStages(langZh);
 }
 
 async function renderEmpArtifacts(jobId, langZh) {
@@ -7006,8 +7054,10 @@ async function renderEmpArtifacts(jobId, langZh) {
         input.focus();
       });
     });
+    updateEmpWorkflowStages(langZh);
   } catch (error) {
     host.innerHTML = `<p class="emp-error">${escapeHtml(error.message || String(error))}</p>`;
+    updateEmpWorkflowStages(langZh);
   }
 }
 
@@ -7132,6 +7182,51 @@ async function cancelEmpJob() {
   }
 }
 
+function empStagePlaceholder(text) {
+  return `<p class="emp-stage-placeholder">${escapeHtml(text)}</p>`;
+}
+
+function resetEmpWorkflowStages(langZh, { keepManifest = false } = {}) {
+  const placeholders = {
+    "emp-manifest": langZh ? "请先选择并扫描本地组学数据。" : "Choose and scan local omics data first.",
+    "emp-parameters": langZh ? "完成数据配对后可选择分组和分析参数。" : "Complete pairing to choose groups and analysis parameters.",
+    "emp-plan": langZh ? "确认科学参数后生成受约束的分析计划。" : "Confirm scientific parameters to create a constrained plan.",
+    "emp-run-state": langZh ? "分析计划确认后，运行进度将在这里显示。" : "Run progress appears here after plan confirmation.",
+    "emp-artifacts": langZh ? "任务完成后可打开结果或将结果加入对话。" : "Open results or add them to chat after completion.",
+  };
+  Object.entries(placeholders).forEach(([id, text]) => {
+    if (keepManifest && ["emp-manifest", "emp-parameters"].includes(id)) return;
+    const host = $(`#${id}`);
+    if (host) host.innerHTML = empStagePlaceholder(text);
+  });
+  updateEmpWorkflowStages(langZh);
+}
+
+function updateEmpWorkflowStages(langZh) {
+  const manifest = !!state.emp.manifest;
+  const plan = !!state.emp.plan;
+  const job = state.emp.job || null;
+  const jobDone = job?.status === "done";
+  const hasArtifacts = !!$("#emp-artifacts .emp-artifact-row");
+  let active = 0;
+  if (manifest && !plan) active = 2;
+  else if (plan && !job) active = 3;
+  else if (job && !["done", "error", "cancelled"].includes(job.status)) active = 4;
+  else if (job) active = 5;
+  const completed = [manifest, manifest, plan, !!job, jobDone, hasArtifacts];
+  $$("[data-emp-workflow-stage]").forEach((item, index) => {
+    item.classList.toggle("is-active", index === active);
+    item.classList.toggle("is-complete", completed[index]);
+    item.classList.toggle("is-disabled", index > active && !completed[index]);
+    const stateLabel = item.querySelector("small");
+    if (stateLabel) {
+      stateLabel.textContent = completed[index]
+        ? (langZh ? "完成" : "Done")
+        : index === active ? (langZh ? "当前" : "Current") : (langZh ? "待前置步骤" : "Waiting");
+    }
+  });
+}
+
 async function renderEmpPanel(langZh) {
   const box = $("#ctab-emp");
   if (!box) return;
@@ -7160,12 +7255,26 @@ async function renderEmpPanel(langZh) {
     </div>
     <div class="row emp-toolbar"><button type="button" class="btn ghost" id="btn-emp-save-check">${langZh ? "保存并检查连接" : "Save & check connection"}</button><button type="button" class="btn ghost" id="btn-emp-r-preflight">${langZh ? "检查 R Direct" : "Check R Direct"}</button><code>${escapeHtml(endpoint)}</code></div>
     <div class="emp-workflow">
-      <div class="emp-scan-row"><label class="field"><span>${langZh ? "本地数据文件或目录" : "Local data file or directory"}</span><div class="path-row"><input id="emp-scan-path" type="text" value="${escapeHtml((state.settings?.config || {}).workspace || "")}" placeholder="/path/to/omics/data"/><button type="button" class="btn ghost" id="btn-emp-browse" title="${langZh ? "选择文件或目录" : "Choose file or directory"}">…</button></div><span id="emp-selected-file" class="muted">${state.emp.selectedFile ? `${langZh ? "已选择文件" : "Selected file"}: ${escapeHtml(state.emp.selectedFile)}` : ""}</span></label><button type="button" class="btn primary" id="btn-emp-scan" ${status.ready ? "" : "disabled"}>${langZh ? "扫描组学数据" : "Scan omics data"}</button></div>
-      <div id="emp-manifest" class="emp-stage"></div>
-      <div id="emp-plan" class="emp-stage"></div>
-      <div id="emp-run-state" class="emp-stage emp-run-state"></div>
-      <div id="emp-artifacts" class="emp-stage"></div>
+      <ol class="emp-stage-nav" aria-label="${langZh ? "联合分析流程" : "Joint analysis workflow"}">
+        ${[
+          langZh ? "数据" : "Data",
+          langZh ? "配对" : "Pairing",
+          langZh ? "参数" : "Parameters",
+          langZh ? "计划" : "Plan",
+          langZh ? "运行" : "Run",
+          langZh ? "结果" : "Results",
+        ].map((label, index) => `<li data-emp-workflow-stage><span>${index + 1}</span><strong>${label}</strong><small></small></li>`).join("")}
+      </ol>
+      <section class="emp-stage-shell"><div class="emp-stage-title"><span>1</span><div><strong>${langZh ? "选择数据" : "Select data"}</strong><small>${langZh ? "文件或目录只在允许根目录内读取" : "Files remain within configured allowed roots"}</small></div></div>
+        <div class="emp-scan-row"><label class="field"><span>${langZh ? "本地数据文件或目录" : "Local data file or directory"}</span><div class="path-row"><input id="emp-scan-path" type="text" value="${escapeHtml((state.settings?.config || {}).workspace || "")}" placeholder="/path/to/omics/data"/><button type="button" class="btn ghost" id="btn-emp-browse" title="${langZh ? "选择文件或目录" : "Choose file or directory"}">…</button></div><span id="emp-selected-file" class="muted">${state.emp.selectedFile ? `${langZh ? "已选择文件" : "Selected file"}: ${escapeHtml(state.emp.selectedFile)}` : ""}</span></label><button type="button" class="btn primary" id="btn-emp-scan" ${status.ready ? "" : "disabled"}>${langZh ? "扫描组学数据" : "Scan omics data"}</button></div>
+      </section>
+      <section class="emp-stage-shell"><div class="emp-stage-title"><span>2</span><div><strong>${langZh ? "核对数据配对" : "Review pairing"}</strong><small>${langZh ? "确认 assay、metadata 和样本交集" : "Confirm assay, metadata and sample overlap"}</small></div></div><div id="emp-manifest" class="emp-stage"></div></section>
+      <section class="emp-stage-shell"><div class="emp-stage-title"><span>3</span><div><strong>${langZh ? "设置科学参数" : "Set scientific parameters"}</strong><small>${langZh ? "选择真实分组水平和分析方法" : "Choose real group levels and methods"}</small></div></div><div id="emp-parameters" class="emp-stage"></div></section>
+      <section class="emp-stage-shell"><div class="emp-stage-title"><span>4</span><div><strong>${langZh ? "确认分析计划" : "Confirm analysis plan"}</strong><small>${langZh ? "运行前检查输入、参数和步骤" : "Review inputs, parameters and steps before running"}</small></div></div><div id="emp-plan" class="emp-stage"></div></section>
+      <section class="emp-stage-shell"><div class="emp-stage-title"><span>5</span><div><strong>${langZh ? "执行与追踪" : "Run and track"}</strong><small>${langZh ? "显示 EMP 返回的真实进度" : "Show progress reported by EMP"}</small></div></div><div id="emp-run-state" class="emp-stage emp-run-state"></div></section>
+      <section class="emp-stage-shell"><div class="emp-stage-title"><span>6</span><div><strong>${langZh ? "查看结果" : "Review results"}</strong><small>${langZh ? "打开产物或加入当前对话" : "Open artifacts or add them to this chat"}</small></div></div><div id="emp-artifacts" class="emp-stage"></div></section>
     </div>`;
+  resetEmpWorkflowStages(langZh);
   $("#btn-emp-save-check")?.addEventListener("click", async () => {
     try { await saveSettings(); } catch (error) { $("#settings-status").textContent = error.message || String(error); }
   });
@@ -7200,16 +7309,15 @@ async function renderEmpPanel(langZh) {
       state.emp.pollToken += 1;
       if (state.emp.pollTimer) clearTimeout(state.emp.pollTimer);
       state.emp.pollTimer = null;
+      resetEmpWorkflowStages(langZh, { keepManifest: true });
       renderEmpManifest(data.manifest, langZh);
-      $("#emp-plan").innerHTML = "";
-      $("#emp-run-state").innerHTML = "";
-      $("#emp-artifacts").innerHTML = "";
     } catch (error) {
       const rawMessage = error.message || String(error);
       const message = rawMessage.includes("outside the allowed roots")
         ? (langZh ? "该路径尚未获得联合分析授权，请重新使用右侧按钮选择文件或目录。" : "This path is not authorized for joint analysis. Choose the file or directory again with the browse button.")
         : rawMessage;
       $("#emp-manifest").innerHTML = `<p class="emp-error">${escapeHtml(message)}</p>`;
+      updateEmpWorkflowStages(langZh);
     } finally {
       if (button) button.disabled = false;
     }

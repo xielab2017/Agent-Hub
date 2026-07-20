@@ -8,6 +8,7 @@ import ntpath
 import os
 import posixpath
 import re
+from collections import Counter
 from pathlib import Path
 from typing import Any, Iterable, Optional
 
@@ -20,6 +21,10 @@ DEFAULT_PREVIEW_BYTES = 512 * 1024
 DEFAULT_PREVIEW_ROWS = 20
 DEFAULT_SAMPLE_ID_ROWS = 5000
 DEFAULT_CHECKSUM_BYTES = 64 * 1024 * 1024
+DEFAULT_METADATA_ROWS = 5000
+DEFAULT_METADATA_COLUMNS = 100
+DEFAULT_METADATA_LEVELS = 50
+DEFAULT_METADATA_VALUE_LENGTH = 128
 TABLE_EXTENSIONS = {".csv", ".tsv", ".txt"}
 IGNORED_DIRS = {
     ".git", ".hg", ".svn", ".venv", "venv", "env", "node_modules",
@@ -215,6 +220,71 @@ def _pair_files(files: list[DatasetFile], workspace: Path) -> tuple[str, str, di
     )
 
 
+def _metadata_summary(
+    files: list[DatasetFile],
+    workspace: Path,
+    *,
+    max_rows: int = DEFAULT_METADATA_ROWS,
+    max_columns: int = DEFAULT_METADATA_COLUMNS,
+    max_levels: int = DEFAULT_METADATA_LEVELS,
+) -> dict[str, Any]:
+    metadata = next((item for item in files if item.role in {"metadata", "clinical"}), None)
+    if metadata is None or not metadata.delimiter:
+        return {}
+    try:
+        path = resolve_allowed_path(workspace / metadata.path, [workspace])
+        with path.open("r", encoding="utf-8-sig", errors="replace", newline="") as handle:
+            reader = csv.reader(handle, delimiter=metadata.delimiter)
+            headers = [str(value).strip() for value in (next(reader, []) or [])][:max_columns]
+            if not headers:
+                return {}
+            counts = [Counter() for _ in headers]
+            non_empty = [0 for _ in headers]
+            overflow = [False for _ in headers]
+            rows_scanned = 0
+            truncated = False
+            for row in reader:
+                if rows_scanned >= max_rows:
+                    truncated = True
+                    break
+                rows_scanned += 1
+                for index in range(min(len(row), len(headers))):
+                    value = str(row[index]).strip()
+                    if not value:
+                        continue
+                    non_empty[index] += 1
+                    if len(value) > DEFAULT_METADATA_VALUE_LENGTH:
+                        overflow[index] = True
+                        continue
+                    if value not in counts[index] and len(counts[index]) >= max_levels:
+                        overflow[index] = True
+                        continue
+                    counts[index][value] += 1
+    except (OSError, csv.Error, DiscoveryError):
+        return {}
+
+    categorical: dict[str, Any] = {}
+    for index, header in enumerate(headers):
+        if index == 0 or not header or overflow[index] or not counts[index]:
+            continue
+        unique = len(counts[index])
+        if unique > 20 and unique / max(1, non_empty[index]) > 0.5:
+            continue
+        categorical[header] = {
+            "levels": [
+                {"value": value, "count": count}
+                for value, count in counts[index].items()
+            ],
+            "truncated": truncated,
+        }
+    return {
+        "columns": headers,
+        "categorical": categorical,
+        "rows_scanned": rows_scanned,
+        "truncated": truncated,
+    }
+
+
 def select_manifest_pairing(
     manifest: DatasetManifest,
     *,
@@ -243,6 +313,7 @@ def select_manifest_pairing(
     manifest.orientation = orientation
     manifest.sample_id_column = sample_id_column
     manifest.sample_overlap = overlap
+    manifest.metadata_summary = _metadata_summary(manifest.files, workspace)
     retained = [warning for warning in manifest.warnings if "sample" not in warning.lower() and "assay" not in warning.lower()]
     manifest.warnings = list(dict.fromkeys(retained + warnings))
     return manifest
@@ -324,7 +395,7 @@ def scan_dataset(
     orientation, sample_id_column, overlap, pair_warnings = _pair_files(discovered, workspace)
     warnings.extend(pair_warnings)
     label = experiment_name.strip() or re.sub(r"[^A-Za-z0-9_-]+", "_", workspace.name).strip("_") or "study"
-    return DatasetManifest(
+    manifest = DatasetManifest(
         manifest_id=new_id("manifest"),
         workspace=str(workspace),
         omics_type=_omics_type(discovered),
@@ -333,5 +404,7 @@ def scan_dataset(
         orientation=orientation,
         sample_id_column=sample_id_column,
         sample_overlap=overlap,
+        metadata_summary=_metadata_summary(discovered, workspace),
         warnings=list(dict.fromkeys(warnings)),
     )
+    return manifest

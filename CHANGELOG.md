@@ -1,5 +1,14 @@
 # Changelog
 
+## v5.0.7 — 2026-07-20
+
+EMP 16S end-to-end hardening and Trellis-controlled task mode.
+
+- Hardened local EMP discovery/planning: metadata grouping variables and reference/test levels from bounded summaries.
+- Exposed the full Data → Pairing → Parameters → Plan → Run → Results progress surface before scan, with disabled stages and concrete prerequisites.
+- Fixed EMP detection, status reporting, and data file browser selection for the joint-analysis panel.
+- Integrated Trellis controlled task mode (specs, agents, workspace journals) for repeatable Hub development.
+
 ## v5.0.6 — 2026-07-20
 
 Agent Hub x EasyMultiProfiler local 16S MVP.

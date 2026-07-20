@@ -71,6 +71,18 @@ STEP_TOOL_SCHEMAS: dict[str, dict[str, Any]] = {
         },
         ("method", "group_var"),
     ),
+    "emp.visualize.alpha": _object(
+        {
+            "metric": {"type": "string", "enum": ["shannon", "simpson", "observed", "chao1"]},
+            "group": _GROUP,
+            "reference_level": _LEVEL,
+            "test_level": _LEVEL,
+            "source": {"type": "string", "enum": ["current"]},
+            "width": {"type": "number", "minimum": 4, "maximum": 20},
+            "height": {"type": "number", "minimum": 3, "maximum": 20},
+        },
+        ("metric", "group", "reference_level", "test_level", "source", "width", "height"),
+    ),
     "emp.analyze.differential": _object(
         {
             "workflow": {"type": "string", "enum": [
@@ -119,7 +131,10 @@ class WorkflowSpec:
 WORKFLOW_SPECS: dict[str, WorkflowSpec] = {
     "microbiome_16s": WorkflowSpec(
         "microbiome_16s",
-        ("emp.workflow.validate", "emp.prepare.taxonomy", "emp.analyze.alpha", "emp.analyze.differential"),
+        (
+            "emp.workflow.validate", "emp.prepare.taxonomy", "emp.analyze.alpha",
+            "emp.visualize.alpha", "emp.analyze.differential",
+        ),
         (
             "group_var", "reference_level", "test_level", "taxonomy_level", "alpha_metric",
             "differential_method", "adjust_method", "alpha",
@@ -301,6 +316,31 @@ def validate_json_schema(value: Mapping[str, Any], schema: Mapping[str, Any], *,
 
 
 def _metadata_profile(manifest: DatasetManifest, group_var: str) -> tuple[list[str], dict[str, int]]:
+    summary = manifest.metadata_summary or {}
+    summary_headers = summary.get("columns")
+    if isinstance(summary_headers, list) and summary_headers:
+        headers = [str(value).strip() for value in summary_headers]
+        if group_var not in headers:
+            raise PlanningError(f"group variable is not present in metadata: {group_var}")
+        categorical = summary.get("categorical") or {}
+        profile = categorical.get(group_var) if isinstance(categorical, Mapping) else None
+        levels = profile.get("levels") if isinstance(profile, Mapping) else None
+        counts: dict[str, int] = {}
+        if isinstance(levels, list):
+            for item in levels:
+                if not isinstance(item, Mapping):
+                    continue
+                value = str(item.get("value") or "").strip()
+                try:
+                    count = int(item.get("count") or 0)
+                except (TypeError, ValueError):
+                    count = 0
+                if value and count > 0:
+                    counts[value] = count
+        if not counts:
+            raise PlanningError(f"group variable has no bounded categorical levels: {group_var}")
+        return headers, counts
+
     metadata = manifest.file_for_role("metadata") or manifest.file_for_role("clinical")
     if metadata is None or not metadata.preview:
         raise PlanningError("metadata preview is required for scientific plan validation")
@@ -438,11 +478,21 @@ class AnalysisPlanCompiler:
                 {"method": values["alpha_metric"], "group_var": values["group_var"]},
                 ["taxonomy_prepare"],
             )
+            alpha_plot = PlanStep(
+                "alpha_plot", "emp.visualize.alpha",
+                {
+                    "metric": values["alpha_metric"], "group": values["group_var"],
+                    "reference_level": values["reference_level"],
+                    "test_level": values["test_level"],
+                    "source": "current", "width": 8, "height": 6,
+                },
+                ["alpha"],
+            )
             differential = PlanStep(
                 "differential", "emp.analyze.differential",
                 _differential_params(workflow, values), ["taxonomy_prepare"],
             )
-            return [validate, taxonomy, alpha, differential]
+            return [validate, taxonomy, alpha, alpha_plot, differential]
         if workflow == "clinical":
             association = PlanStep(
                 "association", "emp.analyze.association",

@@ -1,6 +1,6 @@
 [project]
 name = "agent-hub"
-version = "5.0.6"
+version = "5.0.7"
 description = "Agent Hub — multi-agent control console for Hermes, OpenClaw, NanoBot and Direct LLM"
 readme = "README.md"
 requires-python = ">=3.9"

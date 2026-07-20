@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/xielab2017/Agent-Hub/releases"><img alt="version" src="https://img.shields.io/badge/version-5.0.6-rose.svg" /></a>
+  <a href="https://github.com/xielab2017/Agent-Hub/releases"><img alt="version" src="https://img.shields.io/badge/version-5.0.7-rose.svg" /></a>
   <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-MIT-blue.svg" /></a>
   <a href="https://www.python.org/"><img alt="python" src="https://img.shields.io/badge/python-%3E%3D3.9-brightgreen.svg" /></a>
   <a href="https://github.com/xielab2017/Agent-Hub"><img alt="platform" src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg" /></a>
@@ -93,7 +93,7 @@ chmod +x ctl.sh "Start Agent Hub.command" start.sh
 curl -s http://127.0.0.1:8765/api/health
 ```
 
-确认健康检查里显示 `"version": "5.0.6"`。如果仍然不对，可临时换端口验证当前源码：
+确认健康检查里显示 `"version": "5.0.7"`。如果仍然不对，可临时换端口验证当前源码：
 
 ```bash
 python3 server.py --host 127.0.0.1 --port 9876 --open
@@ -235,7 +235,7 @@ export HERMES_ALI_PUBLIC_URL='https://agent.example.edu'
 
 ### EasyMultiProfiler 联合分析
 
-v5.0.6 提供实验性的本机 16S 纵向流程：扫描本地数据目录、识别 assay/metadata、核对样本、确认结构化计划、调用 EMP 完成 taxonomy 与 Alpha 多样性分析，并把 JSON、PNG、PDF 和 Markdown 报告登记为会话产物。
+v5.0.7 提供实验性的本机 16S 纵向流程：扫描本地数据目录、识别 assay/metadata、核对样本、确认结构化计划、调用 EMP 完成 taxonomy 与 Alpha 多样性分析，并把 JSON、PNG、PDF 和 Markdown 报告登记为会话产物。
 
 先在 EasyMultiProfiler-Web 仓库启动 API；路径导入只允许 `EMP_ALLOWED_ROOTS` 中的目录：
 
@@ -292,7 +292,7 @@ Agent-Hub/
 
 ## 开发与版本
 
-当前版本：**v5.0.6**（分支 `v5.0.6`）
+当前版本：**v5.0.7**（分支 `v5.0.7`）
 
 ```bash
 # 健康检查
@@ -306,6 +306,7 @@ git pull
 
 简要更新：
 
+- **v5.0.7** — EMP 16S 端到端加固：六段进度面、元数据分组变量、文件浏览器与状态修复；集成 Trellis 受控任务模式
 - **v5.0.6** — Agent Hub x EasyMultiProfiler 本机 16S MVP：受控数据扫描、计划确认、持久 job/artifact、稳定进度和中英文 UI
 - **v5.0.0** — 强化 Agent Hub 本地网关、启动器与跨平台使用体验；新增 macOS 首次启动排查说明
 - **v4.0.0** — 发布 Agent Hub v4 系列能力与文档刷新

@@ -270,9 +270,9 @@ class EmpClient:
         values.pop("workflow", None)
         values.pop("min_group_size", None)
         values.pop("source_step", None)
-        if "reference_level" in values:
+        if tool == "emp.analyze.differential" and "reference_level" in values:
             values["ref_group"] = values.pop("reference_level")
-        if "test_level" in values:
+        if tool == "emp.analyze.differential" and "test_level" in values:
             values["test_group"] = values.pop("test_level")
         if tool == "emp.prepare.normalize" and workflow in {"metabolomics", "metagenomics"}:
             values["normalize_method"] = values.pop("method")
