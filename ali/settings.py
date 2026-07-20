@@ -94,6 +94,12 @@ DEFAULT_CAMPUS: dict[str, Any] = {
     },
     "data_policy": "internal",  # internal | restricted | public
     "workspace": "",
+    "trellis": {
+        "enabled": True,
+        "context_budget_chars": 18000,
+        "artifact_budget_chars": 7000,
+        "suggest_for_complex_tasks": True,
+    },
     "emp": {
         "enabled": False,
         "mode": "auto",

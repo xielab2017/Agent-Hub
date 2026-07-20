@@ -47,6 +47,7 @@ from . import (
     run_journal,
     streaming,
     subagent_planner,
+    trellis,
     uploads,
     websearch,
     workflows,
@@ -425,6 +426,22 @@ def handle_get(handler) -> None:
 
     if path == "/api/settings":
         return _json(handler, 200, public_settings_view())
+
+    if path == "/api/trellis/status":
+        sid = (qs.get("session_id") or [""])[0]
+        workspace = (qs.get("workspace") or [""])[0]
+        try:
+            return _json(handler, 200, {"ok": True, **trellis.status(sid, workspace)})
+        except trellis.TrellisError as exc:
+            return _json(handler, 400, {"ok": False, "error": str(exc)})
+
+    if path == "/api/trellis/artifact":
+        sid = (qs.get("session_id") or [""])[0]
+        name = (qs.get("name") or [""])[0]
+        try:
+            return _json(handler, 200, {"ok": True, **trellis.read_artifact(sid, name)})
+        except (OSError, trellis.TrellisError) as exc:
+            return _json(handler, 404, {"ok": False, "error": str(exc)})
 
     if path == "/api/emp/status":
         return _json(handler, 200, {"ok": True, **get_emp_service().status()})
@@ -833,6 +850,92 @@ def handle_post(handler) -> None:
                 **view,
             },
         )
+
+    if path == "/api/trellis/suggest":
+        body = _read_json(handler)
+        return _json(handler, 200, {"ok": True, **trellis.suggest(str(body.get("message") or ""))})
+
+    if path == "/api/trellis/tasks":
+        body = _read_json(handler)
+        try:
+            result = trellis.create_task(
+                str(body.get("session_id") or ""),
+                str(body.get("workspace") or ""),
+                str(body.get("title") or ""),
+                str(body.get("description") or ""),
+            )
+            audit.log_event(
+                "trellis_task_created",
+                {"session_id": body.get("session_id"), "task_id": result["task"]["id"]},
+            )
+            return _json(handler, 201, {"ok": True, **result})
+        except (OSError, trellis.TrellisError) as exc:
+            return _json(handler, 400, {"ok": False, "error": str(exc)})
+
+    if path == "/api/trellis/bind":
+        body = _read_json(handler)
+        try:
+            result = trellis.bind_task(
+                str(body.get("session_id") or ""),
+                str(body.get("workspace") or ""),
+                str(body.get("task_id") or ""),
+            )
+            return _json(handler, 200, {"ok": True, **result})
+        except (OSError, trellis.TrellisError) as exc:
+            return _json(handler, 400, {"ok": False, "error": str(exc)})
+
+    if path == "/api/trellis/unbind":
+        body = _read_json(handler)
+        try:
+            return _json(handler, 200, trellis.unbind_task(str(body.get("session_id") or "")))
+        except trellis.TrellisError as exc:
+            return _json(handler, 400, {"ok": False, "error": str(exc)})
+
+    if path == "/api/trellis/approve":
+        body = _read_json(handler)
+        try:
+            result = trellis.approve(
+                str(body.get("session_id") or ""),
+                str(body.get("identity") or "local-user"),
+                str(body.get("summary") or ""),
+            )
+            audit.log_event(
+                "trellis_plan_approved",
+                {"session_id": body.get("session_id"), "task_id": result["task"]["id"]},
+            )
+            return _json(handler, 200, {"ok": True, **result})
+        except (OSError, trellis.TrellisError) as exc:
+            return _json(handler, 400, {"ok": False, "error": str(exc)})
+
+    if path == "/api/trellis/transition":
+        body = _read_json(handler)
+        try:
+            result = trellis.transition(
+                str(body.get("session_id") or ""),
+                str(body.get("status") or ""),
+                str(body.get("reason") or ""),
+            )
+            return _json(handler, 200, {"ok": True, **result})
+        except (OSError, trellis.TrellisError) as exc:
+            return _json(handler, 400, {"ok": False, "error": str(exc)})
+
+    if path == "/api/trellis/validation":
+        body = _read_json(handler)
+        try:
+            result = trellis.record_validation(
+                str(body.get("session_id") or ""),
+                str(body.get("command") or ""),
+                bool(body.get("ok")),
+                str(body.get("summary") or ""),
+            )
+            audit.log_event("trellis_validation_recorded", {
+                "session_id": body.get("session_id"),
+                "task_id": result["task"]["id"],
+                "ok": result["validation"]["ok"],
+            })
+            return _json(handler, 200, {"ok": True, **result})
+        except (OSError, trellis.TrellisError) as exc:
+            return _json(handler, 400, {"ok": False, "error": str(exc)})
 
     if path == "/api/emp/scan":
         body = _read_json(handler)

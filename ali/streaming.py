@@ -624,7 +624,15 @@ def start_chat(
     max_tokens_override: int | str | None = None,
 ) -> dict[str, Any]:
     """Start a background agent run; returns stream_id for SSE."""
-    from . import agents as agents_mod, audit, ecosystem, routing, skills as skills_mod, soul as soul_mod
+    from . import (
+        agents as agents_mod,
+        audit,
+        ecosystem,
+        routing,
+        skills as skills_mod,
+        soul as soul_mod,
+        trellis as trellis_mod,
+    )
     from .settings import load_campus_config
 
     session = store.get_session(session_id)
@@ -827,6 +835,14 @@ def start_chat(
         extra_system = (extra_system + "\n\n" + sub_prompt).strip() if extra_system else sub_prompt
     if skill_block:
         extra_system = (extra_system + "\n\n" + skill_block).strip() if extra_system else skill_block
+
+    try:
+        trellis_block, trellis_meta = trellis_mod.context_block(session_id)
+        route_info["trellis"] = trellis_meta
+        if trellis_block:
+            extra_system = (extra_system + "\n\n" + trellis_block).strip() if extra_system else trellis_block
+    except (OSError, trellis_mod.TrellisError) as exc:
+        route_info["trellis"] = {"enabled": True, "error": str(exc)}
 
     # Activated ecosystem packages (OpenSquilla / OpenScience / Obsidian …)
     if not simple_chat:

@@ -1,0 +1,30 @@
+{
+  "id": "agent-hub-emp-phase1",
+  "name": "agent-hub-emp-phase1",
+  "title": "Agent Hub x EMP 本机联合分析 Phase 0-1",
+  "description": "实现 Agent Hub 与 EasyMultiProfiler Web v7 的本机 16S 纵向链路、契约、安全路径导入、任务恢复和产物管理",
+  "status": "planning",
+  "dev_type": null,
+  "scope": "Agent-Hub Phase 0-1 + EasyMultiProfiler-Web v7 API additions",
+  "package": null,
+  "priority": "P2",
+  "creator": "liweixie",
+  "assignee": "liweixie",
+  "createdAt": "2026-07-20",
+  "completedAt": null,
+  "branch": "v5.0.6",
+  "base_branch": "v5.0.5",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [
+    "07-20-emp-api-path-import",
+    "07-20-agent-hub-emp-adapter",
+    "07-20-emp-e2e-release"
+  ],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {}
+}

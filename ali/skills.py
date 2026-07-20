@@ -8,7 +8,7 @@ import zipfile
 from pathlib import Path
 from typing import Any
 
-from .config import STATE_DIR, ensure_state_dirs, hermes_home
+from .config import REPO_ROOT, STATE_DIR, ensure_state_dirs, hermes_home
 from .home import skill_dir as agent_cli_skills
 
 # Legacy path (still scanned); new installs go to ~/.agent-cli/skills
@@ -86,6 +86,7 @@ def skill_dirs() -> list[Path]:
     home = hermes_home()
     candidates = [
         agent_cli_skills(),
+        REPO_ROOT / ".agents" / "skills",
         ALI_SKILLS,
         home / "skills",
         home / "hermes-data" / "skills",
@@ -164,6 +165,7 @@ def list_skills() -> dict[str, Any]:
     ALI_SKILLS.mkdir(parents=True, exist_ok=True)
     # Prefer Agent Hub install root, then others. Dedupe by skill id.
     preferred = str(install_skills_root().resolve())
+    project_skills = str((REPO_ROOT / ".agents" / "skills").resolve())
     by_id: dict[str, dict[str, Any]] = {}
     for root in skill_dirs() or [ALI_SKILLS]:
         try:
@@ -177,11 +179,9 @@ def list_skills() -> dict[str, Any]:
             meta["id"] = sid
             meta["path"] = str(parent)
             meta["source_root"] = root_res
-            managed_roots = {str(r.resolve()) for r in skill_dirs()} | {
-                preferred,
-                str(ALI_SKILLS.resolve()),
-            }
-            meta["managed"] = True  # all on-disk skills are deletable
+            # Project-owned Trellis skills are versioned source files, not
+            # removable user installs exposed by the Control Center.
+            meta["managed"] = root_res != project_skills
             cat, sub = classify_skill(meta)
             meta["category"] = cat
             meta["sub"] = sub

@@ -35,6 +35,7 @@ class Session:
     facts: list[str] = field(default_factory=list)
     todos: list[str] = field(default_factory=list)
     tags: list[str] = field(default_factory=list)
+    trellis: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -57,6 +58,7 @@ class Session:
             facts=[str(x) for x in (data.get("facts") or []) if str(x).strip()],
             todos=[str(x) for x in (data.get("todos") or []) if str(x).strip()],
             tags=[str(x) for x in (data.get("tags") or []) if str(x).strip()],
+            trellis=dict(data.get("trellis") or {}),
         )
 
 
@@ -144,6 +146,11 @@ def create_session(
     folder_id: str = "",
 ) -> Session:
     now = time.time()
+    inherited_trellis: dict[str, Any] = {}
+    if parent_id:
+        parent = get_session(parent_id)
+        if parent is not None:
+            inherited_trellis = dict(parent.trellis or {})
     session = Session(
         id=str(uuid.uuid4()),
         title=title or "New chat",
@@ -153,6 +160,7 @@ def create_session(
         hidden=bool(hidden),
        parent_id=str(parent_id or "").strip(),
         folder_id=str(folder_id or "").strip(),
+        trellis=inherited_trellis,
     )
     save_session(session)
     return session
@@ -176,6 +184,7 @@ def update_session(
     archived: bool | None = None,
     folder_id: str | None = None,
     messages: list[dict[str, Any]] | None = None,
+    trellis: dict[str, Any] | None = None,
 ) -> Session | None:
     # Keep read-modify-write together; parallel lanes can update one session.
     with _lock:
@@ -194,6 +203,8 @@ def update_session(
             session.folder_id = str(folder_id or "").strip()
         if messages is not None:
             session.messages = messages
+        if trellis is not None:
+            session.trellis = dict(trellis)
         session.updated_at = time.time()
         save_session(session)
         return session

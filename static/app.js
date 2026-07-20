@@ -293,6 +293,7 @@ const I18N = {
     "control.search": "搜索",
     "control.models": "模型",
     "control.emp": "联合分析",
+    "control.trellis": "受控任务",
     "control.routing": "路由",
     "control.obsidian": "知识库",
     "control.schedule": "定时任务",
@@ -305,6 +306,12 @@ const I18N = {
     "control.soul": "Soul",
     "control.agents": "Agents",
     "control.feedback": "反馈",
+    "trellis.suggest": "建议使用 Trellis 管理此复杂任务",
+    "trellis.manage": "管理",
+    "trellis.approve": "批准计划",
+    "trellis.unbind": "解除绑定",
+    "trellis.validate": "登记验证",
+    "trellis.complete": "完成任务",
     "control.save": "保存配置",
     "msg.copy": "复制",
     "msg.quote": "引用",
@@ -562,6 +569,7 @@ const I18N = {
     "control.search": "Search",
     "control.models": "Models",
     "control.emp": "Joint analysis",
+    "control.trellis": "Trellis",
     "control.routing": "Routing",
     "control.obsidian": "Knowledge",
     "control.schedule": "Schedule",
@@ -574,6 +582,12 @@ const I18N = {
     "control.soul": "Soul",
     "control.agents": "Agents",
     "control.feedback": "Feedback",
+    "trellis.suggest": "Trellis is recommended for this complex task",
+    "trellis.manage": "Manage",
+    "trellis.approve": "Approve plan",
+    "trellis.unbind": "Unbind",
+    "trellis.validate": "Record check",
+    "trellis.complete": "Complete",
     "control.save": "Save",
     "msg.copy": "Copy",
     "msg.quote": "Quote",
@@ -691,6 +705,7 @@ const state = {
   streamBuffers: {}, // sessionId -> live SSE buffer (survives session switches)
   settings: null,
   emp: { sessionId: "", manifest: null, plan: null, job: null, endpoints: [], remoteSessionId: "", remoteEndpointId: "", planEndpointId: "local-default", projectId: "", boundJobId: "", pollTimer: null, pollToken: 0 },
+  trellis: { status: null, suggestedFor: "", preview: null },
   pendingWf: null,
   lastAssistantText: "",
   liveModels: [],
@@ -2453,6 +2468,65 @@ async function refreshSessions() {
     }
   }
   renderSessionList();
+}
+
+const TRELLIS_PHASE_LABELS = {
+  zh: { planning: "规划中", pending_approval: "待批准", in_progress: "执行中", quality_check: "质量检查", blocked: "已阻塞", completed: "已完成" },
+  en: { planning: "Planning", pending_approval: "Approval", in_progress: "Executing", quality_check: "Quality check", blocked: "Blocked", completed: "Completed" },
+};
+
+function trellisWorkspace() {
+  return String($("#workspace-input")?.value || state.settings?.config?.workspace || "").trim();
+}
+
+async function refreshTrellisStatus() {
+  if (!state.currentId) {
+    state.trellis.status = null;
+    renderTrellisTaskbar();
+    return null;
+  }
+  const q = new URLSearchParams({ session_id: state.currentId, workspace: trellisWorkspace() });
+  try {
+    state.trellis.status = await api(`/api/trellis/status?${q.toString()}`);
+  } catch (error) {
+    state.trellis.status = { enabled: false, message: error.message || String(error) };
+  }
+  renderTrellisTaskbar();
+  return state.trellis.status;
+}
+
+function renderTrellisTaskbar() {
+  const host = $("#trellis-taskbar");
+  if (!host) return;
+  const info = state.trellis.status || {};
+  const task = info.task;
+  const suggested = state.trellis.suggestedFor === state.currentId;
+  if (!task && !suggested) {
+    host.classList.add("hidden");
+    host.innerHTML = "";
+    return;
+  }
+  const lang = state.prefs.language === "en" ? "en" : "zh";
+  const phase = task ? (TRELLIS_PHASE_LABELS[lang][task.status] || task.status) : t("trellis.suggest");
+  const progress = { planning: 12, pending_approval: 28, in_progress: 58, quality_check: 82, blocked: 58, completed: 100 }[task?.status] || 8;
+  host.innerHTML = `
+    <span class="trellis-mark" aria-hidden="true">T</span>
+    <strong>${escapeHtml(task?.title || phase)}</strong>
+    ${task ? `<span class="trellis-phase" data-status="${escapeHtml(task.status)}">${escapeHtml(phase)}</span><span class="trellis-progress"><i style="width:${progress}%"></i></span>` : ""}
+    <button type="button" class="btn ghost chip" id="btn-trellis-manage">${escapeHtml(t("trellis.manage"))}</button>`;
+  host.classList.remove("hidden");
+  $("#btn-trellis-manage")?.addEventListener("click", () => openControlTab("trellis"));
+}
+
+async function maybeSuggestTrellis(message) {
+  if (state.trellis.status?.task || state.trellis.suggestedFor === state.currentId) return;
+  try {
+    const result = await api("/api/trellis/suggest", { method: "POST", body: JSON.stringify({ message }) });
+    if (result.suggested) {
+      state.trellis.suggestedFor = state.currentId;
+      renderTrellisTaskbar();
+    }
+  } catch (_) {}
 }
 
 function bindFolderControls() {
@@ -4306,10 +4380,12 @@ async function selectSession(id) {
     state.emp = { sessionId: id, manifest: null, plan: null, job: null, endpoints: [], remoteSessionId: "", remoteEndpointId: "", planEndpointId: "local-default", projectId: "", boundJobId: "", pollTimer: null, pollToken: state.emp.pollToken + 1 };
   }
   state.currentId = id;
+  if (prevId !== id) state.trellis.preview = null;
   state.selectedSessionId = id;
   renderSessionList();
   renderActiveRuns({ force: true });
   updateSendEnabled();
+  refreshTrellisStatus().catch(() => {});
 
   // Instant paint from live buffer while history loads (no freeze waiting on API)
   const live = state.streamBuffers[id];
@@ -6134,6 +6210,7 @@ async function sendMessage(overrideText, extra = {}) {
   const sessionId = state.currentId;
   if (!text || !sessionId) return;
   const taskOptions = composerTaskOptions();
+  await maybeSuggestTrellis(text);
 
   // Phase 2: while this session is streaming, Queue or Steer instead of starting a second run.
   if (state.sessionRuns[sessionId]?.streaming && !extra._from_queue) {
@@ -7071,12 +7148,103 @@ async function renderEmpPanel(langZh) {
   } catch (_) {}
 }
 
+async function renderTrellisControl() {
+  const host = $("#ctab-trellis");
+  if (!host) return;
+  const langZh = state.prefs.language !== "en";
+  const info = state.trellis.status || {};
+  const task = info.task || null;
+  const tasks = info.tasks || [];
+  const phase = task ? (TRELLIS_PHASE_LABELS[langZh ? "zh" : "en"][task.status] || task.status) : "";
+  const validations = (task?.validations || []).slice().reverse();
+  host.innerHTML = `
+    <div class="trellis-control-head">
+      <div><h4>Trellis ${langZh ? "受控任务模式" : "controlled task mode"}</h4>
+      <p class="muted">${escapeHtml(info.initialized
+        ? (langZh ? `工作区已启用：${info.workspace || ""}` : `Enabled workspace: ${info.workspace || ""}`)
+        : (langZh ? "当前工作区尚未初始化 Trellis；Agent Hub 不会自动修改它。" : "Trellis is not initialized here; Agent Hub will not modify it automatically."))}</p></div>
+      <label class="field trellis-enable"><span>${langZh ? "启用集成" : "Enable integration"}</span><input type="checkbox" data-key="trellis.enabled" ${state.settings?.config?.trellis?.enabled !== false ? "checked" : ""}></label>
+    </div>
+    ${!info.initialized ? `<pre class="trellis-command">trellis init --codex -u ${escapeHtml(langZh ? "你的名字" : "your-name")}</pre>` : ""}
+    ${info.initialized && !task ? `
+      <div class="trellis-create-grid">
+        <label class="field"><span>${langZh ? "新任务标题" : "New task title"}</span><input id="trellis-new-title" type="text" maxlength="160" value="${escapeHtml($("#chat-title")?.textContent || "")}"></label>
+        <button type="button" class="btn primary" id="btn-trellis-create">${langZh ? "创建并绑定" : "Create & bind"}</button>
+        <label class="field"><span>${langZh ? "绑定已有任务" : "Bind existing task"}</span><select id="trellis-task-select"><option value="">—</option>${tasks.map((item) => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.title)} · ${escapeHtml(item.status)}</option>`).join("")}</select></label>
+        <button type="button" class="btn ghost" id="btn-trellis-bind">${langZh ? "绑定" : "Bind"}</button>
+      </div>` : ""}
+    ${task ? `
+      <section class="trellis-task-detail">
+        <div class="trellis-title-row"><div><strong>${escapeHtml(task.title)}</strong><div class="muted"><code>${escapeHtml(task.id)}</code></div></div><span class="trellis-phase" data-status="${escapeHtml(task.status)}">${escapeHtml(phase)}</span></div>
+        <div class="trellis-actions">
+          ${["planning", "pending_approval"].includes(task.status) ? `<button type="button" class="btn primary" id="btn-trellis-approve">${escapeHtml(t("trellis.approve"))}</button>` : ""}
+          ${["in_progress", "quality_check"].includes(task.status) ? `<button type="button" class="btn ghost" id="btn-trellis-check-pass">${escapeHtml(t("trellis.validate"))} ✓</button><button type="button" class="btn ghost" id="btn-trellis-check-fail">${escapeHtml(t("trellis.validate"))} ×</button>` : ""}
+          ${task.status === "quality_check" ? `<button type="button" class="btn primary" id="btn-trellis-complete">${escapeHtml(t("trellis.complete"))}</button>` : ""}
+          <button type="button" class="btn ghost" id="btn-trellis-unbind">${escapeHtml(t("trellis.unbind"))}</button>
+        </div>
+        <div class="trellis-artifacts">${(task.artifacts || []).map((name) => `<button type="button" class="btn ghost chip" data-trellis-artifact="${escapeHtml(name)}">${escapeHtml(name)}</button>`).join("") || `<span class="muted">${langZh ? "暂无规划工件" : "No planning artifacts"}</span>`}</div>
+        <div id="trellis-preview" class="trellis-preview">${state.trellis.preview ? renderMd(state.trellis.preview.content || "") : ""}</div>
+        <h4>${langZh ? "验证记录" : "Validation records"}</h4>
+        <div class="trellis-checks">${validations.map((item) => `<div class="trellis-check ${item.ok ? "ok" : "bad"}"><strong>${item.ok ? "PASS" : "FAIL"}</strong><code>${escapeHtml(item.command || "")}</code><span>${escapeHtml(item.summary || "")}</span></div>`).join("") || `<p class="muted">${langZh ? "尚未登记验证" : "No checks recorded"}</p>`}</div>
+      </section>` : ""}`;
+
+  $("#btn-trellis-create")?.addEventListener("click", async () => {
+    const title = String($("#trellis-new-title")?.value || "").trim();
+    await api("/api/trellis/tasks", { method: "POST", body: JSON.stringify({ session_id: state.currentId, workspace: trellisWorkspace(), title, description: title }) });
+    state.trellis.suggestedFor = "";
+    await refreshTrellisStatus();
+    await renderTrellisControl();
+  });
+  $("#btn-trellis-bind")?.addEventListener("click", async () => {
+    const taskId = $("#trellis-task-select")?.value || "";
+    if (!taskId) return;
+    await api("/api/trellis/bind", { method: "POST", body: JSON.stringify({ session_id: state.currentId, workspace: trellisWorkspace(), task_id: taskId }) });
+    state.trellis.suggestedFor = "";
+    await refreshTrellisStatus();
+    await renderTrellisControl();
+  });
+  $("#btn-trellis-approve")?.addEventListener("click", async () => {
+    if (!confirm(langZh ? "批准当前 PRD、设计和实施计划并进入执行阶段？" : "Approve the current planning artifacts and enter execution?")) return;
+    await api("/api/trellis/approve", { method: "POST", body: JSON.stringify({ session_id: state.currentId, identity: "local-user" }) });
+    await refreshTrellisStatus();
+    await renderTrellisControl();
+  });
+  $("#btn-trellis-unbind")?.addEventListener("click", async () => {
+    await api("/api/trellis/unbind", { method: "POST", body: JSON.stringify({ session_id: state.currentId }) });
+    state.trellis.preview = null;
+    await refreshTrellisStatus();
+    await renderTrellisControl();
+  });
+  const recordCheck = async (ok) => {
+    const command = prompt(langZh ? "已运行的验证命令" : "Validation command", "python3 -m pytest");
+    if (command == null) return;
+    const summary = prompt(langZh ? "结果摘要" : "Result summary", ok ? (langZh ? "验证通过" : "Passed") : (langZh ? "验证失败" : "Failed"));
+    await api("/api/trellis/validation", { method: "POST", body: JSON.stringify({ session_id: state.currentId, command, summary: summary || "", ok }) });
+    await refreshTrellisStatus();
+    await renderTrellisControl();
+  };
+  $("#btn-trellis-check-pass")?.addEventListener("click", () => recordCheck(true));
+  $("#btn-trellis-check-fail")?.addEventListener("click", () => recordCheck(false));
+  $("#btn-trellis-complete")?.addEventListener("click", async () => {
+    await api("/api/trellis/transition", { method: "POST", body: JSON.stringify({ session_id: state.currentId, status: "completed" }) });
+    await refreshTrellisStatus();
+    await renderTrellisControl();
+  });
+  host.querySelectorAll("[data-trellis-artifact]").forEach((button) => button.addEventListener("click", async () => {
+    const q = new URLSearchParams({ session_id: state.currentId, name: button.dataset.trellisArtifact });
+    state.trellis.preview = await api(`/api/trellis/artifact?${q.toString()}`);
+    await renderTrellisControl();
+  }));
+}
+
 async function renderControl() {
   applyControlCenterLanguage();
   await loadSettings();
   const cfg = (state.settings && state.settings.config) || {};
   const health = await api("/api/health/office");
   const ali = cfg.ali || {};
+  await refreshTrellisStatus();
+  renderTrellisControl();
 
   $("#ctab-appearance").innerHTML = `
     <div class="grid-2">

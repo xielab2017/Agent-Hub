@@ -790,6 +790,52 @@ html[data-bg="white"] .brand-sub {
   margin: 0 0 10px;
 }
 
+.trellis-taskbar {
+  min-height: 40px;
+  padding: 5px 14px;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--accent) 5%, var(--bg));
+  display: grid;
+  grid-template-columns: 24px minmax(100px, auto) auto minmax(70px, 180px) auto;
+  align-items: center;
+  gap: 9px;
+  font-size: calc(var(--font-size-base) - 1px);
+}
+.trellis-taskbar.hidden { display: none; }
+.trellis-taskbar strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.trellis-mark {
+  width: 22px; height: 22px; display: grid; place-items: center;
+  border: 1px solid var(--accent); color: var(--accent); font-weight: 750;
+  border-radius: 5px;
+}
+.trellis-phase { color: var(--muted); white-space: nowrap; font-size: calc(var(--font-size-base) - 2px); }
+.trellis-phase[data-status="blocked"] { color: var(--danger); }
+.trellis-phase[data-status="completed"] { color: var(--success, #21865b); }
+.trellis-progress { height: 4px; background: var(--border); overflow: hidden; border-radius: 2px; }
+.trellis-progress i { display: block; height: 100%; background: var(--accent); }
+.trellis-control-head, .trellis-title-row, .trellis-actions, .trellis-artifacts { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+.trellis-control-head, .trellis-title-row { justify-content: space-between; }
+.trellis-control-head h4 { margin-bottom: 4px; }
+.trellis-enable { flex: 0 0 auto; }
+.trellis-command { border: 1px solid var(--border); background: var(--bg-soft); padding: 10px; overflow: auto; }
+.trellis-create-grid { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 10px; }
+.trellis-task-detail { display: grid; gap: 14px; }
+.trellis-artifacts { padding-top: 10px; border-top: 1px solid var(--border); }
+.trellis-preview { max-height: 340px; overflow: auto; padding: 12px; border: 1px solid var(--border); background: var(--bg-soft); }
+.trellis-preview:empty { display: none; }
+.trellis-checks { display: grid; gap: 7px; }
+.trellis-check { display: grid; grid-template-columns: 48px minmax(120px, .7fr) minmax(140px, 1fr); gap: 9px; padding: 8px; border-left: 3px solid var(--border); background: var(--bg-soft); }
+.trellis-check.ok { border-left-color: var(--success, #21865b); }
+.trellis-check.bad { border-left-color: var(--danger); }
+
+@media (max-width: 720px) {
+  .trellis-taskbar { grid-template-columns: 24px minmax(0, 1fr) auto; }
+  .trellis-taskbar .trellis-progress, .trellis-taskbar .trellis-phase { display: none; }
+  .trellis-create-grid { grid-template-columns: 1fr; }
+  .trellis-check { grid-template-columns: 46px 1fr; }
+  .trellis-check span { grid-column: 1 / -1; }
+}
+
 .quick-prefs { display: flex; gap: 6px; }
 .btn.chip {
   flex: 1;
