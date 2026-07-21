@@ -1,5 +1,13 @@
 # Changelog
 
+## v5.0.8_Java — 2026-07-22
+
+Java Desktop packaging line (consumed by Agent Hub / EMP Desktop shell).
+
+- Added `docs/DESKTOP_JAVA.md` contract: ports, health, env vars, EMP companion.
+- Added `desktop.env.example` for JavaFX orchestrator.
+- Base remains v5.0.7 feature set (Agent / routing / Soul / Skills / MCP / EMP joint analysis).
+
 ## v5.0.7 — 2026-07-20
 
 EMP 16S end-to-end hardening and Trellis-controlled task mode.
