@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import queue
+import re
 import sys
 import threading
 import time
@@ -1164,6 +1165,66 @@ def start_chat(
     }
 
 
+def hermes_turn_input(agent_cls: Any, preamble: str, user_text: str) -> tuple[str, dict[str, Any]]:
+    """How to hand one Hub turn to Hermes ``AIAgent``.
+
+    Hermes ≥0.19 accepts ``ephemeral_system_prompt``: the Hub context goes in
+    as system-level instructions for this turn only, and the user message stays
+    clean (Hermes persists it in its own session history / memory).  Older
+    builds get the legacy ``[SYSTEM CONTEXT] … [USER] …`` user message.
+    """
+    pre = (preamble or "").strip()
+    if not pre:
+        return user_text, {}
+    try:
+        import inspect
+
+        params = inspect.signature(agent_cls.__init__).parameters
+        if "ephemeral_system_prompt" in params:
+            return user_text, {"ephemeral_system_prompt": pre}
+    except (TypeError, ValueError):
+        pass
+    return f"[SYSTEM CONTEXT]\n{pre}\n\n[USER]\n{user_text}", {}
+
+
+_TOOL_EVENTS = {
+    "tool.started": "started",
+    "tool.completed": "completed",
+    "tool.output_risk": "risk",
+    "reasoning.available": "reasoning",
+    "_thinking": "reasoning",
+}
+
+
+def parse_tool_event(args: tuple, kwargs: dict[str, Any]) -> dict[str, Any]:
+    """Normalise a Hermes tool-progress callback call (any version) to one dict."""
+    a = list(args)
+    head = str(a[0]) if a else ""
+    kind = _TOOL_EVENTS.get(head)
+    if kind is None:
+        # legacy: (name, preview[, args]) or keywords
+        name = str(a[0] if a else kwargs.get("name") or kwargs.get("tool_name") or "")
+        preview = a[1] if len(a) > 1 else kwargs.get("preview")
+        extra = a[2] if len(a) > 2 else kwargs.get("args")
+        return {"kind": "started", "name": name, "preview": str(preview or extra or "")}
+    if kind == "reasoning":
+        # ("_thinking", text) or ("reasoning.available", "_thinking", text, None)
+        text = a[2] if head == "reasoning.available" and len(a) > 2 else (a[1] if len(a) > 1 else "")
+        return {"kind": "reasoning", "name": "", "text": str(text or "")}
+    name = str(a[1] if len(a) > 1 else kwargs.get("name") or "")
+    preview = a[2] if len(a) > 2 else None
+    tool_args = a[3] if len(a) > 3 else None
+    if not preview and tool_args:
+        preview = str(tool_args)
+    return {
+        "kind": kind,
+        "name": name,
+        "preview": str(preview or ""),
+        "duration": kwargs.get("duration"),
+        "is_error": bool(kwargs.get("is_error")),
+    }
+
+
 def _attach_provenance(
     assistant_msg: dict[str, Any],
     *,
@@ -1278,82 +1339,33 @@ def _run_agent_streaming(
         assistant_parts.append(delta)
         _put(q, "token", {"text": delta})
 
-    def _provider_fallback(exc: Exception) -> str:
-        """Try a configured healthy provider after an account-level refusal."""
-        err = str(exc)
-        low = err.lower()
-        account_refusal = any(
-            marker in low
-            for marker in ("overdue", "overdue_payment", "access denied", "account is not in good standing", "余额不足")
-        )
-        if not account_refusal or provider != "dashscope" or assistant_parts:
-            return ""
-        candidates = ("zhipu", "deepseek", "kimi", "minimax")
-        for fallback_provider in candidates:
-            fallback_cfg = get_provider(fallback_provider)
-            fallback_key = resolve_api_key(cfg, provider=fallback_provider).get("key") or ""
-            if not fallback_cfg or not fallback_key:
-                continue
-            fallback_model = coerce_model_for_provider(
-                fallback_provider, "", route_key=route_key
-            )
-            try:
-                _put(
-                    q,
-                    "meta",
-                    {
-                        "mode": "provider-fallback",
-                        "from_provider": provider,
-                        "provider": fallback_provider,
-                        "model": fallback_model,
-                        "reason": "primary provider account refusal",
-                    },
-                )
-                fallback_url = str(fallback_cfg.get("base_url") or "")
-                if route_info.get("simple_chat"):
-                    fallback_text = llm_client._chat_once(
-                        fallback_url,
-                        fallback_key,
-                        model=fallback_model,
-                        messages=messages,
-                        timeout=timeout,
-                        verify_tls=verify_tls,
-                        on_token=on_token,
-                        temperature=route_info.get("temperature"),
-                        max_tokens=route_info.get("max_tokens"),
-                    )
-                else:
-                    fallback_text = llm_client.stream_chat(
-                        fallback_url,
-                        fallback_key,
-                        model=fallback_model,
-                        messages=messages,
-                        timeout=timeout,
-                        verify_tls=verify_tls,
-                        on_token=on_token,
-                        temperature=route_info.get("temperature"),
-                        max_tokens=route_info.get("max_tokens"),
-                    )
-                if fallback_text:
-                    route_info["provider"] = fallback_provider
-                    route_info["backend_type"] = fallback_provider
-                    route_info["base_url"] = fallback_url
-                    route_info["model"] = fallback_model
-                    route_info["provider_fallback"] = {
-                        "from": provider,
-                        "to": fallback_provider,
-                        "reason": "account_refusal",
-                    }
-                    return fallback_text
-            except Exception:
-                continue
-        return ""
+    def on_tool(*args: Any, **kwargs: Any) -> None:
+        """Hermes tool-progress callback.
 
-    def on_tool(name: str = "", preview: str = "", args: Any = None, **kwargs: Any) -> None:
-        payload = {
-            "name": name or kwargs.get("tool_name") or "tool",
-            "preview": (preview or str(args or kwargs.get("args") or ""))[:120],
-        }
+        Hermes ≥0.19 calls ``(event, name, preview, args, **extra)`` with events
+        ``tool.started`` / ``tool.completed`` / ``tool.output_risk`` /
+        ``reasoning.available`` / ``_thinking``; older builds call
+        ``(name, preview[, args])``.  Both are accepted.
+        """
+        ev = parse_tool_event(args, kwargs)
+        if ev["kind"] == "reasoning":
+            if ev.get("text"):
+                _think(q, str(ev["text"])[:300], kind="reasoning", quiet=quiet)
+            return
+        if ev["kind"] == "completed":
+            for t in reversed(tools_seen):
+                if t.get("name") == ev["name"] and "ok" not in t:
+                    t["ok"] = not ev.get("is_error")
+                    if ev.get("duration") is not None:
+                        t["duration_ms"] = int(float(ev["duration"]) * 1000)
+                    break
+            _put(q, "tool", {"name": ev["name"], "status": "error" if ev.get("is_error") else "done",
+                             "duration_ms": (int(float(ev["duration"]) * 1000) if ev.get("duration") is not None else None)})
+            return
+        if ev["kind"] == "risk":
+            _think(q, f"⚠ 工具输出风险提示：{ev['name']}", kind="tool")
+            return
+        payload = {"name": ev["name"] or "tool", "preview": str(ev.get("preview") or "")[:120]}
         tools_seen.append(payload)
         _put(q, "tool", payload)
         _progress(q, 2, min(88, 45 + 8 * len(tools_seen)), "execute")
@@ -1507,11 +1519,13 @@ def _run_agent_streaming(
                 if hermes_provider == "deepseek" and api_key:
                     _os.environ["DEEPSEEK_API_KEY"] = api_key
 
+                hermes_user_msg, hermes_extra = hermes_turn_input(AIAgent, active_preamble, msg_text)
                 kwargs: dict[str, Any] = {
                     "platform": "cli",
                     "quiet_mode": True,
                     "session_id": session_id,
                     "stream_delta_callback": on_token,
+                    **hermes_extra,
                 }
                 if model:
                     kwargs["model"] = model
@@ -1532,6 +1546,8 @@ def _run_agent_streaming(
                         # Older AIAgent signatures — drop unknown kwargs
                         for drop in ("provider", "api_key", "base_url", "tool_progress_callback"):
                             kwargs.pop(drop, None)
+                        if kwargs.pop("ephemeral_system_prompt", None):
+                            hermes_user_msg = agent_input
                         try:
                             agent = AIAgent(**kwargs, tool_progress_callback=on_tool)
                         except TypeError:
@@ -1545,7 +1561,7 @@ def _run_agent_streaming(
                             pass
 
                     result = agent.run_conversation(
-                        user_message=agent_input,
+                        user_message=hermes_user_msg,
                         conversation_history=clean_history,
                         task_id=session_id,
                     )
@@ -1901,20 +1917,24 @@ def _run_agent_streaming(
                             for m in history
                             if m.get("role") in ("user", "assistant") and isinstance(m.get("content"), str)
                         ]
+                        heal_user_msg, heal_extra = hermes_turn_input(AIAgent, retry_preamble, msg_text)
                         kwargs = {
                             "platform": "cli",
                             "quiet_mode": True,
                             "session_id": session_id,
                             "stream_delta_callback": on_token,
+                            **heal_extra,
                         }
                         if model:
                             kwargs["model"] = model
                         try:
                             agent = AIAgent(**kwargs, tool_progress_callback=on_tool)
                         except TypeError:
+                            if kwargs.pop("ephemeral_system_prompt", None):
+                                heal_user_msg = agent_input
                             agent = AIAgent(**kwargs)
                         result = agent.run_conversation(
-                            user_message=agent_input,
+                            user_message=heal_user_msg,
                             conversation_history=clean_history,
                             task_id=session_id,
                         )
@@ -2127,6 +2147,25 @@ def _apply_hermes_agent_tls(agent: Any, verify_tls: bool) -> None:
                 pass
 
 
+def _with_recent_history(prompt: str, session_id: str, *, turns: int = 6, chars: int = 800) -> str:
+    """Insert the last few chat turns before the ``[USER]`` part of a Hermes CLI prompt."""
+    try:
+        session = store.get_session(session_id)
+    except Exception:  # noqa: BLE001
+        session = None
+    prior = [m for m in (session.messages[:-1] if session else [])
+             if m.get("role") in ("user", "assistant") and isinstance(m.get("content"), str) and not m.get("error")]
+    if not prior:
+        return prompt
+    lines = ["[CONVERSATION SO FAR]"]
+    for m in prior[-turns:]:
+        body = re.sub(r"\s+", " ", m["content"]).strip()
+        lines.append(f"{m['role']}: {body[:chars]}{'…' if len(body) > chars else ''}")
+    block = "\n".join(lines) + "\n\n"
+    idx = prompt.rfind("[USER]\n")
+    return prompt[:idx] + block + prompt[idx:] if idx >= 0 else block + "[USER]\n" + prompt
+
+
 def _hermes_cli_reply(
     q: queue.Queue,
     session_id: str,
@@ -2183,9 +2222,12 @@ def _hermes_cli_reply(
             "key_source": key_info.get("source"),
         },
     )
+    # The CLI has no conversation_history argument: carry the recent turns in the
+    # prompt (the in-process path passes them as history) so follow-ups keep context.
+    prompt = _with_recent_history(msg_text, session_id)
     try:
         result = hermes_cli.run_hermes_chat(
-            msg_text,
+            prompt,
             model=use_model,
             provider_id=provider,
             api_key=api_key,
@@ -2211,6 +2253,9 @@ def _hermes_cli_reply(
         return False
     if not text:
         return False
+    if result.get("session_id"):
+        route_info["hermes_session_id"] = result["session_id"]
+        _put(q, "meta", {"mode": "hermes-cli", "hermes_session_id": result["session_id"]})
     assistant_parts.append(text)
     _put(q, "token", {"text": text})
     return True

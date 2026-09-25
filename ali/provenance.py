@@ -296,6 +296,7 @@ def build_record(
             "soul_role": str(ri.get("soul_role") or ""),
             "subagent_id": ri.get("subagent_id") or None,
             "subagent_auto": ri.get("subagent_auto") if ri.get("subagent_id") else None,
+            "hermes_session_id": ri.get("hermes_session_id") or None,
         },
         "context": {
             "skills": [str(s) for s in (ri.get("skills") or [])],
@@ -313,7 +314,12 @@ def build_record(
             },
         },
         "search": ri.get("_search") if isinstance(ri.get("_search"), dict) else {},
-        "tools": _redact([{"name": str(t.get("name") or ""), "preview": str(t.get("preview") or "")} for t in (tools or []) if isinstance(t, dict)]),
+        "tools": _redact([
+            {"name": str(t.get("name") or ""), "preview": str(t.get("preview") or ""),
+             **({"ok": bool(t["ok"])} if "ok" in t else {}),
+             **({"duration_ms": t["duration_ms"]} if t.get("duration_ms") is not None else {})}
+            for t in (tools or []) if isinstance(t, dict)
+        ]),
         "output": {
             "sha256": sha256_text(final_text),
             "chars": len(final_text or ""),

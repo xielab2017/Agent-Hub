@@ -333,15 +333,36 @@ def run_hermes_chat(
     return {
         "ok": True,
         "text": text,
+        "session_id": hermes_session_id(err, out),
         "bin": str(bin_path),
         "provider": hermes_provider,
         "hermes_home": env.get("HERMES_HOME"),
     }
 
 
+_NOTICE_LINE = re.compile(r"^\s*(?:⚠|⚠️|WARNING\b|Warning:|\[warn|\[info|Note:)", re.I)
+_SESSION_LINE = re.compile(r"(?m)^\s*session_id:\s*(\S+)\s*$")
+
+
+def hermes_session_id(*texts: str) -> str:
+    for t in texts:
+        m = _SESSION_LINE.search(t or "")
+        if m:
+            return m.group(1)
+    return ""
+
+
 def clean_hermes_text(text: str) -> str:
-    """Drop think tags, reasoning banners / skill JSON dumps from Hermes CLI output."""
-    s = text or ""
+    """Drop think tags, reasoning banners / skill JSON dumps from Hermes CLI output.
+
+    Also removes CLI chatter printed before the answer (e.g. "⚠ tirith security
+    scanner …"), carriage returns and the trailing ``session_id:`` line.
+    """
+    s = (text or "").replace("\r\n", "\n").replace("\r", "")
+    lines = s.split("\n")
+    while lines and (not lines[0].strip() or _NOTICE_LINE.match(lines[0])):
+        lines.pop(0)
+    s = _SESSION_LINE.sub("", "\n".join(lines))
     think = r"think(?:ing)?|reasoning|redacted_reasoning|thought"
     s = re.sub(rf"<\s*(?:{think})\b[^>]*>[\s\S]*?<\s*/\s*(?:{think})\s*>", "", s, flags=re.I)
     s = re.sub(rf"<\s*(?:{think})\b[^>]*>[\s\S]*$", "", s, flags=re.I)
@@ -462,8 +483,75 @@ def _patch_model_yaml(path: Path, *, model: str, provider: str, base_url: str = 
     path.write_text(text, encoding="utf-8")
 
 
+_MCP_SIDECAR = ".agent-hub-mcp.json"
+
+
 def merge_mcp_servers_into_config(path: Path, servers: dict[str, Any]) -> None:
-    """Replace Hub-managed MCP marker block (or append) with current servers."""
+    """Put the Hub's MCP servers into Hermes ``config.yaml`` → ``mcp_servers``.
+
+    YAML-aware: servers the user added themselves are kept, Hub servers that
+    were disabled are removed (the ids the Hub manages are remembered in a
+    sidecar file), and there is only ever one ``mcp_servers`` key.  Files left
+    with the old comment-marker block (which ``yaml.safe_dump`` elsewhere
+    turned into a duplicate key) are repaired.  Falls back to the marker block
+    when PyYAML is unavailable.
+    """
+    try:
+        import json as _json
+
+        import yaml
+    except ImportError:
+        return _merge_mcp_marker_block(path, servers)
+    text = ""
+    if path.is_file():
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError:
+            text = ""
+    sidecar = path.parent / _MCP_SIDECAR
+    managed_prev: set[str] = set()
+    try:
+        managed_prev = set(_json.loads(sidecar.read_text(encoding="utf-8")).get("servers") or [])
+    except (OSError, ValueError, AttributeError):
+        managed_prev = set()
+    marker = re.compile(re.escape(_MCP_MARKER_BEGIN) + r"[\s\S]*?" + re.escape(_MCP_MARKER_END) + r"\n?")
+    for block in marker.findall(text):
+        try:
+            legacy = yaml.safe_load(block) or {}
+            managed_prev |= set((legacy.get("mcp_servers") or {}) if isinstance(legacy, dict) else {})
+        except yaml.YAMLError:
+            pass
+    stripped = marker.sub("", text)
+    try:
+        data = yaml.safe_load(stripped) if stripped.strip() else {}
+    except yaml.YAMLError:
+        return _merge_mcp_marker_block(path, servers)
+    if data is None:
+        data = {}
+    if not isinstance(data, dict):
+        return _merge_mcp_marker_block(path, servers)
+    current = data.get("mcp_servers") if isinstance(data.get("mcp_servers"), dict) else {}
+    for sid in managed_prev:
+        if sid not in servers:
+            current.pop(sid, None)
+    for sid, entry in (servers or {}).items():
+        current[sid] = entry
+    data["mcp_servers"] = current
+    path.parent.mkdir(parents=True, exist_ok=True)
+    mode = path.stat().st_mode & 0o777 if path.exists() else 0o600
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=str(path.parent), delete=False) as tmp:
+        yaml.safe_dump(data, tmp, allow_unicode=True, sort_keys=False)
+        tmp_path = Path(tmp.name)
+    os.chmod(tmp_path, mode)
+    os.replace(tmp_path, path)
+    try:
+        sidecar.write_text(_json.dumps({"servers": sorted(servers or {})}), encoding="utf-8")
+    except OSError:
+        pass
+
+
+def _merge_mcp_marker_block(path: Path, servers: dict[str, Any]) -> None:
+    """Legacy text merge: replace the Hub-managed marker block (or append it)."""
     block_lines = [_MCP_MARKER_BEGIN, "mcp_servers:"]
     if not servers:
         block_lines.append("  {}")
@@ -568,6 +656,8 @@ def sync_hub_to_hermes(
         (model or "").strip()
         or tier_model
         or str(models.get("main") or models.get("qwen_main") or models.get("fast") or "").strip()
+        # the Backend tab's own model, before Hermes' hardcoded default kicks in
+        or str((cfg.get("backend") or {}).get("model") or "").strip()
     )
 
     # If the Routing tab named a different provider than the Backend

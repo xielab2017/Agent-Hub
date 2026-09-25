@@ -1,4 +1,4 @@
-"""Shared test setup: no test may reach the real network.
+"""Shared test setup: no test may reach the real network or real claw homes.
 
 Every outbound search / connector / page request goes through
 ``websearch._http``; tests that need responses stub a higher-level function
@@ -24,4 +24,8 @@ def _no_real_network(monkeypatch):
         raise OSError(f"network disabled in tests: {url}")
 
     monkeypatch.setattr(websearch, "_http", _blocked)
+    # Never link test skills into a developer's real ~/.hermes / ~/.openclaw skills dir.
+    from ali import skills
+
+    monkeypatch.setattr(skills, "sync_active_claw", lambda: {"ok": True, "synced": False, "reason": "tests"})
     yield

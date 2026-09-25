@@ -391,7 +391,9 @@ def install_skill_dir(src: Path, *, name: str = "") -> dict[str, Any]:
             f"---\nname: {dest_name}\ndescription: Installed via Agent Hub\n---\n\n# {dest_name}\n",
             encoding="utf-8",
         )
-    return {"ok": True, "id": dest_name, "path": str(dest)}
+    # New skills show up in the connected claw (e.g. ~/.hermes/skills) right away.
+    claw = sync_active_claw()
+    return {"ok": True, "id": dest_name, "path": str(dest), "claw_sync": claw.get("written") or []}
 
 
 def install_skill_zip(zip_path: Path, *, name: str = "") -> dict[str, Any]:
@@ -469,7 +471,47 @@ def uninstall_skill(skill_id: str) -> dict[str, Any]:
                 continue
     if not removed:
         raise FileNotFoundError(skill_id)
+    removed += prune_dangling_claw_links(skill_id)
     return {"ok": True, "id": skill_id, "removed": removed, "path": removed[0]}
+
+
+def claw_skill_dirs() -> list[Path]:
+    """Native skills directories of the claws the Hub links skills into."""
+    from .config import hermes_home
+
+    return [hermes_home() / "skills", Path.home() / ".openclaw" / "skills", Path.home() / ".nanobot" / "skills"]
+
+
+def prune_dangling_claw_links(skill_id: str = "") -> list[str]:
+    """Remove symlinks in claw skill dirs whose Hub target no longer exists."""
+    removed: list[str] = []
+    for d in claw_skill_dirs():
+        if not d.is_dir():
+            continue
+        for link in ([d / skill_id] if skill_id else list(d.iterdir())):
+            try:
+                if link.is_symlink() and not link.exists():
+                    link.unlink()
+                    removed.append(str(link))
+            except OSError:
+                continue
+    return removed
+
+
+def sync_active_claw() -> dict[str, Any]:
+    """Link Hub skills into the currently connected claw (best-effort)."""
+    try:
+        from .runtimes import resolved_runtime_id
+
+        rid = resolved_runtime_id()
+    except Exception:  # noqa: BLE001
+        return {"ok": False, "synced": False}
+    if not rid or rid in ("auto", "direct"):
+        return {"ok": True, "synced": False, "reason": "no claw"}
+    try:
+        return sync_skills_to_claw(rid)
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc)}
 
 
 def sync_skills_to_claw(runtime_id: str) -> dict[str, Any]:
@@ -513,6 +555,8 @@ def sync_skills_to_claw(runtime_id: str) -> dict[str, Any]:
             continue
         target = dest_root / child.name
         try:
+            if target.is_symlink() and not target.exists():
+                target.unlink()  # dangling link from a removed/reinstalled skill: relink
             if target.exists() or target.is_symlink():
                 continue
             try:

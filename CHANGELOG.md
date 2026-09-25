@@ -1,5 +1,39 @@
 # Changelog
 
+## v5.3.1 — 2026-09-25
+
+Hermes fusion verified against the real **Hermes Agent v0.19.0** (in-process
+`run_agent.AIAgent` and the `hermes` CLI) driven through Agent Hub with a
+local OpenAI-compatible model — and the problems it exposed fixed.
+
+- **Tool calls were invisible.** Hermes ≥0.19 calls
+  `tool_progress_callback("tool.started", name, preview, args)` /
+  `("tool.completed", …, duration=, is_error=)` / reasoning events; the Hub's
+  callback expected `(name, preview)`, raised, and Hermes swallowed the error —
+  so tools never reached the UI or provenance. The callback now understands
+  both styles; tool start / finish (with duration and success) stream live and
+  are recorded in provenance.
+- **Hub context was sent as the user's message.** The in-process path now
+  passes it as `ephemeral_system_prompt` (older Hermes: legacy concatenation),
+  so Hermes keeps a clean user turn in its own session history and memory.
+- **`config.yaml` got two `mcp_servers` keys** (the TLS patch's YAML
+  round-trip erased the MCP marker comments) and a user's own MCP servers could
+  be dropped. MCP sync is now YAML-aware: user servers are kept, disabled Hub
+  servers removed, one key only; broken files are repaired.
+- Connect wrote Hermes' hardcoded default model when only the Backend model was
+  set; it now falls back to that model first.
+- **CLI path:** Hermes notices printed before the answer (`⚠ tirith …`),
+  carriage returns and the `session_id:` line no longer leak into replies; the
+  last turns are included in the prompt so follow-ups keep context (the CLI has
+  no history argument); the Hermes session id is recorded in provenance.
+- **Skills:** skills saved or installed after Connect (incl. 「存为技能」) are
+  linked into `~/.hermes/skills` immediately; uninstall removes the link;
+  dangling links are repaired. Verified with Hermes' own skill discovery.
+- Removed an unused duplicate `_provider_fallback` with undefined names.
+- Tests: `tests/test_hermes_integration.py` (incl. an end-to-end run through the
+  real Hub code path with a fake `run_agent` on the discovery path); tests never
+  touch real claw skill dirs — 171 passing.
+
 ## v5.3.0 — 2026-09-25
 
 Type a task in the chat box → search → check the data → summarise → move on

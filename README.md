@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/xielab2017/Agent-Hub/releases"><img alt="version" src="https://img.shields.io/badge/version-5.3.0-rose.svg" /></a>
+  <a href="https://github.com/xielab2017/Agent-Hub/releases"><img alt="version" src="https://img.shields.io/badge/version-5.3.1-rose.svg" /></a>
   <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-MIT-blue.svg" /></a>
   <a href="https://www.python.org/"><img alt="python" src="https://img.shields.io/badge/python-%3E%3D3.9-brightgreen.svg" /></a>
   <a href="https://github.com/xielab2017/Agent-Hub"><img alt="platform" src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg" /></a>
@@ -100,7 +100,7 @@ chmod +x ctl.sh "Start Agent Hub.command" start.sh
 curl -s http://127.0.0.1:8765/api/health
 ```
 
-确认健康检查里显示 `"version": "5.3.0"`。如果仍然不对，可临时换端口验证当前源码：
+确认健康检查里显示 `"version": "5.3.1"`。如果仍然不对，可临时换端口验证当前源码：
 
 ```bash
 python3 server.py --host 127.0.0.1 --port 9876 --open
@@ -254,6 +254,15 @@ python3 server.py --host 0.0.0.0 --port 8765
 | `/verify` | 联网核验上一条回复的 DOI / PMID |
 | `/next` · `/stop` | 继续下一步 / 停止当前任务 |
 
+### Hermes 融合（已用 Hermes Agent v0.19.0 实测）
+
+控制中心「Claws」连接 Hermes 后，对话走 Hermes 的工具链：
+
+- **进程内**（Hub 所在 Python 能 `import run_agent`）：Hub 上下文作为 `ephemeral_system_prompt` 传入，用户消息保持干净；多轮历史作为 `conversation_history` 传入
+- **CLI 回退**（找到 `hermes` 命令）：`hermes chat -q … -Q`，自动附带最近几轮对话；清除 CLI 提示行，记录 Hermes 会话 ID
+- 工具调用（如 `read_file`、`terminal`）实时显示在「处理过程」，并连同耗时、成功与否写入溯源记录
+- Soul、模型/密钥、MCP 服务器、技能同步到 `~/.hermes`：保留你在 `config.yaml` 里自己配置的 MCP；Hub 新装或「存为技能」的技能立即出现在 Hermes 里
+
 ### 外部搜索引擎与读原文
 
 控制中心 → **搜索**：可选引擎优先级，并逐个开关——Bing RSS、360、百度、搜狗、DuckDuckGo、SearXNG（填自建实例地址）、Brave Search / Tavily（填 API Key）、Google CSE / SerpAPI。深度搜索会并行打开前几个结果页面（默认 3 个），提取与问题最相关的段落；只访问公网地址，不会访问本机或内网。
@@ -300,7 +309,7 @@ Agent-Hub/
 
 ## 开发与版本
 
-当前版本：**v5.3.0**（分支 `main`）
+当前版本：**v5.3.1**（分支 `main`）
 
 ```bash
 # 健康检查
@@ -314,6 +323,7 @@ git pull
 
 简要更新：
 
+- **v5.3.1** — Hermes 融合实测（Hermes Agent v0.19.0）：工具调用可见、系统上下文独立、MCP / 技能 / 模型同步修复、CLI 输出清理与多轮上下文
 - **v5.3.0** — 对话框任务与自动下一步、多引擎搜索与读原文、来源分级与跨来源核对、结构化总结
 - **v5.2.0** — 审查代理、科学数据库连接器、流程存为技能；CI 自动测试
 - **v5.1.0** — 对标 Claude Science 的可审计溯源：每条回复的溯源记录、完整性校验、报告与复现包导出

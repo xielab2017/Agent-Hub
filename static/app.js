@@ -15,7 +15,7 @@ const FONT_SIZE_LABELS = {
   zh: { 13: "小 13", 14: "中 14", 15: "中大 15", 16: "大 16", 18: "特大 18" },
   en: { 13: "S 13", 14: "M 14", 15: "M+ 15", 16: "L 16", 18: "XL 18" },
 };
-const LOGO_VER = "5.3.0";
+const LOGO_VER = "5.3.1";
 const DEFAULT_LOGO = `/brand/suat-logo-color.png?v=${LOGO_VER}`;
 const LOGO_PRESETS = [
   { id: "suat-color", src: `/brand/suat-logo-color.png?v=${LOGO_VER}`, labelKey: "appearance.logoPresetColor" },
@@ -3439,6 +3439,15 @@ function makeStreamHandlers(sessionId, assistantEl, bodyEl, startRoute, stateBag
     },
     onTool(tool) {
       const name = tool.name || tool.skill || "skill";
+      if (tool.status) {
+        // Completion of an earlier tool call (Hermes ≥0.19 emits started + completed).
+        if (viewAlive()) {
+          const { assistantEl: a } = liveAssistant();
+          const ms = tool.duration_ms != null ? ` · ${formatElapsed(tool.duration_ms)}` : "";
+          if (a) appendThinking(a, `${tool.status === "error" ? "✗" : "✓"} ${name}${ms}`);
+        }
+        return;
+      }
       const nextPct = Math.min(90, (state.sessionRuns[sessionId]?.pct || 55) + 8);
       setSessionRun(sessionId, { pct: nextPct });
       if (viewAlive()) {
