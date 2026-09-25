@@ -72,3 +72,6 @@
 [   732s]   audited 5/10: 2 unsupported citation(s) corrected
 [   739s]   audited 4/10: 4 unsupported citation(s) corrected
 [   781s]   audited 7/10: 4 unsupported citation(s) corrected
+[   819s]   audited 1/10: 5 unsupported citation(s) corrected
+[   828s]   audited 6/10: 2 unsupported citation(s) corrected
+[   862s]   audited 8/10: 5 unsupported citation(s) corrected
