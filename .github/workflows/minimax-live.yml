@@ -1,0 +1,56 @@
+name: MiniMax live check
+
+# Runs scripts/minimax_live_check.py against the real MiniMax API from a GitHub
+# runner (open network).  The key comes only from the repository secret
+# MINIMAX_KEY (Settings → Secrets and variables → Actions); it is never in the
+# repository and GitHub masks it in logs.  Optional secret / variable:
+# MINIMAX_BASE_URL (e.g. https://api.minimax.cn/anthropic).
+#
+# Triggers: manual (Actions → MiniMax live check → Run workflow), or a push whose
+# commit message contains "[minimax-live]".
+
+on:
+  workflow_dispatch:
+    inputs:
+      quick:
+        description: "Skip the multi-step task"
+        type: boolean
+        default: false
+  push:
+    branches: ["**"]
+
+jobs:
+  live:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[minimax-live]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: python -m pip install --upgrade pip pyyaml
+      - name: Reachability
+        run: |
+          for u in https://api.minimaxi.com/v1/models https://api.minimax.cn/anthropic/v1/models https://api.minimax.io/v1/models https://eutils.ncbi.nlm.nih.gov/entrez/eutils/einfo.fcgi https://html.duckduckgo.com/html/; do
+            printf '%s  ' "$u"; curl -s -o /dev/null -w '%{http_code}\n' --max-time 15 "$u" || echo "unreachable"
+          done
+      - name: Live check
+        env:
+          MINIMAX_KEY: ${{ secrets.MINIMAX_KEY }}
+          ANTHROPIC_BASE_URL: ${{ secrets.MINIMAX_BASE_URL || vars.MINIMAX_BASE_URL }}
+        run: |
+          if [ -z "$MINIMAX_KEY" ]; then
+            echo "::error::Repository secret MINIMAX_KEY is not set (Settings → Secrets and variables → Actions → New repository secret)."
+            exit 1
+          fi
+          set -o pipefail
+          python scripts/minimax_live_check.py ${{ inputs.quick && '--quick' || '' }} 2>&1 | tee live-report.txt
+      - name: Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: minimax-live-report
+          path: live-report.txt
+          if-no-files-found: ignore
