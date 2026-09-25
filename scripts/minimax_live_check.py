@@ -154,7 +154,7 @@ def main() -> int:
         say("     ·", n)
     pages = [p for p in (out["msg"].get("evidence") or {}).get("sources") or []]
     for p in pages[:6]:
-        say(f"     [{p.get('n')}] {p.get('tier')} read={p.get('page_read')} {p.get('url')}")
+        say(f"     [{p.get('n')}] {p.get('tier')} read={p.get('page_read')} {p.get('url')} — {str(p.get('title') or '')[:90]}")
     all_ok &= show("search", out, not out["msg"].get("error") and bool(re.search(r"\[\d+\]", out["msg"].get("content") or ""))
                    and "<invoke" not in (out["msg"].get("content") or ""))
 
@@ -175,6 +175,10 @@ def main() -> int:
             m = o["msg"]
             say(f"   step {nxt['step']}/{nxt['total']} {nxt['title']}: {o['secs']}s error={bool(m.get('error'))} "
                 f"warn={(m.get('review') or {}).get('warn')}")
+            for n in [x for x in o["notes"] if "英文检索词" in x or "检索完成" in x or "检索失败" in x][:3]:
+                say("     ·", n)
+            for src in ((m.get("evidence") or {}).get("sources") or [])[:5]:
+                say(f"     [{src.get('n')}] read={src.get('page_read')} {str(src.get('title') or '')[:90]}")
             for issue in [i for i in (m.get("review") or {}).get("issues") or [] if i.get("severity") == "warn"][:6]:
                 say(f"     ! {issue.get('kind')}: {issue.get('text')} — {str(issue.get('detail_zh') or issue.get('detail'))[:140]}")
             say("     reply:", re.sub(r"\s+", " ", str(m.get("content") or ""))[:500])

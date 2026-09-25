@@ -197,3 +197,18 @@ def test_named_references_must_be_among_the_sources():
     assert refs == ["Jensen et al."] and rv["ok"] is False
     # without retrieved sources there is nothing to check against
     assert not any(i["kind"] == "unverified_reference" for i in review_reply("Jensen et al. 2015", sources=[])["issues"])
+
+
+def test_design_parameter_in_a_table_row_and_pubmed_relevance_sort(monkeypatch):
+    from ali import search_extensions as se
+    from ali.reviewer import review_reply
+
+    rv = review_reply("| 参数 | 数值 |\n|---|---|\n| 失访率 | 20% | 考虑运动干预依从性 |\n| 效应 | 升高 35% |",
+                      sources=[{"title": "t", "url": "https://pubmed.ncbi.nlm.nih.gov/1/", "snippet": "irisin"}])
+    kinds = {(i["kind"], i["text"]) for i in rv["issues"]}
+    assert ("design_parameter", "20%") in kinds and ("untraceable_number", "35%") in kinds
+
+    urls = []
+    monkeypatch.setattr(se, "_fetch", lambda url, **k: urls.append(url) or '{"esearchresult": {"idlist": []}}')
+    se.search_pubmed("irisin exercise")
+    assert "sort=relevance" in urls[0]

@@ -492,6 +492,7 @@ def search_pubmed(query: str, *, limit: int = 8, timeout: float = 8.0) -> dict[s
             "term": q,
             "retmax": min(limit, 20),
             "retmode": "json",
+            "sort": "relevance",  # E-utilities default is newest-first, which buries the key papers
         })
         es = json.loads(_fetch(es_url, timeout=timeout, headers={"Accept": "application/json"}))
         ids = (es.get("esearchresult") or {}).get("idlist") or []

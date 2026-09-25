@@ -133,11 +133,11 @@ def _evidence_numbers(evidence: str) -> set[str]:
 def _sentence_window(text: str, start: int, end: int, *, before: int = 30, after: int = 16) -> str:
     """Up to ``before``/``after`` characters around a match, never crossing a sentence end."""
     left = text[max(0, start - before): start]
-    cut = max(left.rfind(c) for c in "。；;！？!?\n|")
+    cut = max(left.rfind(c) for c in "。；;！？!?\n")  # a table row ("| 失访率 | 20% |") is one unit
     if cut >= 0:
         left = left[cut + 1:]
     right = text[end: end + after]
-    stops = [i for i in (right.find(c) for c in "。；;！？!?\n|") if i >= 0]
+    stops = [i for i in (right.find(c) for c in "。；;！？!?\n") if i >= 0]
     if stops:
         right = right[: min(stops)]
     return left + text[start:end] + right
