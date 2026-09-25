@@ -198,6 +198,7 @@ def main() -> int:
             shots.take(page, "A", "authored", note=f"skill authored: {status}")
             report["steps"].append({"hub": "A", "step": "author", "status": status})
             if not status.startswith("✓"):
+                (out / "SKILL.rejected.md").write_text(card.locator(".skill-run-log").inner_text(), encoding="utf-8")
                 raise SystemExit(f"authoring failed: {status}")
             md = card.locator(".skill-run-log").inner_text()
             (out / "SKILL.authored.md").write_text(md, encoding="utf-8")

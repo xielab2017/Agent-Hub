@@ -2513,7 +2513,13 @@ async function authorSkill(sid, zh, runDir = "") {
   const status = card.querySelector(".skill-run-status");
   status.textContent = zh ? "模型撰写 SKILL.md 中…" : "the model is writing SKILL.md…";
   try {
-    const res = await api("/api/skills/author", { method: "POST", body: JSON.stringify({ id: sid, run_dir: runDir }), timeoutMs: 900000 });
+    const r = await fetch("/api/skills/author", { method: "POST", body: JSON.stringify({ id: sid, run_dir: runDir }),
+      headers: Object.assign({ "Content-Type": "application/json" }, state.token ? { Authorization: `Bearer ${state.token}` } : {}) });
+    const res = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      if (res.draft) card.querySelector(".skill-run-log").textContent = res.draft;  // the rejected draft, for review
+      throw new Error(res.error || r.statusText);
+    }
     status.textContent = zh ? `✓ 已安装并加载（${res.model}）` : `✓ installed and loaded (${res.model})`;
     card.querySelector(".skill-run-stage").textContent = res.path || "";
     card.querySelector(".skill-run-log").textContent = res.markdown || "";

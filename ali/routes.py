@@ -1830,6 +1830,8 @@ def handle_post(handler) -> None:
                                                load=body.get("load", True) is not False)
         except FileNotFoundError as exc:
             return _json(handler, 404, {"error": str(exc)})
+        except skill_runner.AuthorCheckError as exc:
+            return _json(handler, 422, {"error": str(exc), "draft": exc.draft})
         except Exception as exc:  # noqa: BLE001 — model / install failures are reported to the UI
             return _json(handler, 400, {"error": str(exc)})
         return _json(handler, 200, result)

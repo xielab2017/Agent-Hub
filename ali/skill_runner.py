@@ -307,6 +307,14 @@ def _frontmatter(md: str) -> tuple[dict[str, str], str]:
     return meta, m.group(2)
 
 
+class AuthorCheckError(ValueError):
+    """The model's SKILL.md failed the Hub's self-check; ``draft`` is the rejected text."""
+
+    def __init__(self, message: str, draft: str) -> None:
+        super().__init__(message)
+        self.draft = draft
+
+
 def cli_flags(script: Path) -> set[str]:
     """The ``--flags`` an entry script really defines (argparse ``add_argument("--x"``), plus ``--help``."""
     text = script.read_text(encoding="utf-8")
@@ -340,7 +348,7 @@ def author_skill(skill_id: str = "literature-review", *, source: str | Path | No
         "'## Recovery' (checkpoints / resume / smoke), '## Transfer' (how to export and install on another Agent Hub "
         "and what it needs there). Be precise and faithful to the pipeline; do not invent features. The ONLY "
         f"command-line options are {', '.join(sorted(cli_flags(src / 'run.py')))}; profile fields are YAML keys "
-        "(`featured:`), never `--options`.\n\n"
+        "(`featured:`) inside a profile file, not command-line options.\n\n"
         + _pipeline_context(src, Path(run_dir) if run_dir else None)), max_tokens=12000, temperature=0.2)
     real = cli_flags(src / "run.py")
     bad = unknown_flags(reply, real)
@@ -350,12 +358,13 @@ def author_skill(skill_id: str = "literature-review", *, source: str | Path | No
         reply = llm(AUTHOR_SYSTEM, (
             f"Your SKILL.md documents command-line options that run.py does not have: {', '.join(bad)}. The ONLY "
             f"command-line options are: {', '.join(sorted(real))}. Profile fields (e.g. featured, coi_statement, "
-            "seed_pmids, focus_terms) are YAML keys inside a profile file, written like `featured:` — never as "
-            "`--featured`. Correct every mention and return the whole SKILL.md again, nothing else."
+            "seed_pmids, focus_terms) are YAML keys inside a profile file, written like `featured:`. Rewrite every "
+            "passage that mentions another double-dash option so that no other double-dash option appears anywhere "
+            "(also not as a counter-example), and return the whole SKILL.md again, nothing else."
             f"\n\n{reply}"), max_tokens=12000, temperature=0.1)
         bad = unknown_flags(reply, real)
     if bad:
-        raise ValueError(f"authored SKILL.md still documents non-existent options: {', '.join(bad)}")
+        raise AuthorCheckError(f"authored SKILL.md still documents non-existent options: {', '.join(bad)}", reply)
     reply = re.sub(r"^\s*```(?:markdown|md)?\s*\n|\n\s*```\s*$", "", reply.strip())  # a fenced whole reply
     meta, body = _frontmatter(reply)
     body = body.strip()
