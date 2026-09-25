@@ -873,7 +873,21 @@ def handle_post(handler) -> None:
             verify_tls=resolve_backend_verify_tls(cfg, {"provider": provider}),
         )
         if not result.get("ok"):
-            return _json(handler, 400, {"error": result.get("error") or "list models failed", **result})
+            extra: dict = {}
+            if provider in ("minimax", "minimax-cn"):
+                # MiniMax keys only work in the region they were issued for: say which one does.
+                from .providers import probe_minimax_region
+
+                probe = probe_minimax_region(key_info.get("key") or "",
+                                             verify_tls=resolve_backend_verify_tls(cfg, {"provider": provider}))
+                other = probe.get("region")
+                if other and other != provider:
+                    extra = {
+                        "suggest_provider": other,
+                        "hint_zh": f"这个 Key 属于「{'中国大陆区' if other == 'minimax-cn' else '国际区'}」，请把后端切换为 {other} 后再拉取。",
+                        "hint_en": f"This key belongs to the {'China' if other == 'minimax-cn' else 'global'} region — switch the backend to {other}.",
+                    }
+            return _json(handler, 400, {"error": result.get("error") or "list models failed", **result, **extra})
 
         models = result.get("models") or []
         catalogs = dict(cfg.get("available_models") or {})

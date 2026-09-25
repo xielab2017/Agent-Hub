@@ -23,6 +23,8 @@ _VENDOR_KEY_ENVS = (
     "GOOGLE_API_KEY",
     "KIMI_CODE_API_KEY",
     "MOONSHOT_API_KEY",
+    "MINIMAX_API_KEY",
+    "MINIMAX_CN_API_KEY",
 )
 
 # Agent-CLI provider id → hermes --provider name (Hermes first-class ids)
@@ -37,6 +39,7 @@ _PROVIDER_MAP = {
     "gemini": "gemini",
     "google": "gemini",
     "minimax": "minimax",
+    "minimax-cn": "minimax-cn",
     "moonshot": "kimi-coding",
     "kimi": "kimi-coding",
     # DashScope / Qwen / Aliyun — Hermes has no native provider, but it
@@ -215,6 +218,9 @@ def _write_managed_env(
         lines.append(f"NVIDIA_API_KEY={api_key}")
     if hermes_provider == "openrouter" and api_key and env_name != "OPENROUTER_API_KEY":
         lines.append(f"OPENROUTER_API_KEY={api_key}")
+    for mm_provider, mm_env in (("minimax", "MINIMAX_API_KEY"), ("minimax-cn", "MINIMAX_CN_API_KEY")):
+        if hermes_provider == mm_provider and api_key and env_name != mm_env:
+            lines.append(f"{mm_env}={api_key}")
     if base_url and hermes_provider == "custom":
         lines.append(f"OPENAI_BASE_URL={base_url}")
         if env_name != "OPENAI_API_KEY":
@@ -278,6 +284,10 @@ def build_hermes_env(
         env["NVIDIA_API_KEY"] = api_key
     if hermes_provider == "openrouter" and api_key:
         env["OPENROUTER_API_KEY"] = api_key
+    if hermes_provider == "minimax" and api_key:
+        env["MINIMAX_API_KEY"] = api_key
+    if hermes_provider == "minimax-cn" and api_key:
+        env["MINIMAX_CN_API_KEY"] = api_key
     return env
 
 
@@ -715,6 +725,10 @@ def sync_hub_to_hermes(
         updates["NVIDIA_API_KEY"] = api_key
     if hermes_provider == "openrouter" and api_key:
         updates["OPENROUTER_API_KEY"] = api_key
+    if hermes_provider == "minimax" and api_key:
+        updates["MINIMAX_API_KEY"] = api_key
+    if hermes_provider == "minimax-cn" and api_key:
+        updates["MINIMAX_CN_API_KEY"] = api_key
 
     managed = hermes_managed_home()
     for home in hermes_config_homes():

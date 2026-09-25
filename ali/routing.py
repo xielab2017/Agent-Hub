@@ -410,6 +410,7 @@ def resolve_route(
         "nvidia-hosted",
         "openrouter",
         "minimax",
+        "minimax-cn",
         "gemini",
         "deepseek",
         "kimi",

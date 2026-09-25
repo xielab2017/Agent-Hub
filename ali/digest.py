@@ -31,7 +31,7 @@ POPULAR_AGENT_MODELS = {
         {"id": "kimi-k2", "provider": "moonshot", "role": "main", "label": "Kimi K2", "docs": "https://platform.moonshot.cn/docs"},
         {"id": "glm-4.5", "provider": "zhipu", "role": "main", "label": "GLM-4.5", "docs": "https://open.bigmodel.cn/"},
         {"id": "doubao-pro", "provider": "volcengine", "role": "main", "label": "Doubao Pro", "docs": "https://www.volcengine.com/docs/82379"},
-        {"id": "minimax-m1", "provider": "minimax", "role": "main", "label": "MiniMax M1", "docs": "https://platform.minimaxi.com/"},
+        {"id": "minimax-m2", "provider": "minimax-cn", "role": "main", "label": "MiniMax M2", "docs": "https://platform.minimaxi.com/"},
         {"id": "hunyuan-turbos", "provider": "tencent", "role": "main", "label": "Hunyuan", "docs": "https://cloud.tencent.com/document/product/1729"},
         {"id": "yi-lightning", "provider": "01ai", "role": "fast", "label": "Yi Lightning", "docs": "https://platform.lingyiwanwu.com/"},
     ],

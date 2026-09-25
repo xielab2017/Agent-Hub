@@ -7,7 +7,7 @@ import socket
 import sys
 from pathlib import Path
 
-VERSION = "5.3.1"
+VERSION = "5.3.2"
 APP_NAME = "Agent Hub"
 APP_TAGLINE = "Control UI · claws use native homes (~/.hermes · ~/.openclaw · ~/.nanobot)"
 

@@ -286,25 +286,56 @@ PROVIDERS: dict[str, dict[str, Any]] = {
     },
     "minimax": {
         "id": "minimax",
-        "label": "MiniMax",
-        "label_en": "MiniMax",
-        "base_url": "https://api.minimax.chat/v1",
+        "label": "MiniMax（国际区）",
+        "label_en": "MiniMax (global)",
+        "base_url": "https://api.minimax.io/v1",
         "api_key_env": "MINIMAX_API_KEY",
         "openai_compatible": True,
-        "hint": "MiniMax 开放平台（OpenAI 兼容）",
+        "hint": "MiniMax 国际区 api.minimax.io（OpenAI 兼容）。中国大陆账号 / Key 请选「MiniMax（中国大陆区）」。",
         "models": _m(
-            fast="MiniMax-Text-01",
-            main="MiniMax-Text-01",
-            vision="MiniMax-Text-01",
-            reasoning="MiniMax-Text-01",
+            fast="MiniMax-M2",
+            main="MiniMax-M2",
+            vision="MiniMax-M2",
+            reasoning="MiniMax-M2",
             embedding="",
             reranker="",
         ),
         "suggestions": {
-            "fast": ["MiniMax-Text-01", "abab6.5s-chat"],
-            "main": ["MiniMax-Text-01", "abab6.5s-chat"],
-            "vision": ["MiniMax-Text-01"],
-            "reasoning": ["MiniMax-Text-01"],
+            "fast": ["MiniMax-M2.7-highspeed", "MiniMax-M2.5-highspeed", "MiniMax-M2", "MiniMax-Text-01"],
+            "main": ["MiniMax-M2.7", "MiniMax-M2.5", "MiniMax-M2.1", "MiniMax-M2", "MiniMax-Text-01"],
+            "vision": ["MiniMax-M2", "MiniMax-Text-01"],
+            "reasoning": ["MiniMax-M2.7", "MiniMax-M2.5", "MiniMax-M2"],
+            "embedding": [],
+            "reranker": [],
+        },
+        "routing": {
+            "simple": "qwen_fast",
+            "office": "qwen_main",
+            "vision": "qwen_vl",
+            "reasoning": "deepseek_reasoning",
+        },
+    },
+    "minimax-cn": {
+        "id": "minimax-cn",
+        "label": "MiniMax（中国大陆区）",
+        "label_en": "MiniMax (China)",
+        "base_url": "https://api.minimaxi.com/v1",
+        "api_key_env": "MINIMAX_CN_API_KEY",
+        "openai_compatible": True,
+        "hint": "MiniMax 中国大陆区 api.minimaxi.com（OpenAI 兼容），含 Coding / Token Plan（sk-cp-…）。国际账号请选「MiniMax（国际区）」。",
+        "models": _m(
+            fast="MiniMax-M2",
+            main="MiniMax-M2",
+            vision="MiniMax-M2",
+            reasoning="MiniMax-M2",
+            embedding="",
+            reranker="",
+        ),
+        "suggestions": {
+            "fast": ["MiniMax-M2.7-highspeed", "MiniMax-M2.5-highspeed", "MiniMax-M2", "MiniMax-Text-01"],
+            "main": ["MiniMax-M2.7", "MiniMax-M2.5", "MiniMax-M2.1", "MiniMax-M2", "MiniMax-Text-01"],
+            "vision": ["MiniMax-M2", "MiniMax-Text-01"],
+            "reasoning": ["MiniMax-M2.7", "MiniMax-M2.5", "MiniMax-M2"],
             "embedding": [],
             "reranker": [],
         },
@@ -479,7 +510,7 @@ HYBRID_PRESETS: dict[str, dict[str, Any]] = {
     "china_office": {
         "label": "国内办公：Kimi办 + DeepSeek推 + MiniMax快",
         "routes": {
-            "simple": {"provider": "minimax", "model": "MiniMax-Text-01"},
+            "simple": {"provider": "minimax-cn", "model": "MiniMax-M2"},
             "office": {"provider": "kimi", "model": "kimi-for-coding"},
             "vision": {"provider": "kimi", "model": "kimi-for-coding"},
             "reasoning": {"provider": "deepseek", "model": "deepseek-reasoner"},
@@ -548,6 +579,7 @@ _SHORT_NAME_PROVIDERS = frozenset(
         "openai",
         "anthropic",
         "minimax",
+        "minimax-cn",
         "kimi",
         "dashscope",
         "zhipu",
@@ -883,6 +915,8 @@ def looks_like_secret(value: str) -> bool:
 # Key prefix → provider id
 _KEY_PREFIX_PROVIDERS: list[tuple[str, str]] = [
     ("nvapi-", "nvidia-nim"),
+    # MiniMax Coding / Token Plan keys; the region (minimax / minimax-cn) is not in the key
+    ("sk-cp-", "minimax"),
     ("sk-or-", "openrouter"),
     ("sk-ant-", "anthropic"),
     ("sk-proj-", "openai"),
@@ -1052,6 +1086,7 @@ def catalog_payload() -> dict[str, Any]:
             "deepseek",
             "kimi",
             "minimax",
+            "minimax-cn",
             "nvidia-nim",
             "zhipu",
             "hybrid",
@@ -1065,8 +1100,10 @@ def catalog_payload() -> dict[str, Any]:
             p["region"] = "both"
         if pid == "hybrid":
             p["region"] = "both"
-        if pid in ("dashscope", "deepseek", "kimi", "minimax", "zhipu"):
+        if pid in ("dashscope", "deepseek", "kimi", "minimax-cn", "zhipu"):
             p["region"] = "cn"
+        if pid == "minimax":
+            p["region"] = "global"
     # ensure region key
     for p in providers:
         p.setdefault("region", "both")
@@ -1090,3 +1127,33 @@ def catalog_payload() -> dict[str, Any]:
             {"id": "reranker", "legacy": "reranker", "tier": "—", "label": "Reranker"},
         ],
     }
+
+
+from .secrets import mask_key  # noqa: E402
+
+MINIMAX_REGIONS = ("minimax-cn", "minimax")
+
+
+def probe_minimax_region(api_key: str, *, timeout: float = 6.0, verify_tls: bool = True,
+                         list_fn: Any = None) -> dict[str, Any]:
+    """Find which MiniMax region accepts this key (China first, then global).
+
+    MiniMax keys only work on the region they were issued for, and the key
+    format does not say which.  Returns ``{"region": "minimax-cn"|"minimax"|None,
+    "results": {provider_id: {ok, count, models, error}}}``.
+    """
+    if list_fn is None:
+        from .llm_client import list_models as list_fn
+    results: dict[str, Any] = {}
+    region = None
+    for pid in MINIMAX_REGIONS:
+        base = PROVIDERS[pid]["base_url"]
+        r = list_fn(base, api_key, timeout=timeout, verify_tls=verify_tls)
+        err = str(r.get("error") or "")
+        if api_key and api_key in err:
+            err = err.replace(api_key, mask_key(api_key))
+        results[pid] = {"ok": bool(r.get("ok")), "count": int(r.get("count") or 0),
+                        "models": list(r.get("models") or [])[:30], "error": err[:300]}
+        if r.get("ok") and region is None:
+            region = pid
+    return {"region": region, "results": results}

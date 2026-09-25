@@ -732,7 +732,7 @@ def start_chat(
         route_info["backend_type"] = sub_provider
         if str(cfg.get("data_policy") or "internal").lower() == "restricted" and sub_provider in {
             "openai", "anthropic", "nvidia-nim", "nvidia-api", "nvidia-hosted",
-            "openrouter", "minimax", "gemini", "deepseek", "kimi", "hybrid",
+            "openrouter", "minimax", "minimax-cn", "gemini", "deepseek", "kimi", "hybrid",
         }:
             raise ValueError(
                 f"data_policy=restricted forbids external provider '{sub_provider}'"
@@ -2373,7 +2373,7 @@ def _direct_llm_reply(
             )
         ):
             return ""
-        for fallback_provider in ("zhipu", "deepseek", "kimi", "minimax"):
+        for fallback_provider in ("zhipu", "deepseek", "kimi", "minimax", "minimax-cn"):
             fallback_cfg = get_provider(fallback_provider)
             fallback_key = resolve_api_key(cfg, provider=fallback_provider).get("key") or ""
             if not fallback_cfg or not fallback_key:

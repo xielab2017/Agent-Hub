@@ -209,7 +209,7 @@ def build_openclaw_env(
         env["GEMINI_API_KEY"] = api_key
     if pid in ("moonshot", "kimi") and api_key:
         env["KIMI_CODE_API_KEY"] = api_key
-    if pid == "minimax" and api_key:
+    if pid in ("minimax", "minimax-cn") and api_key:
         env["MINIMAX_API_KEY"] = api_key
     if verify_tls:
         env.pop("NODE_TLS_REJECT_UNAUTHORIZED", None)

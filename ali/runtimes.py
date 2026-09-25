@@ -1378,6 +1378,7 @@ _CLAW_PROVIDER_MAP = {
     "gemini": "google",
     "google": "google",
     "minimax": "minimax",
+    "minimax-cn": "minimax",
     "moonshot": "moonshot",
     "kimi": "moonshot",
     # DashScope / Qwen / Aliyun are exposed through their OpenAI-compatible
@@ -1520,7 +1521,7 @@ def _env_updates_for_hub(cred: dict[str, Any]) -> dict[str, str]:
         updates["DEEPSEEK_API_KEY"] = api_key
     if pid in ("moonshot", "kimi") and api_key:
         updates["KIMI_CODE_API_KEY"] = api_key
-    if pid == "minimax" and api_key:
+    if pid in ("minimax", "minimax-cn") and api_key:
         updates["MINIMAX_API_KEY"] = api_key
     return updates
 

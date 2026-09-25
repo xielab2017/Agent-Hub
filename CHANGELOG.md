@@ -1,5 +1,28 @@
 # Changelog
 
+## v5.3.2 — 2026-09-25
+
+MiniMax provider brought up to date.
+
+- **Two regions.** `minimax` is now the global endpoint
+  (`https://api.minimax.io/v1`, `MINIMAX_API_KEY`); the new `minimax-cn`
+  preset is the mainland-China endpoint (`https://api.minimaxi.com/v1`,
+  `MINIMAX_CN_API_KEY`). The retired `api.minimax.chat` host is gone. The
+  China office combo uses `minimax-cn`.
+- **M2-series models.** Slots default to `MiniMax-M2`; suggestions list
+  M2.7 / M2.7-highspeed / M2.5 / M2.5-highspeed / M2.1 / M2 (Text-01 kept
+  for old configs).
+- **Coding / Token Plan keys** (`sk-cp-…`) are detected as MiniMax instead
+  of OpenAI.
+- **Hermes / OpenClaw.** `minimax-cn` maps to Hermes's native `minimax-cn`
+  provider (China keys previously hit the global endpoint and failed auth);
+  the matching `MINIMAX_API_KEY` / `MINIMAX_CN_API_KEY` is written to the
+  managed `.env` and subprocess env, and stale vendor keys are not inherited.
+- **Region probe.** When "refresh models" fails for a MiniMax provider, the
+  Hub checks the other region's `/v1/models` and suggests switching if the key
+  works there (errors are masked; the key is never echoed).
+- `data_policy: restricted` blocks `minimax-cn` like other external vendors.
+
 ## v5.3.1 — 2026-09-25
 
 Hermes fusion verified against the real **Hermes Agent v0.19.0** (in-process
