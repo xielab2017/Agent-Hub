@@ -1,13 +1,11 @@
-[19:29:12] hub A: ['backend: minimax-cn https://api.minimaxi.com/v1 MiniMax-M3']
-[19:29:12] hub A up at http://127.0.0.1:8765 (state /tmp/agenthub-A-c8zcxgoh)
-[19:29:14] screenshot 001_A_home.png
-[19:29:17] screenshot 002_A_authoring.png
-[19:29:29] screenshot 003_A_authored.png
-[19:29:30] screenshot 004_A_exported.png
-[19:29:31] hub B: ['backend: minimax-cn https://api.minimaxi.com/v1 MiniMax-M3']
-[19:29:32] hub B up at http://127.0.0.1:8766 (state /tmp/agenthub-B-edmnc2p5)
-[19:29:34] screenshot 005_B_home.png
-[19:29:38] screenshot 006_B_imported.png
-[19:29:41] screenshot 007_B_run-started.png
-[19:34:31] screenshot 008_B_finished.png
-[19:34:31] RESULT: PASS {"title": "Software for multi-omics data integration and analysis: a systematic and critical comparison of frameworks, packages, workflows and platforms, with EasyMultiProfiler as a featured workflow for microbiome research", "model": "minimax-cn/MiniMax-M3", "llm_calls": 19, "queries": 4, "records": 28, "cards": 12, "sections": 2, "references": 12, "citation_check": {"cited": 12, "references": 12
+[19:40:00] hub A: ['backend: minimax-cn https://api.minimaxi.com/v1 MiniMax-M3']
+[19:40:01] hub A up at http://127.0.0.1:8765 (state /tmp/agenthub-A-xs_vnj_f)
+[19:40:03] screenshot 009_A_home.png
+[19:40:05] screenshot 010_A_authoring.png
+[19:40:26] screenshot 011_A_authored.png
+[19:40:28] screenshot 012_A_exported.png
+[19:40:29] hub B: ['backend: minimax-cn https://api.minimaxi.com/v1 MiniMax-M3']
+[19:40:29] hub B up at http://127.0.0.1:8766 (state /tmp/agenthub-B-1_oxftos)
+[19:40:31] screenshot 013_B_home.png
+[19:40:35] screenshot 014_B_imported.png
+[19:40:38] screenshot 015_B_run-started.png

@@ -1,21 +1,34 @@
 [     0s] model: minimax-cn/MiniMax-M3 via https://api.minimaxi.com/v1
 [     0s] profile: 16 seed queries, focus ['multi-omics', 'multiomics', 'omics integration', 'integrative analysis', 'data integration', 'software'], reviewers reviewer-bioinformatics-methods, reviewer-microbiome-user, reviewer-editor-integrity
-[     9s] queries: 4
-[     9s]     8 ← multi-omics integration software
-[     9s]     8 ← multi-omics data integration R package
-[    10s]     8 ← microbiome multi-omics integration analysis
-[    11s]     5 ← MultiAssayExperiment Bioconductor
-[    12s] records with abstracts: 28
-[    38s] screened: 27 (19 relevant)
-[    38s] evidence cards: 12
-[    38s] featured work: EasyMultiProfiler (EMP) → card R1
-[    85s] outline: Software for multi-omics data integration and analysis: a systematic and critical comparison of frameworks, packages, workflows and platforms, with EasyMultiProfiler as a featured workflow for microbiome research — 2 sections
-[   103s]   drafted 2/2 A taxonomy of integration strategies: unsupervised, supervis (725 words, 2 cards)
-[   111s]   drafted 1/2 Introduction: the multi-omics integration imperative and the (769 words, 12 cards)
-[   174s] reviews: reviewer-bioinformatics-methods (1387 words), reviewer-microbiome-user (1191 words), reviewer-editor-integrity (1338 words)
-[   189s]   revised 2/2 (701 words, 5 cards)
-[   204s]   revised 1/2 (855 words, 12 cards)
-[   216s]   audited 1/2: 0 unsupported citation(s) corrected
-[   255s]   audited 2/2: 2 unsupported citation(s) corrected
-[   268s] citations: {'cited': 12, 'references': 12, 'out_of_range': [], 'uncited': [], 'citations': 30}
-RESULT: PASS {"title": "Software for multi-omics data integration and analysis: a systematic and critical comparison of frameworks, packages, workflows and platforms, with EasyMultiProfiler as a featured workflow for microbiome research", "model": "minimax-cn/MiniMax-M3", "llm_calls": 19, "queries": 4, "records": 28, "cards": 12, "sections": 2, "references": 12, "citation_check": {"cited": 12, "references": 12, "out_of_range": [], "uncited": [], "citations": 30}, "words": 1580, "featured": {"name": "EasyMultiProfiler (EMP)", "pmid": "40932530", "reference": 9}}
+[     7s] queries: 30
+[     7s]    25 ← multi-omics integration software
+[     8s]    25 ← multi-omics data integration R package
+[     9s]    25 ← microbiome multi-omics integration analysis
+[    10s]     5 ← MultiAssayExperiment Bioconductor
+[    11s]    12 ← mixOmics DIABLO integration
+[    11s]    25 ← MOFA multi-omics factor analysis
+[    12s]    25 ← MicrobiomeAnalyst
+[    13s]    25 ← MetaboAnalyst multi-omics
+[    13s]    25 ← multi-omics integration methods benchmark
+[    14s]    25 ← multi-omics workflow reproducibility
+[    15s]    25 ← host microbiome metabolome integration
+[    16s]     9 ← QIIME 2 reproducible microbiome data science
+[    16s]    25 ← deep learning multi-omics integration
+[    17s]    25 ← multi-omics network analysis tool
+[    18s]     0 ← SummarizedExperiment omics data structure
+[    18s]     1 ← tidy microbiome analysis R package
+[    19s]    25 ← ("Multiomics"[Mesh] OR "multi-omics"[tiab] OR "multiomics"[tiab]) AND ("Software"[Mesh] OR
+[    20s]    25 ← ("Multiomics"[Mesh] OR "multi-omics"[tiab] OR "multiomics"[tiab]) AND ("matrix factorizati
+[    21s]    25 ← ("Multiomics"[Mesh] OR "multi-omics"[tiab]) AND ("network-based"[tiab] OR "graph-based"[ti
+[    21s]    25 ← ("Multiomics"[Mesh] OR "multi-omics"[tiab]) AND ("Bayesian"[tiab] OR "Bayes Theorem"[Mesh]
+[    22s]    25 ← ("Multiomics"[Mesh] OR "multi-omics"[tiab]) AND ("deep learning"[tiab] OR "neural network"
+[    23s]    25 ← ("Multiomics"[Mesh] OR "multi-omics"[tiab]) AND ("R package"[tiab] OR "Bioconductor"[tiab]
+[    23s]    25 ← ("Microbiota"[Mesh] OR "microbiome"[tiab] OR "microbiomes"[tiab]) AND ("multi-omics"[tiab]
+[    24s]    25 ← ("Multiomics"[Mesh] OR "multi-omics"[tiab]) AND ("web server"[tiab] OR "web platform"[tiab
+[    25s]    25 ← ("Multiomics"[Mesh] OR "multi-omics"[tiab]) AND ("benchmark"[tiab] OR "benchmarking"[tiab]
+[    26s]    25 ← ("Multiomics"[Mesh] OR "multi-omics"[tiab]) AND ("Reproducibility of Results"[Mesh] OR "re
+[    27s]    25 ← ("Multiomics"[Mesh] OR "multi-omics"[tiab]) AND ("Data Visualization"[Mesh] OR "visualizat
+[    28s]    25 ← ("Microbiota"[Mesh] OR "Gastrointestinal Microbiome"[Mesh] OR "microbiome"[tiab]) AND ("ho
+[    29s]     5 ← "EasyMultiProfiler"[tiab] OR ("multi-omics"[tiab] AND "microbiome"[tiab] AND ("workflow"[t
+[    29s]    25 ← ("Multiomics"[Mesh] OR "multi-omics"[tiab] OR "integrative omics"[tiab]) AND ("Computation
+[    45s] records with abstracts: 500

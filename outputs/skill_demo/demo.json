@@ -1,7 +1,7 @@
 {
- "run_url": "https://github.com/xielab2017/Agent-Hub/actions/runs/36179912098",
+ "run_url": "https://github.com/xielab2017/Agent-Hub/actions/runs/36181007207",
  "profile": "multiomics-emp",
- "smoke": true,
+ "smoke": false,
  "steps": [
   {
    "hub": "A",
@@ -11,7 +11,7 @@
   {
    "hub": "A",
    "step": "export",
-   "bytes": 8759
+   "bytes": 8377
   },
   {
    "hub": "B",
@@ -19,83 +19,15 @@
    "installed": true,
    "entry": "run.py",
    "origin": "agent-hub-authored"
-  },
-  {
-   "hub": "B",
-   "step": "run",
-   "status": "✓ done"
   }
  ],
  "run": {
-  "id": "literature-review-20260925-192938-fe4e",
-  "status": "done",
-  "stage": "citations: {'cited': 12, 'references': 12, 'out_of_range': [], 'uncited': [], 'citations': 30}",
-  "returncode": 0,
-  "outputs": [
-   {
-    "name": "citation_audit.json",
-    "bytes": 2434
-   },
-   {
-    "name": "draft_v1.md",
-    "bytes": 11665
-   },
-   {
-    "name": "evidence_cards.json",
-    "bytes": 32280
-   },
-   {
-    "name": "llm_trace.jsonl",
-    "bytes": 11481
-   },
-   {
-    "name": "profile.json",
-    "bytes": 5316
-   },
-   {
-    "name": "response_to_reviewers.md",
-    "bytes": 19562
-   },
-   {
-    "name": "review.docx",
-    "bytes": 44468
-   },
-   {
-    "name": "review_final.md",
-    "bytes": 17012
-   },
-   {
-    "name": "reviewer_reports.md",
-    "bytes": 28557
-   },
-   {
-    "name": "summary.json",
-    "bytes": 589
-   }
-  ],
-  "summary": {
-   "title": "Software for multi-omics data integration and analysis: a systematic and critical comparison of frameworks, packages, workflows and platforms, with EasyMultiProfiler as a featured workflow for microbiome research",
-   "model": "minimax-cn/MiniMax-M3",
-   "llm_calls": 19,
-   "queries": 4,
-   "records": 28,
-   "cards": 12,
-   "sections": 2,
-   "references": 12,
-   "citation_check": {
-    "cited": 12,
-    "references": 12,
-    "out_of_range": [],
-    "uncited": [],
-    "citations": 30
-   },
-   "words": 1580,
-   "featured": {
-    "name": "EasyMultiProfiler (EMP)",
-    "pmid": "40932530",
-    "reference": 9
-   }
-  },
+  "id": "literature-review-20260925-194035-5cbc",
+  "status": "running",
+  "stage": "records with abstracts: 500",
+  "returncode": null,
+  "outputs": [],
+  "summary": null,
   "error": null
  }
 }
