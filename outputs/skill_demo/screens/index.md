@@ -14,3 +14,4 @@
 - 2026-09-25 19:40:35 UTC — `014_B_imported.png` — bundle uploaded in Control Center → Skills and installed
 - 2026-09-25 19:40:38 UTC — `015_B_run-started.png` — typed: /skill literature-review profile=multiomics-emp out=outputs/skill_demo/review
 - 2026-09-25 19:45:39 UTC — `016_B_running.png` — running: ⏳ 运行中 · 5 min · 47 行日志
+- 2026-09-25 19:50:40 UTC — `017_B_running.png` — running: ⏳ 运行中 · 10 min · 61 行日志
