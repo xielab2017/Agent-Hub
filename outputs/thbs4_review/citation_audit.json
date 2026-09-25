@@ -1,0 +1,329 @@
+[
+ {
+  "section": "3. Expression and secretion by skeletal muscle: is THBS4 a genuine myokine?",
+  "issues": [
+   {
+    "sentence": "Within adult skeletal muscle, THBS4 is abundant in tendon and localises predominantly to interstitial cells and to the neuromuscular junction rather than to the myofibre cytoplasm itself [R44];",
+    "cards": [
+     "R44"
+    ],
+    "issue": "R44 (Arber et al., 1995) does not mention THBS4 being abundant in tendon; its abstract discusses interstitial cells, NMJ and nervous system expression only. The tendon abundance claim is from R1 (Frolova et al., 2014): 'TSP-4... is expressed abundantly in tendon and muscle.'",
+    "fix": "Cite R1 for the tendon claim, e.g., 'Within adult skeletal muscle, THBS4 is abundant in tendon [R1] and localises predominantly to interstitial cells and to the neuromuscular junction rather than to the myofibre cytoplasm itself [R44].'"
+   },
+   {
+    "sentence": "it is also synthesised by cardiac and dermal fibroblasts, vascular smooth muscle cells, endothelial cells, and astrocytes [R11].",
+    "cards": [
+     "R11"
+    ],
+    "issue": "R11 (Stenina‑Adognravi, 2019 review) abstract discusses THBS4 roles in cardiovascular and nervous systems, angiogenesis, fibrosis and the motor unit, but does not explicitly enumerate these specific cell types (cardiac fibroblasts, dermal fibroblasts, vascular smooth muscle cells, endothelial cells, astrocytes) as expression sources.",
+    "fix": "Soften to what the abstract actually supports, e.g., 'it is also expressed in cardiovascular and nervous tissues, where it acts on fibroblasts, vascular and other cell types [R11],' or cite a more specific source that enumerates these cell types."
+   },
+   {
+    "sentence": "In cardiomyocytes, transit through the secretory pathway is required for sarcolemmal protection [R12, R14], and THBS4 is detectably secreted in response to ER stress or mechanical load.",
+    "cards": [
+     "R12",
+     "R14"
+    ],
+    "issue": "R12 and R14 establish that Thbs4 transits the secretory pathway and is actively secreted from cardiomyocytes, but neither abstract states that secretion is specifically triggered by ER stress or mechanical load. R12 in fact states the reverse causal direction ('Thbs4... activates an adaptive endoplasmic reticulum (ER) stress response'). The mechanical-load trigger is not mentioned in either abstract.",
+    "fix": "Restrict to what is directly supported, e.g., 'THBS4 is detectably secreted from cardiomyocytes and engages an adaptive ER stress response [R12, R14].'"
+   }
+  ]
+ },
+ {
+  "section": "2. THBS4 at the protein level: domain architecture, intracellular itinerary and secretion",
+  "issues": [
+   {
+    "sentence": "First, most serological studies measure total circulating protein and cannot distinguish THBS4 originating from myofibers, intramuscular fibroblasts, endothelial cells, satellite cells, motor neurons, or infiltrating immune cells, all of which express the transcript under stress [R2, R11, R21].",
+    "cards": [
+     "R2",
+     "R11",
+     "R21"
+    ],
+    "issue": "The cited abstracts do not directly support that ALL listed cell types express the THBS4 transcript under stress. R2 supports myofiber expression; R21 identifies a cardiac Fibroblast-Thbs4 population (fibroblasts). R11 mentions the 'motor unit' (indirectly relating to motor neurons), nervous system, and inflammation, but does not explicitly state that endothelial cells, satellite cells, or infiltrating immune cells express the THBS4 transcript.",
+    "fix": "Either narrow the cell-type list to those clearly supported by the cited abstracts (e.g., myofibers [R2], fibroblasts [R21], and motor-unit components [R11]) or add citations that directly document expression in endothelial cells, satellite cells, and infiltrating immune cells."
+   }
+  ]
+ },
+ {
+  "section": "5. THBS4 in ageing, sarcopenia and exercise adaptation",
+  "issues": [
+   {
+    "sentence": "The corollary is that, in non-DGC models of muscular dystrophy in which sarcolemmal fragility is not the dominant lesion, loss of Thbs4 does not aggravate the phenotype, indicating that the protective effect of THBS4 is conditional rather than universal [R3].",
+    "cards": [
+     "R3"
+    ],
+    "issue": "R3 explicitly describes LGMD2E (β-sarcoglycan deficiency) as a 'DGC-associated disease' and studies it alongside LAMA2-RD. β-sarcoglycan is a component of the dystrophin-glycoprotein complex, so LGMD2E is NOT a non-DGC model. The characterisation 'non-DGC models' misrepresents the scope of R3.",
+    "fix": "Cite R3 accurately: 'in models of muscular dystrophy in which Thbs4 deletion had previously been shown to aggravate disease — specifically LGMD2E (β-sarcoglycan deficiency, a DGC-associated dystrophy) and LAMA2-RD — loss of Thbs4 did not worsen the phenotype [R3].'"
+   },
+   {
+    "sentence": "Mass-spectrometric profiling of mouse serum has identified THBS4 as a protein enriched in young relative to old blood, and recombinant THBS4 is sufficient to increase dendritic arborisation and excitatory synapse numbers in transdifferentiated human neurons [R4].",
+    "cards": [
+     "R4"
+    ],
+    "issue": "R4 reports that recombinant THBS4 increases 'synapse numbers' and elevates synaptic NMDA receptors, but does not specifically state 'excitatory synapse numbers.' The 'excitatory' qualifier is not directly supported by the abstract.",
+    "fix": "Replace 'excitatory synapse numbers' with 'synapse numbers and NMDA-receptor recruitment' or 'synapse numbers.'"
+   },
+   {
+    "sentence": "That recombinant THBS4 can promote synaptogenesis in vitro is independently supported by the observation that endogenous Thbs4 secreted by subventricular-zone astrocytes acts as a homopentameric ligand on neural precursors and modulates Notch signalling after cortical injury [R38].",
+    "cards": [
+     "R38"
+    ],
+    "issue": "R38 describes Thbs4's role in astrogenesis and Notch signalling modulation after cortical injury in vivo; it does not describe or measure synaptogenesis. The claim that R38 supports 'synaptogenesis in vitro' is a misattribution of what the card actually demonstrates.",
+    "fix": "Rephrase to reflect what R38 actually shows, e.g.: 'That THBS4 can act on neural cells is independently supported by the observation that endogenous Thbs4 secreted by subventricular-zone astrocytes acts as a homopentameric ligand and modulates Notch signalling to drive protective astrogenesis after cortical injury [R38].'"
+   },
+   {
+    "sentence": "The corollary that THBS4 acts as a circulating pro-synaptogenic factor positions it within the muscle-brain axis framework and motivates a narrative in which progressive loss of muscle-derived THBS4 secretion during ageing contributes to cognitive decline alongside, or even upstream of, classical sarcopenia [R57].",
+    "cards": [
+     "R57"
+    ],
+    "issue": "R57 is a narrative review of myokines including irisin/FNDC5, BDNF, IL-6, IGF-1, cathepsin B, and GDF-15. THBS4 is not mentioned in the abstract. The card does not support the specific claim that THBS4 is positioned within the muscle-brain axis framework.",
+    "fix": "Remove the R57 citation for this THBS4-specific claim, or replace it with a card that specifically discusses THBS4 in the context of muscle-brain signalling."
+   },
+   {
+    "sentence": "The genetic evidence in mice comes almost entirely from DGC-deficient backgrounds, and deletion of Thbs4 fails to worsen disease in non-DGC dystrophies, indicating that the protein's protective role is conditional [R2, R3].",
+    "cards": [
+     "R2",
+     "R3"
+    ],
+    "issue": "R3 explicitly investigates a DGC-associated disease (LGMD2E, β-sarcoglycan deficiency) alongside LAMA2-RD; it is therefore inaccurate to characterise the R3 models collectively as 'non-DGC dystrophies.' The conditional nature of THBS4 protection is supported, but the 'non-DGC' descriptor for R3 is misattributed.",
+    "fix": "Rephrase as: '…and deletion of Thbs4 fails to worsen disease in at least some non-DGC or sarcoglycan-deficient models (LAMA2-RD and LGMD2E), indicating that the protein's protective role is conditional [R2, R3].'"
+   }
+  ]
+ },
+ {
+  "section": "4. Molecular mechanisms: TGF-β/SMAD, hypoxia/HIF-1α, ATF6 and integrin engagement",
+  "issues": [
+   {
+    "sentence": "In pulmonary arterial smooth muscle cells, hypoxia elevates THBS4 via HIF-1α, and HIF-1α binding to the THBS4 promoter was demonstrated in rat hypoxia-SUGEN and monocrotaline models [R9].",
+    "cards": [
+     "R9"
+    ],
+    "issue": "R9's available excerpt states that 'The role of HIF-1α... signaling pathways in regulating THBS4 was explored' but does not explicitly demonstrate or mention HIF-1α binding to the THBS4 promoter.",
+    "fix": "Soften to 'HIF-1α was implicated as a regulator of THBS4 in rat hypoxia-SUGEN and monocrotaline models [R9]'."
+   },
+   {
+    "sentence": "The same study reported that THBS4 itself reinforced SMAD2 signalling in a feed-forward loop, amplifying vascular remodelling [R9].",
+    "cards": [
+     "R9"
+    ],
+    "issue": "R9's available excerpt does not mention a feed-forward loop or that THBS4 reinforces SMAD2 signalling; it describes SMAD2 as a regulator of THBS4, not the reverse.",
+    "fix": "Remove the feed-forward loop claim or cite a different source; the R9 excerpt only supports SMAD2/p38 MAPK regulation of THBS4, not THBS4→SMAD2 feedback."
+   },
+   {
+    "sentence": "In irreversible pulmonary arterial hypertension associated with congenital heart disease, THBS4 was the top upregulated ECM transcript and promoted PASMC proliferation [R10].",
+    "cards": [
+     "R10"
+    ],
+    "issue": "R10 states THBS4 was 'significantly upregulated' in the irreversible group by bioinformatic analysis, but does not state it was the 'top upregulated ECM transcript.'",
+    "fix": "Change 'top upregulated ECM transcript' to 'a significantly upregulated ECM transcript' to match R10's wording."
+   },
+   {
+    "sentence": "The P387 variant, which more actively supports macrophage adhesion and accumulation within atherosclerotic lesions than A387 [R30], illustrates that disease-associated coding variation can re-shape THBS4 engagement with immune cells without altering its general pro-angiogenic profile [R36].",
+    "cards": [
+     "R36"
+    ],
+    "issue": "R36 explicitly states that 'Mice expressing the P387 TSP-4 variant... displayed greater angiogenesis compared with A387 form,' directly contradicting the claim that the pro-angiogenic profile is unaltered.",
+    "fix": "Revise to acknowledge that P387 also enhances angiogenesis: 'illustrates that disease-associated coding variation can re-shape THBS4 engagement with immune cells while also augmenting its pro-angiogenic activity [R30, R36]'."
+   },
+   {
+    "sentence": "Parallel work in skin fibroblasts demonstrated that THBS4 is a TGF-β1 transcriptional target that mediates hypertrophic scar formation via SMAD3 and p38 signalling, with Thbs4 knockdown attenuating TGF-β1-induced proliferation, migration and collagen deposition [R33].",
+    "cards": [
+     "R33"
+    ],
+    "issue": "R33 reports that TSP-4 knockdown suppressed 'proliferation, invasion, migration, or fibrosis' of HSFs. The sentence substitutes 'collagen deposition' for 'fibrosis' and drops 'invasion.' The card does not specifically mention collagen deposition.",
+    "fix": "Change 'collagen deposition' to 'fibrosis' to match the card's exact wording (e.g., 'attenuating TGF-β1-induced proliferation, migration and fibrosis')."
+   }
+  ]
+ },
+ {
+  "section": "1. Introduction: framing THBS4 within the myokine landscape",
+  "issues": [
+   {
+    "sentence": "This conceptual shift was driven chiefly by primary observations such as the contraction-induced release of IL-6 into the human circulation, followed by identification of additional canonical myokines — irisin/FNDC5, BDNF, IGF-1, cathepsin B and GDF-15 — whose expression, secretion kinetics, receptor systems and downstream effects in distant target organs have since been mapped in considerable molecular and translational detail, including human exercise studies and genetic loss-of-function models [R57, R58].",
+    "cards": [
+     "R57",
+     "R58"
+    ],
+    "issue": "The specific claim about 'contraction-induced release of IL-6 into the human circulation' is not supported by either card. R57 explicitly frames IL-6 in terms of 'chronic IL-6 elevation' as a pathological driver in ageing, which is the opposite of acute exercise-induced release, and R58 does not mention IL-6 at all. Likewise, neither card explicitly references 'genetic loss-of-function models' (R57 only mentions 'preclinical evidence' broadly; R58 does not discuss model systems).",
+    "fix": "Cite a primary source that actually documents contraction-induced IL-6 release into human circulation (e.g., the original Steensberg/Pedersen exercise studies) instead of R57/R58 for that specific claim, and either drop the 'genetic loss-of-function models' phrase or cite a card that supports it."
+   },
+   {
+    "sentence": "The mechanistic evidence for endocrine action remains largely inferential: most experimental data derive from cardiac, fibrotic, vascular and wound-healing contexts in which THBS4 operates as a locally deposited matricellular regulator rather than as a circulating hormone [R11, R27, R45].",
+    "cards": [
+     "R11",
+     "R27",
+     "R45"
+    ],
+    "issue": "R45 (Lawler et al. 1993) is the original identification/tissue-distribution paper for THBS4; it does not examine THBS4 function in cardiac, fibrotic, vascular or wound-healing contexts. It only reports RNA expression patterns in Xenopus and human tissues and thus does not support the claim about experimental data deriving from these functional contexts.",
+    "fix": "Remove R45 from this citation or replace it; R11 and R27 alone adequately support the claim about THBS4 being studied in cardiac, fibrotic, vascular and wound-healing contexts."
+   },
+   {
+    "sentence": "Indeed, work in cardiomyocytes demonstrates that transit through the secretory pathway is required for THBS4 to stabilise the sarcolemma, while several of its most robustly described activities — ATF6α-mediated adaptive endoplasmic reticulum stress responses, integrin engagement, and modulation of TGF-β/SMAD signalling — are exerted by intracellular or matrix-anchored pools that are not, by definition, endocrine [R2, R12].",
+    "cards": [
+     "R2",
+     "R12"
+    ],
+    "issue": "Neither R2 nor R12 discusses modulation of TGF-β/SMAD signalling. R2 focuses on dystrophin-glycoprotein and integrin attachment complex trafficking, and R12 focuses on adaptive ER stress responses (ATF6α), ER expansion and sarcolemmal stability. The TGF-β/SMAD component of this enumeration is therefore unsupported by the cited cards.",
+    "fix": "Remove 'modulation of TGF-β/SMAD signalling' from this sentence, or cite an additional card (e.g., R1, which mentions decreased TGFβ receptor beta-glycan expression) that actually supports the TGF-β/SMAD claim."
+   }
+  ]
+ },
+ {
+  "section": "8. Critical perspectives and controversies",
+  "issues": [
+   {
+    "sentence": "In transverse aortic constriction, Thbs4 knockout exaggerates hypertrophy and fibrosis with defective collagen maturation [R39]",
+    "cards": [
+     "R39"
+    ],
+    "issue": "R39's abstract reports increased deposition of interstitial collagens and reactive fibrosis in Thbs4-/- TAC hearts, but does not specifically describe 'defective collagen maturation' — the claim of a maturation defect is not supported by the cited evidence.",
+    "fix": "Cite R39 only for the hypertrophy/fibrosis claim, e.g., 'exaggerates hypertrophy and fibrosis with increased interstitial collagen deposition [R39]'; or cite a source that actually demonstrates defective collagen maturation."
+   },
+   {
+    "sentence": "yet paradoxically preserved endothelial-dependent relaxation in resistance arteries alongside a high incidence of aortic dissections and aneurysms in the large vessels [R34]",
+    "cards": [
+     "R34"
+    ],
+    "issue": "R34's abstract documents preserved endothelial-dependent relaxation in resistance arteries and a high incidence of aortic aneurysms, but does not specifically report aortic dissections — the dissection phenotype is reported in R32, not R34.",
+    "fix": "Cite both cards appropriately, e.g., 'preserved endothelial-dependent relaxation in resistance arteries and a high incidence of aortic aneurysms [R34], with aortic dissections also observed [R32]'."
+   }
+  ]
+ },
+ {
+  "section": "7. Lessons from cardiac, fibrotic and musculoskeletal disease biology",
+  "issues": [
+   {
+    "sentence": "These phenotypes are linked to an intracellular itinerary in which the T3R and TSP-C domains engage ATF6α and BiP in the endoplasmic reticulum, driving an adaptive unfolded-protein-response program that is itself transcriptionally sustained by KLF6 and MLL4-mediated H3K4 methylation [R14, R15, R48]",
+    "cards": [
+     "R14",
+     "R15",
+     "R48"
+    ],
+    "issue": "KLF6 does NOT sustain the TSP4 program — R48 shows that KLF6 directly suppresses Tsp4 expression, so it is loss of KLF6 activity (not KLF6 activity itself) that permits TSP4 up-regulation. The sentence groups KLF6 with MLL4 as a positive transcriptional sustainer of the UPR program, which is the opposite of what R48 demonstrates. Only MLL4-mediated H3K4 methylation (R15) positively sustains Thbs4 transcription.",
+    "fix": "…driving an adaptive unfolded-protein-response program that is positively sustained by MLL4-mediated H3K4 methylation [R14, R15], while KLF6 acts as a transcriptional repressor of Thbs4 [R48], so the UPR-sustained Thbs4 program is derepressed when KLF6 activity is reduced."
+   },
+   {
+    "sentence": "and — post-infarction — paradoxically upregulated when cardiomyocyte TGF-β signalling is suppressed, suggesting that the matricellular protein integrates opposing inputs to maintain proteostasis [R22, R48]",
+    "cards": [
+     "R22",
+     "R48"
+    ],
+    "issue": "R48 does not support the post-infarction / cardiomyocyte-specific TGF-β suppression finding — R48 examines KLF6-mediated transcriptional control of TSP4 in angiotensin II-infused hearts, not post-MI TGF-β signalling suppression. Only R22 documents TSP4 up-regulation upon cardiomyocyte-selective TGF-β suppression after myocardial infarction.",
+    "fix": "…and — post-infarction — paradoxically upregulated when cardiomyocyte TGF-β signalling is suppressed, suggesting that the matricellular protein integrates opposing inputs to maintain proteostasis [R22]."
+   }
+  ]
+ },
+ {
+  "section": "6. Systemic metabolism, vascular crosstalk and inter-organ signalling",
+  "issues": [
+   {
+    "sentence": "The P387 coding variant of THBS4, originally linked to premature coronary artery disease and myocardial infarction [R54, R50], more actively supports macrophage adhesion and accumulation within atherosclerotic lesions than the common A387 variant in an ApoE-/- knock-in model [R30]; whether total lesion area differs across genotypes in this model is not directly addressed by the available data.",
+    "cards": [
+     "R30"
+    ],
+    "issue": "R30 explicitly measured and reported lesion size in the ApoE-/-/P387 knock-in model ('lesions size measured by Oil Red O did not change'), so total lesion area was directly addressed, contradicting the author's claim that it was not.",
+    "fix": "Should acknowledge that R30 found no difference in lesion size between P387 and A387 genotypes."
+   },
+   {
+    "sentence": "Notably, the available protein-localisation data do not establish microvascular enrichment of THBS4 in oxidative fibre beds: the Arber et al. study documents interstitial and NMJ accumulation [R44], while the Frolova et al. study speaks to tendon collagen, soleus ECM composition, lipoprotein lipase activity, VLDL uptake, soleus mass and grip strength [R1].",
+    "cards": [
+     "R1"
+    ],
+    "issue": "R1 explicitly states 'higher levels of TSP-4 protein are associated with the microvasculature of red skeletal muscle with high oxidative metabolism,' which directly contradicts the claim that the available protein-localisation data do not establish microvascular enrichment. The description of R1 selectively omits this key finding.",
+    "fix": "Should acknowledge R1's microvascular enrichment finding (TSP-4 protein associated with microvasculature of red/oxidative skeletal muscle)."
+   }
+  ]
+ },
+ {
+  "section": "9. Open questions and an experimental roadmap",
+  "issues": [
+   {
+    "sentence": "This technical gap helps explain why recent reviews of the skeletal-muscle endocrine organ still discuss irisin, Metrnl, BDNF, IL-6 and GDF-15 as paradigmatic mediators without specific mention of THBS4 [R58, R59, R60]",
+    "cards": [
+     "R58",
+     "R59",
+     "R60"
+    ],
+    "issue": "The card abstracts do not confirm that all five specific myokines (irisin, Metrnl, BDNF, IL-6, GDF-15) are discussed as paradigmatic mediators. Only R60 explicitly mentions irisin and Metrnl; none of the provided excerpts mention BDNF, IL-6, or GDF-15. The absence of THBS4 is supported, but the specific five-mokine list is not.",
+    "fix": "Soften the specific list or cite a source that actually enumerates these five; e.g., 'still discuss canonical myokines such as irisin and Metrnl as paradigmatic mediators without specific mention of THBS4 [R58, R59, R60].'"
+   },
+   {
+    "sentence": "the candidate-myokine case for circulating THBS4 in humans rests on indirect serological observations in older or dystrophic cohorts [R6, R8] rather than on prospective, biopsy-anchored studies",
+    "cards": [
+     "R6",
+     "R8"
+    ],
+    "issue": "R8 is a mouse study (mdx/Fiona mice), not a human dystrophic cohort. Citing it as evidence for 'circulating THBS4 in humans' is a species misattribution.",
+    "fix": "Cite only R6 for the human older-cohort serology and remove R8 from this human claim, or rephrase as '…in older human cohorts and in dystrophic mice [R6, R8], with the human evidence remaining serological only.'"
+   },
+   {
+    "sentence": "THBS4 exerts biological effects both as a secreted homopentamer and as an intracellular modulator of the ATF6α arm of the unfolded-protein response [R12, R14]",
+    "cards": [
+     "R12",
+     "R14"
+    ],
+    "issue": "Neither R12 nor R14 uses the term 'homopentamer' in the abstract. R14 describes Thbs4 as a secreted glycoprotein and discusses its active secretion, but does not specify homopentameric structure. The ATF6α claim is supported by R14 (and implicitly by R12), but the homopentamer descriptor is not.",
+    "fix": "Replace 'homopentamer' with a term supported by the cards (e.g., 'secreted glycoprotein') or add R38, which explicitly states 'secreted homopentameric glycoprotein'."
+   },
+   {
+    "sentence": "The phenotypes of T3R- and TSP-C-domain mutants, in which secretion is ablated yet intracellular ER-stress signalling persists, demonstrate that any myokine claim must rigorously distinguish extracellular from cell-autonomous action [R12, R14]",
+    "cards": [
+     "R12",
+     "R14"
+    ],
+    "issue": "R14 explicitly states that the T3R and TSP-C domains 'were actively secreted from cardiomyocytes,' which directly contradicts the claim that secretion is ablated in these mutants. R12 describes a 'secretion-defective mutant' but does not identify it as a T3R or TSP-C domain mutant; in R14, it is the calcium-binding mutant within T3R (not T3R or TSP-C themselves) that shows secretion blockade.",
+    "fix": "Recast as: 'The phenotype of secretion-defective Thbs4 mutants, in which intracellular ER-stress signalling persists despite loss of secretion [R12, R14], demonstrates…' or specify that the calcium-binding-site mutant within T3R (not the isolated T3R/TSP-C domains) is the secretion-defective construct."
+   },
+   {
+    "sentence": "with the P387 variant providing additional context for THBS4 engagement of myeloid and mesenchymal populations [R30]",
+    "cards": [
+     "R30"
+    ],
+    "issue": "R30 focuses exclusively on macrophages (myeloid lineage) and their accumulation in atherosclerotic lesions. The card provides no evidence for engagement of mesenchymal cells.",
+    "fix": "Drop 'and mesenchymal populations,' or rephrase as '…providing additional context for THBS4 engagement of myeloid cells such as macrophages [R30].'"
+   },
+   {
+    "sentence": "Adipose, hepatic, pancreatic and neuronal cells are obvious starting points given the proposed inter-organ axes [R1, R4, R55]",
+    "cards": [
+     "R1",
+     "R4",
+     "R55"
+    ],
+    "issue": "R1 describes local effects of Thbs4 on tendon collagen, soleus muscle ECM, lipoprotein lipase activity and VLDL uptake — it does not establish inter-organ axes to adipose, hepatic or pancreatic targets. R4 supports neuronal relevance, and R55 discusses inter-organ crosstalk generally, but R1 is a mismatch for the multi-organ axis framing.",
+    "fix": "Replace R1 with a card that supports inter-organ metabolic signalling (e.g., R55 alone, or add a card specifically linking Thbs4 to adipose/hepatic/pancreatic targets), or restrict the cited organs to those supported: '…neuronal cells, given the proposed inter-organ axes and the demonstrated neuronal activity of circulating THBS4 [R4, R55].'"
+   }
+  ]
+ },
+ {
+  "section": "10. Conclusions",
+  "issues": [
+   {
+    "sentence": "THBS4 has since been characterised as a pentameric, calcium-binding extracellular matrix protein whose T3R and TSP-C domains mediate interaction with ATF6α and BiP, supporting adaptive unfolded protein response signalling and transit through the secretory pathway [R14]",
+    "cards": [
+     "R14"
+    ],
+    "issue": "R14 does not characterise THBS4 as 'pentameric'. R14 describes thrombospondins as 'stress-inducible secreted glycoproteins' and applies 'oligomeric' only to a different protein (Nell2). No pentameric structure is asserted for THBS4 in the cited card.",
+    "fix": "Drop 'pentameric', or cite a reference (e.g., the original identification/characterisation paper) that explicitly establishes the pentameric subunit architecture."
+   },
+   {
+    "sentence": "The P387 variant, which more actively supports macrophage adhesion and accumulation in atherosclerotic lesions than A387, further dissociates variant biology from any simple circulating-biomarker model [R30, R54]",
+    "cards": [
+     "R30",
+     "R54"
+    ],
+    "issue": "R54 does not support the macrophage-adhesion claim; R54 discusses functional differences between the A387P variants only in terms of endothelial cell adhesion and proliferation, not macrophage adhesion or lesional macrophage accumulation. Only R30 supports the specific claim about macrophages.",
+    "fix": "Cite R30 alone for the macrophage-adhesion/lesion claim, and keep R54 only as support for the broader 'variant biology dissociation' point, or rephrase so R54 is not attached to the macrophage-specific wording."
+   },
+   {
+    "sentence": "other contemporary reviews of muscle–brain and muscle–cancer cross-talk treat the broader endocrine framework without including THBS4 in their listings [R55, R56, R57]",
+    "cards": [
+     "R55",
+     "R56",
+     "R57"
+    ],
+    "issue": "R55 is a general myokine/exerkine review on the 'endocrine code' and broad inter-organ crosstalk (touching on neurocognitive adaptation but not on muscle–cancer cross-talk). It is not a focused review of muscle–brain or muscle–cancer cross-talk like R56 (breast cancer/myokines) and R57 (muscle–brain axis).",
+    "fix": "Remove R55 from this citation (it already appears as a myokine compendium in the preceding sentence with R58–R60), or rephrase so that R55 is grouped with R58–R60 as a broad-endocrine-framework review rather than as a muscle–brain/muscle–cancer cross-talk review."
+   }
+  ]
+ }
+]

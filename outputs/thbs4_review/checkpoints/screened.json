@@ -1,0 +1,2270 @@
+{
+ "39373248": {
+  "pmid": "39373248",
+  "relevance": 2,
+  "finding": "Diabetic db/db cardiac fibroblasts showed increased expression of matricellular genes including Thbs4 alongside oxidative-response genes.",
+  "model": "mouse (db/db fibroblasts)",
+  "section": "fibrosis_ecm"
+ },
+ "38876442": {
+  "pmid": "38876442",
+  "relevance": 2,
+  "finding": "MLL4 acts as a transcriptional activator of Thbs4 via H3K4 mono-methylation, mediating THBS4-dependent protection against ER stress in cardiomyocytes under pressure overload.",
+  "model": "mouse cardiomyocytes / NRCMs",
+  "section": "heart"
+ },
+ "39154161": {
+  "pmid": "39154161",
+  "relevance": 2,
+  "finding": "THBS4 was significantly upregulated in the irreversible stage of pulmonary arterial hypertension associated with congenital heart disease and promoted PASMC proliferation and vascular remodeling.",
+  "model": "rat MCT-AV model / human PAH-CHD",
+  "section": "other"
+ },
+ "41873540": {
+  "pmid": "41873540",
+  "relevance": 2,
+  "finding": "THBS4 was upregulated in pulmonary arteries across multiple pulmonary hypertension rat models, with expression induced by HIF-1α under hypoxia and by TGF-β1 via SMAD2/p38 MAPK.",
+  "model": "rat PH models / human PAH",
+  "section": "other"
+ },
+ "34907264": {
+  "pmid": "34907264",
+  "relevance": 3,
+  "finding": "THBS4 was identified as a predicted myokine hub with elevated skeletal-muscle expression, belonging to a secretome-enriched module upregulated specifically after untrained eccentric exercise.",
+  "model": "human skeletal muscle (in vivo exercise training)",
+  "section": "exercise"
+ },
+ "36734484": {
+  "pmid": "36734484",
+  "relevance": 1,
+  "finding": "THBS4 expression was significantly upregulated (~62-fold) in human muscle-derived cells after tenogenic induction in vitro.",
+  "model": "human muscle-derived cells / tenocytes",
+  "section": "muscle"
+ },
+ "41361340": {
+  "pmid": "41361340",
+  "relevance": 2,
+  "finding": "THBS4 plays a pivotal role in vascular remodeling via the focal adhesion pathway and promotes vascular smooth muscle cell apoptosis in an arterial-to-venous graft model.",
+  "model": "rabbit carotid-to-jugular graft",
+  "section": "other"
+ },
+ "10501972": {
+  "pmid": "10501972",
+  "relevance": 1,
+  "finding": "The thrombospondin-4 gene was mapped to mouse chromosome 13 and human chromosome 5q13, with promoter features consistent with its known expression in muscle and bone tissue.",
+  "model": "mouse / human (genomic)",
+  "section": "biology"
+ },
+ "39965654": {
+  "pmid": "39965654",
+  "relevance": 2,
+  "finding": "Imatinib increased JNK phosphorylation and Runx2 expression, promoting transcription of THBS4 in right ventricular cardiomyocytes and aggravating pressure-overload-induced RV failure.",
+  "model": "rat PAB model / RV cardiomyocytes",
+  "section": "heart"
+ },
+ "38926599": {
+  "pmid": "38926599",
+  "relevance": 3,
+  "finding": "Deletion of the thrombospondin-4 gene did not worsen the dystrophic phenotype in mouse models of LGMD2E (β-sarcoglycan deficiency) or LAMA2-RD, unlike prior findings in DGC-associated dystrophies.",
+  "model": "mouse (Sgcβ-null and LAMA2-RD models)",
+  "section": "muscle"
+ },
+ "22034490": {
+  "pmid": "22034490",
+  "relevance": 2,
+  "finding": "Mice lacking TSP4 failed to acutely augment cardiac contractility or activate stretch-response pathways (ERK1/2, Akt) on acute pressure overload, a deficit rescued by recombinant TSP4.",
+  "model": "mouse (Tsp4-/- hearts and trabeculae)",
+  "section": "heart"
+ },
+ "29729633": {
+  "pmid": "29729633",
+  "relevance": 2,
+  "finding": "Ang II-treated Thbs4-/- mice developed increased cardiomyocyte hypertrophy, perivascular fibrosis, inflammation, and aortic dissections, identifying TSP-4 as protective in hypertensive cardiovascular remodelling.",
+  "model": "mouse (Thbs4-/- + Ang II)",
+  "section": "heart"
+ },
+ "39240344": {
+  "pmid": "39240344",
+  "relevance": 1,
+  "finding": "CSF TSP4 levels are decreased in pediatric (but not adult) SMA patients and increase after Nusinersen treatment, suggesting TSP4 as a potential therapy-response biomarker.",
+  "model": "human (pediatric CSF)",
+  "section": "other"
+ },
+ "12952849": {
+  "pmid": "12952849",
+  "relevance": 1,
+  "finding": "TSP-4 is expressed by vascular endothelial and smooth muscle cells, and the A387P proatherogenic variant suppresses endothelial cell adhesion and proliferation.",
+  "model": "human vascular cells",
+  "section": "other"
+ },
+ "41575592": {
+  "pmid": "41575592",
+  "relevance": 0,
+  "finding": "Muscle proteomics in PURA syndrome revealed dysregulation of ECM remodeling and complement activation, but THBS4 is not specifically discussed.",
+  "model": "human skeletal muscle",
+  "section": "muscle"
+ },
+ "32249254": {
+  "pmid": "32249254",
+  "relevance": 1,
+  "finding": "TSP-4 treatment of rat ventricular myocytes prolonged action potential duration by suppressing Kv channel currents and ICaL.",
+  "model": "rat ventricular myocytes",
+  "section": "heart"
+ },
+ "8432726": {
+  "pmid": "8432726",
+  "relevance": 2,
+  "finding": "THBS4 was originally identified and shown to be highly expressed in human heart and skeletal muscle, with lower levels in brain, lung and pancreas.",
+  "model": "human / Xenopus",
+  "section": "biology"
+ },
+ "14562182": {
+  "pmid": "14562182",
+  "relevance": 0,
+  "finding": "TSP-4 protein and mRNA are widely distributed throughout the bovine eye, including cornea, trabecular meshwork, retina and blood vessel walls.",
+  "model": "bovine eye",
+  "section": "other"
+ },
+ "24941943": {
+  "pmid": "24941943",
+  "relevance": 2,
+  "finding": "Zebrafish Tsp4b is required for ECM assembly and laminin localization at myotendinous junctions, with pentamerization essential for its function in muscle attachment.",
+  "model": "zebrafish",
+  "section": "muscle"
+ },
+ "22380695": {
+  "pmid": "22380695",
+  "relevance": 1,
+  "finding": "TSP-4 null mice develop pronounced cardiac hypertrophy and fibrosis with defective collagen maturation in response to pressure overload.",
+  "model": "mouse (review)",
+  "section": "heart"
+ },
+ "34142438": {
+  "pmid": "34142438",
+  "relevance": 0,
+  "finding": "TSP4 promotes bladder cancer cell migration and invasion via AKT-mediated MMP2 expression.",
+  "model": "human bladder cancer cells",
+  "section": "other"
+ },
+ "7490284": {
+  "pmid": "7490284",
+  "relevance": 2,
+  "finding": "TSP-4 is expressed by interstitial cells in adult skeletal muscle and accumulates at the neuromuscular junction, while also being expressed by neurons where it promotes neurite outgrowth.",
+  "model": "rat / human",
+  "section": "muscle"
+ },
+ "27581066": {
+  "pmid": "27581066",
+  "relevance": 0,
+  "finding": "Thrombospondin-4 is induced after bladder outlet obstruction but is not required for ATF6α activation, ER expansion or loss of contractile markers.",
+  "model": "rodent bladder",
+  "section": "other"
+ },
+ "22682248": {
+  "pmid": "22682248",
+  "relevance": 1,
+  "finding": "Thbs4 acts as an intracellular ER-resident effector of an adaptive ER stress response by binding ATF6α, and cardiac-specific Thbs4 overexpression protects from myocardial injury.",
+  "model": "mouse (cardiac)",
+  "section": "heart"
+ },
+ "26968543": {
+  "pmid": "26968543",
+  "relevance": 2,
+  "finding": "TSP-4 knockout mice subjected to angiotensin II-induced hypertension exhibited exaggerated cardiac hypertrophy, high incidence of aortic aneurysms, but preserved endothelial-dependent relaxation in resistance arteries.",
+  "model": "mouse",
+  "section": "heart"
+ },
+ "18541142": {
+  "pmid": "18541142",
+  "relevance": 2,
+  "finding": "Cardiac TSP-4 mRNA is rapidly upregulated by arginine-vasopressin and angiotensin II infusion, and TSP-4 protein localizes to endothelial cells in hypertrophied hearts of spontaneously hypertensive rats.",
+  "model": "rat",
+  "section": "heart"
+ },
+ "20353484": {
+  "pmid": "20353484",
+  "relevance": 2,
+  "finding": "Metoprolol treatment decreased left ventricular thrombospondin-4 mRNA levels by approximately 50% after myocardial infarction and lowered TSP-4 levels in spontaneously hypertensive rats with left ventricular hypertrophy.",
+  "model": "rat",
+  "section": "heart"
+ },
+ "22362893": {
+  "pmid": "22362893",
+  "relevance": 2,
+  "finding": "TSP-4 knockout mice subjected to transverse aortic constriction showed increased heart weight due to greater extracellular matrix deposition and altered expression of inflammatory and fibrotic genes.",
+  "model": "mouse",
+  "section": "fibrosis_ecm"
+ },
+ "15837839": {
+  "pmid": "15837839",
+  "relevance": 2,
+  "finding": "Thrombospondin-4 was identified among the extracellular matrix genes with altered expression in spontaneously hypertensive rats transitioning from left ventricular hypertrophy to diastolic heart failure.",
+  "model": "rat",
+  "section": "heart"
+ },
+ "27252848": {
+  "pmid": "27252848",
+  "relevance": 2,
+  "finding": "Thromboxane-prostanoid receptor antagonism in right ventricular pressure overload increased expression of antifibrotic thrombospondin-4 and blocked induction of the profibrotic TGF-β pathway.",
+  "model": "mouse",
+  "section": "heart"
+ },
+ "21465236": {
+  "pmid": "21465236",
+  "relevance": 2,
+  "finding": "In rats with aorto-caval fistula-induced decompensated heart failure, thrombospondin-4 was upregulated as a heart failure marker alongside activated Wnt and TGF-β signaling and depleted myocardial triglycerides.",
+  "model": "rat",
+  "section": "metabolism"
+ },
+ "9382869": {
+  "pmid": "9382869",
+  "relevance": 2,
+  "finding": "During skeletal muscle morphogenesis, thrombospondin-4 is expressed in prospective tendon mesenchyme adjacent to primary myotubes, coinciding with accumulation of muscle ankyrin repeat protein (MARP) transcript at myotube end regions.",
+  "model": "mouse/rat",
+  "section": "muscle"
+ },
+ "31292558": {
+  "pmid": "31292558",
+  "relevance": 1,
+  "finding": "This review summarizes milestones in ageing biology, including the identification of gene variants extending lifespan in model organisms and the emergence of new therapeutic opportunities.",
+  "model": "review",
+  "section": "ageing"
+ },
+ "31501588": {
+  "pmid": "31501588",
+  "relevance": 0,
+  "finding": "Ageing is the primary risk factor for neurodegenerative diseases, discussed in relation to nine biological hallmarks including mitochondrial dysfunction and cellular senescence.",
+  "model": "review",
+  "section": "other"
+ },
+ "40595368": {
+  "pmid": "40595368",
+  "relevance": 0,
+  "finding": "Modern mechanistic theories of ageing are reviewed, distinguishing error-based and program-based theories and discussing experimental limitations.",
+  "model": "review",
+  "section": "ageing"
+ },
+ "25528930": {
+  "pmid": "25528930",
+  "relevance": 0,
+  "finding": "Human aging is a complex biological, psychological, and social process characterized by progressive age-related changes in metabolism, tissues, and organ function.",
+  "model": "human",
+  "section": "ageing"
+ },
+ "27669143": {
+  "pmid": "27669143",
+  "relevance": 3,
+  "finding": "Thbs4 stabilizes sarcolemmal membrane attachment complexes in skeletal muscle, with its loss causing spontaneous dystrophic changes with aging and overexpression being protective against muscular dystrophy.",
+  "model": "mouse and Drosophila",
+  "section": "muscle"
+ },
+ "30622267": {
+  "pmid": "30622267",
+  "relevance": 2,
+  "finding": "Thbs3, in contrast to Thbs4, promotes sarcolemmal destabilization by reducing integrin function, augmenting injury-induced cardiomyopathy.",
+  "model": "mouse",
+  "section": "heart"
+ },
+ "34168130": {
+  "pmid": "34168130",
+  "relevance": 2,
+  "finding": "Thbs1 (but not Thbs2, Thbs3, or Thbs4) induces lethal cardiac atrophy via PERK-ATF4-regulated autophagy when overexpressed.",
+  "model": "mouse",
+  "section": "heart"
+ },
+ "29712757": {
+  "pmid": "29712757",
+  "relevance": 2,
+  "finding": "Transit through the secretory pathway is required for Thbs4 to augment sarcolemmal stability, while its ER stress induction and vesicular expansion are exclusively intracellular processes; deletion of Thbs4 worsens cardiomyopathy in mdx mice.",
+  "model": "mouse and Drosophila",
+  "section": "secretion"
+ },
+ "26459760": {
+  "pmid": "26459760",
+  "relevance": 2,
+  "finding": "The T3R and TSP-C domains of Thbs4 mediate its interaction with Atf6α and BiP, ER localization, adaptive ER stress activation, and secretion from cardiomyocytes.",
+  "model": "mouse (cardiomyocytes)",
+  "section": "secretion"
+ },
+ "24573206": {
+  "pmid": "24573206",
+  "relevance": 2,
+  "finding": "Cardiomyocyte-selective suppression of TGFβ signaling upregulates thrombospondin 4 along with associated endoplasmic reticulum stress responses and other protective cardiokines after myocardial infarction.",
+  "model": "mouse",
+  "section": "heart"
+ },
+ "23287452": {
+  "pmid": "23287452",
+  "relevance": 2,
+  "finding": "A commentary highlighting that intracellular Thbs4 protects the heart by enhancing ATF6-mediated adaptive ER stress responses, broadening understanding of protein folding and quality control.",
+  "model": "commentary (cardiac context)",
+  "section": "heart"
+ },
+ "29138119": {
+  "pmid": "29138119",
+  "relevance": 2,
+  "finding": "A comprehensive review summarizing Thbs4 as a major regulator of ECM organization and tissue remodeling in cardiovascular and nervous systems, the motor unit, inflammation, and cancer, with unique pro-angiogenic and anti-fibrotic properties.",
+  "model": "review (multiple models)",
+  "section": "other"
+ },
+ "32795101": {
+  "pmid": "32795101",
+  "relevance": 2,
+  "finding": "Single-cell transcriptomics identified a distinct Fibroblast-Thbs4 population in the heart that contributes to pathological ECM remodeling and fibrosis after angiotensin II treatment.",
+  "model": "mouse",
+  "section": "fibrosis_ecm"
+ },
+ "37582915": {
+  "pmid": "37582915",
+  "relevance": 2,
+  "finding": "Spatial transcriptomics in DMD mouse models identified Thbs4 as a marker of fibrotic histological alterations in dystrophic skeletal muscle.",
+  "model": "mouse (DMD models)",
+  "section": "fibrosis_ecm"
+ },
+ "24589453": {
+  "pmid": "24589453",
+  "relevance": 3,
+  "finding": "Thbs4 deficiency alters tendon collagen fibril size and soleus muscle ECM composition, reduces lipoprotein lipase activity and VLDL uptake, and decreases soleus mass and grip strength, linking Thbs4 to oxidative muscle metabolism.",
+  "model": "mouse",
+  "section": "muscle"
+ },
+ "28481870": {
+  "pmid": "28481870",
+  "relevance": 2,
+  "finding": "Endothelial Thbs4 is upregulated by TGF-β1 via SMAD3 and mediates TGF-β1-induced angiogenesis in vitro and in vivo, with Thbs4-/- mice showing reduced tumor angiogenesis.",
+  "model": "mouse and cultured endothelial cells",
+  "section": "other"
+ },
+ "35354289": {
+  "pmid": "35354289",
+  "relevance": 0,
+  "finding": "General review characterizing the basic pathophysiological mechanisms of aging (damage accumulation) in their hierarchical context.",
+  "model": "human",
+  "section": "ageing"
+ },
+ "25045704": {
+  "pmid": "25045704",
+  "relevance": 0,
+  "finding": "General review of mechanisms and theories of ageing and longevity, covering oxidative stress, metabolism, inflammation, and interventions like caloric restriction.",
+  "model": "human/animal",
+  "section": "ageing"
+ },
+ "37454704": {
+  "pmid": "37454704",
+  "relevance": 0,
+  "finding": "Review of methods and tools to assess ageing-associated phenotypes in mice, including physiological and molecular biomarkers.",
+  "model": "mouse",
+  "section": "ageing"
+ },
+ "41366834": {
+  "pmid": "41366834",
+  "relevance": 0,
+  "finding": "Analysis of evolutionary and mechanistic theories of why we age, concluding that optimisation theories fit the available data on lifespan.",
+  "model": "theoretical",
+  "section": "ageing"
+ },
+ "24350929": {
+  "pmid": "24350929",
+  "relevance": 0,
+  "finding": "Panel statement on ageing, longevity, exceptional longevity and associated genetic and non-genetic biomarkers.",
+  "model": "human",
+  "section": "ageing"
+ },
+ "20036955": {
+  "pmid": "20036955",
+  "relevance": 0,
+  "finding": "Review of biomarkers of biological versus chronological ageing, focusing on immunosenescence, inflammatory responses and oxidative stress.",
+  "model": "human",
+  "section": "ageing"
+ },
+ "33550187": {
+  "pmid": "33550187",
+  "relevance": 0,
+  "finding": "Overview of myeloid-derived suppressor cells (MDSCs) in the context of human ageing and inflammageing.",
+  "model": "human",
+  "section": "ageing"
+ },
+ "32383239": {
+  "pmid": "32383239",
+  "relevance": 0,
+  "finding": "Clinical experience describing care of patients with pre-existing endocrine disease (mostly type 2 diabetes) admitted to a COVID-19 ward.",
+  "model": "human",
+  "section": "other"
+ },
+ "32139381": {
+  "pmid": "32139381",
+  "relevance": 0,
+  "finding": "The SCALE Insulin trial showed liraglutide 3.0 mg combined with intensive behavioral therapy produced greater weight loss and HbA1c reduction than placebo in individuals with overweight/obesity and insulin-treated type 2 diabetes.",
+  "model": "human",
+  "section": "metabolism"
+ },
+ "36697822": {
+  "pmid": "36697822",
+  "relevance": 0,
+  "finding": "Aberrant serine homeostasis drives serine/glycine deficiencies in diabetic mice, and dietary serine/glycine restriction with high-fat intake accelerates small fibre neuropathy.",
+  "model": "mouse",
+  "section": "metabolism"
+ },
+ "37709961": {
+  "pmid": "37709961",
+  "relevance": 0,
+  "finding": "Functional profiling of 60 GLP1R variants revealed loss-of-function variants associated with impaired glucose control and increased adiposity in ~200,000 UK Biobank participants.",
+  "model": "human/cell",
+  "section": "metabolism"
+ },
+ "37955852": {
+  "pmid": "37955852",
+  "relevance": 0,
+  "finding": "A randomized crossover trial showed that 6 weeks of mild sleep restriction increased fasting insulin and HOMA-IR in women, independent of adiposity changes.",
+  "model": "human",
+  "section": "metabolism"
+ },
+ "41997502": {
+  "pmid": "41997502",
+  "relevance": 0,
+  "finding": "Liver-targeted interventions can promote longevity by modulating liver ageing pathways and systemic homeostasis.",
+  "model": "review (human/mammalian)",
+  "section": "other"
+ },
+ "25240472": {
+  "pmid": "25240472",
+  "relevance": 0,
+  "finding": "Argues philosophically that ageing can be construed as a disease using an objectivist disease concept.",
+  "model": "conceptual/human",
+  "section": "other"
+ },
+ "28679453": {
+  "pmid": "28679453",
+  "relevance": 0,
+  "finding": "Proposes incorporating resilience into healthy ageing models and fostering wellbeing via individual, social, and environmental resources.",
+  "model": "human",
+  "section": "other"
+ },
+ "41998285": {
+  "pmid": "41998285",
+  "relevance": 0,
+  "finding": "Reviews how age-related organellar changes and inter-organelle signalling regulate ageing and longevity.",
+  "model": "review (multiple)",
+  "section": "ageing"
+ },
+ "29548941": {
+  "pmid": "29548941",
+  "relevance": 0,
+  "finding": "Describes age-related changes in dermis at tissue, cellular, and molecular levels including fibroblast and ECM dynamics.",
+  "model": "human (skin)",
+  "section": "fibrosis_ecm"
+ },
+ "40859047": {
+  "pmid": "40859047",
+  "relevance": 0,
+  "finding": "Proposes that species evolve longer lifespans under constraints imposed by the need to reduce cancer risk.",
+  "model": "evolutionary/cancer biology",
+  "section": "ageing"
+ },
+ "37684253": {
+  "pmid": "37684253",
+  "relevance": 0,
+  "finding": "Shows that the CD44 intercellular domain negatively regulates autophagy and promotes vascular endothelial cell ageing.",
+  "model": "human/mouse/C. elegans",
+  "section": "ageing"
+ },
+ "23132168": {
+  "pmid": "23132168",
+  "relevance": 0,
+  "finding": "Reviews inflamm-ageing as chronic low-grade inflammation underlying age-related disease and links it to metaflammation, senescent cells, microbiota, and nutrition.",
+  "model": "human",
+  "section": "ageing"
+ },
+ "30888651": {
+  "pmid": "30888651",
+  "relevance": 0,
+  "finding": "Discusses age-related cognitive decline and implicates zinc homeostasis as a key player in learning, memory, and ARCD.",
+  "model": "human",
+  "section": "ageing"
+ },
+ "42010239": {
+  "pmid": "42010239",
+  "relevance": 0,
+  "finding": "Summarizes 12 hallmarks of cardiovascular ageing across molecular, cellular, and systemic levels and proposes rejuvenation strategies.",
+  "model": "human/mammalian",
+  "section": "heart"
+ },
+ "40120947": {
+  "pmid": "40120947",
+  "relevance": 0,
+  "finding": "Reviews dietary polyphenols from Blue Zone diets as geroprotective compounds influencing hallmarks of ageing.",
+  "model": "human",
+  "section": "ageing"
+ },
+ "41185962": {
+  "pmid": "41185962",
+  "relevance": 0,
+  "finding": "Identifies EDA2R as a key regulator of inflammaging, biomarker of ageing, and driver of inflammation and tissue damage via NF-κB signalling.",
+  "model": "human/animal models",
+  "section": "ageing"
+ },
+ "15818714": {
+  "pmid": "15818714",
+  "relevance": 0,
+  "finding": "Reviews insulin analogs (lispro, aspart, glargine) for use in pregnancy complicated by diabetes, with no mention of thrombospondin-4.",
+  "model": "human",
+  "section": "other"
+ },
+ "34942154": {
+  "pmid": "34942154",
+  "relevance": 0,
+  "finding": "Multinational study showing diabetes mellitus, maternal adiposity, and gestational diabetes are associated with COVID-19 in pregnancy, with no mention of thrombospondin-4.",
+  "model": "human",
+  "section": "other"
+ },
+ "31266190": {
+  "pmid": "31266190",
+  "relevance": 0,
+  "finding": "Reviews mechanisms by which hypovitaminosis D contributes to obesity-induced insulin resistance, with no mention of thrombospondin-4.",
+  "model": "human",
+  "section": "other"
+ },
+ "30155750": {
+  "pmid": "30155750",
+  "relevance": 0,
+  "finding": "Reviews dietary interventions for type 2 diabetes in overweight youth, with no mention of thrombospondin-4.",
+  "model": "human",
+  "section": "other"
+ },
+ "34266759": {
+  "pmid": "34266759",
+  "relevance": 0,
+  "finding": "Reviews insulin treatment options for type 2 diabetes in primary care, with no mention of thrombospondin-4.",
+  "model": "human",
+  "section": "other"
+ },
+ "24554005": {
+  "pmid": "24554005",
+  "relevance": 0,
+  "finding": "Shows circulating NT-proBNP levels reflect changes in insulin sensitivity in the Diabetes Prevention Program, with no mention of thrombospondin-4.",
+  "model": "human",
+  "section": "other"
+ },
+ "29103210": {
+  "pmid": "29103210",
+  "relevance": 0,
+  "finding": "Cochrane review of insulin versus oral anti-diabetic therapies for gestational diabetes, with no mention of thrombospondin-4.",
+  "model": "human",
+  "section": "other"
+ },
+ "38809396": {
+  "pmid": "38809396",
+  "relevance": 0,
+  "finding": "Reviews non-invasive serum biomarkers and scores for fatty liver (NAFLD/MAFLD/MASLD) diagnosis and staging, with no mention of thrombospondin-4.",
+  "model": "human",
+  "section": "other"
+ },
+ "39560782": {
+  "pmid": "39560782",
+  "relevance": 0,
+  "finding": "Reviews epidemiology, risk factors, screening, and treatment of MASLD in children, with no mention of thrombospondin-4.",
+  "model": "human",
+  "section": "other"
+ },
+ "39488409": {
+  "pmid": "39488409",
+  "relevance": 0,
+  "finding": "Seminar on steatotic liver disease covering reclassification, diagnosis, and treatment, with no mention of thrombospondin-4.",
+  "model": "human",
+  "section": "other"
+ },
+ "38851997": {
+  "pmid": "38851997",
+  "relevance": 0,
+  "finding": "Clinical practice guidelines on prevention, screening, diagnosis and treatment of MASLD, with no mention of thrombospondin-4.",
+  "model": "human",
+  "section": "other"
+ },
+ "38228377": {
+  "pmid": "38228377",
+  "relevance": 0,
+  "finding": "Narrative review of MASLD as a multisystem metabolic disorder with cardiovascular and malignant complications, with no mention of thrombospondin-4.",
+  "model": "human",
+  "section": "other"
+ },
+ "39243773": {
+  "pmid": "39243773",
+  "relevance": 0,
+  "finding": "Narrative review describing the natural history, progression rates, and risk factors of MASLD from steatosis to cirrhosis and hepatocellular carcinoma.",
+  "model": "human",
+  "section": "other"
+ },
+ "38891828": {
+  "pmid": "38891828",
+  "relevance": 0,
+  "finding": "Review summarizing pathogenic mechanisms and current therapeutic options for MASLD, including FXR agonists, PPAR agonists, and anti-fibrotic agents.",
+  "model": "human",
+  "section": "other"
+ },
+ "38141808": {
+  "pmid": "38141808",
+  "relevance": 0,
+  "finding": "Narrative review examining the epidemiological and mechanistic links between MASLD and the risk of chronic kidney disease.",
+  "model": "human",
+  "section": "other"
+ },
+ "38965572": {
+  "pmid": "38965572",
+  "relevance": 0,
+  "finding": "NHANES analysis showing that higher TyG-BMI and TyG-WC indices are associated with increased all-cause, cardiovascular, and diabetes mortality in NAFLD/MASLD.",
+  "model": "human",
+  "section": "other"
+ },
+ "39342178": {
+  "pmid": "39342178",
+  "relevance": 0,
+  "finding": "Comprehensive review of the MASLD–cardiovascular disease relationship, pathophysiological mechanisms, and implications for clinical management.",
+  "model": "human",
+  "section": "other"
+ },
+ "38521116": {
+  "pmid": "38521116",
+  "relevance": 0,
+  "finding": "Meta-analysis estimating a global NAFLD/MASLD prevalence of 65.33% among patients with type 2 diabetes, with rising trends over time.",
+  "model": "human",
+  "section": "other"
+ },
+ "37949334": {
+  "pmid": "37949334",
+  "relevance": 0,
+  "finding": "NHANES 2017–2020 analysis calculating the prevalence of steatotic liver disease subcategories (MASLD, MetALD, ALD) in the United States.",
+  "model": "human",
+  "section": "other"
+ },
+ "40494889": {
+  "pmid": "40494889",
+  "relevance": 0,
+  "finding": "Review of immunopathogenic mechanisms and immunoregulatory therapies in MASLD/MASH, highlighting hepatic inflammation in disease progression.",
+  "model": "human",
+  "section": "other"
+ },
+ "37940495": {
+  "pmid": "37940495",
+  "relevance": 0,
+  "finding": "Review of MASLD natural history showing that fibrosis stage is the most accurate predictor of mortality, with both liver-related and cardiovascular causes dominating.",
+  "model": "human",
+  "section": "other"
+ },
+ "38852583": {
+  "pmid": "38852583",
+  "relevance": 0,
+  "finding": "Joint EASL-EASD-EASO clinical practice guidelines providing updated definitions, screening, diagnosis, and treatment recommendations for MASLD.",
+  "model": "human",
+  "section": "other"
+ },
+ "40237514": {
+  "pmid": "40237514",
+  "relevance": 0,
+  "finding": "Review comparing MAFLD and MASLD criteria in terms of epidemiology, diagnosis, stigma, and related liver diseases one year after nomenclature change.",
+  "model": "human",
+  "section": "other"
+ },
+ "39182603": {
+  "pmid": "39182603",
+  "relevance": 0,
+  "finding": "Review synthesizing evidence linking MASLD to increased risk of hepatocellular carcinoma and various intrahepatic and extrahepatic malignancies.",
+  "model": "human",
+  "section": "other"
+ },
+ "35876516": {
+  "pmid": "35876516",
+  "relevance": 0,
+  "finding": "This paper is a historical review of the discovery of insulin 100 years ago and its subsequent scientific, industrial, and clinical developments.",
+  "model": "historical/human",
+  "section": "other"
+ },
+ "20807459": {
+  "pmid": "20807459",
+  "relevance": 0,
+  "finding": "Whole and fractionated yellow pea flours lowered fasting insulin and reduced insulin resistance in hypercholesterolaemic overweight men and women compared with wheat flour.",
+  "model": "human",
+  "section": "metabolism"
+ },
+ "26900135": {
+  "pmid": "26900135",
+  "relevance": 0,
+  "finding": "Autophagy and mitophagy play protective roles against skeletal muscle insulin resistance and pancreatic β-cell dysfunction in obesity and type 2 diabetes.",
+  "model": "review/cellular",
+  "section": "metabolism"
+ },
+ "37460842": {
+  "pmid": "37460842",
+  "relevance": 0,
+  "finding": "Selective hepatic insulin resistance in MAFLD preserves insulin-driven triglyceride biosynthesis even as insulin's suppression of hepatic glucose production wanes.",
+  "model": "human/cellular",
+  "section": "metabolism"
+ },
+ "30232070": {
+  "pmid": "30232070",
+  "relevance": 0,
+  "finding": "A 16-year-old girl with Wolfram syndrome presented with parasuicide on a background of depressive disorder and was managed with intensive insulin therapy and psychotherapy.",
+  "model": "human (case report)",
+  "section": "other"
+ },
+ "28958751": {
+  "pmid": "28958751",
+  "relevance": 0,
+  "finding": "Insulin therapy in type 2 diabetes is associated with increased cardiovascular risk, weight gain, hypoglycemia, and adverse metabolic effects.",
+  "model": "human (clinical trials/meta-analyses)",
+  "section": "metabolism"
+ },
+ "30355075": {
+  "pmid": "30355075",
+  "relevance": 1,
+  "finding": "Age-related changes in glucose metabolism and body composition contribute to insulin resistance, obesity, diabetes, and elevated cardiovascular risk in older adults.",
+  "model": "human",
+  "section": "ageing"
+ },
+ "928319": {
+  "pmid": "928319",
+  "relevance": 0,
+  "finding": "Adipose tissue sensitivity to physiological insulin concentrations is markedly reduced in obese women regardless of normal or diabetic glucose tolerance.",
+  "model": "human (adipose tissue)",
+  "section": "metabolism"
+ },
+ "37920887": {
+  "pmid": "37920887",
+  "relevance": 0,
+  "finding": "Mendelian randomization showed that higher gluteofemoral adipose tissue and appendicular lean mass are causally protective against type 2 diabetes in women.",
+  "model": "human (UK Biobank)",
+  "section": "metabolism"
+ },
+ "27053292": {
+  "pmid": "27053292",
+  "relevance": 0,
+  "finding": "WFS1-deficient mice have fewer pancreatic islets, reduced glucose-stimulated insulin secretion, and altered islet transcriptomes including downregulation of Trpm5.",
+  "model": "mouse (Wfs1KO)",
+  "section": "other"
+ },
+ "28509408": {
+  "pmid": "28509408",
+  "relevance": 0,
+  "finding": "Insulin therapy in type 2 diabetes is associated with 3-9 kg weight gain in the first year, predominantly as adipose tissue, driven by multiple mechanisms.",
+  "model": "human (clinical)",
+  "section": "metabolism"
+ },
+ "19749172": {
+  "pmid": "19749172",
+  "relevance": 0,
+  "finding": "Most type 2 diabetes risk SNPs identified by GWAS affect pancreatic β-cell function rather than insulin resistance pathways.",
+  "model": "human (GWAS)",
+  "section": "other"
+ },
+ "40243565": {
+  "pmid": "40243565",
+  "relevance": 0,
+  "finding": "This review discusses molecular mechanisms, clinical implications, and emerging therapeutic strategies for metabolic-dysfunction-associated steatotic liver disease (MASLD), including lipid metabolism dysregulation, chronic inflammation, oxidative stress, and mitochondrial dysfunction.",
+  "model": "human",
+  "section": "other"
+ },
+ "38722246": {
+  "pmid": "38722246",
+  "relevance": 0,
+  "finding": "This review addresses the epidemiology, screening, and co-management of type 2 diabetes mellitus and metabolic dysfunction-associated steatotic liver disease, focusing on shared pathogenic mechanisms and multidisciplinary care.",
+  "model": "human",
+  "section": "other"
+ },
+ "40257301": {
+  "pmid": "40257301",
+  "relevance": 0,
+  "finding": "Single-cell profiling of peripheral immune cells in MASLD/MASH patients revealed alterations in white blood cell compartments correlating with disease activity, but no link to thrombospondin-4 or skeletal muscle is described.",
+  "model": "human",
+  "section": "other"
+ },
+ "38869512": {
+  "pmid": "38869512",
+  "relevance": 0,
+  "finding": "Joint EASL-EASD-EASO guidelines provide recommendations on prevention, screening, diagnosis, and treatment of MASLD, including lifestyle modification and pharmacotherapy.",
+  "model": "human",
+  "section": "other"
+ },
+ "38246813": {
+  "pmid": "38246813",
+  "relevance": 0,
+  "finding": "This article reviews non-invasive fibrosis tests for diagnosis, staging, and risk stratification of metabolic associated steatotic liver disease, including serum markers and imaging techniques.",
+  "model": "human",
+  "section": "other"
+ },
+ "39126031": {
+  "pmid": "39126031",
+  "relevance": 0,
+  "finding": "A narrative review examining the histological features and nomenclature implications of NAFLD/MASLD and NASH/MASH, including fibrosis patterns.",
+  "model": "human",
+  "section": "other"
+ },
+ "38193865": {
+  "pmid": "38193865",
+  "relevance": 0,
+  "finding": "This review discusses therapeutic management of MASLD, including lifestyle modification, bariatric surgery, pharmacotherapy, and multidisciplinary approaches.",
+  "model": "human",
+  "section": "other"
+ },
+ "38445559": {
+  "pmid": "38445559",
+  "relevance": 0,
+  "finding": "This commentary discusses the updated AASLD NAFLD practice guidance in light of the new MASLD/MASH nomenclature for diagnosis, risk stratification, and management.",
+  "model": "human",
+  "section": "other"
+ },
+ "37467769": {
+  "pmid": "37467769",
+  "relevance": 0,
+  "finding": "This review describes ventilation mechanics, focusing on airway resistance and lung/chest wall compliance during spontaneous breathing and mechanical ventilation.",
+  "model": "human",
+  "section": "other"
+ },
+ "39645093": {
+  "pmid": "39645093",
+  "relevance": 0,
+  "finding": "This review discusses stage-specific regulation of mechanically sensitive pathways during tendon/ligament development and healing, including tenogenic genes such as scleraxis and mohawk.",
+  "model": "various (in vitro, animal, human)",
+  "section": "other"
+ },
+ "40854879": {
+  "pmid": "40854879",
+  "relevance": 0,
+  "finding": "This study investigates how geometry and material properties govern global mechanics of bead-thread networks, identifying conditions for superjamming in soft materials design.",
+  "model": "materials (experimental and modeling)",
+  "section": "other"
+ },
+ "38225751": {
+  "pmid": "38225751",
+  "relevance": 0,
+  "finding": "This review provides a comprehensive library of fracture and mechanical property data for tough hydrogels used in load-bearing applications.",
+  "model": "materials",
+  "section": "other"
+ },
+ "41724409": {
+  "pmid": "41724409",
+  "relevance": 0,
+  "finding": "This work characterizes epiphyseal osteochondral interfaces in osteoarthritis using CT imaging, showing amplified articular calcified cartilage expansion and altered osteocyte lacunae precede OA sclerosis.",
+  "model": "mouse/human",
+  "section": "other"
+ },
+ "36509398": {
+  "pmid": "36509398",
+  "relevance": 0,
+  "finding": "This review synthesizes the mechanical properties of isolated collagen fibrils under tension, emphasizing ultrastructural architecture and deformation mechanisms.",
+  "model": "vertebrate tissues",
+  "section": "other"
+ },
+ "39156637": {
+  "pmid": "39156637",
+  "relevance": 0,
+  "finding": "The study shows that matrix stiffness in OA cartilage causes mitochondrial damage in chondrocytes, leading to Phf8-mediated H3K27me3 demethylation.",
+  "model": "human/cell culture",
+  "section": "other"
+ },
+ "35414870": {
+  "pmid": "35414870",
+  "relevance": 0,
+  "finding": "This review discusses strategies to mechanically reinforce granular hydrogels by tuning microgel composition and interparticle interactions for tissue engineering applications.",
+  "model": "biomaterials",
+  "section": "other"
+ },
+ "35894589": {
+  "pmid": "35894589",
+  "relevance": 0,
+  "finding": "This study uses purified proteins to reveal how the actin filament network underlying cell movement becomes denser when pushing against stronger mechanical force.",
+  "model": "in vitro (proteins)",
+  "section": "other"
+ },
+ "30661717": {
+  "pmid": "30661717",
+  "relevance": 0,
+  "finding": "This review covers mechanotransduction mechanisms in inner-ear hair cells, focusing on mechanically-gated channels, adaptation, and bundle mechanics.",
+  "model": "mammalian (ex vivo)",
+  "section": "other"
+ },
+ "40945886": {
+  "pmid": "40945886",
+  "relevance": 0,
+  "finding": "The study demonstrates that ECM-cytoskeleton integration is essential for stretch-induced calcium signaling in human tendon fibroblast proto-tissues.",
+  "model": "human (in vitro)",
+  "section": "other"
+ },
+ "41362457": {
+  "pmid": "41362457",
+  "relevance": 0,
+  "finding": "This review evaluates regenerative scaffolds that integrate mechanical robustness with biological functionality for load-bearing musculoskeletal tissue repair.",
+  "model": "biomaterials review",
+  "section": "other"
+ },
+ "36701851": {
+  "pmid": "36701851",
+  "relevance": 0,
+  "finding": "The study reports that composite constructs of amniotic membrane with electrospun P4HB and fibrin glue exceed the mechanical loads required for vesicovaginal fistula repair.",
+  "model": "human tissue (ex vivo)",
+  "section": "other"
+ },
+ "36836698": {
+  "pmid": "36836698",
+  "relevance": 1,
+  "finding": "This review discusses how mechanically activated ion channels in striated muscle may transduce mechanical load into signaling cascades regulating muscle protein synthesis and hypertrophy.",
+  "model": "striated muscle review",
+  "section": "muscle"
+ },
+ "18758034": {
+  "pmid": "18758034",
+  "relevance": 0,
+  "finding": "This article reviews hypotheses for how osteocytes are mechanically activated in bone, including fluid shear stress and lacunar strain.",
+  "model": "bone cells (review)",
+  "section": "other"
+ },
+ "28648626": {
+  "pmid": "28648626",
+  "relevance": 0,
+  "finding": "This review summarizes how mechanical load triggers rapid local Ca2+ releases at microdomains in cardiac myocytes via ROS and nitric oxide signaling.",
+  "model": "cardiac myocytes",
+  "section": "heart"
+ },
+ "37598794": {
+  "pmid": "37598794",
+  "relevance": 0,
+  "finding": "Mechanical anisotropy of human dura mater correlates with location-dependent collagen fiber orientation and dispersion.",
+  "model": "human tissue (dura mater)",
+  "section": "other"
+ },
+ "41953265": {
+  "pmid": "41953265",
+  "relevance": 0,
+  "finding": "Mechanical signals are transmitted from the extracellular matrix to the nucleus via perinuclear cytoskeleton, LINC complex, and nuclear lamina.",
+  "model": "review (cell biology)",
+  "section": "other"
+ },
+ "37075172": {
+  "pmid": "37075172",
+  "relevance": 0,
+  "finding": "Mineralized collagen fibrils are the fundamental mechanical unit of cortical bone, with age/disease altering hierarchical deformation.",
+  "model": "bone (cortical)",
+  "section": "other"
+ },
+ "17127313": {
+  "pmid": "17127313",
+  "relevance": 0,
+  "finding": "Mechanical loading regulates matrix metalloproteinase expression in tissues including blood vessels, intervertebral disc, and articular cartilage.",
+  "model": "review (multiple tissues)",
+  "section": "other"
+ },
+ "12773321": {
+  "pmid": "12773321",
+  "relevance": 0,
+  "finding": "Upper airway mechanical load contributes modestly to obstructive sleep apnea severity, with compensation varying by position and sleep stage.",
+  "model": "human (sleep apnea patients)",
+  "section": "other"
+ },
+ "33140650": {
+  "pmid": "33140650",
+  "relevance": 0,
+  "finding": "A thermoresponsive layered hydrogel mimics the adaptive load-bearing lubrication mechanism of natural cartilage.",
+  "model": "synthetic material (hydrogel)",
+  "section": "other"
+ },
+ "37157455": {
+  "pmid": "37157455",
+  "relevance": 0,
+  "finding": "Deflection of a mechanically loaded GRIN lens affects endoscopic image quality.",
+  "model": "optical device",
+  "section": "other"
+ },
+ "10367017": {
+  "pmid": "10367017",
+  "relevance": 0,
+  "finding": "Tensegrity architecture explains how macroscopic mechanical stresses are transmitted to cells and transduced into biochemical responses.",
+  "model": "review (mechanobiology)",
+  "section": "other"
+ },
+ "34325074": {
+  "pmid": "34325074",
+  "relevance": 0,
+  "finding": "Small animal studies show that mechanical load magnitude, frequency, and timing drive tendon responses along a continuum from healthy tendon to tendinopathy.",
+  "model": "small animal (tendon)",
+  "section": "other"
+ },
+ "7628627": {
+  "pmid": "7628627",
+  "relevance": 2,
+  "finding": "Thrombospondin-4 is abundant in tendon as pentameric particles with five globular arms connected to a central assembly domain.",
+  "model": "bovine tendon",
+  "section": "fibrosis_ecm"
+ },
+ "16754514": {
+  "pmid": "16754514",
+  "relevance": 2,
+  "finding": "In equine tendon, TSP-4 and COMP are linked via disulfide bridges into heterooligomers that cannot be separated under nonreducing conditions.",
+  "model": "equine tendon",
+  "section": "fibrosis_ecm"
+ },
+ "7496039": {
+  "pmid": "7496039",
+  "relevance": 2,
+  "finding": "Thrombospondin-4 transcripts first appear in the mesenchyme surrounding bone anlage during early osteogenesis in the chick embryo but are transient in osteogenic tissues.",
+  "model": "chick embryo",
+  "section": "fibrosis_ecm"
+ },
+ "40412107": {
+  "pmid": "40412107",
+  "relevance": 2,
+  "finding": "TSP4 expression is significantly reduced in diabetic foot ulcer tissues, and pharmacological agents (riboflavin, desloratadine, chenodeoxycholic acid) were identified that selectively upregulate TSP4 to promote wound healing.",
+  "model": "human (diabetic foot ulcer tissue)",
+  "section": "fibrosis_ecm"
+ },
+ "22035575": {
+  "pmid": "22035575",
+  "relevance": 0,
+  "finding": "TSP-2 mRNA levels were increased 4.9-fold in fibro(sclero)tic and stenotic human aortic valves, while other thrombospondins including TSP-4 did not change significantly.",
+  "model": "human (aortic valve tissue)",
+  "section": "heart"
+ },
+ "35293116": {
+  "pmid": "35293116",
+  "relevance": 1,
+  "finding": "This review summarizes recent findings on the role of thrombospondins in aortic aneurysm development, highlighting their involvement in vascular remodeling and extracellular matrix dysregulation.",
+  "model": "human (vascular tissue review)",
+  "section": "heart"
+ },
+ "36689135": {
+  "pmid": "36689135",
+  "relevance": 1,
+  "finding": "Analysis of human exome sequencing data indicates THBS1 is highly loss-intolerant in humans, and stress response studies in Thbs1-/- mice reveal protective functions in cardiovascular and immune systems.",
+  "model": "human/mouse (genetics and stress models)",
+  "section": "other"
+ },
+ "33854480": {
+  "pmid": "33854480",
+  "relevance": 1,
+  "finding": "This review highlights new insights into the role of TSP1 (via regulation of nitric oxide, latent TGFβ1 activation, and interactions with CD36/CD47) in obesity, diabetes, and cardiovascular diseases.",
+  "model": "metabolic disease review",
+  "section": "metabolism"
+ },
+ "25064829": {
+  "pmid": "25064829",
+  "relevance": 0,
+  "finding": "This review reappraises the matricellular protein concept, considering the expanded family including thrombospondins, tenascins, SPARC, and CCNs, and their diverse functions and therapeutic potential.",
+  "model": "general review",
+  "section": "other"
+ },
+ "25793578": {
+  "pmid": "25793578",
+  "relevance": 0,
+  "finding": "Tenascin-X is described as both an architectural extracellular matrix glycoprotein and a matricellular protein that regulates TGF-β bioavailability and epithelial cell plasticity.",
+  "model": "review",
+  "section": "fibrosis_ecm"
+ },
+ "30302044": {
+  "pmid": "30302044",
+  "relevance": 0,
+  "finding": "This review summarizes the role of ammonia in the pathogenesis of hepatic encephalopathy and discusses additional contributing factors such as cytokines and immune mediators.",
+  "model": "human/animal (hepatic encephalopathy review)",
+  "section": "other"
+ },
+ "17160353": {
+  "pmid": "17160353",
+  "relevance": 0,
+  "finding": "Endogenous TSP-1 functions as a mediator of cis interactions among integrins, LRP, calreticulin, and integrin-associated protein in T lymphocyte plasma membranes, regulating adhesion and migration.",
+  "model": "lymphocyte (in vitro/review)",
+  "section": "other"
+ },
+ "38919018": {
+  "pmid": "38919018",
+  "relevance": 1,
+  "finding": "This review discusses matricellular proteins including thrombospondins as modulators of immunometabolism and tissue homeostasis, influencing insulin signaling, adipogenesis, and lipid metabolism in obesity and diabetes.",
+  "model": "review (immunometabolism)",
+  "section": "metabolism"
+ },
+ "38284126": {
+  "pmid": "38284126",
+  "relevance": 0,
+  "finding": "ADAMTSL proteins are a family of regulatory extracellular matrix proteins with tissue-specific functions in development, remodeling, and repair, linked via GWAS to traits such as lung function and body mass.",
+  "model": "mammalian/C. elegans/Drosophila review",
+  "section": "fibrosis_ecm"
+ },
+ "29214179": {
+  "pmid": "29214179",
+  "relevance": 0,
+  "finding": "This review discusses roles of thrombospondins, primarily TSP-1, in angiogenesis, inflammation, apoptosis, and fibrosis following hemorrhagic stroke via binding to CD36, CD47, and TGF-β.",
+  "model": "review (hemorrhagic stroke)",
+  "section": "other"
+ },
+ "25848892": {
+  "pmid": "25848892",
+  "relevance": 1,
+  "finding": "Reviews the role of matricellular proteins including thrombospondins in glaucoma, focusing on TSP1 in the trabecular meshwork and lamina cribrosa, not THBS4 in skeletal muscle.",
+  "model": "human / mouse (ocular tissue)",
+  "section": "other"
+ },
+ "25708195": {
+  "pmid": "25708195",
+  "relevance": 1,
+  "finding": "Reviews CD47 signaling pathways and its interaction with thrombospondin-1, with no mention of THBS4 or skeletal muscle.",
+  "model": "mouse / cell culture",
+  "section": "other"
+ },
+ "24892720": {
+  "pmid": "24892720",
+  "relevance": 1,
+  "finding": "Reviews pseudoachondroplasia caused by mutations in thrombospondin-5/COMP in chondrocytes, not THBS4 in skeletal muscle.",
+  "model": "mouse / chondrocytes",
+  "section": "other"
+ },
+ "32393961": {
+  "pmid": "32393961",
+  "relevance": 1,
+  "finding": "Reviews muscle-organ crosstalk via myokines, identifying skeletal muscle as an endocrine organ, but does not specifically address THBS4.",
+  "model": "human",
+  "section": "muscle"
+ },
+ "18923185": {
+  "pmid": "18923185",
+  "relevance": 1,
+  "finding": "Reviews IL-6 as a myokine and its roles in exercise and metabolism, without mentioning THBS4.",
+  "model": "human",
+  "section": "muscle"
+ },
+ "28389517": {
+  "pmid": "28389517",
+  "relevance": 1,
+  "finding": "Reviews myokines released during exercise and their roles in muscle adaptation and endocrine signaling, without specific focus on THBS4.",
+  "model": "human",
+  "section": "exercise"
+ },
+ "22473333": {
+  "pmid": "22473333",
+  "relevance": 1,
+  "finding": "Describes skeletal muscle as a secretory organ and identifies several myokines, but does not mention THBS4 specifically.",
+  "model": "human",
+  "section": "muscle"
+ },
+ "40879954": {
+  "pmid": "40879954",
+  "relevance": 1,
+  "finding": "Reviews skeletal muscle as an endocrine organ and the functions of various myokines in metabolism and health, without mentioning THBS4.",
+  "model": "human",
+  "section": "muscle"
+ },
+ "35304603": {
+  "pmid": "35304603",
+  "relevance": 1,
+  "finding": "Reviews exerkines released in response to exercise across multiple tissues including skeletal muscle, without specific mention of THBS4.",
+  "model": "human",
+  "section": "exercise"
+ },
+ "41511097": {
+  "pmid": "41511097",
+  "relevance": 1,
+  "finding": "Reviews the role of myokines in muscle metabolism and inter-organ communication, without specific mention of THBS4.",
+  "model": "human",
+  "section": "metabolism"
+ },
+ "39683426": {
+  "pmid": "39683426",
+  "relevance": 1,
+  "finding": "Reviews myokines and exerkines in the muscle-gut axis and their roles in metabolism, ageing, and inter-organ communication, without specific mention of THBS4.",
+  "model": "human",
+  "section": "muscle"
+ },
+ "40648864": {
+  "pmid": "40648864",
+  "relevance": 1,
+  "finding": "Reviews skeletal muscle as an endocrine organ and discusses myokines such as irisin and Metrnl in metabolic regulation, without specific mention of THBS4.",
+  "model": "human",
+  "section": "muscle"
+ },
+ "32936697": {
+  "pmid": "32936697",
+  "relevance": 1,
+  "finding": "TSP family members (including THBS4-related functions) tune osteoclast and osteoblast activity in bone remodeling and in osteolytic/osteoblastic skeletal metastases.",
+  "model": "review/mammalian",
+  "section": "biology"
+ },
+ "29909440": {
+  "pmid": "29909440",
+  "relevance": 0,
+  "finding": "THBS1 regulates eicosanoid metabolism and inflammatory pathways in the tumor microenvironment contributing to carcinogenesis.",
+  "model": "review/mammalian",
+  "section": "other"
+ },
+ "29853185": {
+  "pmid": "29853185",
+  "relevance": 1,
+  "finding": "Matricellular glycoproteins such as thrombospondins shape ECM properties and are induced during development, inflammation, and wound repair across animal phyla.",
+  "model": "review/non-mammalian models",
+  "section": "biology"
+ },
+ "26791544": {
+  "pmid": "26791544",
+  "relevance": 1,
+  "finding": "Matricellular proteins modulate sterile and non-sterile inflammatory responses in cardiac injury beyond their classic de-adhesive functions.",
+  "model": "review/mammalian heart",
+  "section": "heart"
+ },
+ "30566900": {
+  "pmid": "30566900",
+  "relevance": 0,
+  "finding": "THBS1 is induced during corpus luteum regression and acts as a major determinant of luteal fate through antiangiogenic and proapoptotic activities.",
+  "model": "mammalian (ovary)",
+  "section": "other"
+ },
+ "22535894": {
+  "pmid": "22535894",
+  "relevance": 2,
+  "finding": "TSP-4, alongside TSP-1, TSP-2, tenascins, SPARC, osteopontin, periostin and CCNs, is upregulated in the injured/remodeling heart and implicated in ageing-associated myocardial remodeling, hypertrophy, fibrosis and diabetic cardiomyopathy.",
+  "model": "review/mammalian heart",
+  "section": "heart"
+ },
+ "38324186": {
+  "pmid": "38324186",
+  "relevance": 0,
+  "finding": "ADAMTS-like matricellular proteins regulate the cardiac extracellular microenvironment, fibrillin microfibrils and TGFβ signaling in heart failure and aortopathies.",
+  "model": "review/mammalian cardiovascular",
+  "section": "fibrosis_ecm"
+ },
+ "34600566": {
+  "pmid": "34600566",
+  "relevance": 0,
+  "finding": "SCO-spondin is a large matricellular glycoprotein secreted into cerebrospinal fluid that modulates signaling and homeostasis in the central nervous system.",
+  "model": "review/CNS",
+  "section": "other"
+ },
+ "24727033": {
+  "pmid": "24727033",
+  "relevance": 0,
+  "finding": "Matricellular proteins including TSPs and SPARC are expressed in the trabecular meshwork and optic nerve head and modulate IOP in glaucoma.",
+  "model": "review/mammalian eye",
+  "section": "other"
+ },
+ "24980904": {
+  "pmid": "24980904",
+  "relevance": 0,
+  "finding": "R-spondins are matricellular regulators of the skeleton that activate canonical Wnt signaling and contribute to limb formation and adult bone maintenance.",
+  "model": "review/mammalian skeleton",
+  "section": "other"
+ },
+ "27878658": {
+  "pmid": "27878658",
+  "relevance": 0,
+  "finding": "Thrombospondin-1/2 and other matricellular proteins are expressed in brain and implicated in neurological disorders including Alzheimer's, ischemia and multiple sclerosis.",
+  "model": "review/mammalian CNS",
+  "section": "other"
+ },
+ "15364610": {
+  "pmid": "15364610",
+  "relevance": 1,
+  "finding": "Matricellular proteins (TSP1, TSP2, tenascin-C, osteopontin, osteonectin) are re-expressed after cardiac injury and modulate remodeling of the stressed heart.",
+  "model": "review/mammalian heart",
+  "section": "heart"
+ },
+ "31952571": {
+  "pmid": "31952571",
+  "relevance": 1,
+  "finding": "Reviews how skeletal muscle functions as an endocrine organ, secreting myokines such as IL-6, irisin, IGF-1, and FGF2 in response to contraction, with effects on bone and other organs relevant to aging and metabolism.",
+  "model": "review (human)",
+  "section": "muscle"
+ },
+ "28605657": {
+  "pmid": "28605657",
+  "relevance": 1,
+  "finding": "Reviews the skeletal muscle secretome and myokines that mediate autocrine, paracrine, and endocrine cross-talk with adipose tissue, liver, pancreas, cardiovascular system, brain, bones, and skin in response to exercise.",
+  "model": "review (various)",
+  "section": "muscle"
+ },
+ "31952573": {
+  "pmid": "31952573",
+  "relevance": 0,
+  "finding": "Broad review of adipokines, myokines, and hepatokines and their roles in obesity, metabolic syndrome, type 2 diabetes, CVD, NAFLD, and neurodegenerative disorders, with no focus on a specific myokine.",
+  "model": "review (human/mouse)",
+  "section": "metabolism"
+ },
+ "34981891": {
+  "pmid": "34981891",
+  "relevance": 1,
+  "finding": "Discusses exercise-induced factors (exerkines), myokines, and extracellular vesicles as mediators of cross-talk between muscle, liver, and adipose tissue during exercise.",
+  "model": "review (human/animal)",
+  "section": "exercise"
+ },
+ "39456714": {
+  "pmid": "39456714",
+  "relevance": 1,
+  "finding": "Reviews mechanisms of age-related sarcopenia and discusses the skeletal muscle secretome as a potential therapeutic target to impede muscle loss.",
+  "model": "review (human/animal)",
+  "section": "ageing"
+ },
+ "41944790": {
+  "pmid": "41944790",
+  "relevance": 1,
+  "finding": "Identifies CCN5/WISP2 as a secreted factor decreased in human sarcopenic muscle; its knockdown in mice induces sarcopenia-like muscle dysfunction and myosteatosis, while overexpression in aged mice is therapeutic.",
+  "model": "human and mouse (C57BL/6J, C2C12)",
+  "section": "ageing"
+ },
+ "33363144": {
+  "pmid": "33363144",
+  "relevance": 1,
+  "finding": "Reviews age-related changes in the skeletal muscle and bone secretomes, including myokines, osteokines, and extracellular vesicle-microRNAs, and their crosstalk during aging.",
+  "model": "review (human/animal)",
+  "section": "ageing"
+ },
+ "38500398": {
+  "pmid": "38500398",
+  "relevance": 1,
+  "finding": "Shows that intramuscular delivery of a stem cell secretome in aged mice increases lean mass, decreases adiposity, improves physical function, and enhances muscle cell growth and IL-6 production.",
+  "model": "aged C57BL/6 mice (22-24 months) and cell culture",
+  "section": "ageing"
+ },
+ "40544888": {
+  "pmid": "40544888",
+  "relevance": 1,
+  "finding": "Reviews how 13 amino acid neurotransmitters are altered in the aged skeletal muscle metabolome/secretome and relate to sarcopenia and healthy aging.",
+  "model": "review (human/animal)",
+  "section": "ageing"
+ },
+ "30977083": {
+  "pmid": "30977083",
+  "relevance": 1,
+  "finding": "Reviews skeletal muscle endocrinology, the myokine concept, and the role of nutrition and exercise in preserving muscle mass and preventing sarcopenia during aging.",
+  "model": "review (human)",
+  "section": "ageing"
+ },
+ "41550466": {
+  "pmid": "41550466",
+  "relevance": 0,
+  "finding": "Demonstrates that treadmill exercise increases muscle and blood mitochondria that are transferred via platelets to protect brain tissue after cerebral ischemia/reperfusion injury.",
+  "model": "mouse and rat primary cells",
+  "section": "other"
+ },
+ "34445222": {
+  "pmid": "34445222",
+  "relevance": 1,
+  "finding": "Reviews specific myokines (myostatin, IGF-1, NGF, S100, irisin) involved in skeletal muscle aging, oxidative stress modulation, and muscle trophism.",
+  "model": "review (human/animal)",
+  "section": "ageing"
+ },
+ "34464025": {
+  "pmid": "34464025",
+  "relevance": 1,
+  "finding": "Obesity alters skeletal muscle energy metabolism, including reduced insulin-mediated glucose uptake, decreased fatty acid oxidation, and mitochondrial dysfunction, while muscle also acts as an endocrine organ secreting myokines.",
+  "model": "human / in vitro (primary myotubes)",
+  "section": "metabolism"
+ },
+ "23897689": {
+  "pmid": "23897689",
+  "relevance": 1,
+  "finding": "Establishes the concept that skeletal muscle is a secretory organ releasing hundreds of myokines with autocrine, paracrine, and endocrine effects, many of which are contraction-dependent.",
+  "model": "review (no specific species)",
+  "section": "secretion"
+ },
+ "40957493": {
+  "pmid": "40957493",
+  "relevance": 1,
+  "finding": "Reviews myokine-mediated multi-organ crosstalk during exercise, encompassing six biological axes including energy substrate flux, mitochondrial biogenesis, ECM remodeling, and immunometabolic reprogramming.",
+  "model": "review (preclinical and clinical evidence)",
+  "section": "secretion"
+ },
+ "32529456": {
+  "pmid": "32529456",
+  "relevance": 1,
+  "finding": "Discusses bidirectional crosstalk between muscle, bone, and adipose tissue through myokines (e.g., IL-6, irisin, myostatin), osteokines, and adipokines regulating metabolism.",
+  "model": "review (human/mammalian)",
+  "section": "other"
+ },
+ "38021216": {
+  "pmid": "38021216",
+  "relevance": 1,
+  "finding": "Highlights myokines (myostatin, irisin) and osteokines (RANKL, SOST) as endocrine signals mediating muscle-bone crosstalk relevant to osteosarcopenia and fracture healing.",
+  "model": "review (preclinical and clinical)",
+  "section": "other"
+ },
+ "35850277": {
+  "pmid": "35850277",
+  "relevance": 1,
+  "finding": "Reviews exercise-induced myokines (e.g., IL-6, OSM, SPARC, irisin) that influence cancer progression, tumor microenvironment, and cancer cachexia through muscle-to-tumor crosstalk.",
+  "model": "review (preclinical and clinical)",
+  "section": "other"
+ },
+ "26453501": {
+  "pmid": "26453501",
+  "relevance": 1,
+  "finding": "Examines PGC-1α-regulated myokine expression in skeletal muscle as molecular mediators linking exercise and sedentary behavior to systemic health effects.",
+  "model": "review (human/mammalian)",
+  "section": "exercise"
+ },
+ "41744761": {
+  "pmid": "41744761",
+  "relevance": 1,
+  "finding": "Synthesizes current understanding of myokines and exerkines as an integrated endocrine code mediating muscle-organ axes in metabolic homeostasis, including discussion of EVs and non-protein mediators.",
+  "model": "review (preclinical and clinical)",
+  "section": "secretion"
+ },
+ "41662991": {
+  "pmid": "41662991",
+  "relevance": 1,
+  "finding": "Discusses skeletal muscle as a metabolic and endocrine organ producing myokines and exerkines that mediate systemic health benefits of physical activity.",
+  "model": "human / clinical nutrition context",
+  "section": "exercise"
+ },
+ "24859778": {
+  "pmid": "24859778",
+  "relevance": 1,
+  "finding": "Summarizes evidence that skeletal muscle synthesizes and secretes multiple myokines that regulate remote organs and muscle itself, supporting its role as an endocrine organ.",
+  "model": "review (mammalian/human)",
+  "section": "secretion"
+ },
+ "42033529": {
+  "pmid": "42033529",
+  "relevance": 1,
+  "finding": "Reviews exercise-induced myokines that act via endocrine and paracrine mechanisms to modulate breast cancer biology, metabolism, and treatment outcomes.",
+  "model": "review (preclinical and clinical)",
+  "section": "other"
+ },
+ "27101470": {
+  "pmid": "27101470",
+  "relevance": 1,
+  "finding": "Updates on novel contraction-regulated myokines (IL-6, irisin, IL-15, decorin) with metabolic effects that differ between healthy and metabolically diseased individuals.",
+  "model": "human / mammalian",
+  "section": "secretion"
+ },
+ "17882701": {
+  "pmid": "17882701",
+  "relevance": 1,
+  "finding": "TSP-4 immunolabeling was higher in the pericellular than interterritorial compartments of Achilles tendon in rats, but was not altered by running distance.",
+  "model": "rat (Sprague-Dawley)",
+  "section": "exercise"
+ },
+ "42446479": {
+  "pmid": "42446479",
+  "relevance": 1,
+  "finding": "Extracorporeal shock wave therapy increased thrombospondin-4 expression in human tenocytes in vitro after rotator cuff injury.",
+  "model": "rabbit / human tenocytes & HUVECs",
+  "section": "fibrosis_ecm"
+ },
+ "24818782": {
+  "pmid": "24818782",
+  "relevance": 1,
+  "finding": "Thrombospondin-4 was enriched in human anterior cruciate ligament compared with patellar tendon, indicating tissue-specific ECM composition.",
+  "model": "human (ACL/PT tissue)",
+  "section": "other"
+ },
+ "34225858": {
+  "pmid": "34225858",
+  "relevance": 0,
+  "finding": "Plasma-treated PCL/collagen multiscale fibers induced tenogenic differentiation of mesenchymal stem cells; thrombospondin-4 is not discussed.",
+  "model": "human MSCs on PCL/collagen scaffolds",
+  "section": "other"
+ },
+ "9749943": {
+  "pmid": "9749943",
+  "relevance": 0,
+  "finding": "Cartilage oligomeric matrix protein (COMP), not TSP-4, is characterized in normal and pseudoachondroplasia musculoskeletal tissues.",
+  "model": "human cartilage/tendon/ligament cells",
+  "section": "other"
+ },
+ "28587393": {
+  "pmid": "28587393",
+  "relevance": 1,
+  "finding": "Thrombospondin-4 expression increased during tenogenic differentiation of human menstrual blood stromal stem cells co-cultured with Achilles tendon cells.",
+  "model": "human MenSCs / Achilles tenocytes",
+  "section": "other"
+ },
+ "42129609": {
+  "pmid": "42129609",
+  "relevance": 2,
+  "finding": "Matrifibrocytes adopt a cartilage-like ECM program including Thbs4, with Thbs4-Atf6α ER-stress adaptation proposed to stabilize the terminal scar state in cardiac fibrosis.",
+  "model": "mouse / human (lineage tracing, single-cell)",
+  "section": "heart"
+ },
+ "28252048": {
+  "pmid": "28252048",
+  "relevance": 3,
+  "finding": "THBS4 was identified as an elevated serum biomarker in mdx dystrophic mice that was normalized toward wild-type levels upon utrophin overexpression, implicating it as a muscle-derived circulating factor in DMD.",
+  "model": "mouse (C57BL/6, mdx, Fiona)",
+  "section": "muscle"
+ },
+ "32736140": {
+  "pmid": "32736140",
+  "relevance": 0,
+  "finding": "Quantitative proteomics of plasma from ischemic-hypoxic rats identified 177 altered proteins, with thrombospondin-4 not specifically highlighted among the findings.",
+  "model": "rat (ischemic-hypoxic model)",
+  "section": "other"
+ },
+ "37391348": {
+  "pmid": "37391348",
+  "relevance": 2,
+  "finding": "This review summarizes that TSP-4 mediates cell–ECM interactions, tissue remodeling, angiogenesis and synaptogenesis, and is implicated in skeletal dysplasia, osteoporosis, cardiovascular disease, tumor progression and neurological disorders.",
+  "model": "review (multiple models)",
+  "section": "biology"
+ },
+ "26868511": {
+  "pmid": "26868511",
+  "relevance": 2,
+  "finding": "Thbs4 ablation reduced macrophage infiltration into adipose tissue and neointima and prevented injury-induced restenosis in ApoE knockout mice fed a Western diet.",
+  "model": "mouse (Thbs4/ApoE DKO)",
+  "section": "metabolism"
+ },
+ "40792449": {
+  "pmid": "40792449",
+  "relevance": 0,
+  "finding": "Maternal serum TSP-4 levels were elevated in pre-eclampsia and distinguished disease severity and adverse perinatal outcomes, with no relation to skeletal muscle, ageing or metabolism.",
+  "model": "human (pregnant women)",
+  "section": "other"
+ },
+ "33996903": {
+  "pmid": "33996903",
+  "relevance": 1,
+  "finding": "THBS4 mRNA levels are significantly higher in gastric tumor tissues and correlate with tumor stage, prognosis, and immune cell infiltration.",
+  "model": "human (gastric cancer databases)",
+  "section": "other"
+ },
+ "41876963": {
+  "pmid": "41876963",
+  "relevance": 1,
+  "finding": "THBS4-positive circulating cancer-associated fibroblasts are detectable in blood and may serve as a diagnostic marker for gastric cancer.",
+  "model": "human (gastric cancer patients)",
+  "section": "other"
+ },
+ "36995772": {
+  "pmid": "36995772",
+  "relevance": 1,
+  "finding": "Intranasal C3a treatment after ischemic stroke upregulates Thbs4 in the peri-infarct cortex of mice alongside enhanced structural connectivity.",
+  "model": "mouse (brain/stroke model)",
+  "section": "other"
+ },
+ "41587539": {
+  "pmid": "41587539",
+  "relevance": 2,
+  "finding": "A 3D-bioprinted human myotendinous junction model expresses thrombospondin-4 at the myotube-tendon interface, alongside collagen VI and XXII.",
+  "model": "human in vitro (3D bioprinted MTJ)",
+  "section": "muscle"
+ },
+ "37047781": {
+  "pmid": "37047781",
+  "relevance": 2,
+  "finding": "In BICD2-associated muscle pathology, thrombospondin-4 shows altered abundance and localization in skeletal muscle biopsies, potentially linked to impaired vesicular protein secretion.",
+  "model": "human (patient muscle biopsies)",
+  "section": "muscle"
+ },
+ "41307411": {
+  "pmid": "41307411",
+  "relevance": 2,
+  "finding": "Thrombospondin-4 is identified as a potential novel diagnostic marker in skeletal muscle proteomes of patients with X-linked myopathy with excessive autophagy (XMEA).",
+  "model": "human (XMEA patient muscle)",
+  "section": "muscle"
+ },
+ "22132088": {
+  "pmid": "22132088",
+  "relevance": 2,
+  "finding": "Thrombospondin-4 marks the tendons of adult zebrafish extraocular muscles in regions that are highly innervated.",
+  "model": "zebrafish (extraocular muscles)",
+  "section": "muscle"
+ },
+ "7519904": {
+  "pmid": "7519904",
+  "relevance": 1,
+  "finding": "Thrombospondin-4 is noted as present in skeletal muscle while the study primarily characterizes myoblast adhesive interactions with thrombospondin-1.",
+  "model": "rodent myoblast cell lines",
+  "section": "muscle"
+ },
+ "11937576": {
+  "pmid": "11937576",
+  "relevance": 2,
+  "finding": "Thrombospondin-4 protein localization is confirmed by immunofluorescence in muscle biopsies of children with juvenile dermatomyositis as part of a dysregulated gene expression profile.",
+  "model": "human (JDM pediatric muscle biopsies)",
+  "section": "muscle"
+ },
+ "39627572": {
+  "pmid": "39627572",
+  "relevance": 3,
+  "finding": "In older males (75+ years), serum thrombospondin-4 levels differ significantly between the physically weakest and fittest participants, supporting its use as a blood-based biomarker for early frailty.",
+  "model": "human (older adults, serum biomarkers)",
+  "section": "ageing"
+ },
+ "16877003": {
+  "pmid": "16877003",
+  "relevance": 2,
+  "finding": "Thrombospondin-4 is one of several neurally regulated genes differentially upregulated in rat tibialis anterior skeletal muscle following reinnervation.",
+  "model": "rat (reinnervated tibialis anterior)",
+  "section": "muscle"
+ },
+ "16138928": {
+  "pmid": "16138928",
+  "relevance": 3,
+  "finding": "Thrombospondin-4 is among skeletal muscle extracellular matrix genes whose transcript abundance is modulated by six weeks of high-intensity aerobic exercise training in humans.",
+  "model": "human (sedentary males, exercise training)",
+  "section": "exercise"
+ },
+ "26418824": {
+  "pmid": "26418824",
+  "relevance": 1,
+  "finding": "Reviews evidence for common pathways explaining bone and muscle wasting in ageing, highlighting the muscle secretome's role in cross-talk with bone.",
+  "model": "human / review",
+  "section": "muscle"
+ },
+ "25804855": {
+  "pmid": "25804855",
+  "relevance": 1,
+  "finding": "Lists muscle-derived secreted factors affecting bone including IGF-1, FGF-2, IL-6, IL-15, myostatin, osteoglycin, FAM5C, Tmem119 and osteoactivin, as part of the bone-muscle unit.",
+  "model": "human / review",
+  "section": "muscle"
+ },
+ "30408611": {
+  "pmid": "30408611",
+  "relevance": 1,
+  "finding": "Describes muscle as a secretory organ releasing factors such as myostatin, irisin, and BAIBA that communicate with bone, with many factors regulated by mechanical loading/exercise.",
+  "model": "human / review",
+  "section": "muscle"
+ },
+ "38424446": {
+  "pmid": "38424446",
+  "relevance": 1,
+  "finding": "Loss of innervation alters the myofiber secretome, with increased secretion of Osteopontin and Tgfb1, leading to aberrant MuSC activation and impaired muscle regeneration.",
+  "model": "mouse",
+  "section": "muscle"
+ },
+ "37815907": {
+  "pmid": "37815907",
+  "relevance": 1,
+  "finding": "Reviews molecular crosstalk between muscle, bone, and adipose tissue, including myokines, osteokines and adipokines, that contribute to sarcopenia pathogenesis.",
+  "model": "human / review",
+  "section": "muscle"
+ },
+ "42587821": {
+  "pmid": "42587821",
+  "relevance": 1,
+  "finding": "Reviews EV-mediated bidirectional signaling in the bone-muscle unit, noting that aging shifts the EV secretome toward a senescent profile that impairs muscle regeneration and osteogenesis.",
+  "model": "human / review",
+  "section": "muscle"
+ },
+ "42520997": {
+  "pmid": "42520997",
+  "relevance": 1,
+  "finding": "Synthesises evidence on myokines and exerkines including irisin/FNDC5, BDNF, IL-6, IGF-1, cathepsin B and GDF-15 that mediate muscle-brain cross-talk in ageing.",
+  "model": "human / review",
+  "section": "ageing"
+ },
+ "42554540": {
+  "pmid": "42554540",
+  "relevance": 0,
+  "finding": "Heart failure participants showed higher visceral adipose tissue, greater muscle fat infiltration, more adverse muscle composition and lower thigh muscle volume than matched controls.",
+  "model": "human (UK Biobank)",
+  "section": "heart"
+ },
+ "34427856": {
+  "pmid": "34427856",
+  "relevance": 1,
+  "finding": "A stem-cell-derived secretome product (STEM) preserved soleus muscle mass, fibre CSA and grip strength in aged mice during hindlimb unloading and recovery.",
+  "model": "mouse (aged C57BL/6)",
+  "section": "ageing"
+ },
+ "39279172": {
+  "pmid": "39279172",
+  "relevance": 1,
+  "finding": "Umbilical cord MSC conditioned medium increased SOD and VEGF and decreased CRP and myostatin in a rat model of sarcopenia.",
+  "model": "rat",
+  "section": "muscle"
+ },
+ "40684475": {
+  "pmid": "40684475",
+  "relevance": 2,
+  "finding": "Metformin exposure in people with type 2 diabetes was associated with reproducible changes in circulating levels of 11 proteins including THBS4.",
+  "model": "human",
+  "section": "metabolism"
+ },
+ "26139464": {
+  "pmid": "26139464",
+  "relevance": 2,
+  "finding": "TSP-4/THBS4 promotes angiogenesis in vivo and endothelial cell adhesion, migration and proliferation via integrin α2 and gabapentin receptor α2δ-1, with Thbs4-/- mice showing impaired angiogenesis.",
+  "model": "mouse / cell culture",
+  "section": "fibrosis_ecm"
+ },
+ "11121445": {
+  "pmid": "11121445",
+  "relevance": 2,
+  "finding": "Thrombospondin 4 is among the developmentally regulated genes showing widespread overexpression in Duchenne muscular dystrophy and alpha-sarcoglycan-deficient skeletal muscle.",
+  "model": "human (DMD/alpha-SG deficiency patients)",
+  "section": "muscle"
+ },
+ "21701537": {
+  "pmid": "21701537",
+  "relevance": 2,
+  "finding": "Transcriptome-wide profiling identifies THBS4 as the gene most strongly correlated with diffuse-type gastric adenocarcinoma, with overexpression localized to tumor stromal extracellular matrix.",
+  "model": "human (gastric adenocarcinoma)",
+  "section": "fibrosis_ecm"
+ },
+ "21360624": {
+  "pmid": "21360624",
+  "relevance": 2,
+  "finding": "The axolotl ortholog of thrombospondin-4 (tsp-4) is highly upregulated during limb regeneration in patterns both distinct and similar to larval limb development.",
+  "model": "axolotl (salamander) limb regeneration",
+  "section": "muscle"
+ },
+ "42411040": {
+  "pmid": "42411040",
+  "relevance": 2,
+  "finding": "THBS4 is downregulated in intervertebral disc degeneration and its overexpression suppresses LPS-induced apoptosis and inflammation in nucleus pulposus cells via the PI3K/AKT pathway.",
+  "model": "in vitro NPCs (human/rat)",
+  "section": "other"
+ },
+ "23615612": {
+  "pmid": "23615612",
+  "relevance": 2,
+  "finding": "SVZ-generated astrocytes express high levels of Thbs4 (a secreted homopentameric glycoprotein) that modulates Notch signaling to drive protective astrogenesis after cortical injury.",
+  "model": "mouse (SVZ niche, neural stem cells)",
+  "section": "other"
+ },
+ "21681990": {
+  "pmid": "21681990",
+  "relevance": 2,
+  "finding": "iTRAQ-based plasma proteomics of APOE-knockout mice fed a high-fat diet identifies thrombospondin-4 among proteins with abundance changes associated with coronary artery disease progression.",
+  "model": "mouse (APOE-/- plasma)",
+  "section": "heart"
+ },
+ "38326801": {
+  "pmid": "38326801",
+  "relevance": 0,
+  "finding": "Transcriptomic and proteomic profiling of human bladders before and after TURP de-obstruction identifies molecular classifiers of bladder remodelling; THBS4 is not specifically addressed.",
+  "model": "human (bladder, BPO)",
+  "section": "other"
+ },
+ "24369271": {
+  "pmid": "24369271",
+  "relevance": 1,
+  "finding": "A 5-plex SRM-MS assay measuring thrombospondin-4 alongside vinculin, SAA, CRP, and apo(a) was developed for plasma biomarker verification in atherosclerosis, but THBS4 did not emerge as a top altered marker.",
+  "model": "human plasma (atherosclerosis cohorts)",
+  "section": "heart"
+ },
+ "41897451": {
+  "pmid": "41897451",
+  "relevance": 2,
+  "finding": "Serum proteomic analysis of elderly heart failure patients with improved ejection fraction identifies thrombospondin-4 among cardiovascular-related proteins that change after six months of therapy optimisation.",
+  "model": "human (elderly HF patients, serum)",
+  "section": "heart"
+ },
+ "31160442": {
+  "pmid": "31160442",
+  "relevance": 3,
+  "finding": "Mass spectrometry reveals thrombospondin-4 is enriched in serum from young but not old mice, and recombinant THBS4 directly increases dendritic arborization and synapse numbers in cultured neurons.",
+  "model": "mouse (young vs old serum, human neurons)",
+  "section": "ageing"
+ },
+ "11967953": {
+  "pmid": "11967953",
+  "relevance": 0,
+  "finding": "cDNA microarray analysis identifies 76 differentially expressed genes associated with benign prostatic hyperplasia; thrombospondin-4 is not specifically highlighted.",
+  "model": "human (prostate tissue)",
+  "section": "other"
+ },
+ "30972713": {
+  "pmid": "30972713",
+  "relevance": 1,
+  "finding": "The THBS4 Ala387Pro genetic variant (along with F13A1 and THBS2 variants) shows no association with myocardial infarction in young patients aged <50.",
+  "model": "human (young MI cases vs controls)",
+  "section": "heart"
+ },
+ "33882817": {
+  "pmid": "33882817",
+  "relevance": 2,
+  "finding": "In brain of outbred deer mice, THBS4 exhibited one of the most pronounced inversions in transcriptomic coordination profiles during aging, consistent with its recent identification as a rejuvenation factor in mice.",
+  "model": "Peromyscus leucopus and P. maniculatus (brain)",
+  "section": "ageing"
+ },
+ "40765330": {
+  "pmid": "40765330",
+  "relevance": 2,
+  "finding": "THBS4 expression was significantly elevated in serum of CKD patients and in fibrotic mouse kidneys/HK2 cells, and THBS4 knockdown suppressed renal fibrosis and fibrosis-associated protein expression.",
+  "model": "Human (CKD patients) and mouse (UUO model) / HK2 cells",
+  "section": "fibrosis_ecm"
+ },
+ "35635083": {
+  "pmid": "35635083",
+  "relevance": 1,
+  "finding": "MALAT1 knockdown in TGF-β1-treated human tendon-derived stem cells downregulated Thrombospondin 4 expression, linking MALAT1 to THBS4 regulation during tenogenic differentiation.",
+  "model": "Human TDSCs / Sprague-Dawley rats",
+  "section": "other"
+ },
+ "32527800": {
+  "pmid": "32527800",
+  "relevance": 2,
+  "finding": "Four weeks of empagliflozin treatment in humans significantly reduced plasma thrombospondin-4 levels, identifying THBS4 as a cardiomyocyte-function-related protein altered by SGLT2 inhibition.",
+  "model": "Human plasma (72 participants across glucose tolerance spectrum)",
+  "section": "metabolism"
+ },
+ "35924962": {
+  "pmid": "35924962",
+  "relevance": 1,
+  "finding": "Higher plasma thrombospondin-4 levels were significantly associated with overall radiographic osteoarthritis burden and knee OA progression in 3517 Rotterdam Study participants.",
+  "model": "Human (Rotterdam Study, plasma Olink proteomics)",
+  "section": "other"
+ },
+ "26356734": {
+  "pmid": "26356734",
+  "relevance": 2,
+  "finding": "Thrombospondin-4 was the most strongly upregulated gene (9.2-fold) in mesenteric arteries of spontaneously hypertensive rats, associated with ER stress and ATF6α activation.",
+  "model": "Rat (SHR vs WKY mesenteric arteries)",
+  "section": "heart"
+ },
+ "30419485": {
+  "pmid": "30419485",
+  "relevance": 0,
+  "finding": "This paper concerns ADAMTS-4 and ADAMTS-5 (a disintegrin and metalloproteinase with thrombospondin motifs), not thrombospondin-4, in mandibular condylar cartilage degeneration.",
+  "model": "Rat (mandibular condylar cartilage)",
+  "section": "other"
+ },
+ "42565167": {
+  "pmid": "42565167",
+  "relevance": 1,
+  "finding": "Plasma thrombospondin-4 was significantly associated with more severe inflammatory depressive symptoms (fatigue, sleep/appetite disturbances) in 165 MDD patients.",
+  "model": "Human (MDD patients, plasma PEA proteomics)",
+  "section": "other"
+ },
+ "32111749": {
+  "pmid": "32111749",
+  "relevance": 2,
+  "finding": "Thrombospondin-4 (TSP-4) plasma levels differed significantly in first-trimester samples between women who later developed gestational diabetes and non-diabetic controls, implicating it as an early GDM biomarker.",
+  "model": "Human (first-trimester plasma, GDM vs controls)",
+  "section": "metabolism"
+ },
+ "41123705": {
+  "pmid": "41123705",
+  "relevance": 1,
+  "finding": "Thrombospondin-4 was among the dysregulated serum proteins in low-fertility Holstein Friesian crossbred bulls, associated with nutrient-autophagy-inflammation-extracellular matrix pathways.",
+  "model": "Bull (Holstein Friesian crossbred, serum LC-MS/MS)",
+  "section": "other"
+ },
+ "36388115": {
+  "pmid": "36388115",
+  "relevance": 1,
+  "finding": "Proteomic/transcriptomic profiling of the failing right ventricle in monocrotaline-induced PAH rats revealed dysregulated mitochondrial, purine, inflammatory, and fibrosis pathways, with multiomic integration of 15 prioritized protein:transcript pairs.",
+  "model": "Rat (male, monocrotaline PAH model, right ventricle)",
+  "section": "heart"
+ },
+ "21732553": {
+  "pmid": "21732553",
+  "relevance": 2,
+  "finding": "Comparative plasma proteomics in S-adenosylhomocysteine hydrolase-deficient patients identified thrombospondin-4 as a candidate biomarker specifically associated with the slowly progressive myopathy of this methionine metabolism disorder.",
+  "model": "Human (AHCY-deficient patients, plasma 2-DE/MALDI-MS and LC/ESI-MS)",
+  "section": "muscle"
+ },
+ "32899998": {
+  "pmid": "32899998",
+  "relevance": 1,
+  "finding": "In colorectal cancer cells, TGFβ and PDGF-D signaling via PDGFRβ, IP3R, and STIM1 increase THBS4 protein levels and promote conversion of incomplete THBS4 to its complete secreted form.",
+  "model": "human (DLD-1 colon cancer cell line)",
+  "section": "secretion"
+ },
+ "16099885": {
+  "pmid": "16099885",
+  "relevance": 1,
+  "finding": "The P387 TSP-4 variant associated with premature myocardial infarction induces more robust MAPK/STAT1/HSP27 phosphorylation and greater H2O2 and IL-8 release from neutrophils via integrin αMβ2 than the A387 variant.",
+  "model": "human (neutrophils)",
+  "section": "other"
+ },
+ "39181283": {
+  "pmid": "39181283",
+  "relevance": 0,
+  "finding": "Wenshen Xiaozheng Tang alleviates endometriosis fibrosis by modulating eMSC differentiation and paracrine signaling, with no mention of THBS4 in the abstract.",
+  "model": "human/mouse (eMSCs)",
+  "section": "other"
+ },
+ "34958493": {
+  "pmid": "34958493",
+  "relevance": 1,
+  "finding": "Neuronal contact-induced astrocytic S1PR1 signaling upregulates expression of the secreted synaptogenic factors SPARCL1 and thrombospondin 4 to coordinate astrocyte-neuron crosstalk.",
+  "model": "mouse (primary astrocytes/neurons)",
+  "section": "secretion"
+ },
+ "33407730": {
+  "pmid": "33407730",
+  "relevance": 1,
+  "finding": "Cancer-associated fibroblast-derived TSP-4 signals via integrin α2 and HSF1 to promote proliferation, EMT, and cancer stem-like traits in gallbladder cancer cells.",
+  "model": "human (GBC tissues/cell lines, xenografts)",
+  "section": "other"
+ },
+ "33464950": {
+  "pmid": "33464950",
+  "relevance": 2,
+  "finding": "Pressure overload in mice and aortic stenosis in patients upregulate Thrombospondin-4 expression in cardiac microvascular endothelial cells, alongside increased proline and procollagen secretion.",
+  "model": "mouse (Tie2-GFP, TAC) and human (aortic stenosis patients)",
+  "section": "heart"
+ },
+ "28726981": {
+  "pmid": "28726981",
+  "relevance": 0,
+  "finding": "Bovine intramuscular adipose tissue development is reviewed with respect to adipogenic markers such as DLK1, with no mention of THBS4.",
+  "model": "cattle (bovine skeletal muscle/IMF)",
+  "section": "muscle"
+ },
+ "12592708": {
+  "pmid": "12592708",
+  "relevance": 1,
+  "finding": "Zebrafish thbs4 encodes a 949-residue secreted extracellular protein with the TSPN domain, four EGF-like repeats, seven calcium-binding Type III repeats, and a C-terminal region characteristic of the THBS3/THBS4/COMP subgroup.",
+  "model": "zebrafish",
+  "section": "biology"
+ },
+ "24983516": {
+  "pmid": "24983516",
+  "relevance": 1,
+  "finding": "Thbs4 is expressed by GFAP-positive astrocytes along the rostral migratory stream, and Thbs4 knockout mice show impaired neuronal migration and reduced interneuron numbers in the olfactory bulb.",
+  "model": "mouse (Thbs4 KO)",
+  "section": "other"
+ },
+ "32913388": {
+  "pmid": "32913388",
+  "relevance": 0,
+  "finding": "Proteomic analysis of human sclera in primary open-angle glaucoma reveals ECM-related alterations, with no specific mention of THBS4 in the abstract.",
+  "model": "human (sclera tissue)",
+  "section": "other"
+ },
+ "18802666": {
+  "pmid": "18802666",
+  "relevance": 1,
+  "finding": "The flexible heteroarotinoid SHetA2 alters secretion of thrombospondin-4, VEGF, and bFGF from ovarian and renal cancer cultures, contributing to its anti-angiogenic activity.",
+  "model": "human (ovarian/renal cell cultures, xenografts)",
+  "section": "other"
+ },
+ "34044860": {
+  "pmid": "34044860",
+  "relevance": 2,
+  "finding": "Lower plasma THBS4 levels are associated with accelerated long-term forgetting in asymptomatic carriers of autosomal dominant Alzheimer's disease mutations, consistent with THBS4 being a blood-borne rejuvenation factor.",
+  "model": "human (ADAD mutation carriers, plasma)",
+  "section": "ageing"
+ },
+ "17936262": {
+  "pmid": "17936262",
+  "relevance": 1,
+  "finding": "THBS4 is part of a gene network with HNF-6/OC-2, E-cadherin, and osteopontin that regulates liver bud expansion by controlling hepatoblast migration and adhesion.",
+  "model": "mouse",
+  "section": "other"
+ },
+ "40044042": {
+  "pmid": "40044042",
+  "relevance": 1,
+  "finding": "Thrombospondin 4 was identified as an O-GlcNAc glycoprotein involved in the regulation of zebrafish fin regeneration.",
+  "model": "zebrafish",
+  "section": "other"
+ },
+ "38045440": {
+  "pmid": "38045440",
+  "relevance": 2,
+  "finding": "Thrombospondin-4 was among nine proteins selected via machine learning as a predictor for adverse events in patients with HFrEF heart failure.",
+  "model": "human",
+  "section": "heart"
+ },
+ "25987545": {
+  "pmid": "25987545",
+  "relevance": 2,
+  "finding": "KLF6 directly suppresses Tsp4 expression in cardiomyocytes, and cardiac TSP4 regulates the activation of cardiac fibroblasts and cardiac fibrosis.",
+  "model": "mouse",
+  "section": "heart"
+ },
+ "38973500": {
+  "pmid": "38973500",
+  "relevance": 2,
+  "finding": "Acupuncture reduced myocardial THBS4 mRNA expression along with decreased ACE/Ang II/AT1R axis signaling in spontaneously hypertensive rats.",
+  "model": "rat",
+  "section": "heart"
+ },
+ "42043508": {
+  "pmid": "42043508",
+  "relevance": 2,
+  "finding": "Thrombospondin 4 showed partial spatial overlap with lectin signals within the fibrotic extracellular matrix of hypertensive heart failure rat hearts.",
+  "model": "rat",
+  "section": "fibrosis_ecm"
+ },
+ "30716923": {
+  "pmid": "30716923",
+  "relevance": 1,
+  "finding": "Thrombospondin-4 was identified as a protein highly related to yak rumen smooth muscle tenderness during postmortem storage.",
+  "model": "yak",
+  "section": "muscle"
+ },
+ "40859337": {
+  "pmid": "40859337",
+  "relevance": 2,
+  "finding": "TSP-4 expression in human infrapatellar fat pad tissue positively correlated with the degree of tissue fibrosis in osteoarthritis, and synovial fluid TSP-4 correlated with pain intensity.",
+  "model": "human",
+  "section": "fibrosis_ecm"
+ },
+ "33668140": {
+  "pmid": "33668140",
+  "relevance": 2,
+  "finding": "TSP-4 promoted synthesis of collagen II, IX, XII and proteoglycans but inhibited collagen I and X in chondrocytes, stabilizing the chondrocyte phenotype in articular cartilage.",
+  "model": "pig (porcine chondrocytes)",
+  "section": "fibrosis_ecm"
+ },
+ "41814667": {
+  "pmid": "41814667",
+  "relevance": 2,
+  "finding": "THBS4 was upregulated in human abdominal aortic aneurysm, and Thbs4 knockdown accelerated aneurysm progression with increased inflammation and remodeling in Ang II-challenged ApoE-/- mice.",
+  "model": "mouse and human",
+  "section": "fibrosis_ecm"
+ },
+ "30132849": {
+  "pmid": "30132849",
+  "relevance": 2,
+  "finding": "TSP-4 is a TGF-β1 target that mediates TGF-β1-induced hypertrophic scar formation through Smad3 and p38 signaling in skin fibroblasts.",
+  "model": "rat and human cells",
+  "section": "fibrosis_ecm"
+ },
+ "32686880": {
+  "pmid": "32686880",
+  "relevance": 2,
+  "finding": "The P387 TSP4 variant more actively supports macrophage adhesion and accumulation in atherosclerotic lesions compared to A387 TSP4.",
+  "model": "mouse and human",
+  "section": "heart"
+ },
+ "15131549": {
+  "pmid": "15131549",
+  "relevance": 2,
+  "finding": "After adjusting for covariates, the THBS4 A387P polymorphism was associated with myocardial infarction, with a 2.5- to 3-fold increased odds of MI in carriers of the P allele in a replication case-control study.",
+  "model": "human (case-control genetic association)",
+  "section": "heart"
+ },
+ "28705915": {
+  "pmid": "28705915",
+  "relevance": 1,
+  "finding": "Microarray analysis of osteoarthritis bone marrow lesions found thrombospondin 4 among the most upregulated genes, implicated in osteochondral turnover and neuronal signalling pathways.",
+  "model": "human (knee OA tissue)",
+  "section": "other"
+ },
+ "36455498": {
+  "pmid": "36455498",
+  "relevance": 1,
+  "finding": "Under macromolecular crowding conditions on a 1000 kPa grooved substrate without collagen coating, thrombospondin 4 was upregulated in human bone marrow stem cells alongside tenogenic differentiation markers.",
+  "model": "human bone marrow stem cells (in vitro)",
+  "section": "other"
+ },
+ "26629997": {
+  "pmid": "26629997",
+  "relevance": 2,
+  "finding": "Thbs4-deficient mice showed no differences in skeletal growth or bone mass acquisition compared to wildtype, but displayed a transient thinning of articular cartilage, suggesting a protective role of Thbs4 for joint integrity.",
+  "model": "mouse (Thbs4 knockout) and porcine chondrocytes",
+  "section": "biology"
+ },
+ "15121769": {
+  "pmid": "15121769",
+  "relevance": 1,
+  "finding": "In a candidate-gene association study of premature coronary heart disease, the strongest association among 111 genes was with the A387P variant in THBS4 (p = 0.002).",
+  "model": "human (case-control genetic association)",
+  "section": "heart"
+ },
+ "30989042": {
+  "pmid": "30989042",
+  "relevance": 1,
+  "finding": "TSP-4 mRNA was significantly higher in human tendon tissue than in other connective tissues (bone, cartilage, nerve, muscle, fat), and its expression in tenocytes declined upon culturing but remained higher than in mesenchymal stem cells.",
+  "model": "human musculoskeletal tissues and cultured cells",
+  "section": "other"
+ },
+ "16610137": {
+  "pmid": "16610137",
+  "relevance": 1,
+  "finding": "THBS4 was identified as one of several promising candidate genes located at quantitative trait loci on chicken chromosome Z associated with egg production and egg shell quality.",
+  "model": "chicken/mouse/human comparative genomics",
+  "section": "other"
+ },
+ "41399375": {
+  "pmid": "41399375",
+  "relevance": 1,
+  "finding": "TSP4 expression in bladder cancer cells positively correlated with lymph node metastasis stages and promoted lymphatic endothelial cell migration via integrin αvβ3/FAK/ERK signalling and induction of VEGF-C.",
+  "model": "human bladder cancer cells and TCGA datasets",
+  "section": "other"
+ },
+ "35768842": {
+  "pmid": "35768842",
+  "relevance": 1,
+  "finding": "In a study of gastric cancer, thrombospondin 4 was identified as a downstream target gene activated by the SYT11-MKK7-JNK-cJun signalling axis in the stem-like molecular subtype.",
+  "model": "human gastric cancer cells and tissues",
+  "section": "other"
+ },
+ "35456219": {
+  "pmid": "35456219",
+  "relevance": 1,
+  "finding": "ELISA validation showed that serum THBS4, together with HMMR, NXPH4 and PITX1, serves as an early-stage hepatocellular carcinoma diagnostic marker with superior predictive capability compared to AFP.",
+  "model": "human HCC patient serum",
+  "section": "other"
+ },
+ "27264108": {
+  "pmid": "27264108",
+  "relevance": 1,
+  "finding": "Proteomic analysis of damaged mouse and human liver revealed altered extracellular matrix composition during regeneration, including increased thrombospondin-4 among non-structural ECM proteins.",
+  "model": "mouse (CCl4/DDC liver injury) and human liver",
+  "section": "fibrosis_ecm"
+ },
+ "21836539": {
+  "pmid": "21836539",
+  "relevance": 1,
+  "finding": "In a study of 421 liver transplant procedures, recipient THBS4 A387P polymorphism was assessed among other prothrombotic polymorphisms but was not found to be associated with hepatic vascular thrombosis.",
+  "model": "human (liver transplant recipients and donors)",
+  "section": "heart"
+ },
+ "40395976": {
+  "pmid": "40395976",
+  "relevance": 1,
+  "finding": "Thrombospondin-4 (Thromb-4) was used as one of the tenogenic marker genes (alongside Scx, Tnmd, Tnc-C) to assess GDF-5/6/7-induced differentiation of MSCs and tendon stem cells under different oxygen tensions.",
+  "model": "human MSCs and tendon stem cells",
+  "section": "other"
+ },
+ "34631719": {
+  "pmid": "34631719",
+  "relevance": 2,
+  "finding": "Recombinant THBS4 promoted cutaneous wound healing in mice and selectively stimulated fibroblast migration and keratinocyte proliferation in vitro, with β-catenin identified as a hub for THBS4-dependent cell signaling.",
+  "model": "human/mouse skin (in vitro and in vivo)",
+  "section": "fibrosis_ecm"
+ },
+ "22869739": {
+  "pmid": "22869739",
+  "relevance": 2,
+  "finding": "An inducible LacI-based transgene system in axolotl was used to demonstrate an in vivo role for thrombospondin-4 during limb regeneration.",
+  "model": "axolotl (amphibian) limb regeneration",
+  "section": "biology"
+ },
+ "32684116": {
+  "pmid": "32684116",
+  "relevance": 2,
+  "finding": "An SDF-1 gradient matrix altered the neurogenic niche after traumatic brain injury and downregulated thrombospondin-4 (Thbs4), which promoted neuronal regeneration and functional recovery.",
+  "model": "rat traumatic brain injury model",
+  "section": "biology"
+ },
+ "36566568": {
+  "pmid": "36566568",
+  "relevance": 2,
+  "finding": "Stimulation of primary human keratinocytes with THBS4 regulated signaling pathways linked to proliferation, migration, inflammation and differentiation, with regulated genes such as IL37 and TSLP linked to atopic dermatitis.",
+  "model": "primary human keratinocytes (in vitro)",
+  "section": "fibrosis_ecm"
+ },
+ "30947736": {
+  "pmid": "30947736",
+  "relevance": 2,
+  "finding": "TSP4-overexpressing bone marrow stromal cells increased VEGF and Ang-1 expression and promoted angiogenesis of endothelial cells in vitro and blood vessel regeneration in a rat focal cerebral ischemia (MCAO) model.",
+  "model": "rat middle cerebral artery occlusion model / HUVECs",
+  "section": "heart"
+ },
+ "15094117": {
+  "pmid": "15094117",
+  "relevance": 1,
+  "finding": "A coding-region single nucleotide polymorphism in thrombospondin-4 (A387P) was among the thrombospondin-family SNPs most strongly associated with familial premature coronary artery disease and myocardial infarction, and altered endothelial cell adhesion/proliferation.",
+  "model": "human genetic association / endothelial cells",
+  "section": "heart"
+ },
+ "25976449": {
+  "pmid": "25976449",
+  "relevance": 1,
+  "finding": "A meta-analysis found that the THBS4 A387P polymorphism was not associated with overall coronary artery disease risk, though an association was observed in the American population subset.",
+  "model": "human genetic meta-analysis",
+  "section": "heart"
+ },
+ "38642137": {
+  "pmid": "38642137",
+  "relevance": 0,
+  "finding": "Animal studies of vertebral osteoporosis showed significant changes in ADAMTS-4 (a disintegrin and metalloproteinase with thrombospondin motif), not thrombospondin-4, in intervertebral disc degeneration.",
+  "model": "rat and mouse animal models",
+  "section": "other"
+ },
+ "20399679": {
+  "pmid": "20399679",
+  "relevance": 1,
+  "finding": "C21, the C-terminal segment of thrombospondin-4, was identified as an erythropoietin-dependent endothelial factor that stimulates red cell formation in anemic mice and acts as an osteopontin antagonist.",
+  "model": "endothelial cells and anemic mice",
+  "section": "biology"
+ },
+ "20006665": {
+  "pmid": "20006665",
+  "relevance": 2,
+  "finding": "C21, the C-terminal peptide of thrombospondin-4, binds CD44 (osteopontin receptor) and TSP-1 and is rapidly internalized and localized to the nucleus, with two mechanisms proposed for its cell-proliferating activity.",
+  "model": "in vitro biochemical and cell-based assays",
+  "section": "biology"
+ },
+ "16170390": {
+  "pmid": "16170390",
+  "relevance": 1,
+  "finding": "Gene expression profiling identified thrombospondin 4 as one of several genes differentially expressed between invasive ductal and lobular breast carcinomas.",
+  "model": "human breast carcinoma tissue",
+  "section": "other"
+ },
+ "33971315": {
+  "pmid": "33971315",
+  "relevance": 0,
+  "finding": "TSP-4 localizes specifically to hypertrophic chondrocytes during postnatal bone formation and fracture repair, unlike TSP-5 which distributes across all cartilage layers.",
+  "model": "cartilage/endochondral ossification (mouse/rat)",
+  "section": "other"
+ },
+ "30669608": {
+  "pmid": "30669608",
+  "relevance": 0,
+  "finding": "TSP-4 protein expression is increased in osteoarthritic knee cartilage and correlates with disease severity, but is not regulated transcriptionally.",
+  "model": "human cartilage (OA patients)",
+  "section": "fibrosis_ecm"
+ },
+ "41156284": {
+  "pmid": "41156284",
+  "relevance": 0,
+  "finding": "Maternal serum TSP-4 levels are significantly higher in gestational hypertension and even higher in those who develop preeclampsia.",
+  "model": "human (pregnant women)",
+  "section": "other"
+ },
+ "29545349": {
+  "pmid": "29545349",
+  "relevance": 0,
+  "finding": "Plasma thrombospondin-4 is among proteins elevated more than 1.3-fold in children with sickle cell anemia and silent cerebral infarction.",
+  "model": "human (children with sickle cell anemia)",
+  "section": "other"
+ },
+ "28284660": {
+  "pmid": "28284660",
+  "relevance": 0,
+  "finding": "Serum thrombospondin-4 is differentially expressed in locoweed-poisoned rabbits and proposed as a potential biomarker for locoism.",
+  "model": "rabbit (locoweed poisoning model)",
+  "section": "other"
+ },
+ "41421089": {
+  "pmid": "41421089",
+  "relevance": 0,
+  "finding": "Serum TSP-4 is significantly higher in knee osteoarthritis participants with pain sensitisation and correlates with Hoffa's synovitis and bone marrow lesion numbers.",
+  "model": "human (knee OA patients)",
+  "section": "other"
+ },
+ "32537023": {
+  "pmid": "32537023",
+  "relevance": 0,
+  "finding": "THBS4 was identified as one of seven candidate survival-associated genes in gastric cancer and is differentially expressed across TNM stages and histological grades.",
+  "model": "human (gastric cancer TCGA cohort)",
+  "section": "other"
+ },
+ "31966412": {
+  "pmid": "31966412",
+  "relevance": 0,
+  "finding": "Thrombospondin-4 was identified as a serum biomarker whose levels correlate with systemic lupus erythematosus disease activity.",
+  "model": "human (SLE patients)",
+  "section": "other"
+ },
+ "38614208": {
+  "pmid": "38614208",
+  "relevance": 0,
+  "finding": "Thrombospondin-4 was identified as a novel 17-fold elevated ligand in epithelial lining fluid of mannose receptor-deficient mice after LPS lung injury and confirmed as an MR endocytosis substrate.",
+  "model": "mouse (lung injury model) and CHO cells",
+  "section": "other"
+ },
+ "42402908": {
+  "pmid": "42402908",
+  "relevance": 0,
+  "finding": "Maternal serum TSP-4 levels are significantly higher in pregnancies complicated by placenta accreta spectrum and independently associated with PAS.",
+  "model": "human (pregnant women with PAS)",
+  "section": "other"
+ },
+ "41153662": {
+  "pmid": "41153662",
+  "relevance": 0,
+  "finding": "Thbs4 overexpression in DRG promotes axonal regeneration and accelerates sciatic nerve recovery via NF-κB and ERK signaling, while knockdown has opposite effects.",
+  "model": "rat (sciatic nerve transection model)",
+  "section": "other"
+ },
+ "25327416": {
+  "pmid": "25327416",
+  "relevance": 0,
+  "finding": "TSP4 protein is upregulated in axotomized somata of L5 DRG neurons and in surrounding interstitial space following peripheral nerve injury.",
+  "model": "rat (spinal nerve ligation and spared nerve injury)",
+  "section": "other"
+ }
+}

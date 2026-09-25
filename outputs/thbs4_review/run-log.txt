@@ -1,78 +1,88 @@
 backend: minimax-cn https://api.minimaxi.com/v1 MiniMax-M3
 [     0s] model: minimax-cn/MiniMax-M3 via https://api.minimaxi.com/v1
-[     7s] queries: 30
-[     8s]     6 ← THBS4 skeletal muscle
-[     9s]    25 ← thrombospondin-4 muscle
-[    10s]     3 ← thrombospondin-4 ATF6 endoplasmic reticulum stress
-[    10s]     3 ← thrombospondin-4 sarcolemma muscular dystrophy
-[    11s]    15 ← thrombospondin-4 heart hypertrophy
-[    12s]    25 ← thrombospondin-4 aging OR ageing
-[    14s]    25 ← THBS4 obesity OR adipose OR insulin OR diabetes
-[    15s]    25 ← THBS4 liver fibrosis OR NAFLD OR MASLD
-[    16s]    25 ← thrombospondin-4 exercise OR mechanical load
-[    17s]    11 ← thrombospondin-4 tendon extracellular matrix
-[    18s]     2 ← THBS4 fibroblast TGF-beta fibrosis
-[    19s]     2 ← THBS4 proteomics plasma
-[    20s]     8 ← thrombospondin-4 angiogenesis inflammation
-[    20s]    25 ← thrombospondin family matricellular review
-[    21s]    25 ← myokines skeletal muscle endocrine organ review
-[    22s]    18 ← muscle secretome aging sarcopenia
-[    23s]    25 ← THBS4[tiab] OR "thrombospondin-4"[tiab]
-[    24s]    25 ← "Thrombospondins"[Mesh] AND "Muscle, Skeletal"[Mesh]
-[    25s]     6 ← THBS4[tiab] AND ("Muscle, Skeletal"[Mesh] OR skeletal muscle[tiab] OR myotube[tiab])
-[    26s]    25 ← THBS4[tiab] AND (secret*[tiab] OR serum[tiab] OR plasma[tiab] OR circulat*[tiab] OR myokin
-[    27s]     9 ← THBS4[tiab] AND ("Aging"[Mesh] OR aging[tiab] OR ageing[tiab] OR elderly[tiab] OR aged[tia
-[    28s]    25 ← THBS4[tiab] AND ("Metabolism"[Mesh] OR metabolism[tiab] OR insulin[tiab] OR diabetes[tiab]
-[    29s]    13 ← THBS4[tiab] AND ("Exercise"[Mesh] OR exercise[tiab] OR training[tiab] OR contraction[tiab]
-[    30s]    25 ← THBS4[tiab] AND ("Fibrosis"[Mesh] OR fibrosis[tiab] OR "Extracellular Matrix"[Mesh] OR ECM
-[    31s]    25 ← THBS4[tiab] AND (proteomic*[tiab] OR biomarker*[tiab] OR cohort[tiab] OR "mass spectrometr
-[    32s]    25 ← THBS4[tiab] AND ("Heart"[Mesh] OR cardiac[tiab] OR cardiomyopath*[tiab] OR myocard*[tiab])
-[    32s]     1 ← THBS4[tiab] AND ("Sarcopenia"[Mesh] OR sarcopen*[tiab] OR muscle atroph*[tiab] OR muscle r
-[    33s]     3 ← THBS4[tiab] AND (adipocyte[tiab] OR hepatocyte[tiab] OR "insulin resistance"[tiab] OR gluc
-[    34s]     6 ← THBS4[tiab] AND (review[pt] OR review[tiab] OR systematic review[tiab] OR meta-analysis[pt
-[    35s]     0 ← THBS4[tiab] AND (frailty[tiab] OR longevity[tiab] OR healthy aging[tiab] OR caloric restri
-[    46s] records with abstracts: 343
-[   173s] screened: 343 (76 relevant)
-[   173s] evidence cards: 60
-[   235s] outline: Thrombospondin-4 (THBS4) as a Skeletal Muscle-Derived Secreted Factor: Regulatory Mechanisms in Ageing and Metabolism — 10 sections
-[   245s]   drafted 1/10 Introduction: THBS4 at the crossroads of muscle biology, age (739 words)
-[   270s]   drafted 2/10 THBS4 protein structure, gene family and evolutionary conser (702 words)
-[   271s]   drafted 4/10 Molecular mechanisms I: From the ECM to integrin signalling  (900 words)
-[   282s]   drafted 3/10 Expression in skeletal muscle: is THBS4 a bona fide myokine? (836 words)
-[   294s]   drafted 6/10 Ageing, sarcopenia and the 'rejuvenating factor' hypothesis (733 words)
-[   301s]   drafted 5/10 Molecular mechanisms II: The unconventional intracellular ER (741 words)
-[   310s]   drafted 7/10 Systemic metabolism and inter-organ crosstalk (919 words)
-[   316s]   drafted 9/10 Critical perspectives and controversies (873 words)
-[   365s]   drafted 10/10 Open questions and experimental roadmap (852 words)
-[   410s]   drafted 8/10 Cardiovascular THBS4: a parallel paradigm with implications  (1030 words)
-[   752s] reviews: reviewer-muscle-biology, reviewer-ageing-metabolism, reviewer-citation-integrity
-[   774s]   revised 2/10
-[   788s]   revised 3/10
-[   840s]   revised 5/10
-[   843s]   revised 4/10
-[   867s]   revised 1/10
-[   878s]   revised 6/10
-[   881s]   revised 7/10
-[   892s]   revised 8/10
-[   968s]   revised 9/10
-[  1215s]   revised 10/10
-[  1278s] citations: {'cited': 60, 'references': 60, 'out_of_range': [], 'uncited': [], 'citations': 386}
+[     5s] queries: 30
+[     5s]     6 ← THBS4 skeletal muscle
+[     6s]    25 ← thrombospondin-4 muscle
+[     6s]     3 ← thrombospondin-4 ATF6 endoplasmic reticulum stress
+[     7s]     3 ← thrombospondin-4 sarcolemma muscular dystrophy
+[     8s]    15 ← thrombospondin-4 heart hypertrophy
+[     8s]    25 ← thrombospondin-4 aging OR ageing
+[     9s]    25 ← THBS4 obesity OR adipose OR insulin OR diabetes
+[    10s]    25 ← THBS4 liver fibrosis OR NAFLD OR MASLD
+[    11s]    25 ← thrombospondin-4 exercise OR mechanical load
+[    11s]    11 ← thrombospondin-4 tendon extracellular matrix
+[    12s]     2 ← THBS4 fibroblast TGF-beta fibrosis
+[    13s]     2 ← THBS4 proteomics plasma
+[    13s]     8 ← thrombospondin-4 angiogenesis inflammation
+[    14s]    25 ← thrombospondin family matricellular review
+[    15s]    25 ← myokines skeletal muscle endocrine organ review
+[    15s]    18 ← muscle secretome aging sarcopenia
+[    16s]    25 ← "Thrombospondin-4"[Title/Abstract] OR "THBS4"[Title/Abstract]
+[    17s]    17 ← "Thrombospondin-4"[Title/Abstract] AND ("skeletal muscle"[Title/Abstract] OR myotube[Title
+[    17s]    25 ← "Thrombospondin-4"[Title/Abstract] AND (myokine[Title/Abstract] OR secreted[Title/Abstract
+[    18s]    10 ← "Thrombospondin-4"[Title/Abstract] AND (aging[Title/Abstract] OR ageing[Title/Abstract] OR
+[    19s]    25 ← "Thrombospondin-4"[Title/Abstract] AND (insulin[Title/Abstract] OR metabolism[Title/Abstra
+[    19s]     5 ← "Thrombospondin-4"[Title/Abstract] AND (adipose[Title/Abstract] OR adipocyte[Title/Abstrac
+[    20s]    10 ← "Thrombospondin-4"[Title/Abstract] AND (liver[Title/Abstract] OR hepatic[Title/Abstract] O
+[    21s]    25 ← "Thrombospondin-4"[Title/Abstract] AND (cardiac[Title/Abstract] OR heart[Title/Abstract] O
+[    21s]     6 ← "Thrombospondin-4"[Title/Abstract] AND (exercise[Title/Abstract] OR training[Title/Abstrac
+[    22s]    25 ← "Thrombospondin-4"[Title/Abstract] AND (fibrosis[Title/Abstract] OR "extracellular matrix"
+[    23s]    25 ← "Thrombospondin-4"[Title/Abstract] AND (proteomic[Title/Abstract] OR proteomics[Title/Abst
+[    23s]    19 ← "Thrombospondin-4"[Title/Abstract] AND (satellite[Title/Abstract] OR regeneration[Title/Ab
+[    24s]    10 ← "Thrombospondin-4"[Title/Abstract] AND ("review"[Publication Type] OR review[Title/Abstrac
+[    25s]     0 ← "Thrombospondin-4"[MeSH Terms] OR "THBS4 protein, human"[Supplementary Concept]
+[    31s] records with abstracts: 336
+[   149s] screened: 324 (85 relevant)
+[   149s] evidence cards: 60
+[   177s] outline: Thrombospondin-4 as a skeletal muscle-derived secreted factor: regulatory mechanisms in ageing and metabolism — a critical appraisal — 10 sections
+[   200s]   drafted 3/10 3. Expression and secretion by skeletal muscle: is THBS4 a g (738 words, 14 cards)
+[   201s]   drafted 1/10 1. Introduction: framing THBS4 within the myokine landscape (767 words, 15 cards)
+[   211s]   drafted 2/10 2. THBS4 at the protein level: domain architecture, intracel (760 words, 13 cards)
+[   214s]   drafted 4/10 4. Molecular mechanisms: TGF-β/SMAD, hypoxia/HIF-1α, ATF6 an (819 words, 16 cards)
+[   215s]   drafted 5/10 5. THBS4 in ageing, sarcopenia and exercise adaptation (852 words, 8 cards)
+[   222s]   drafted 6/10 6. Systemic metabolism, vascular crosstalk and inter-organ s (753 words, 13 cards)
+[   232s]   drafted 8/10 8. Critical perspectives and controversies (850 words, 15 cards)
+[   234s]   drafted 7/10 7. Lessons from cardiac, fibrotic and musculoskeletal diseas (816 words, 29 cards)
+[   238s]   drafted 9/10 9. Open questions and an experimental roadmap (963 words, 28 cards)
+[   264s]   drafted 10/10 10. Conclusions (725 words, 24 cards)
+[   568s] reviews: reviewer-muscle-biology (1548 words), reviewer-ageing-metabolism (2019 words), reviewer-citation-integrity (1268 words)
+[   586s]   revised 1/10 (969 words, 17 cards)
+[   608s]   revised 2/10 (853 words, 13 cards)
+[   618s]   revised 4/10 (856 words, 16 cards)
+[   632s]   revised 5/10 (918 words, 9 cards)
+[   648s]   revised 7/10 (891 words, 28 cards)
+[   661s]   revised 3/10 (831 words, 14 cards)
+[   684s]   revised 9/10 (1139 words, 27 cards)
+[   718s]   revised 10/10 (906 words, 24 cards)
+[   732s]   revised 8/10 (882 words, 18 cards)
+[   738s]   revised 6/10 (936 words, 13 cards)
+[   799s]   audited 3/10: 3 unsupported citation(s) corrected
+[   812s]   audited 2/10: 1 unsupported citation(s) corrected
+[   895s]   audited 5/10: 5 unsupported citation(s) corrected
+[   901s]   audited 4/10: 5 unsupported citation(s) corrected
+[   926s]   audited 1/10: 3 unsupported citation(s) corrected
+[   957s]   audited 8/10: 2 unsupported citation(s) corrected
+[   969s]   audited 7/10: 2 unsupported citation(s) corrected
+[   980s]   audited 6/10: 2 unsupported citation(s) corrected
+[  1014s]   audited 9/10: 6 unsupported citation(s) corrected
+[  1068s]   audited 10/10: 3 unsupported citation(s) corrected
+[  1109s] citations: {'cited': 59, 'references': 59, 'out_of_range': [], 'uncited': [], 'citations': 257}
 {
- "title": "Thrombospondin-4 (THBS4) as a Skeletal Muscle-Derived Secreted Factor: Regulatory Mechanisms in Ageing and Metabolism",
+ "title": "Thrombospondin-4 as a skeletal muscle-derived secreted factor: regulatory mechanisms in ageing and metabolism — a critical appraisal",
  "model": "minimax-cn/MiniMax-M3",
- "llm_calls": 66,
+ "llm_calls": 88,
  "queries": 30,
- "records": 343,
+ "records": 336,
  "cards": 60,
  "sections": 10,
- "references": 60,
+ "references": 59,
  "citation_check": {
-  "cited": 60,
-  "references": 60,
+  "cited": 59,
+  "references": 59,
   "out_of_range": [],
   "uncited": [],
-  "citations": 386
+  "citations": 257
  },
- "words": 12461
+ "words": 9204
 }
-RESULT: PASS — 60 distinct references cited
+RESULT: PASS — 59 distinct references cited

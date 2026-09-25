@@ -1,0 +1,11 @@
+{
+ "abstract": "Thrombospondin-4 (THBS4) is a pentameric matricellular glycoprotein abundantly expressed in skeletal muscle and heart, whose biology spans intracellular chaperone-like activity at the endoplasmic reticulum and extracellular roles at the sarcolemma. Recent transcriptomic, proteomic and serological studies have positioned THBS4 at the muscle–circulation interface, prompting consideration of this protein as a candidate myokine relevant to ageing and metabolism. Exercise modulates THBS4 expression, circulating concentrations track physical performance in older adults and decline with age in mice, and recombinant THBS4 promotes neuronal dendritic arborisation. Thbs4 ablation in mice produces a coherent muscle phenotype encompassing altered extracellular matrix composition, reduced lipoprotein lipase activity and decreased very-low-density lipoprotein uptake, alongside an age-dependent sarcolemmal vulnerability. This review critically appraises these claims. The most robust cellular evidence derives from cardiomyocytes, where THBS4 engages the adaptive unfolded-protein response via BiP/ATF6α, whereas upstream TGF-β/SMAD, HIF-1α and KLF6 modules have been mapped largely in non-muscle tissues and extrapolated to skeletal muscle by inference. Demonstration that myofibre-derived THBS4 reaches biologically active plasma concentrations, engages a defined distant receptor, and mediates phenotypes lost upon myofibre-specific deletion remains outstanding, and the dominant source of the circulating pool—myofibre versus interstitial, vascular or nervous tissue—is unresolved. Until these criteria are met, THBS4 is best regarded as a matricryptic factor with myokine-like associations rather than a ratified endocrine signal, and conditional loss-of-function studies combined with compartment-resolved proteomics in age- and sex-stratified human cohorts are now required to test the candidature.",
+ "keywords": [
+  "Thrombospondin-4",
+  "Myokine",
+  "Skeletal muscle",
+  "Ageing",
+  "Sarcopenia",
+  "Matricellular protein"
+ ]
+}

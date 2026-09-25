@@ -1,0 +1,74 @@
+[
+ {
+  "card": "R1",
+  "model": "mouse",
+  "finding": "TSP-4 deficiency alters tendon collagen fibril size, soleus muscle ECM, and reduces VLDL uptake and grip strength.",
+  "limitation": "Single-gene knockout; mechanistic links between ECM changes and metabolism not fully defined."
+ },
+ {
+  "card": "R2",
+  "model": "mouse and Drosophila",
+  "finding": "Thbs4 stabilizes sarcolemmal membrane attachment complexes, with loss causing age-related dystrophy and overexpression protecting against muscular dystrophy.",
+  "limitation": "Spontaneous dystrophy only in aged mice; cross-species findings combined."
+ },
+ {
+  "card": "R3",
+  "model": "mouse (Sgcβ-null and LAMA2-RD)",
+  "finding": "Thbs4 deletion does not worsen dystrophic phenotype in mouse models of LGMD2E or LAMA2-RD.",
+  "limitation": "Contradicts earlier DGC-dystrophy studies; only two non-DGC models tested."
+ },
+ {
+  "card": "R4",
+  "model": "mouse serum / human neurons",
+  "finding": "THBS4 is enriched in young mouse serum and recombinant THBS4 increases dendritic arborization and synapse numbers in cultured neurons.",
+  "limitation": "In vitro neuronal culture; in vivo role in brain aging not directly tested."
+ },
+ {
+  "card": "R5",
+  "model": "human (sedentary males)",
+  "finding": "THBS4 transcript abundance in skeletal muscle is modulated by six weeks of aerobic exercise training in humans.",
+  "limitation": "Small cohort of healthy males; transcript-only without protein validation."
+ },
+ {
+  "card": "R6",
+  "model": "human (older adults)",
+  "finding": "Serum THBS4 levels differ between physically weakest and fittest older males, supporting its use as a frailty biomarker.",
+  "limitation": "Sex-specific finding in males only; correlative cross-sectional design."
+ },
+ {
+  "card": "R7",
+  "model": "human skeletal muscle",
+  "finding": "THBS4 was identified as a predicted myokine hub upregulated after untrained eccentric exercise in humans.",
+  "limitation": "Predicted, not biochemically confirmed myokine; short two-week training study."
+ },
+ {
+  "card": "R8",
+  "model": "mouse (C57BL/6, mdx)",
+  "finding": "THBS4 is an elevated serum biomarker in mdx dystrophic mice, normalized toward wild-type by utrophin overexpression.",
+  "limitation": "Mouse-only biomarker discovery; clinical DMD patient validation not performed."
+ },
+ {
+  "card": "R9",
+  "model": "rat PH models / human PAH",
+  "finding": "THBS4 is upregulated in pulmonary arteries across PH models, induced by HIF-1α and TGF-β1 via SMAD2/p38 signaling.",
+  "limitation": "Animal PH models; therapeutic targeting experiments limited in scope."
+ },
+ {
+  "card": "R12",
+  "model": "mouse and Drosophila",
+  "finding": "Secretory pathway transit is required for Thbs4 to augment sarcolemmal stability; Thbs4 deletion worsens mdx cardiomyopathy.",
+  "limitation": "Uses artificial secretion-defective mutants; only cardiac mdx model examined."
+ },
+ {
+  "card": "R18",
+  "model": "mouse",
+  "finding": "Thbs3 antithetically promotes sarcolemmal destabilization via integrin inhibition, augmenting injury-induced cardiomyopathy, unlike Thbs4.",
+  "limitation": "Injury-induced model; differential constitutive versus inducible Thbs3 effects not resolved."
+ },
+ {
+  "card": "R19",
+  "model": "mouse DMD models",
+  "finding": "Spatial transcriptomics identifies Thbs4 as a marker of fibrotic histopathological alterations in dystrophic mouse skeletal muscle.",
+  "limitation": "Mouse-only; descriptive marker without functional in vivo validation."
+ }
+]
