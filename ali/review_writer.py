@@ -80,6 +80,7 @@ class HubLLM:
         self.verify_tls = resolve_backend_verify_tls(cfg, {})
         self.timeout = timeout
         self.calls = 0
+        self.trace: Path | None = None  # one JSON line per call (sizes, truncation, reply head) for diagnosis
         self._lock = threading.Lock()
         if not (self.base_url and self.model):
             raise RuntimeError("Agent Hub has no model configured (backend / models)")
@@ -103,11 +104,22 @@ class HubLLM:
                 last = exc
                 time.sleep(5 * (attempt + 1))
                 continue
-            text = strip_model_think_tags(text or "").strip()
+            raw = text or ""
+            text = strip_model_think_tags(raw).strip()
+            self._log({"system": system[:60], "prompt_chars": len(user), "max_tokens": max_tokens, "raw_chars": len(raw),
+                       "chars": len(text), "truncated": bool(meta.get("truncated")), "head": text[:240],
+                       "raw_head": raw[:240] if not text else ""})
             if text and not (meta.get("truncated") and attempt < 2):
                 return text
             last = RuntimeError("empty or truncated model reply")
         raise RuntimeError(f"model call failed: {last}")
+
+
+    def _log(self, row: dict[str, Any]) -> None:
+        if self.trace is None:
+            return
+        with self._lock, open(self.trace, "a", encoding="utf-8") as fh:
+            fh.write(json.dumps({"t": round(time.time(), 1), **row}, ensure_ascii=False) + "\n")
 
 
 def extract_json(text: str) -> Any:
@@ -121,6 +133,26 @@ def extract_json(text: str) -> Any:
         if isinstance(value, (dict, list)):
             return value
     raise ValueError("no JSON found in model reply")
+
+
+def ask_json(llm: Callable[..., str], system: str, user: str, *, expect: type = list, max_tokens: int = 8000,
+             temperature: float = 0.2) -> Any:
+    """A reply parsed as JSON of type ``expect``; one retry with a larger budget and a stricter instruction."""
+    reply = ""
+    for attempt in range(2):
+        ask = user if attempt == 0 else (user + "\n\nIMPORTANT: your previous reply was not valid JSON. Reply "
+                                         "with the JSON only — no prose, no Markdown, no explanation.")
+        try:
+            reply = llm(system, ask, max_tokens=max_tokens * (1 + attempt), temperature=temperature)
+            value = extract_json(reply)
+        except ValueError:
+            continue
+        if isinstance(value, dict) and expect is list:  # {"queries": [...]} style wrappers
+            inner = [v for v in value.values() if isinstance(v, list)]
+            value = inner[0] if len(inner) == 1 else value
+        if isinstance(value, expect):
+            return value
+    raise ValueError(f"model reply is not JSON {expect.__name__}: {reply[:200]!r}")
 
 
 # ── PubMed (through the Hub network layer) ────────────────────────────
@@ -303,40 +335,46 @@ WRITER_SYSTEM = (
 
 
 def plan_queries(llm: HubLLM, topic: str, seeds: list[str]) -> list[str]:
-    reply = llm("You design PubMed search strategies.", (
+    try:
+        got = ask_json(llm, "You design PubMed search strategies.", (
         f"Review topic: {topic}\n\nReturn a JSON array of 10-14 distinct PubMed queries (English, PubMed syntax "
         "allowed, no wildcards) that together retrieve the primary literature and key reviews on this topic: core "
         "biology, skeletal muscle, secretion / circulation, ageing, metabolism (adipose, liver, insulin, heart), "
-        "exercise, fibrosis / ECM, human cohorts / proteomics. Output only the JSON array."), max_tokens=1500)
-    queries = [str(q).strip() for q in extract_json(reply) if str(q).strip()]
+        "exercise, fibrosis / ECM, human cohorts / proteomics. Output only the JSON array."), expect=list, max_tokens=4000)
+    except ValueError:
+        got = []  # the seed queries alone still cover the topic
+    queries = [str(q).strip() for q in got if isinstance(q, str) and str(q).strip()]
     return list(dict.fromkeys(seeds + queries))
 
 
 def screen(llm: HubLLM, topic: str, recs: list[dict[str, Any]], *, batch: int = 12) -> dict[str, dict[str, Any]]:
     """Relevance 0-3 and a one-sentence key finding per record (from its abstract only)."""
     results: dict[str, dict[str, Any]] = {}
+    failures: list[str] = []
 
     def run(chunk: list[dict[str, Any]]) -> None:
         cards = "\n\n".join(f"PMID {r['pmid']} | {r['title']} | {r['journal']} {r['year']}\n{(r['abstract'] or '(no abstract)')[:1600]}"
                             for r in chunk)
         try:
-            reply = llm("You screen papers for a systematic literature review. Use only the given abstracts.", (
+            rows = ask_json(llm, "You screen papers for a systematic literature review. Use only the given abstracts.", (
                 f"Review topic: {topic}\n\nFor each paper return an object "
                 '{"pmid": "...", "relevance": 0-3, "finding": "one factual sentence about what the paper shows '
                 'regarding the topic (only from the abstract)", "model": "species / system", "section": "one of: '
                 'biology, muscle, secretion, ageing, metabolism, heart, fibrosis_ecm, exercise, human, other"}. '
                 "relevance 3 = directly about the topic's protein in muscle/ageing/metabolism, 2 = directly about the "
                 "protein in another tissue or mechanism, 1 = context only, 0 = irrelevant. Output one JSON array.\n\n"
-                + cards), max_tokens=4000, temperature=0.1)
-            for row in extract_json(reply):
+                + cards), expect=list, max_tokens=8000, temperature=0.1)
+            for row in rows:
                 if isinstance(row, dict) and str(row.get("pmid") or "") in {r["pmid"] for r in chunk}:
                     results[str(row["pmid"])] = row
-        except Exception:  # noqa: BLE001 — unscreened papers are simply not used
-            pass
+        except Exception as exc:  # noqa: BLE001 — unscreened papers are simply not used
+            failures.append(str(exc)[:200])
 
     chunks = [recs[i:i + batch] for i in range(0, len(recs), batch)]
     with ThreadPoolExecutor(max_workers=3) as pool:
         list(pool.map(run, chunks))
+    if failures and not results:
+        raise RuntimeError(f"screening failed for every batch: {failures[0]}")
     return results
 
 
@@ -370,15 +408,14 @@ def card_block(cards: list[dict[str, Any]], *, abstract_chars: int = 900) -> str
 
 
 def make_outline(llm: HubLLM, topic: str, cards: list[dict[str, Any]]) -> dict[str, Any]:
-    reply = llm(WRITER_SYSTEM, (
+    outline = ask_json(llm, WRITER_SYSTEM, (
         f"Topic: {topic}\n\nEvidence cards:\n{card_block(cards, abstract_chars=300)}\n\n"
         "Design the review. Return JSON: {\"title\": \"...\", \"sections\": [{\"heading\": \"...\", \"goal\": \"what the "
         "section must establish, incl. the critical angle\", \"cards\": [ids], \"words\": 600-1000}]}. 8-10 sections: "
         "Introduction; biology of the protein; expression and secretion by skeletal muscle (is it a genuine myokine?); "
         "molecular mechanisms; ageing/sarcopenia; systemic metabolism; a dedicated 'Critical perspectives and "
         "controversies' section; open questions and an experimental roadmap; conclusions. Every card should be used by "
-        "at least one section. Output only JSON."), max_tokens=4000, temperature=0.2)
-    outline = extract_json(reply)
+        "at least one section. Output only JSON."), expect=dict, max_tokens=8000, temperature=0.2)
     if not isinstance(outline, dict) or not outline.get("sections"):
         raise ValueError("outline has no sections")
     return outline
@@ -427,13 +464,16 @@ def section_problems(text: str, cards: list[dict[str, Any]]) -> list[str]:
 
 def key_studies_table(llm: HubLLM, cards: list[dict[str, Any]], *, rows: int = 12) -> list[dict[str, str]]:
     primary = [c for c in cards if not c.get("review")][:rows + 6]
-    reply = llm(WRITER_SYSTEM, (
+    try:
+        got = ask_json(llm, WRITER_SYSTEM, (
         f"From these evidence cards pick the {rows} most important primary studies and return a JSON array of "
         '{"card": id, "model": "species / system", "finding": "main finding (<=25 words)", "limitation": "main '
         'limitation or caveat (<=20 words)"}. Use only the cards.\n\n' + card_block(primary, abstract_chars=500)),
-        max_tokens=3000, temperature=0.1)
+        expect=list, max_tokens=6000, temperature=0.1)
+    except ValueError:
+        return []
     ids = {c["id"] for c in cards}
-    return [r for r in extract_json(reply) if isinstance(r, dict) and str(r.get("card") or "").lstrip("R").isdigit()
+    return [r for r in got if isinstance(r, dict) and str(r.get("card") or "").lstrip("R").isdigit()
             and int(str(r["card"]).lstrip("R")) in ids][:rows]
 
 
@@ -481,10 +521,9 @@ def response_letter(llm: HubLLM, reviews: list[dict[str, str]], changes: str) ->
 
 
 def write_abstract(llm: HubLLM, title: str, body: str) -> dict[str, Any]:
-    reply = llm(WRITER_SYSTEM, (
+    return ask_json(llm, WRITER_SYSTEM, (
         f"Write the abstract (200-250 words, one paragraph, no citations) and 5-6 keywords for this review titled "
-        f"\"{title}\". Return JSON {{\"abstract\": \"...\", \"keywords\": [...]}}.\n\n{body[:30000]}"), max_tokens=2000)
-    return extract_json(reply)
+        f"\"{title}\". Return JSON {{\"abstract\": \"...\", \"keywords\": [...]}}.\n\n{body[:30000]}"), expect=dict, max_tokens=6000)
 
 
 # ── Word output ───────────────────────────────────────────────────────
@@ -538,6 +577,8 @@ def run(topic: str, out_dir: Path, *, seed_queries: list[str], seed_pmids: list[
         max_cards: int = 60, log: Callable[[str], None] = print, llm: HubLLM | None = None) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
     llm = llm or HubLLM()
+    if isinstance(llm, HubLLM):
+        llm.trace = out_dir / "llm_trace.jsonl"
     log(f"model: {llm.provider}/{llm.model} via {llm.base_url}")
 
     queries = plan_queries(llm, topic, seed_queries)
