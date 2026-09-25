@@ -1,5 +1,5 @@
 {
- "run_url": "https://github.com/xielab2017/Agent-Hub/actions/runs/36184844531",
+ "run_url": "https://github.com/xielab2017/Agent-Hub/actions/runs/36186852955",
  "profile": "multiomics-emp",
  "smoke": false,
  "steps": [
@@ -11,7 +11,7 @@
   {
    "hub": "A",
    "step": "export",
-   "bytes": 8465
+   "bytes": 8049
   },
   {
    "hub": "B",
@@ -19,83 +19,15 @@
    "installed": true,
    "entry": "run.py",
    "origin": "agent-hub-authored"
-  },
-  {
-   "hub": "B",
-   "step": "run",
-   "status": "✓ done"
   }
  ],
  "run": {
-  "id": "literature-review-20260925-201820-85f0",
-  "status": "done",
-  "stage": "citations: {'cited': 62, 'references': 62, 'out_of_range': [], 'uncited': [], 'citations': 330}",
-  "returncode": 0,
-  "outputs": [
-   {
-    "name": "citation_audit.json",
-    "bytes": 23128
-   },
-   {
-    "name": "draft_v1.md",
-    "bytes": 64709
-   },
-   {
-    "name": "evidence_cards.json",
-    "bytes": 159031
-   },
-   {
-    "name": "llm_trace.jsonl",
-    "bytes": 122682
-   },
-   {
-    "name": "profile.json",
-    "bytes": 5428
-   },
-   {
-    "name": "response_to_reviewers.md",
-    "bytes": 28550
-   },
-   {
-    "name": "review.docx",
-    "bytes": 68490
-   },
-   {
-    "name": "review_final.md",
-    "bytes": 86753
-   },
-   {
-    "name": "reviewer_reports.md",
-    "bytes": 39826
-   },
-   {
-    "name": "summary.json",
-    "bytes": 594
-   }
-  ],
-  "summary": {
-   "title": "Software for multi-omics data integration and analysis: a systematic and critical comparison of frameworks, packages, workflows and platforms, with EasyMultiProfiler as a featured workflow for microbiome research",
-   "model": "minimax-cn/MiniMax-M3",
-   "llm_calls": 108,
-   "queries": 30,
-   "records": 514,
-   "cards": 64,
-   "sections": 10,
-   "references": 62,
-   "citation_check": {
-    "cited": 62,
-    "references": 62,
-    "out_of_range": [],
-    "uncited": [],
-    "citations": 330
-   },
-   "words": 9215,
-   "featured": {
-    "name": "EasyMultiProfiler (EMP)",
-    "pmid": "40932530",
-    "reference": 3
-   }
-  },
+  "id": "literature-review-20260925-203820-1550",
+  "status": "running",
+  "stage": "records with abstracts: 532",
+  "returncode": null,
+  "outputs": [],
+  "summary": null,
   "error": null
  }
 }

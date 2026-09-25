@@ -33,3 +33,10 @@
 - 2026-09-25 20:28:26 UTC — `033_B_running.png` — running: ⏳ 运行中 · 10 min · 67 行日志
 - 2026-09-25 20:33:27 UTC — `034_B_running.png` — running: ⏳ 运行中 · 15 min · 77 行日志
 - 2026-09-25 20:35:26 UTC — `035_B_finished.png` — skill run finished: ✓ done
+- 2026-09-25 20:37:53 UTC — `036_A_home.png` — Hub A started (fresh state, model configured)
+- 2026-09-25 20:37:55 UTC — `037_A_authoring.png` — typed: /skill-author literature-review run=outputs/thbs4_review
+- 2026-09-25 20:38:11 UTC — `038_A_authored.png` — skill authored: ✓ 已安装并加载（minimax-cn/MiniMax-M3）
+- 2026-09-25 20:38:12 UTC — `039_A_exported.png` — skill exported: literature-review.zip (8049 bytes)
+- 2026-09-25 20:38:16 UTC — `040_B_home.png` — Hub B started — fresh state, no literature-review skill
+- 2026-09-25 20:38:20 UTC — `041_B_imported.png` — bundle uploaded in Control Center → Skills and installed
+- 2026-09-25 20:38:23 UTC — `042_B_run-started.png` — typed: /skill literature-review profile=multiomics-emp out=outputs/skill_demo/review fresh
