@@ -32,3 +32,4 @@
 - 2026-09-25 20:23:25 UTC — `032_B_running.png` — running: ⏳ 运行中 · 5 min · 46 行日志
 - 2026-09-25 20:28:26 UTC — `033_B_running.png` — running: ⏳ 运行中 · 10 min · 67 行日志
 - 2026-09-25 20:33:27 UTC — `034_B_running.png` — running: ⏳ 运行中 · 15 min · 77 行日志
+- 2026-09-25 20:35:26 UTC — `035_B_finished.png` — skill run finished: ✓ done
