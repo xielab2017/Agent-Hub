@@ -71,6 +71,11 @@ def test_card_ids_and_focus_ranking():
     assert [c["pmid"] for c in cards] == ["5", "2", "1", "4"]  # seed, title mention, abstract mention, context
 
 
+def test_map_card_ids_to_final_numbers():
+    out = rw.map_card_ids("R45 is misread; see [R12, R3] and (R7). R99 too.", [3, 12, 45])
+    assert out == "ref. 3 is misread; see [ref. 2; ref. 1] and [an uncited source (card 7)]. an uncited source (card 99) too."
+
+
 def test_prose_checks_and_scrub():
     text = "The R9 model [R9] shows (R3, R4) effects. This claim is supported by evidence card [R2]."
     problems = rw.prose_problems(text)

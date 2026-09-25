@@ -317,6 +317,19 @@ def clean_section(text: str, heading: str = "") -> str:
     return normalize_cites(re.sub(r"\n{3,}", "\n\n", out).strip())
 
 
+def map_card_ids(text: str, order: list[int]) -> str:
+    """Card ids in reviewer reports / letters → the manuscript's final reference numbers ("R45" → "ref. 12")."""
+    pos = {rid: i + 1 for i, rid in enumerate(order)}
+
+    def one(rid: str) -> str:
+        n = pos.get(int(rid))
+        return f"ref. {n}" if n else f"an uncited source (card {rid})"
+
+    text = re.sub(r"\[\s*(R\d+(?:\s*[,;，]\s*R?\d+)*)\s*\]",
+                  lambda m: "[" + "; ".join(one(x) for x in re.findall(r"\d+", m.group(1))) + "]", normalize_cites(text))
+    return re.sub(r"\bR(\d+)\b", lambda m: one(m.group(1)), text)
+
+
 def validate_citations(texts: list[str], n_refs: int) -> dict[str, Any]:
     nums: list[int] = []
     for t in texts:
@@ -870,12 +883,14 @@ def run(topic: str, out_dir: Path, *, seed_queries: list[str], seed_pmids: list[
                     "limitation": r.get("limitation", "")} for k, r in enumerate(table_rows)]
     check = validate_citations([t for _, t in sections_final] + [r["ref"] for r in table_final], len(references))
     log(f"citations: {check}")
+    (out_dir / "reviewer_reports.md").write_text(map_card_ids(
+        "\n\n".join(f"# {r['label']}\n\n{r['report']}" for r in reviews), order), encoding="utf-8")
 
     body_plain = "\n\n".join(f"{h}\n{t}" for h, t in sections_final)
     meta = ck.stage("abstract", lambda: write_abstract(llm, title, body_plain))
     changes = "\n".join(f"- {s['heading']}: revised against the reviews" for s in sections)
     letter = ck.stage("response", lambda: response_letter(llm, reviews, changes))
-    (out_dir / "response_to_reviewers.md").write_text(letter, encoding="utf-8")
+    (out_dir / "response_to_reviewers.md").write_text(map_card_ids(letter, order), encoding="utf-8")
     final_md = f"# {title}\n\n## Abstract\n\n{meta.get('abstract', '')}\n\n" + "\n\n".join(
         f"## {i}. {h}\n\n{t}" for i, (h, t) in enumerate(sections_final, start=1)) + "\n\n## References\n\n" + "\n".join(
         f"[{i}] {r}" for i, r in enumerate(references, start=1))
