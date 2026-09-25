@@ -66,3 +66,7 @@
 [   653s]   revised 9/10 (922 words, 28 cards)
 [   661s]   revised 7/10 (1089 words, 12 cards)
 [   774s]   revised 10/10 (851 words, 23 cards)
+[   813s]   audited 3/10: 2 unsupported citation(s) corrected
+[   814s]   audited 1/10: 2 unsupported citation(s) corrected
+[   829s]   audited 2/10: 3 unsupported citation(s) corrected
+[   853s]   audited 5/10: 3 unsupported citation(s) corrected
