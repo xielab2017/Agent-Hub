@@ -1,0 +1,18 @@
+backend: minimax-cn https://api.minimaxi.com/v1 MiniMax-M3
+[     0s] model: minimax-cn/MiniMax-M3 via https://api.minimaxi.com/v1
+Traceback (most recent call last):
+  File "/home/runner/work/Agent-Hub/Agent-Hub/scripts/review_pipeline.py", line 122, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/home/runner/work/Agent-Hub/Agent-Hub/scripts/review_pipeline.py", line 107, in main
+    summary = review_writer.run(TOPIC, out, seed_queries=SEED_QUERIES, seed_pmids=SEED_PMIDS,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Agent-Hub/Agent-Hub/ali/review_writer.py", line 543, in run
+    queries = plan_queries(llm, topic, seed_queries)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Agent-Hub/Agent-Hub/ali/review_writer.py", line 311, in plan_queries
+    queries = [str(q).strip() for q in extract_json(reply) if str(q).strip()]
+                                       ^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Agent-Hub/Agent-Hub/ali/review_writer.py", line 123, in extract_json
+    raise ValueError("no JSON found in model reply")
+ValueError: no JSON found in model reply
