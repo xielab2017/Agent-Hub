@@ -38,3 +38,11 @@
 [   225s] outline: Software for multi-omics data integration and analysis: a systematic and critical comparison of frameworks, packages, workflows and platforms, with EasyMultiProfiler as a featured workflow for microbiome research — 10 sections
 [   234s]   drafted 2/10 A taxonomy of integration strategies: early, intermediate an (1119 words, 19 cards)
 [   237s]   drafted 1/10 Introduction: why multi-omics integration demands dedicated  (720 words, 32 cards)
+[   245s]   drafted 4/10 Microbiome-centred multi-omics tools: the case for host–micr (648 words, 5 cards)
+[   250s]   drafted 3/10 General-purpose integration frameworks in R and Python (779 words, 15 cards)
+[   263s]   drafted 6/10 Data structures, containerised workflows and reproducibility (762 words, 11 cards)
+[   279s]   drafted 5/10 Web servers, GUI tools and point-and-click platforms (905 words, 15 cards)
+[   285s]   drafted 7/10 Benchmarking evidence and evaluation criteria (742 words, 12 cards)
+[   289s]   drafted 8/10 EasyMultiProfiler (EMP): design, strengths and limitations r (828 words, 13 cards)
+[   299s]   drafted 10/10 Recommendations, roadmap and conclusions (615 words, 14 cards)
+[   333s]   drafted 9/10 Critical perspectives, controversies and emerging frontiers (972 words, 23 cards)
