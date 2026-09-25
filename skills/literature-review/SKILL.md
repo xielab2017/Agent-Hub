@@ -26,7 +26,8 @@ critical position.
 2. PubMed E-utilities search and abstracts; model screening (relevance 0-3, one-sentence finding).
 3. Evidence cards (focus-term ranking, seed / featured papers first, a few framing reviews).
 4. Outline → sections drafted in parallel, citing cards only; Hub reviewer checks each section.
-5. Three reviewer subagents (registered in the Hub) → reports.
+5. Three reviewer subagents (registered in the Hub) → reports; literature they name as missing is searched in
+   PubMed, screened and added as new evidence cards.
 6. Revision → citation integration (≥ min refs) → per-section citation audit against the cited abstracts.
 7. Renumber to [n] by first appearance → abstract, response letter, Word document.
 

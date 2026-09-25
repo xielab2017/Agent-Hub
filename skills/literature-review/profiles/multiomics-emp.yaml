@@ -14,7 +14,11 @@ coi_statement: >-
   The authors of this review developed EasyMultiProfiler (Liu B et al., Sci China Life Sci 2025). It is assessed
   with the same criteria as every other tool, and each statement about it is referenced to its published
   description.
-seed_pmids: ["40932530"]
+# the featured work + landmark tools every comparison must include (PMIDs checked against PubMed):
+# MOFA 29925568, MOFA+ 32393329, mixOmics 29099853, MicrobiomeAnalyst 28449106, MetaboAnalyst 6.0 38587201,
+# QIIME 2 31341288, SNF 24464287, phyloseq 23630581
+seed_pmids: ["40932530", "29925568", "32393329", "29099853", "28449106", "38587201", "31341288", "24464287",
+             "23630581"]
 seed_queries:
   - multi-omics integration software
   - multi-omics data integration R package

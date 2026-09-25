@@ -272,3 +272,23 @@ def test_load_profile_and_terms_regex(tmp_path):
     assert prof["topic"] == "X" and prof["seed_pmids"] == ["2"] and prof["reviewers"] == rw.REVIEWERS
     rx = re.compile(rw.terms_regex(prof["focus_terms"]), re.I)
     assert rx.search("a multiomics tool") and rx.search("Multi-omics") and rx.search("MOFA+") and not rx.search("omics")
+
+
+def test_reviewer_gaps_add_cards_for_missing_literature(monkeypatch):
+    base = rw.parse_pubmed_xml(XML)[0]
+    recs = {"900": {**base, "pmid": "900", "title": "MOFA: multi-omics factor analysis"},
+            "901": {**base, "pmid": "901", "title": "Unrelated"}}
+    monkeypatch.setattr(rw, "pubmed_search", lambda q, retmax=3: ["900", "901", "1"] if "MOFA" in q else [])
+    monkeypatch.setattr(rw, "pubmed_fetch", lambda pmids: [recs[p] for p in pmids if p in recs])
+
+    def llm(system, user, **kw):
+        if "precise PubMed searches" in system:
+            return '[{"item": "MOFA", "query": "MOFA multi-omics factor analysis"}, {"item": "x", "query": "none"}]'
+        return json.dumps([{"pmid": "900", "relevance": 3, "finding": "f", "model": "m", "section": "tools"},
+                           {"pmid": "901", "relevance": 0, "finding": "", "model": "", "section": "other"}])
+
+    cards = [{"id": 1, "pmid": "1", "first_author": "A", "year": "2020", "title": "t"},
+             {"id": 7, "pmid": "7", "first_author": "B", "year": "2021", "title": "u"}]
+    reviews = [{"label": "R1", "report": "MOFA is missing."}]
+    new = rw.reviewer_gaps(llm, "topic", reviews, cards, rubric="r", log=lambda m: None)
+    assert [(c["id"], c["pmid"]) for c in new] == [(8, "900")]  # ids continue; irrelevant and known papers skipped

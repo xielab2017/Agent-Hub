@@ -268,7 +268,8 @@ def _pipeline_context(source: Path, run_dir: Path | None) -> str:
 
     parts = [f"PIPELINE MODULE (ali/review_writer.py) DOCSTRING\n{rw.__doc__ or ''}",
              f"run() DOCSTRING\n{rw.run.__doc__ or ''}",
-             "STAGES (checkpointed in order): profile, queries, records, screened, outline, drafts, reviews, revised, "
+             "STAGES (checkpointed in order): profile, queries, records, screened, outline, drafts, reviews, gaps (missing "
+             "literature named by the reviewers → PubMed → new evidence cards), revised, "
              "integrated, audited, table, abstract, response",
              "PROFILE FIELDS: " + ", ".join(rw.DEFAULT_PROFILE)]
     entry = source / "run.py"

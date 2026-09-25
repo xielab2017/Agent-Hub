@@ -597,14 +597,51 @@ def evidence_cards(recs: list[dict[str, Any]], screened: dict[str, dict[str, Any
                                 not any(mentions(r)), -(int(r["year"] or 0))))
     chosen = sorted(primary, key=key)[:max(0, limit - min(context_slots, len(context)))]
     chosen += context[:limit - len(chosen)]
-    cards = []
-    for i, r in enumerate(chosen, start=1):
-        s = screened[r["pmid"]]
-        cards.append({"id": i, "pmid": r["pmid"], "doi": r.get("doi"), "title": r["title"], "journal": r["journal"],
-                      "year": r["year"], "first_author": (r.get("authors") or ["?"])[0], "review": r.get("review"),
-                      "relevance": s.get("relevance"), "section": s.get("section"), "model": s.get("model"),
-                      "finding": s.get("finding"), "abstract": r.get("abstract") or "", "reference": format_reference(r)})
-    return cards
+    return [make_card(i, r, screened[r["pmid"]]) for i, r in enumerate(chosen, start=1)]
+
+
+def make_card(card_id: int, r: dict[str, Any], s: dict[str, Any]) -> dict[str, Any]:
+    return {"id": card_id, "pmid": r["pmid"], "doi": r.get("doi"), "title": r["title"], "journal": r["journal"],
+            "year": r["year"], "first_author": (r.get("authors") or ["?"])[0], "review": r.get("review"),
+            "relevance": s.get("relevance"), "section": s.get("section"), "model": s.get("model"),
+            "finding": s.get("finding"), "abstract": r.get("abstract") or "", "reference": format_reference(r)}
+
+
+def reviewer_gaps(llm: Callable[..., str], topic: str, reviews: list[dict[str, str]], cards: list[dict[str, Any]],
+                  *, rubric: str, sections: list[str] | None = None, max_queries: int = 8, per_query: int = 3,
+                  log: Callable[[str], None] = print) -> list[dict[str, Any]]:
+    """Missing literature the reviewers name → PubMed → screened → new evidence cards (ids continue)."""
+    comments = "\n\n".join(f"### {r['label']}\n{r['report']}" for r in reviews)
+    have = "\n".join(f"- {c['first_author']} {c['year']}: {c['title']}" for c in cards)
+    try:
+        wanted = ask_json(llm, "You turn peer-review comments into precise PubMed searches.", (
+            f"Review topic: {topic}\n\nThe reviewers below say that key works, tools or evidence are missing. List "
+            f"up to {max_queries} of the most important MISSING items that are NOT already among the current sources, "
+            'as a JSON array of {"item": "what is missing", "query": "a precise PubMed query that finds its primary '
+            'paper (title words / tool name, no wildcards)"}. Return [] if nothing specific is missing.\n\n'
+            f"REVIEWS\n{comments[:24000]}\n\nCURRENT SOURCES\n{have}"), expect=list, max_tokens=6000, temperature=0.1)
+    except ValueError:
+        return []
+    known = {c["pmid"] for c in cards}
+    pmids: list[str] = []
+    for w in wanted[:max_queries]:
+        q = str((w or {}).get("query") or "").strip() if isinstance(w, dict) else ""
+        if not q:
+            continue
+        try:
+            got = [p for p in pubmed_search(q, retmax=per_query) if p not in known and p not in pmids]
+        except Exception as exc:  # noqa: BLE001
+            log(f"  gap search failed ({q[:60]}): {exc}")
+            continue
+        log(f"  gap: {str(w.get('item'))[:70]} → {len(got)} papers")
+        pmids += got
+    if not pmids:
+        return []
+    recs = [r for r in pubmed_fetch(pmids) if r.get("abstract")]
+    screened = screen(llm, topic, recs, rubric=rubric, sections=sections)
+    start = max(c["id"] for c in cards) + 1
+    new = [r for r in recs if _rel(screened.get(r["pmid"])) >= 2]
+    return [make_card(start + k, r, screened[r["pmid"]]) for k, r in enumerate(new)]
 
 
 def card_block(cards: list[dict[str, Any]], *, abstract_chars: int = 900) -> str:
@@ -722,7 +759,8 @@ def revise_section(llm: HubLLM, sec_heading: str, text: str, reviews: list[dict[
     comments = "\n\n".join(f"### {r['label']}\n{r['report']}" for r in reviews)
     return llm(WRITER_SYSTEM, (
         f"Revise the section \"{sec_heading}\" to address every reviewer comment that concerns it (and the general ones). "
-        "Keep the [R<id>] citation style; only cite evidence cards; keep or sharpen the critical viewpoint. Keep the "
+        "Keep the [R<id>] citation style; only cite evidence cards (including cards added for the reviewers' missing-"
+        "literature comments, which you should use where they belong); keep or sharpen the critical viewpoint. Keep the "
         "length within about 20% of the current section — tighten elsewhere when adding material. Return only the "
         "revised section text: no heading, no notes, and no mention of reviewers, comments, cards or the revision."
         f"\n\nREVIEWER COMMENTS\n{comments}\n\nCURRENT SECTION\n{text}\n\n"
@@ -993,6 +1031,13 @@ def run(topic: str, out_dir: Path, *, profile: dict[str, Any] | None = None, see
     (out_dir / "reviewer_reports.md").write_text(
         "\n\n".join(f"# {r['label']}\n\n{r['report']}" for r in reviews), encoding="utf-8")
     log("reviews: " + ", ".join(f"{r['id']} ({len(r['report'].split())} words)" for r in reviews))
+    gap_cards = ck.stage("gaps", lambda: reviewer_gaps(llm, topic, reviews, cards, rubric=prof["screen_rubric"],
+                                                       sections=prof["screen_sections"], log=log))
+    if gap_cards:
+        cards = cards + gap_cards
+        (out_dir / "evidence_cards.json").write_text(json.dumps(cards, ensure_ascii=False, indent=1), encoding="utf-8")
+    log(f"reviewer gaps: {len(gap_cards)} new evidence cards"
+        + (" — " + "; ".join(f"R{c['id']} {c['first_author']} {c['year']}" for c in gap_cards[:10]) if gap_cards else ""))
 
     def revise(i: int) -> str:
         text = clean_section(revise_section(llm, sections[i]["heading"], drafts[i], reviews, cards), sections[i]["heading"])

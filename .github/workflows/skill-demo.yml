@@ -81,8 +81,10 @@ jobs:
           sleep 2
           git rebase --abort 2>/dev/null || true
           git add outputs/skill_demo
-          git diff --cached --quiet && exit 0
-          git commit -m "Skill demo outputs (run ${{ github.run_id }})"
+          # the live loop may already have committed the last files without pushing them: push whenever ahead
+          git diff --cached --quiet || git commit -m "Skill demo outputs (run ${{ github.run_id }})"
+          git fetch -q origin "${{ github.ref_name }}"
+          [ -z "$(git log --oneline "origin/${{ github.ref_name }}..HEAD")" ] && exit 0
           for i in 1 2 3; do
             git pull --rebase -X theirs origin "${{ github.ref_name }}" && git push origin "HEAD:${{ github.ref_name }}" && exit 0
             git rebase --abort 2>/dev/null || true
