@@ -1,0 +1,3502 @@
+{
+ "41483619": {
+  "pmid": "41483619",
+  "relevance": 1,
+  "finding": "An Alzheimer's disease study applied transcriptomic and proteomic multi-omics analysis using R with WGCNA, differential expression, and machine learning to identify CACNG3 as a synaptic calcium channel regulator.",
+  "model": "human (Alzheimer's disease brain)",
+  "section": "applications"
+ },
+ "34554215": {
+  "pmid": "34554215",
+  "relevance": 3,
+  "finding": "timeOmics is an R/Bioconductor package providing a generic framework for integrating longitudinal multi-omics data through pre-processing, modeling, and clustering, demonstrated on iHMP data integrating mRNA, metabolites, gut taxa, and clinical variables.",
+  "model": "human (iHMP diabetes mellitus patients)",
+  "section": "frameworks"
+ },
+ "33315104": {
+  "pmid": "33315104",
+  "relevance": 3,
+  "finding": "MOVICS is an R package that provides a unified interface for 10 multi-omics integrative clustering algorithms along with downstream subtype characterization, comparison, and external validation analyses for cancer subtyping.",
+  "model": "human (breast cancer cohorts)",
+  "section": "frameworks"
+ },
+ "39027644": {
+  "pmid": "39027644",
+  "relevance": 3,
+  "finding": "consICA is an R/Bioconductor package implementing consensus independent component analysis for reference-free deconvolution of heterogeneous omics data to extract shared signals across modalities for patient stratification.",
+  "model": "human (cancer multi-omics)",
+  "section": "statistics_ml"
+ },
+ "41278008": {
+  "pmid": "41278008",
+  "relevance": 2,
+  "finding": "SUMO is an R package for simulating factor-analysis-based multi-omics datasets with controllable latent structures, noise, and complexity to enable reproducible testing and validation of integration methods.",
+  "model": "simulated multi-omics data",
+  "section": "benchmarks"
+ },
+ "41120838": {
+  "pmid": "41120838",
+  "relevance": 3,
+  "finding": "MultiModalGraphics is an R package for creating annotated scatterplots and heatmaps of multi-omics data with embedded statistical summaries (fold-changes, p-values, q-values, SDs), interoperating with MultiAssayExperiment, limma, voom, and iClusterPlus.",
+  "model": "multi-omics high-dimensional biological data",
+  "section": "frameworks"
+ },
+ "35016614": {
+  "pmid": "35016614",
+  "relevance": 3,
+  "finding": "chromoMap is an R package for interactive visualization of chromosomes with mapped genomic features and multi-omics data (genomics, transcriptomics, epigenomics) across chromosomal coordinates.",
+  "model": "multi-organism genomic and multi-omics data",
+  "section": "frameworks"
+ },
+ "34883510": {
+  "pmid": "34883510",
+  "relevance": 3,
+  "finding": "The paper proposes a generic approach (implemented as the R package netOmics) to interpret multi-omics longitudinal data by building and exploring hybrid multi-omics networks with node labelling and propagation analysis.",
+  "model": "multi-omics longitudinal data",
+  "section": "networks"
+ },
+ "37577445": {
+  "pmid": "37577445",
+  "relevance": 1,
+  "finding": "The study applied multi-omics integration (amplicon, metagenomic, metatranscriptomic sequencing) using the R package mdmnets for co-occurrence network analysis to assess unknown taxa in microbialite-forming communities.",
+  "model": "microbialite microbial communities",
+  "section": "applications"
+ },
+ "39042603": {
+  "pmid": "39042603",
+  "relevance": 3,
+  "finding": "The paper presents an R package (bwm) implementing a regularization and constrained-based framework to handle high dimensionality and block-wise missing data in multi-omics classification and regression tasks.",
+  "model": "human (breast cancer, exposome multi-omics)",
+  "section": "frameworks"
+ },
+ "41800387": {
+  "pmid": "41800387",
+  "relevance": 3,
+  "finding": "OmniCorr is an R package for integrating and visualizing host-microbiome multi-omics data by clustering co-varying features into modules, computing cross-omics correlations, and identifying significant host-microbiome interactions.",
+  "model": "Atlantic salmon (host transcriptomics + metagenomics/metatranscriptomics) and cattle (host proteomics + metaproteomics)",
+  "section": "microbiome_tools"
+ },
+ "31703610": {
+  "pmid": "31703610",
+  "relevance": 3,
+  "finding": "OmicsARules is an R package that uses association rules mining with a new measure (Lamda3) to identify and prioritize biologically meaningful co-occurring gene alterations across multi-omics datasets.",
+  "model": "human (BRCA, ESCA, LUAD cancer multi-omics)",
+  "section": "statistics_ml"
+ },
+ "40932530": {
+  "pmid": "40932530",
+  "relevance": 3,
+  "finding": "EasyMultiProfiler (EMP) is a streamlined analytical workflow that uses SummarizedExperiment and MultiAssayExperiment classes to provide a unified five-module (extraction, preparation, support, analysis, visualization) framework for standardized, reproducible multi-omics microbiome data integration.",
+  "model": "microbiome (host-microbiome multi-omics)",
+  "section": "workflows_reproducibility"
+ },
+ "29925568": {
+  "pmid": "29925568",
+  "relevance": 3,
+  "finding": "The paper presents MOFA, a computational framework for unsupervised integration of multi-omics datasets that infers hidden factors capturing shared and modality-specific variation, demonstrated on chronic lymphocytic leukaemia and single-cell multi-omics data.",
+  "model": "human (chronic lymphocytic leukaemia) / single-cell multi-omics",
+  "section": "frameworks"
+ },
+ "38355833": {
+  "pmid": "38355833",
+  "relevance": 3,
+  "finding": "The Analyst software suite (ExpressAnalyst, MetaboAnalyst, OmicsNet, OmicsAnalyst) is a web-based platform enabling single-omics analysis, knowledge-driven network integration, and data-driven joint dimensionality reduction for multi-omics studies.",
+  "model": "human (pancreatic islet tissue and plasma)",
+  "section": "platforms_web"
+ },
+ "30657866": {
+  "pmid": "30657866",
+  "relevance": 3,
+  "finding": "DIABLO is a multi-omics integrative method in the mixOmics R Bioconductor package that performs supervised feature selection across data types to identify correlated multi-omics biomarkers discriminating phenotypic groups.",
+  "model": "human multi-omics (mRNA, miRNA, CpG, protein, metabolite)",
+  "section": "statistics_ml"
+ },
+ "32916129": {
+  "pmid": "32916129",
+  "relevance": 1,
+  "finding": "The study integrates longitudinal gut microbiome, metabolome, host epigenome, and transcriptome multi-omics data to identify IBS subtype-specific microbial and metabolic signatures, including purine metabolism as a novel host-microbial pathway.",
+  "model": "human gut microbiome (IBS)",
+  "section": "applications"
+ },
+ "31953831": {
+  "pmid": "31953831",
+  "relevance": 2,
+  "finding": "The chapter reviews network-based strategies for multi-omics integration, covering subnetwork identification, network-based enrichment, hierarchical community network analysis, and visualization tools for systems metabolomics.",
+  "model": "general multi-omics (with metabolomics focus)",
+  "section": "networks"
+ },
+ "39019974": {
+  "pmid": "39019974",
+  "relevance": 2,
+  "finding": "The protocol describes how the clusterProfiler Bioconductor package, originally for GO/KEGG enrichment, can be extended to multi-omics contexts including metabolomics/metagenomics integration, transcription factor characterization, and single-cell annotation.",
+  "model": "general multi-omics (metabolomics, metagenomics, single-cell)",
+  "section": "statistics_ml"
+ },
+ "40593592": {
+  "pmid": "40593592",
+  "relevance": 3,
+  "finding": "GAUDI is a non-linear unsupervised multi-omics integration method that combines independent UMAP embeddings with density-based clustering to uncover non-linear relationships across omics layers and identify latent factors per dataset.",
+  "model": "general cellular multi-omics",
+  "section": "statistics_ml"
+ },
+ "35925427": {
+  "pmid": "35925427",
+  "relevance": 3,
+  "finding": "The paper proposes an uncertainty-aware dynamic integration framework with deep embedding, confidence prediction (confidNet), and downstream task modules for multi-omics tumor classification that handles varying data quality across omics types.",
+  "model": "human (tumors)",
+  "section": "statistics_ml"
+ },
+ "34415323": {
+  "pmid": "34415323",
+  "relevance": 3,
+  "finding": "omicsGAN is a generative adversarial network model that integrates two omics datasets (e.g., mRNA and microRNA) with their interaction network to generate synthetic data with improved predictive signals for cancer outcome classification and survival prediction.",
+  "model": "human (TCGA breast, lung, ovarian cancer)",
+  "section": "statistics_ml"
+ },
+ "39680906": {
+  "pmid": "39680906",
+  "relevance": 3,
+  "finding": "CrossIsoFun is a multi-omics framework for isoform function prediction that uses omics-specific graph convolutional networks combined with a View Correlation Discovery Network and a cycleGAN-based autoencoder to integrate heterogeneous omics features and isoform-isoform interactions.",
+  "model": "general (isoform-level multi-omics)",
+  "section": "frameworks"
+ },
+ "31823712": {
+  "pmid": "31823712",
+  "relevance": 3,
+  "finding": "miodin is an R/Bioconductor package providing a workflow-based syntax for vertical (same samples) and horizontal (same variables) multi-omics data integration, supporting transparent analysis across transcriptomics, genomics, and proteomics.",
+  "model": "general multi-omics",
+  "section": "workflows_reproducibility"
+ },
+ "39243551": {
+  "pmid": "39243551",
+  "relevance": 3,
+  "finding": "Proposes TMODINET, a deep learning framework combining self-attention, graph convolutional networks and Dirichlet-based uncertainty estimation for trustworthy multi-omics cancer diagnosis, benchmarked on four real-world multimodal medical datasets.",
+  "model": "human cancer multi-omics (clinical samples)",
+  "section": "statistics_ml"
+ },
+ "39893194": {
+  "pmid": "39893194",
+  "relevance": 3,
+  "finding": "Introduces SIMO, a probabilistic alignment method for spatial integration of multi-omics single-cell data (spatial transcriptomics with scRNA-seq, scATAC-seq and DNA methylation), benchmarked on simulated and biological datasets.",
+  "model": "single-cell spatial multi-omics (transcriptomics, chromatin accessibility, methylation)",
+  "section": "frameworks"
+ },
+ "39888834": {
+  "pmid": "39888834",
+  "relevance": 3,
+  "finding": "Proposes scMGAT, a graph attention network method for integrating single-cell multi-omics data (RNA, protein, methylation, chromatin accessibility), evaluated on eight human and mouse datasets.",
+  "model": "single-cell multi-omics (RNA, protein, methylation, ATAC)",
+  "section": "statistics_ml"
+ },
+ "36944885": {
+  "pmid": "36944885",
+  "relevance": 3,
+  "finding": "Provides a detailed reproducible R workflow using the mixOmics package for vertical and horizontal integration of phenomics, metabolomics, proteomics and transcriptomics data from Arabidopsis thaliana under abiotic stress.",
+  "model": "Arabidopsis thaliana multi-omics (phenomics, metabolomics, proteomics, transcriptomics)",
+  "section": "workflows_reproducibility"
+ },
+ "40692180": {
+  "pmid": "40692180",
+  "relevance": 3,
+  "finding": "Proposes MO-GCAN, a two-stage supervised multi-omics framework using per-omics graph convolutional networks and a sample-fusion graph attention network for cancer subtyping, applied to eight cancer types.",
+  "model": "human cancer multi-omics (eight cancer types)",
+  "section": "statistics_ml"
+ },
+ "41100535": {
+  "pmid": "41100535",
+  "relevance": 3,
+  "finding": "Proposes CAEncoder, a contrastive adversarial encoder combining a Vision Transformer with CycleGAN for dimensionality reduction and integration of multi-omics cancer data.",
+  "model": "human cancer multi-omics",
+  "section": "statistics_ml"
+ },
+ "37216923": {
+  "pmid": "37216923",
+  "relevance": 3,
+  "finding": "Proposes HONMF, an unsupervised hypergraph-based orthogonal non-negative matrix factorization method for integrative analysis of multi-omics microbiome data (bacterial, fungal and viral profiles), supporting visualization, feature selection and cross-kingdom association analysis.",
+  "model": "multi-omics microbiome (bacteria, fungi, viruses from environmental/tissue samples)",
+  "section": "microbiome_tools"
+ },
+ "40305217": {
+  "pmid": "40305217",
+  "relevance": 3,
+  "finding": "Develops a lipid-metabolite-protein interaction network visualized via hyperbolic embedding and delivered as a Shiny R package for multi-omics integration and hypothesis generation, demonstrated on a cardiovascular disease case study.",
+  "model": "human lipid-metabolite-protein multi-omics (cardiovascular disease)",
+  "section": "networks"
+ },
+ "40940333": {
+  "pmid": "40940333",
+  "relevance": 3,
+  "finding": "Introduces Flexynesis, a deep learning toolkit providing standardized data processing, feature selection, hyperparameter tuning and marker discovery for bulk multi-omics integration, distributed via PyPI, Bioconda, Guix and Galaxy.",
+  "model": "bulk multi-omics (precision oncology use cases)",
+  "section": "frameworks"
+ },
+ "39965391": {
+  "pmid": "39965391",
+  "relevance": 3,
+  "finding": "Develops a two-step variable selection and network integration framework with MINGLE (Multi-omics Integrated Network for GraphicaL Exploration), which fuses multi-omics data into a single network for biomarker identification, illustrated on glioma data.",
+  "model": "human glioma multi-omics",
+  "section": "networks"
+ },
+ "40279264": {
+  "pmid": "40279264",
+  "relevance": 3,
+  "finding": "Introduces Gencube, a command-line tool that enables centralized retrieval and integration of six multi-omics data types (genome assemblies, gene sets, annotations, sequences, comparative genomics, NGS resources) from leading databases.",
+  "model": "multi-species multi-omics data resources",
+  "section": "platforms_web"
+ },
+ "40133495": {
+  "pmid": "40133495",
+  "relevance": 3,
+  "finding": "Presents CellPhoneDB v5, an expanded toolkit that infers cell-cell communication from single-cell multi-omics by combining curated ligand-receptor interactions with spatial transcriptomics and scATAC-seq-derived transcription factor activity.",
+  "model": "single-cell multi-omics (RNA, spatial transcriptomics, scATAC-seq)",
+  "section": "frameworks"
+ },
+ "41251164": {
+  "pmid": "41251164",
+  "relevance": 3,
+  "finding": "OmniPath is a knowledgebase aggregating prior knowledge from 168 resources, offered with Python and R/Bioconductor client packages and a Cytoscape plugin, intended for use in bulk, single-cell and spatial multi-omics analysis environments.",
+  "model": "multi-species / bulk, single-cell and spatial multi-omics",
+  "section": "platforms_web"
+ },
+ "39541897": {
+  "pmid": "39541897",
+  "relevance": 1,
+  "finding": "A multi-omics application integrating transcriptomic, proteomic and Mendelian randomization analyses to identify shared molecular features of Crohn's disease and metabolic syndrome using existing tools such as limma, WGCNA, CIBERSORT, LASSO and XGBoost.",
+  "model": "human (Crohn's disease / metabolic syndrome)",
+  "section": "applications"
+ },
+ "40308576": {
+  "pmid": "40308576",
+  "relevance": 1,
+  "finding": "An application paper integrating scRNA-seq and bulk transcriptomic data with 101 machine learning frameworks to develop a STING pathway-related signature predicting immunotherapy response in lung adenocarcinoma.",
+  "model": "human (lung adenocarcinoma, mouse validation)",
+  "section": "applications"
+ },
+ "38394643": {
+  "pmid": "38394643",
+  "relevance": 1,
+  "finding": "An application of multi-omics (scRNA-seq, proteomics, pQTL, GWAS, metabolomics) using Seurat, PathfindR and limma to identify AKR1A1 as a biomarker for diabetic kidney disease.",
+  "model": "human (kidney)",
+  "section": "applications"
+ },
+ "39605665": {
+  "pmid": "39605665",
+  "relevance": 3,
+  "finding": "iModMix is a biology-agnostic R package and Shiny application that uses graphical lasso to construct data-driven modules across transcriptomic, proteomic and metabolomic data and correlates eigenfeatures for horizontal multi-omics integration.",
+  "model": "biology-agnostic (transcriptomics, proteomics, metabolomics)",
+  "section": "frameworks"
+ },
+ "41634555": {
+  "pmid": "41634555",
+  "relevance": 3,
+  "finding": "MUUMI is an R package that unifies statistical meta-analysis with similarity network fusion and molecular interactome inference for multi-omics data integration, demonstrated on 17 transcriptomic IPF datasets and multi-omics THP-1 macrophage data.",
+  "model": "human (idiopathic pulmonary fibrosis, THP-1 macrophages)",
+  "section": "networks"
+ },
+ "41692950": {
+  "pmid": "41692950",
+  "relevance": 3,
+  "finding": "moiraine is an R package for building reproducible multi-omics integration pipelines that preprocesses data, runs one or more integration methods, produces visualizations and enables comparison of results across different integration tools.",
+  "model": "general multi-omics",
+  "section": "workflows_reproducibility"
+ },
+ "41740868": {
+  "pmid": "41740868",
+  "relevance": 1,
+  "finding": "An applied study that uses the MOVICS R package to integrate CyTOF, cytokine and metabolomics data for depression subtype discovery and treatment-response prediction.",
+  "model": "human (major depressive disorder)",
+  "section": "applications"
+ },
+ "35238331": {
+  "pmid": "35238331",
+  "relevance": 3,
+  "finding": "MultiBaC is a Bioconductor R package specifically designed to remove batch effects in multi-omic experiments, including scenarios where omics type and batch are confounded and where hidden batch effects are present.",
+  "model": "general multi-omics (microarray and RNA-Seq)",
+  "section": "workflows_reproducibility"
+ },
+ "39126426": {
+  "pmid": "39126426",
+  "relevance": 3,
+  "finding": "BioM2 is an R package for biologically informed multi-stage machine learning that integrates prior biological knowledge (e.g., Gene Ontology pathways) into ML models trained on multi-omics data such as DNA methylation and gene expression.",
+  "model": "general (methylation, transcriptomics)",
+  "section": "statistics_ml"
+ },
+ "40236779": {
+  "pmid": "40236779",
+  "relevance": 3,
+  "finding": "iMLGAM is an R package that combines machine learning with a genetic algorithm to integrate multi-omics data into a scoring system for predicting pan-cancer immunotherapy response.",
+  "model": "human pan-cancer",
+  "section": "statistics_ml"
+ },
+ "37932270": {
+  "pmid": "37932270",
+  "relevance": 1,
+  "finding": "An applied cross-cohort integration of 9 metagenomic and 4 metabolomic IBD cohorts that builds multi-omics biological correlation maps and identifies multi-omics biomarkers, but does not introduce new software.",
+  "model": "human gut microbiome / metabolome (IBD)",
+  "section": "applications"
+ },
+ "41939867": {
+  "pmid": "41939867",
+  "relevance": 1,
+  "finding": "In silico multi-omics integration of bulk RNA-seq, single-cell, spatial transcriptomics and blood multi-omics data, combined with machine learning, identified core IPF genes and supported a causal gut-immune-lung axis via Mendelian randomization.",
+  "model": "human (idiopathic pulmonary fibrosis patients, blood, gut, lung)",
+  "section": "applications"
+ },
+ "40785047": {
+  "pmid": "40785047",
+  "relevance": 1,
+  "finding": "An integrated multi-omics analysis of public metagenomic, 16S, host transcriptomic and inferred metabolomic data identified five tripartite microbe-metabolite-host gene associations in atherosclerosis with diagnostic potential.",
+  "model": "human (atherosclerosis, gut microbiome and peripheral blood)",
+  "section": "applications"
+ },
+ "41052276": {
+  "pmid": "41052276",
+  "relevance": 3,
+  "finding": "A systematic literature review categorizes, compares and evaluates computational methods for longitudinal multi-omics integration across statistical modeling, machine learning, dimensionality reduction and latent factor approaches, assessing performance, interpretability and ease of use.",
+  "model": "host-microbiome longitudinal multi-omics (various organisms, review)",
+  "section": "frameworks"
+ },
+ "39358810": {
+  "pmid": "39358810",
+  "relevance": 1,
+  "finding": "Combined plasma proteomics, metabolomics and gut/saliva metagenomics from 87 AD patients identified SKAP1, NEFL, homovanillate, glutamate and Paraprevotella clara as predictors of AD severity using AI-based models validated at 3-month follow-up.",
+  "model": "human (Alzheimer's disease, plasma, gut and saliva microbiome)",
+  "section": "applications"
+ },
+ "36624530": {
+  "pmid": "36624530",
+  "relevance": 1,
+  "finding": "Fecal 16S rRNA sequencing, metatranscriptomics and untargeted metabolomics from 495 subjects identified microbial taxa, transcripts and metabolites differentially abundant in IBS, with random forests classifiers constructed from differential features.",
+  "model": "human (irritable bowel syndrome, gut microbiome)",
+  "section": "applications"
+ },
+ "39870302": {
+  "pmid": "39870302",
+  "relevance": 1,
+  "finding": "16S rRNA sequencing, a novel metaproteomics pipeline, untargeted metabolomics and host proteomics in 30 children with ASD revealed altered microbial networks, Bifidobacterium/Klebsiella-derived metaproteins and metabolite-host macromolecule interactions linked to neurodevelopmental deficits.",
+  "model": "human (autism spectrum disorder, gut microbiome)",
+  "section": "applications"
+ },
+ "39660865": {
+  "pmid": "39660865",
+  "relevance": 1,
+  "finding": "Parallel microbial profiling, transcriptomics and metabolomics of tumor and adjacent normal brain tissues from 50 glioma patients, combined with mediation analysis and animal validation, suggested intratumoral bacteria influence neuron-related gene expression via bacteria-associated metabolites.",
+  "model": "human (glioma, intratumoral microbiome) with mouse model validation",
+  "section": "applications"
+ },
+ "42013851": {
+  "pmid": "42013851",
+  "relevance": 1,
+  "finding": "A 15-layer multi-omics atlas integrating genomics, epigenomics, transcriptomics, proteomics, multiple PTMs, protein-protein interactions, metabolomics and microbiome profiles from 159 gastric adenocarcinomas defined tumor ecotypes linked to clinical outcomes and immunotherapy response.",
+  "model": "human (gastric adenocarcinoma, tumor microenvironment)",
+  "section": "applications"
+ },
+ "39638782": {
+  "pmid": "39638782",
+  "relevance": 1,
+  "finding": "Comprehensive molecular, immune, microbiome and metabolic profiling of 40 recurrent ovarian cancer patients in a phase 2 pembrolizumab/bevacizumab/cyclophosphamide trial linked T/B cell clusters and distinct microbial patterns with amino acid/lipid metabolism to exceptional clinical responses.",
+  "model": "human (recurrent ovarian cancer, tumor and gut microbiome)",
+  "section": "applications"
+ },
+ "38417224": {
+  "pmid": "38417224",
+  "relevance": 1,
+  "finding": "Multi-omics analysis of fecal and blood samples from 99 MDD patients and 50 healthy controls using 16S, metagenomics, plasma metabolomics and mass cytometry identified increased Enterococcus, altered arginine/proline and sphingolipid metabolism, and two immune subtypes correlated with relapse.",
+  "model": "human (major depressive disorder, gut microbiome and blood)",
+  "section": "applications"
+ },
+ "37170220": {
+  "pmid": "37170220",
+  "relevance": 2,
+  "finding": "A multi-omics summary data-based Mendelian randomization (SMR) approach integrating intestinal transcriptomes, GWAS, blood eQTLs/mQTLs, intestinal eQTLs and fecal microbial QTLs identified oxidative stress genes and their regulatory elements with causal effects on Crohn's disease risk.",
+  "model": "human (Crohn's disease, intestinal transcriptome, blood, gut microbiota)",
+  "section": "statistics_ml"
+ },
+ "37610102": {
+  "pmid": "37610102",
+  "relevance": 1,
+  "finding": "Integrated whole-genome sequencing, untargeted metabolomics and mRNA sequencing revealed that morphine-induced expansion of Parasuterella/Enterococcus and depletion of Lactobacillus correlated with lipid and flavonoid metabolite changes and innate/adaptive immune dysregulation in the host transcriptome.",
+  "model": "mouse (morphine treatment model, gut microbiome)",
+  "section": "applications"
+ },
+ "37992400": {
+  "pmid": "37992400",
+  "relevance": 1,
+  "finding": "Applied multi-omics integration (16S rRNA, untargeted metabolomics, spatial metabolomics, transcriptomics) in APP/PS1 mice to link gut microbiota alterations to glycerophospholipid metabolism and neuroinflammation in Alzheimer's disease.",
+  "model": "mouse model (APP/PS1)",
+  "section": "applications"
+ },
+ "41474484": {
+  "pmid": "41474484",
+  "relevance": 2,
+  "finding": "Review synthesizes network analysis methods combined with multi-omics data for livestock microbiome research, evaluating approaches ranging from correlated-species identification to integrative metabolic modeling and machine learning for predicting keystone species.",
+  "model": "livestock microbiome",
+  "section": "networks"
+ },
+ "40449450": {
+  "pmid": "40449450",
+  "relevance": 1,
+  "finding": "Used an integrative multi-omics approach (16S sequencing, non-targeted metabolomics, qRT-PCR, ELISA) to show that the Angelica sinensis-Carthamus tinctorius herb pair ameliorates diabetic retinopathy with depressive symptoms via the gut-eye-brain axis.",
+  "model": "mouse (STZ-induced diabetic retinopathy)",
+  "section": "applications"
+ },
+ "40715814": {
+  "pmid": "40715814",
+  "relevance": 3,
+  "finding": "Introduces BioMapAI, a supervised deep neural network integrating gut metagenomics, plasma metabolomics, immune profiling, blood labs and clinical symptoms to classify ME/CFS and generate explainable cross-omics connectivity maps.",
+  "model": "human (ME/CFS cohort, n=249)",
+  "section": "statistics_ml"
+ },
+ "38521774": {
+  "pmid": "38521774",
+  "relevance": 3,
+  "finding": "Presents MintTea, an intermediate multi-omics integration method combining canonical correlation analysis extensions and consensus analysis to identify disease-associated modules across microbiome, metabolome and other omics layers.",
+  "model": "human gut microbiome (metabolic syndrome, colorectal cancer cohorts)",
+  "section": "statistics_ml"
+ },
+ "39388921": {
+  "pmid": "39388921",
+  "relevance": 1,
+  "finding": "Joint multi-omics analysis (16S rRNA sequencing, serum metabolomics, liver transcriptomics) reveals that the Miao medicine Yindanxinnaotong formula attenuates NAFLD via lipid metabolism and inflammation pathways.",
+  "model": "mouse (HFD-induced NAFLD)",
+  "section": "applications"
+ },
+ "38936370": {
+  "pmid": "38936370",
+  "relevance": 1,
+  "finding": "Integrated genome, transcriptome and metabolome analyses at the strain level across 1,234 Cutibacterium acnes isolates reveal functional heterogeneity of the species in normal versus diseased skin.",
+  "model": "bacterial isolates (human skin)",
+  "section": "applications"
+ },
+ "35338351": {
+  "pmid": "35338351",
+  "relevance": 1,
+  "finding": "Combined lung microbiome (16S) and metabolomics with a published matching transcriptome and human cohort validation to identify hyperoxia/LPS-responsive biomarkers of bronchopulmonary dysplasia using differential co-expression analysis.",
+  "model": "mouse (C57BL6/J hyperoxia+LPS BPD model)",
+  "section": "applications"
+ },
+ "38166610": {
+  "pmid": "38166610",
+  "relevance": 2,
+  "finding": "Reviews current statistical and computational approaches for integrating multi-omic host-microbiome data (genome, transcriptome, epigenome, metabolome, proteome), highlighting the need for standardization across methods.",
+  "model": "human gut microbiome",
+  "section": "frameworks"
+ },
+ "40703513": {
+  "pmid": "40703513",
+  "relevance": 1,
+  "finding": "Integrative multi-omics (16S, metabolomics, transcriptomics, single-cell RNA-seq) combined with WGCNA, LASSO, SVM and RFE-RF machine learning identifies GPX3 and MYC as ferroptosis regulators linked to gut microbiota metabolites in rheumatoid arthritis.",
+  "model": "human (rheumatoid arthritis)",
+  "section": "applications"
+ },
+ "40165060": {
+  "pmid": "40165060",
+  "relevance": 1,
+  "finding": "Integrates 16S rDNA microbiome and untargeted metabolomics data in Pkhd1 mutant mice using DIABLO to identify key microbial and metabolic features of congenital hepatic fibrosis.",
+  "model": "mouse (Pkhd1del3-4/del3-4)",
+  "section": "applications"
+ },
+ "33119407": {
+  "pmid": "33119407",
+  "relevance": 3,
+  "finding": "Describes the curatedTCGAData and cBioPortalData R/Bioconductor packages together with the MultiAssayExperiment data structure for integrated multi-omic analysis of public oncology databases.",
+  "model": "human cancer (TCGA, cBioPortal)",
+  "section": "frameworks"
+ },
+ "37624866": {
+  "pmid": "37624866",
+  "relevance": 2,
+  "finding": "SingleCellMultiModal is a Bioconductor package that distributes landmark single-cell multimodal datasets (CITE-Seq, ECCITE-Seq, SCoPE2, scNMT, 10X Multiome, seqFISH, G&T) via MultiAssayExperiment objects for streamlined multi-omics integration analyses.",
+  "model": "human / mouse single cells",
+  "section": "frameworks"
+ },
+ "37208161": {
+  "pmid": "37208161",
+  "relevance": 2,
+  "finding": "RaggedExperiment is a Bioconductor data structure for lossless representation of ragged genomic ranges (mutations, copy number, methylation, open chromatin) that is compatible with MultiAssayExperiment for multimodal analyses.",
+  "model": "human (TCGA cancer)",
+  "section": "frameworks"
+ },
+ "29092936": {
+  "pmid": "29092936",
+  "relevance": 3,
+  "finding": "The MultiAssayExperiment Bioconductor package provides coordinated representation, storage, and operation on multiple diverse genomics datasets and ships ready-to-analyze multi-omics TCGA objects, reducing obstacles to scalable, reproducible multi-omics analysis.",
+  "model": "human (TCGA cancer)",
+  "section": "frameworks"
+ },
+ "40429886": {
+  "pmid": "40429886",
+  "relevance": 1,
+  "finding": "The study applied DIABLO from mixOmics to integrate paired proteomic and transcriptomic data from COVID-19 patients to identify multi-omics biomarker panels discriminating disease severity.",
+  "model": "human (SARS-CoV-2 infection)",
+  "section": "applications"
+ },
+ "33325641": {
+  "pmid": "33325641",
+  "relevance": 3,
+  "finding": "The study directly compared two multi-omics integration tools, SNFtool and mixOmics DIABLO, on three human nutrition transcriptomics-plus-metabolomics datasets, showing that combining modalities with either tool significantly improved sample classification in some studies while DIABLO performed comparably to transcriptomics alone in others.",
+  "model": "human (nutrition intervention)",
+  "section": "benchmarks"
+ },
+ "42509863": {
+  "pmid": "42509863",
+  "relevance": 1,
+  "finding": "The study used mixOmics DIABLO to integrate targeted metabolomics and RNA-seq from melanoma xenografts under ketogenic diet, identifying coordinated pathway-level reprogramming.",
+  "model": "mouse xenograft (melanoma)",
+  "section": "applications"
+ },
+ "41401669": {
+  "pmid": "41401669",
+  "relevance": 0,
+  "finding": "The study applied mixOmics DIABLO discriminant analysis to clinical variables (anhedonia, suicidal ideation, anxiety, neuroticism, childhood trauma) in depressed patients, not to molecular omics data.",
+  "model": "human (major depressive disorder)",
+  "section": "other"
+ },
+ "35209946": {
+  "pmid": "35209946",
+  "relevance": 1,
+  "finding": "The study used mixOmics DIABLO to integrate transcriptomic, metabolomic, and lipidomic CSF profiles distinguishing medulloblastoma patients from controls.",
+  "model": "human (medulloblastoma, pediatric)",
+  "section": "applications"
+ },
+ "41326768": {
+  "pmid": "41326768",
+  "relevance": 1,
+  "finding": "The study applied mixOmics DIABLO to integrate RNA-seq, metabolomics, and 16S rRNA microbiome data across multiple tissues from beef cattle offspring to identify prenatal-nutrition biomarkers.",
+  "model": "beef cattle",
+  "section": "applications"
+ },
+ "40426050": {
+  "pmid": "40426050",
+  "relevance": 1,
+  "finding": "The study used MixOmics DIABLO to integrate 16S rRNA microbiome, metabolomics, and transcriptomics data along the pig gut-muscle axis to identify breed-specific regulators of fat deposition.",
+  "model": "pig",
+  "section": "applications"
+ },
+ "41938341": {
+  "pmid": "41938341",
+  "relevance": 1,
+  "finding": "The study applied mixOmics DIABLO to integrate untargeted lipidomics and proteomics plasma profiles from TAVI patients, identifying lipid-protein clusters associated with severe diastolic dysfunction.",
+  "model": "human (aortic stenosis)",
+  "section": "applications"
+ },
+ "31333693": {
+  "pmid": "31333693",
+  "relevance": 1,
+  "finding": "The study used mixOmics sPLS and DIABLO to integrate einkorn wheat albumins/globulins proteomics with seed storage protein composition data across developmental stages and nitrogen/sulfur conditions.",
+  "model": "einkorn wheat (Triticum monococcum)",
+  "section": "applications"
+ },
+ "41389879": {
+  "pmid": "41389879",
+  "relevance": 3,
+  "finding": "Describes a unified systems biology framework that integrates transcriptomic, epigenomic and proteomic data across five mouse organs using MOFA+ to identify 27 cross-tissue regulatory modules and validate a liver-kidney metabolic axis with CRISPR knockdowns.",
+  "model": "mouse multi-organ (liver, kidney, heart, lung, brain)",
+  "section": "frameworks"
+ },
+ "37166960": {
+  "pmid": "37166960",
+  "relevance": 3,
+  "finding": "Introduces MicrobiomeAnalyst 2.0, a web-based platform featuring a new Microbiome Metabolomics Profiling module for joint microbiome–metabolomics analysis alongside statistical meta-analysis and raw data processing modules, demonstrated on a type 1 diabetes multi-omics dataset.",
+  "model": "human (type 1 diabetes microbiome study)",
+  "section": "platforms_web"
+ },
+ "31942082": {
+  "pmid": "31942082",
+  "relevance": 2,
+  "finding": "Provides a step-by-step protocol for MicrobiomeAnalyst covering marker-gene and shotgun data profiling, functional prediction, taxon set enrichment and meta-analysis as a one-stop web-based microbiome analysis resource.",
+  "model": "general microbiome (16S and shotgun)",
+  "section": "platforms_web"
+ },
+ "28449106": {
+  "pmid": "28449106",
+  "relevance": 2,
+  "finding": "Describes the original MicrobiomeAnalyst web tool integrating community profiling, comparative analysis, functional prediction, taxon set enrichment and public-data projection for 16S and shotgun microbiome data.",
+  "model": "general microbiome (16S/marker-gene and shotgun metagenomics)",
+  "section": "platforms_web"
+ },
+ "40951128": {
+  "pmid": "40951128",
+  "relevance": 1,
+  "finding": "Cross-sectional study of HPV infection and vaginal microbiome in pre-menopausal women that uses MicrobiomeAnalyst for community comparison and differential abundance analysis.",
+  "model": "human vaginal microbiome",
+  "section": "applications"
+ },
+ "41334942": {
+  "pmid": "41334942",
+  "relevance": 1,
+  "finding": "Mouse study of dietary fiber formulations on T2DM gut microbiota analyzed via QIIME2, ANCOM and MicrobiomeAnalyst, reporting enrichment of Akkermansia muciniphila and SCFA producers with curcumin supplementation.",
+  "model": "mouse (T2DM gut microbiome)",
+  "section": "applications"
+ },
+ "40682738": {
+  "pmid": "40682738",
+  "relevance": 1,
+  "finding": "Compares vaginal and rectal microbiomes between endometrial cancer and benign gynecological condition patients using MicrobiomeAnalyst, ANCOM-BC and GraphPad, identifying QOL-related microbial signatures.",
+  "model": "human vaginal and rectal microbiome",
+  "section": "applications"
+ },
+ "37527556": {
+  "pmid": "37527556",
+  "relevance": 1,
+  "finding": "Clinical cross-sectional study profiling peri-implantitis microbiome using 16S V3-V4 sequencing with DADA2/HOMD and statistical analysis through the MicrobiomeAnalyst workflow.",
+  "model": "human peri-implant oral microbiome",
+  "section": "applications"
+ },
+ "41568044": {
+  "pmid": "41568044",
+  "relevance": 2,
+  "finding": "Systematically benchmarks eight web-based amplicon-metagenomic tools across diversity, taxonomy, differential comparison, network, functional profiling, machine learning and user experience modules, ranking MicrobiomeAnalyst 2.0 highest overall.",
+  "model": "benchmark of microbiome web tools (not multi-omics)",
+  "section": "benchmarks"
+ },
+ "40740347": {
+  "pmid": "40740347",
+  "relevance": 1,
+  "finding": "Integrates cervical 16S microbiome, untargeted metabolomics, cytokines and miRNA data from HPV-positive women across CIN stages using MicrobiomeAnalyst and MetaboAnalyst to characterize pre/post-menopause microenvironmental differences.",
+  "model": "human cervical microbiome + metabolome + cytokines + miRNAs",
+  "section": "applications"
+ },
+ "41562342": {
+  "pmid": "41562342",
+  "relevance": 1,
+  "finding": "Case-control 16S gut microbiome study in inclusion body myositis using QIIME2 and MicrobiomeAnalyst, identifying Bacteroides enrichment and reduced alpha diversity in older IBM probands.",
+  "model": "human gut microbiome",
+  "section": "applications"
+ },
+ "38972981": {
+  "pmid": "38972981",
+  "relevance": 1,
+  "finding": "Pilot study of vaginal/rectal microbiome and cervicovaginal immune mediators in chronic pelvic pain with/without endometriosis, analyzed with SAS, R, MicrobiomeAnalyst, MetaboAnalyst and QIIME2.",
+  "model": "human vaginal/rectal microbiome + immune mediators",
+  "section": "applications"
+ },
+ "42271577": {
+  "pmid": "42271577",
+  "relevance": 1,
+  "finding": "Used MetaboAnalyst v6.0 and the MixOmics package (DIABLO) to compare urine, serum, and plasma metabolomes in breast cancer versus control groups.",
+  "model": "human (breast cancer patients)",
+  "section": "applications"
+ },
+ "42694300": {
+  "pmid": "42694300",
+  "relevance": 1,
+  "finding": "Integrated 16S microbiome and GC-MS metabolomics data in saliva and gingival crevicular fluid from ciliopathy patients using Spearman correlations, MCIA, and the supervised DIABLO framework (mixOmics).",
+  "model": "human (Alström and Bardet-Biedl syndrome patients)",
+  "section": "applications"
+ },
+ "32393329": {
+  "pmid": "32393329",
+  "relevance": 3,
+  "finding": "Describes Multi-Omics Factor Analysis v2 (MOFA+), a statistical framework using variational inference and flexible sparsity for scalable integration of multi-modal single-cell data across samples and modalities.",
+  "model": "single-cell multi-modal omics",
+  "section": "statistics_ml"
+ },
+ "42194997": {
+  "pmid": "42194997",
+  "relevance": 1,
+  "finding": "Applied Multi-Omics Factor Analysis (MOFA) to integrate genomic, epigenomic, and transcriptomic data from TCGA to explore molecular heterogeneity across glioma types.",
+  "model": "human (glioma patients, TCGA)",
+  "section": "applications"
+ },
+ "38871719": {
+  "pmid": "38871719",
+  "relevance": 1,
+  "finding": "Applied MOFA+ to integrate transcriptomic, proteomic, and metabolomic data from breast cancer tumor tissues, identifying three multi-omics clusters with distinct long-term prognoses validated in METABRIC and TCGA.",
+  "model": "human (breast cancer patients)",
+  "section": "applications"
+ },
+ "42624833": {
+  "pmid": "42624833",
+  "relevance": 2,
+  "finding": "Introduces Semi-supervised Omics Factor Analysis (SOFA), an extension of GFA/MOFA that incorporates known covariates to focus factor discovery on novel sources of variation across multi-omic data.",
+  "model": "multi-omic (cancer, brain development, heart failure datasets)",
+  "section": "statistics_ml"
+ },
+ "40633729": {
+  "pmid": "40633729",
+  "relevance": 1,
+  "finding": "Applied MOFA to integrate six omics datasets (~170,000 variables) from blood, urine, and allograft of 131 kidney transplant recipients, identifying eight hidden factors linked to rejection and immune processes.",
+  "model": "human (kidney transplant recipients)",
+  "section": "applications"
+ },
+ "39373483": {
+  "pmid": "39373483",
+  "relevance": 2,
+  "finding": "Provides a step-by-step workflow for applying MOFA to a complex cardiovascular multi-omics dataset combining cytokine, plasma-proteomic, neutrophil prime-seq, and scRNA-seq data across time points.",
+  "model": "human (cardiovascular disease)",
+  "section": "workflows_reproducibility"
+ },
+ "40935702": {
+  "pmid": "40935702",
+  "relevance": 1,
+  "finding": "Applied MOFA to integrate RNA-seq, proteomics, and metabolomics from muscle tissues of 203 idiopathic inflammatory myopathy patients, identifying subtype-specific molecular signatures.",
+  "model": "human (idiopathic inflammatory myopathy patients)",
+  "section": "applications"
+ },
+ "40582590": {
+  "pmid": "40582590",
+  "relevance": 1,
+  "finding": "Applied MOFA to integrate CUT&Tag profiles of five histone marks (H3K4me3, H3K27me3, H3K4me1, H3K27ac, H3K9me3) across brown, white, and beige adipocytes from mouse adipose depots.",
+  "model": "mouse (adipocytes)",
+  "section": "applications"
+ },
+ "41145914": {
+  "pmid": "41145914",
+  "relevance": 1,
+  "finding": "Applied MOFA to blood plasma N-terminomics data from 143 systemic lupus erythematosus patients, linking N-terminal signatures to immunological and clinical heterogeneity.",
+  "model": "human (systemic lupus erythematosus patients)",
+  "section": "applications"
+ },
+ "40580709": {
+  "pmid": "40580709",
+  "relevance": 1,
+  "finding": "Used MOFA to integrate blood methylome, transcriptome, plasma proteome, and urinary/serum metabolome data from 1041 mother-child pairs in the HELIX exposome study to test multi-omics mediation of environment–BMI associations.",
+  "model": "human (children from the HELIX cohort)",
+  "section": "applications"
+ },
+ "40387018": {
+  "pmid": "40387018",
+  "relevance": 3,
+  "finding": "Develops a joint-modeling framework that combines multi-omics factor analysis (MOFA) for dimension reduction with a multivariate functional mixed model to integrate metabolomics/lipidomics with longitudinal neuropsychological data for dynamic AD risk estimation.",
+  "model": "human (ADNI cohort, Alzheimer's disease)",
+  "section": "frameworks"
+ },
+ "40713657": {
+  "pmid": "40713657",
+  "relevance": 3,
+  "finding": "Introduces MOTL, a transfer-learning framework that enhances MOFA-based joint matrix factorization for small multi-omics target datasets by leveraging latent factors inferred from large heterogeneous learning datasets.",
+  "model": "human (glioblastoma) / simulated data",
+  "section": "frameworks"
+ },
+ "41819525": {
+  "pmid": "41819525",
+  "relevance": 1,
+  "finding": "Uses MOFA to integrate gene expression, mutation, and methylation profiles from TCGA and COCC colorectal cancer cohorts to define an immune-based molecular classification (MotifCC) with three prognostic clusters.",
+  "model": "human (colorectal cancer, TCGA n=627, COCC n=977)",
+  "section": "applications"
+ },
+ "42680979": {
+  "pmid": "42680979",
+  "relevance": 3,
+  "finding": "Provides an R-based guide/protocol chapter for metabolomics data analysis covering QC, differential expression, integration with proteomics via MOFA, and statistical network and enrichment analyses.",
+  "model": "clinical metabolomics and proteomics data",
+  "section": "workflows_reproducibility"
+ },
+ "35694866": {
+  "pmid": "35694866",
+  "relevance": 1,
+  "finding": "Applies MOFA+ to integrate genetics, miRNA transcriptomics, proteomics, and blood-based biomarkers from 170 Aβ+ patients to identify multi-omics subtypes of cerebral amyloid pathology linked to autophagy pathways.",
+  "model": "human (Alzheimer's disease / cerebral amyloid pathology)",
+  "section": "applications"
+ },
+ "42260416": {
+  "pmid": "42260416",
+  "relevance": 1,
+  "finding": "Uses the MOFA framework to integrate DNA methylation, gene expression, and metabolic profiles across normal, malignant, and aggressive prostate tissue, identifying pathways associated with aggressive disease.",
+  "model": "human (prostate cancer, TCGA cohort)",
+  "section": "applications"
+ },
+ "35248699": {
+  "pmid": "35248699",
+  "relevance": 1,
+  "finding": "Applies MOFA to integrate RNA-seq, methylation, and LC-MS metabolomics from colorectal tissue, plasma, and urine to identify choline-deficiency-related multi-omics features predicting XELOX-induced thrombocytopenia.",
+  "model": "human (colorectal cancer patients on XELOX chemotherapy)",
+  "section": "applications"
+ },
+ "42585023": {
+  "pmid": "42585023",
+  "relevance": 1,
+  "finding": "Uses MOFA to integrate metabolomic, epigenomic, transcriptomic, proteomic, and PTM responses to endurance training in male and female rat gastrocnemius, identifying sex-biased molecular programs.",
+  "model": "rat (gastrocnemius muscle, MoTrPAC consortium)",
+  "section": "applications"
+ },
+ "41545302": {
+  "pmid": "41545302",
+  "relevance": 1,
+  "finding": "Applies MOFA2 to integrate cell-free DNA methylation and EV-associated miRNAs from liquid biopsies of 79 metastatic NSCLC patients to derive immunotherapy-outcome molecular subtypes.",
+  "model": "human (non-small cell lung cancer)",
+  "section": "applications"
+ },
+ "42136650": {
+  "pmid": "42136650",
+  "relevance": 1,
+  "finding": "Reviews multi-omics profiling in recurrent pregnancy loss and discusses computational integration frameworks including WGCNA, MOFA, and deep-learning models for subtype classification and risk prediction.",
+  "model": "human (recurrent pregnancy loss)",
+  "section": "other"
+ },
+ "33106757": {
+  "pmid": "33106757",
+  "relevance": 0,
+  "finding": "Reviews single-cell RNA sequencing technologies and their applications to infectious diseases; does not address multi-omics integration software.",
+  "model": "single-cell transcriptomics in infectious disease",
+  "section": "other"
+ },
+ "33802234": {
+  "pmid": "33802234",
+  "relevance": 3,
+  "finding": "Catalogues and tests multi-omics integration tools (including MOFA and netDX) on public cancer omics data to assess robustness and provide reproducible workflows for biomarker and causal network discovery.",
+  "model": "human (multi-cancer public omics resources)",
+  "section": "benchmarks"
+ },
+ "34267323": {
+  "pmid": "34267323",
+  "relevance": 1,
+  "finding": "Used the MicrobiomeAnalyst web platform for differential abundance analysis of 16S rRNA sequencing data from 361 obese/overweight volunteers to build a regression model predicting obesity-related inflammatory status.",
+  "model": "human",
+  "section": "microbiome_tools"
+ },
+ "38332014": {
+  "pmid": "38332014",
+  "relevance": 1,
+  "finding": "Analyzed longitudinal 16S rRNA fecal sequencing data from mice under high-fat diet and exercise using QIIME 2, R, and MicrobiomeAnalyst.",
+  "model": "mouse",
+  "section": "microbiome_tools"
+ },
+ "31953825": {
+  "pmid": "31953825",
+  "relevance": 3,
+  "finding": "Describes MetaboAnalyst 4.0 as a comprehensive web-based suite for metabolomics processing, statistical analysis, functional interpretation, and multi-omics data integration.",
+  "model": "metabolomics platform",
+  "section": "platforms_web"
+ },
+ "41918874": {
+  "pmid": "41918874",
+  "relevance": 2,
+  "finding": "Applied a multi-omics strategy (metagenomics, untargeted metabolomics, qRT-PCR gene expression) in GDM women receiving probiotics, integrating data via PCA, PLS-DA, network analysis, KEGG, and MetaboAnalyst.",
+  "model": "human",
+  "section": "applications"
+ },
+ "35715522": {
+  "pmid": "35715522",
+  "relevance": 3,
+  "finding": "Provides a Nature Protocols step-by-step guide for MetaboAnalyst 5.0 covering LC-HRMS spectra processing, functional interpretation, multi-omics integration with transcriptomics, and covariate-adjusted statistical analysis.",
+  "model": "metabolomics platform",
+  "section": "platforms_web"
+ },
+ "31756036": {
+  "pmid": "31756036",
+  "relevance": 3,
+  "finding": "Describes MetaboAnalyst 4.0 as a web-based tool suite for metabolomics analysis with a new module for network-based multi-omics data integration and a companion R package (MetaboAnalystR).",
+  "model": "metabolomics platform",
+  "section": "platforms_web"
+ },
+ "41874668": {
+  "pmid": "41874668",
+  "relevance": 2,
+  "finding": "Performed integrated multi-omics PRS analysis of RNAs, proteins, and metabolites for heel bone mineral density in 96,165 UK Biobank subjects using the MetaboAnalyst 6.0 platform.",
+  "model": "human",
+  "section": "applications"
+ },
+ "41373475": {
+  "pmid": "41373475",
+  "relevance": 2,
+  "finding": "Combined bidirectional Mendelian randomization of 486 serum metabolites with RNA-seq integration and MetaboAnalyst 6.0 pathway enrichment to identify causal metabolites and neuro-related pathways in AML.",
+  "model": "human",
+  "section": "applications"
+ },
+ "35572129": {
+  "pmid": "35572129",
+  "relevance": 2,
+  "finding": "Integrated metabolomics with 16S rRNA sequencing in MPTP-induced Parkinson's disease mice, using MetaboAnalyst for pathway analysis and Pearson's correlation between differential metabolites and gut microbiota.",
+  "model": "mouse",
+  "section": "applications"
+ },
+ "40934592": {
+  "pmid": "40934592",
+  "relevance": 2,
+  "finding": "Generated transcriptomic and metabolomic multi-omics datasets from polystyrene microplastic-exposed mice and analyzed them using MetaboAnalyst to assess reproductive and metabolic consequences.",
+  "model": "mouse",
+  "section": "applications"
+ },
+ "41508032": {
+  "pmid": "41508032",
+  "relevance": 2,
+  "finding": "Integrated polar/non-polar lipidomics, proteomic, and transcriptomic profiling of ME/CFS lymphoblastoid cell lines using MetaboAnalyst for multi-omic pathway analysis.",
+  "model": "human cell lines",
+  "section": "applications"
+ },
+ "41752037": {
+  "pmid": "41752037",
+  "relevance": 2,
+  "finding": "Used bidirectional Mendelian randomization of 452 serum metabolites with RNA-seq integration and MetaboAnalyst 6.0 pathway enrichment to identify causal metabolic drivers of multiple myeloma.",
+  "model": "human",
+  "section": "applications"
+ },
+ "37370767": {
+  "pmid": "37370767",
+  "relevance": 1,
+  "finding": "Applied NeDRex, NetworkAnalyst, mGWAS-Explorer, ExpressAnalyst, and MetaboAnalyst to integrate multi-omics data and identify key genes, miRNAs, SNPs, and metabolites associated with glioblastoma.",
+  "model": "human (glioblastoma)",
+  "section": "applications"
+ },
+ "40768780": {
+  "pmid": "40768780",
+  "relevance": 1,
+  "finding": "Combined transcriptomic (DESeq2) and metabolomic (MetaboAnalyst) analyses with Cytoscape network analysis to identify immune-metabolic disturbances in autism spectrum disorder.",
+  "model": "human (autism spectrum disorder)",
+  "section": "applications"
+ },
+ "40789885": {
+  "pmid": "40789885",
+  "relevance": 0,
+  "finding": "Used MetaboAnalyst 6.0 for metabolite set enrichment analysis of fecal extracellular vesicle metabolomics in solid tumor patients versus healthy controls.",
+  "model": "human (solid tumors)",
+  "section": "applications"
+ },
+ "42491255": {
+  "pmid": "42491255",
+  "relevance": 1,
+  "finding": "Integrated transcriptomics and targeted metabolomics with MetaboAnalyst 6.0 pathway analysis to characterize carbon ion radiation effects on lung adenocarcinoma cells.",
+  "model": "human cell lines (A549, LLC) and mouse model",
+  "section": "applications"
+ },
+ "41757494": {
+  "pmid": "41757494",
+  "relevance": 1,
+  "finding": "Performed cross-species multi-omics integration of serum metabolomics and placental transcriptomics using HomoloGene and MetaboAnalyst 5.0 in an advanced maternal age threatened abortion model.",
+  "model": "human and mouse (threatened abortion)",
+  "section": "applications"
+ },
+ "41380752": {
+  "pmid": "41380752",
+  "relevance": 1,
+  "finding": "Combined network pharmacology, molecular docking and UPLC-Q-TOF/MS metabolomics, with MetaboAnalyst and MetaScape used for joint pathway analysis of RR and MO herb pair laxation mechanism.",
+  "model": "rat (constipation model)",
+  "section": "applications"
+ },
+ "40904160": {
+  "pmid": "40904160",
+  "relevance": 1,
+  "finding": "Used transcriptomics and targeted metabolomics with MetaboAnalyst 6.0 and O2PLS methods to identify key targets and pathways underlying Moringa oleifera effects on learning and memory in mice.",
+  "model": "mouse (scopolamine-induced memory impairment)",
+  "section": "applications"
+ },
+ "38672431": {
+  "pmid": "38672431",
+  "relevance": 1,
+  "finding": "Applied integrated proteomic and metabolomic profiling of safflower organs with PaintOmics and MetaboAnalyst to characterize seed development and petal wilting.",
+  "model": "safflower (Carthamus tinctorius)",
+  "section": "applications"
+ },
+ "41663004": {
+  "pmid": "41663004",
+  "relevance": 1,
+  "finding": "Integrated serum metabolomics and brown adipose tissue transcriptomics via MetaboAnalyst to investigate the cold property of Coptidis Rhizoma in mice.",
+  "model": "mouse (C57BL/6J)",
+  "section": "applications"
+ },
+ "41565115": {
+  "pmid": "41565115",
+  "relevance": 1,
+  "finding": "Review discusses omics-driven strategies for marine macroalgal bioactive metabolite discovery, mentioning GNPS, MetaboAnalyst, and emerging integrative multi-omics frameworks combining machine learning and systems biology.",
+  "model": "marine macroalgae",
+  "section": "other"
+ },
+ "36761330": {
+  "pmid": "36761330",
+  "relevance": 1,
+  "finding": "Used MetaboAnalyst 4.0 for statistical analyses, gene ontology, and pathway enrichment of integrated untargeted proteomic and metabolomic data from informal workers exposed to potentially toxic elements.",
+  "model": "human (occupational exposure)",
+  "section": "applications"
+ },
+ "34990052": {
+  "pmid": "34990052",
+  "relevance": 1,
+  "finding": "Combined transcriptomics and serum metabolomics analyzed with MetaboAnalyst to identify metabolic alterations and biomarkers associated with head and neck squamous cell carcinoma.",
+  "model": "human (HNSCC)",
+  "section": "applications"
+ },
+ "41169614": {
+  "pmid": "41169614",
+  "relevance": 1,
+  "finding": "A systematic review of metabolomics studies in TB animal models (predominantly mice) that captured only 4.7% of human TB-associated differential metabolites, using MetaboAnalyst 6.0 for pathway analysis and highlighting the need for integrated multi-platform standardization.",
+  "model": "human/mouse/animal TB",
+  "section": "applications"
+ },
+ "38395000": {
+  "pmid": "38395000",
+  "relevance": 1,
+  "finding": "Applied global proteomics and metabolomics to HepG2 cells treated with SC-43 and performed joint pathway analysis on differential proteins and metabolites using the MetaboAnalyst 5.0 platform to identify co-regulated pathways.",
+  "model": "HepG2 cell line",
+  "section": "applications"
+ },
+ "39322753": {
+  "pmid": "39322753",
+  "relevance": 3,
+  "finding": "Benchmarked 14 single-cell protein abundance/chromatin accessibility prediction algorithms and 18 single-cell multi-omics integration algorithms across 47 datasets, finding totalVI/scArches best for protein prediction, Seurat/MOJITOO/scAI best for vertical integration, and totalVI/UINMF best for horizontal/mosaic integration.",
+  "model": "single-cell multi-omics",
+  "section": "benchmarks"
+ },
+ "32823283": {
+  "pmid": "32823283",
+  "relevance": 3,
+  "finding": "Large-scale benchmark of 11 survival prediction methods (boosting, penalized regression, random forest) on 18 TCGA multi-omics cancer datasets showed that methods accounting for the multi-omics group structure yielded slightly better prediction, with only block forest outperforming a clinical Cox model.",
+  "model": "TCGA cancer multi-omics",
+  "section": "benchmarks"
+ },
+ "40640531": {
+  "pmid": "40640531",
+  "relevance": 3,
+  "finding": "Systematic benchmark of 40 single-cell multi-modal integration algorithms across DNA, RNA, protein, and spatial omics in paired, unpaired, and mosaic settings, evaluating usability, accuracy, and robustness to guide method selection.",
+  "model": "single-cell multi-modal",
+  "section": "benchmarks"
+ },
+ "37365273": {
+  "pmid": "37365273",
+  "relevance": 2,
+  "finding": "Review of gene regulatory network inference methods that leverage single-cell multi-omics (transcriptomics and chromatin accessibility), comparing and classifying approaches and highlighting benchmarking challenges.",
+  "model": "single-cell multi-omics (scRNA-seq + scATAC-seq)",
+  "section": "networks"
+ },
+ "40474806": {
+  "pmid": "40474806",
+  "relevance": 1,
+  "finding": "Integrated whole-slide histopathology with multi-transcriptomics (CNV, hdWGCNA, CellChat, Monocle2) to characterize lung adenocarcinoma heterogeneity and build a prognostic model using an ML benchmark framework.",
+  "model": "TCGA-LUAD (human)",
+  "section": "applications"
+ },
+ "39746153": {
+  "pmid": "39746153",
+  "relevance": 1,
+  "finding": "Applied transcriptomic and proteomic profiling with benchmark dose modeling in irradiated white blood cells to derive point-of-departure values for key events of an adverse outcome pathway for acute myeloid leukemia.",
+  "model": "in vitro human blood cells (X-irradiation)",
+  "section": "applications"
+ },
+ "34383739": {
+  "pmid": "34383739",
+  "relevance": 3,
+  "finding": "Comprehensive evaluation of 10 multi-omics integration methods for cancer subtyping across nine TCGA cancers and 11 omics data type combinations, showing that adding more omics types does not always improve performance.",
+  "model": "TCGA multi-omics (cancer)",
+  "section": "benchmarks"
+ },
+ "38001063": {
+  "pmid": "38001063",
+  "relevance": 3,
+  "finding": "Introduced Mowgli, a multi-view learning method combining integrative Nonnegative Matrix Factorization and Optimal Transport for paired multi-omics data of any type/number, available as a Python package integrated with the scverse ecosystem.",
+  "model": "paired single-cell multi-omics (10X Multiome, CITE-seq, TEA-seq)",
+  "section": "frameworks"
+ },
+ "35169688": {
+  "pmid": "35169688",
+  "relevance": 3,
+  "finding": "Reviewed and benchmarked machine learning methods (general-purpose and task-specific, supervised and unsupervised) for multi-omics integration in cancer using CCLE data, reporting classification accuracy, drug response prediction error, and runtime.",
+  "model": "CCLE cancer cell line multi-omics",
+  "section": "statistics_ml"
+ },
+ "38444019": {
+  "pmid": "38444019",
+  "relevance": 3,
+  "finding": "Proposed MOCAT, a multi-omics integration framework using auxiliary classifier-enhanced autoencoders with attention and confidence learning, outperforming state-of-the-art methods on BRCA, ROSMAP, LGG, and KIPAN benchmark datasets.",
+  "model": "TCGA/related cancer multi-omics",
+  "section": "frameworks"
+ },
+ "35759425": {
+  "pmid": "35759425",
+  "relevance": 1,
+  "finding": "16S rRNA amplicon sequencing of bakery production environments was analyzed using the mothur pipeline and visualized with MicrobiomeAnalyst and R packages, identifying Proteobacteria and Firmicutes among the dominant phyla.",
+  "model": "bacterial communities (bakery environments)",
+  "section": "applications"
+ },
+ "35710793": {
+  "pmid": "35710793",
+  "relevance": 1,
+  "finding": "Cervicovaginal 16S rRNA profiles from 203 pregnant women were processed with QIIME 1.9.1 and analyzed using MicrobiomeAnalyst and Calypso, finding that balanced Lactobacillus/Ureaplasma/Prevotella colonization favors term birth.",
+  "model": "human vaginal microbiome (pregnant women)",
+  "section": "applications"
+ },
+ "38147830": {
+  "pmid": "38147830",
+  "relevance": 1,
+  "finding": "Nasal 16S V3–V4 swabs from healthcare-facility staff were filtered through MG-RAST v3.6 and profiled/visualized in MicrobiomeAnalyst v2.0, revealing workspace-associated taxonomic differences.",
+  "model": "human nasal microbiome (healthcare workers)",
+  "section": "applications"
+ },
+ "37258861": {
+  "pmid": "37258861",
+  "relevance": 1,
+  "finding": "A practical guide describes fundamental web-based metagenomic services including BV-BRC, RDP, MG-RAST, MicrobiomeAnalyst, METAGENassist, and MGnify for taxonomic and functional analysis without programming expertise.",
+  "model": "metagenomic data (web services overview)",
+  "section": "platforms_web"
+ },
+ "40284963": {
+  "pmid": "40284963",
+  "relevance": 1,
+  "finding": "Gut 16S rRNA data from 41 COVID-19 patients were analyzed via ANCOM in QIIME2 and Kruskal–Wallis tests in MicrobiomeAnalyst, identifying Halococcus and Coprococcus as differentially abundant in critical cases.",
+  "model": "human gut microbiome (COVID-19 patients)",
+  "section": "applications"
+ },
+ "37065420": {
+  "pmid": "37065420",
+  "relevance": 1,
+  "finding": "HOMINGS-sequenced mother–infant salivary 16S data were processed in QIIME 1.9.1 with core microbiome and LEfSe analyses performed in MicrobiomeAnalyst, showing age-dependent diversity increases in infants.",
+  "model": "human oral microbiome (mother–infant dyads)",
+  "section": "applications"
+ },
+ "41387715": {
+  "pmid": "41387715",
+  "relevance": 1,
+  "finding": "Fecal 16S V4 sequencing from infants with congenital heart disease was processed in QIIME2 and analyzed with MicrobiomeAnalyst 2.0, linking lower alpha diversity to poorer cognitive and language scores.",
+  "model": "human gut microbiome (infants with congenital heart disease)",
+  "section": "applications"
+ },
+ "37457284": {
+  "pmid": "37457284",
+  "relevance": 0,
+  "finding": "MIVAS III is a cross-sectional protocol describing lifestyle, arterial aging, cognitive, and gut/oral microbiota measurements in 1000 CVD-free Iberian adults without focusing on analysis software.",
+  "model": "human gut and oral microbiome (population cohort protocol)",
+  "section": "other"
+ },
+ "36583787": {
+  "pmid": "36583787",
+  "relevance": 1,
+  "finding": "Nasal 16S V1–V3 profiles from SARS-CoV-2 positive and negative subjects were processed with MicrobAT Suite and analyzed statistically in MicrobiomeAnalyst, revealing reduced Corynebacterium in COVID-19.",
+  "model": "human nasal microbiome (COVID-19 patients vs. healthy controls)",
+  "section": "applications"
+ },
+ "36691777": {
+  "pmid": "36691777",
+  "relevance": 1,
+  "finding": "Internal-implant 16S V3–V4 sequences were processed with DADA2 against HOMD, with alpha/beta diversity and differential abundance analyzed via the MicrobiomeAnalyst workflow, showing elevated Gram-positive/Enterococci in peri-implantitis.",
+  "model": "human oral microbiome (dental implant sites)",
+  "section": "applications"
+ },
+ "36142775": {
+  "pmid": "36142775",
+  "relevance": 1,
+  "finding": "A review of freely available web-based 16S rRNA analysis tools evaluates MicrobiomeAnalyst, Mian, gcMeta, VAMPS, and Microbiome Toolbox, noting usability limitations of gcMeta, VAMPS, and Microbiome Toolbox.",
+  "model": "16S rRNA microbiome data (web-tool review)",
+  "section": "platforms_web"
+ },
+ "38229613": {
+  "pmid": "38229613",
+  "relevance": 1,
+  "finding": "Nanopore full-length 16S rRNA sequencing of PD patient and healthy-control fecal samples was analyzed with the web-based tools BugSeq and MicrobiomeAnalyst, identifying altered SCFA-producing taxa in Parkinson's disease.",
+  "model": "human gut microbiome (Parkinson's disease, Indian cohort)",
+  "section": "applications"
+ },
+ "38493343": {
+  "pmid": "38493343",
+  "relevance": 3,
+  "finding": "Benchmarked 12 multi-omics integration methods on three integration tasks for single-cell RNA and ATAC data using qualitative visualization and quantitative metrics across six aspects, providing guidelines for method selection.",
+  "model": "single-cell RNA-seq and ATAC-seq (human/mouse)",
+  "section": "benchmarks"
+ },
+ "36551996": {
+  "pmid": "36551996",
+  "relevance": 3,
+  "finding": "Developed and evaluated open-source jSVD data fusion methods (R and Python) on the TCGA Skin Cutaneous Melanoma dataset, finding that data fusion did not outperform single-domain classification for molecular subtyping but may be better suited for response prediction.",
+  "model": "human / cutaneous melanoma (TCGA SKCM)",
+  "section": "benchmarks"
+ },
+ "41083898": {
+  "pmid": "41083898",
+  "relevance": 3,
+  "finding": "Developed guidelines for selecting single-cell multimodal omics integration methods through systematic categorization and comprehensive benchmarking of current methods across multiple tasks including dimension reduction, batch correction, clustering, imputation, and spatial registration.",
+  "model": "single-cell multimodal omics",
+  "section": "benchmarks"
+ },
+ "38243340": {
+  "pmid": "38243340",
+  "relevance": 3,
+  "finding": "Introduced MOSD, a weighted affinity and self-diffusion multi-omics integration method, benchmarked across ten cancer types using gene expression, DNA methylation and miRNA, showing improved patient survival differentiation and computational efficiency over state-of-art integration methods.",
+  "model": "human / ten cancer types (gene expression, DNA methylation, miRNA)",
+  "section": "frameworks"
+ },
+ "42032296": {
+  "pmid": "42032296",
+  "relevance": 3,
+  "finding": "Presented SpaMosaic, a contrastive learning and graph neural network tool for mosaic integration of spatial multi-omics with missing-modality imputation, benchmarked against existing methods on simulated and experimentally acquired RNA, protein, chromatin accessibility and histone modification datasets from brain, embryo, tonsil and lymph node tissues.",
+  "model": "mouse / brain, embryo, tonsil, lymph node (spatial RNA, protein, ATAC, histone modifications)",
+  "section": "frameworks"
+ },
+ "40632608": {
+  "pmid": "40632608",
+  "relevance": 3,
+  "finding": "Introduced scMGCL, a graph contrastive learning framework for integrating single-cell ATAC-seq and RNA-seq data, which outperformed state-of-the-art methods in cell-type clustering, label transfer and marker-gene correlation preservation while reducing runtime and memory usage.",
+  "model": "single-cell ATAC-seq and RNA-seq",
+  "section": "frameworks"
+ },
+ "41065575": {
+  "pmid": "41065575",
+  "relevance": 1,
+  "finding": "Applied an integrative analysis combining TWAS with scRNA-seq to dissect pulmonary arterial hypertension pathogenesis, using multiple algorithms (AUCell, Ucell, ssGSEA, CellChat, CytoTRACE, scMetabolism) and a benchmarked random forest model to characterize endothelial subpopulations.",
+  "model": "human / pulmonary arterial hypertension (TWAS + scRNA-seq)",
+  "section": "applications"
+ },
+ "35501393": {
+  "pmid": "35501393",
+  "relevance": 3,
+  "finding": "Introduced GLUE, a graph-linked unified embedding framework for single-cell multi-omics integration that explicitly models regulatory interactions across omics layers, with systematic benchmarking showing superior accuracy, robustness and scalability for triple-omics integration and human cell atlas construction over millions of cells.",
+  "model": "single-cell multi-omics (epigenome, genome, transcriptome)",
+  "section": "frameworks"
+ },
+ "38985929": {
+  "pmid": "38985929",
+  "relevance": 3,
+  "finding": "Performed thorough comparison of six representative integrative classification methods (matrix factorization, multiple kernel, ensemble, graph-based) against random forest controls on simulated and real-world multi-omics datasets across infectious diseases, oncology and vaccines, finding DIABLO and random forest alternatives to be top performers.",
+  "model": "human / multi-disease multi-omics (infectious diseases, oncology, vaccines)",
+  "section": "benchmarks"
+ },
+ "36600199": {
+  "pmid": "36600199",
+  "relevance": 3,
+  "finding": "Introduced MinNet, a Siamese network with graph-based contrastive loss for integrating unpaired single-cell multi-omics data (scRNA-seq with scATAC-seq and scRNA-seq with epitope data), with benchmarking showing top performance in removing batch effects and enabling downstream cis-regulatory inference.",
+  "model": "single-cell scRNA-seq + scATAC-seq and scRNA-seq + epitope data",
+  "section": "frameworks"
+ },
+ "39826483": {
+  "pmid": "39826483",
+  "relevance": 3,
+  "finding": "Benchmarked eight representative early, intermediate, and late integration multi-omics clustering methods for colorectal cancer subtyping using TCGA DNA methylation, gene expression and protein expression data, identifying similarity network fusion (SNF) as the top performer across simulated and real-world datasets.",
+  "model": "human / colorectal cancer (DNA methylation, gene expression, protein expression)",
+  "section": "benchmarks"
+ },
+ "42089753": {
+  "pmid": "42089753",
+  "relevance": 3,
+  "finding": "Systematically benchmarked 20 statistical, machine learning and deep learning multi-omics biomarker identification methods against curated gold-standard prognostic and therapeutic biomarkers across five cancer datasets, identifying DeePathNet and DeepKEGG as top performers and providing consensus biomarker panels.",
+  "model": "human / cancer multi-omics (prognostic and therapeutic biomarkers)",
+  "section": "benchmarks"
+ },
+ "41526977": {
+  "pmid": "41526977",
+  "relevance": 2,
+  "finding": "Systematically benchmarked five commercial spatial transcriptomics platforms (Visium v1/v2/HD, Xenium, CosMx) on matched FFPE tumor sections, including integration of Visium v2 targeted protein data with RNA profiles to assess RNA-protein concordance.",
+  "model": "spatial transcriptomics + targeted proteomics across six human cancer types (FFPE)",
+  "section": "benchmarks"
+ },
+ "37147619": {
+  "pmid": "37147619",
+  "relevance": 3,
+  "finding": "Describes MODILM, a novel multi-omics data integration learning model that combines Graph Attention Networks and Multilayer Perceptrons with a View Correlation Discovery Network to classify complex diseases by fusing similarity-network-derived features across omics layers.",
+  "model": "multi-omics complex disease classification",
+  "section": "statistics_ml"
+ },
+ "41269529": {
+  "pmid": "41269529",
+  "relevance": 1,
+  "finding": "Comprehensive review of multi-omics integration strategies, analytical workflows, and computational tools for biomarker discovery in personalized oncology, with emphasis on machine learning/deep learning approaches and single-cell and spatial multi-omics advances.",
+  "model": "oncology (genomics, transcriptomics, proteomics, metabolomics)",
+  "section": "applications"
+ },
+ "34411543": {
+  "pmid": "34411543",
+  "relevance": 0,
+  "finding": "Reviews how machine learning and deep learning are applied in mass spectrometry-based proteomics for peptide prediction and biomarker discovery, with only brief mention of multi-omics integration needs.",
+  "model": "MS-based proteomics (single-omics)",
+  "section": "other"
+ },
+ "28982688": {
+  "pmid": "28982688",
+  "relevance": 2,
+  "finding": "Presents a deep learning-based multi-omics model integrating RNA-Seq, miRNA-Seq, and methylation data from TCGA to predict HCC survival subgroups and validates it across five external cohorts.",
+  "model": "human hepatocellular carcinoma (RNA-Seq, miRNA-Seq, methylation)",
+  "section": "statistics_ml"
+ },
+ "38217405": {
+  "pmid": "38217405",
+  "relevance": 3,
+  "finding": "Develops a multi-omics data analysis workflow implemented in Nextflow with containers, version control and rich semantic metadata, packaged as a Research Object Crate and shared via WorkflowHub as a FAIR Digital Object.",
+  "model": "multi-omics (childhood externalizing behavior case study)",
+  "section": "workflows_reproducibility"
+ },
+ "41332529": {
+  "pmid": "41332529",
+  "relevance": 3,
+  "finding": "Presents an end-to-end analytical pipeline for the GeoMx Digital Spatial Profiler that simultaneously generates whole-transcriptome and 637-protein measurements, including morphology-guided region selection, QC, normalization, and multi-modal data interpretation.",
+  "model": "spatial transcriptomics + proteomics (human brain: AD, DLB, ALS, controls)",
+  "section": "workflows_reproducibility"
+ },
+ "39255791": {
+  "pmid": "39255791",
+  "relevance": 0,
+  "finding": "Describes a standardized NGN2 iPSC-to-neuron differentiation protocol with temporal transcriptomic, imaging, and functional profiling, without presenting a multi-omics integration software tool.",
+  "model": "iPSC-derived neurons (primarily transcriptomics)",
+  "section": "other"
+ },
+ "33944776": {
+  "pmid": "33944776",
+  "relevance": 3,
+  "finding": "Introduces bioBakery 3, an integrated suite of methods (MetaPhlAn 3, HUMAnN 3, StrainPhlAn 3, PanPhlAn 3) for taxonomic, functional, strain-level and phylogenetic profiling of metagenomes and metatranscriptomes, with cloud-deployable reproducible workflows.",
+  "model": "human gut microbiome (shotgun metagenomics + metatranscriptomics)",
+  "section": "microbiome_tools"
+ },
+ "40233719": {
+  "pmid": "40233719",
+  "relevance": 1,
+  "finding": "Reviews the application of AI methods to multi-omics analysis in translational cancer research, covering target discovery, biomarker identification, patient stratification, and therapeutic response prediction, alongside reproducibility and interpretability challenges.",
+  "model": "oncology multi-omics (review)",
+  "section": "applications"
+ },
+ "36594155": {
+  "pmid": "36594155",
+  "relevance": 0,
+  "finding": "Describes BAMM, a wet-lab protocol for rapid unified extraction of lipids, metabolites, and proteins for mass spectrometry-based multi-omics, rather than a computational integration/analysis software tool.",
+  "model": "MS-based lipidomics, metabolomics, proteomics (sample prep)",
+  "section": "other"
+ },
+ "29272324": {
+  "pmid": "29272324",
+  "relevance": 1,
+  "finding": "Reviews bioinformatics requirements for precision oncology, discussing molecular tumor board workflows from primary analysis of profiling data to automated clinical report generation, with emphasis on reproducibility and integration of high-dimensional multi-omics.",
+  "model": "clinical oncology multi-omics (review)",
+  "section": "applications"
+ },
+ "40891528": {
+  "pmid": "40891528",
+  "relevance": 3,
+  "finding": "OpenPedCan provides reproducible, dockerized multi-omics workflows (WGS, WXS, RNA-seq, methylation, proteomics, miRNA) delivered via 60+ scalable modules on GitHub, CAVATICA, and AWS.",
+  "model": "human (pediatric cancer)",
+  "section": "workflows_reproducibility"
+ },
+ "33349678": {
+  "pmid": "33349678",
+  "relevance": 3,
+  "finding": "anvi'o is described as a community-led, open multi-omics platform/software ecosystem that reduces constraints in 'omics data analyses for microbiology.",
+  "model": "microbiome / microbial communities",
+  "section": "platforms_web"
+ },
+ "41892252": {
+  "pmid": "41892252",
+  "relevance": 3,
+  "finding": "SVNeoPP is an end-to-end Snakemake workflow integrating WGS, RNA-seq, and LC-MS/MS proteomics for SV-derived neoantigen prediction with modular extension and checkpoint-based reproducibility.",
+  "model": "human (hepatocellular carcinoma)",
+  "section": "workflows_reproducibility"
+ },
+ "37443183": {
+  "pmid": "37443183",
+  "relevance": 1,
+  "finding": "The study provides a stable MHCC97H transcriptome and proteome reference dataset to calibrate accuracy and reproducibility of omics workflows.",
+  "model": "human cell line (MHCC97H)",
+  "section": "other"
+ },
+ "30968358": {
+  "pmid": "30968358",
+  "relevance": 0,
+  "finding": "The chapter discusses integrated fluidic circuit (IFC) microfluidics hardware for single-cell and single-cell multi-omics applications, not software integration tools.",
+  "model": "single-cell (microfluidic platform)",
+  "section": "other"
+ },
+ "42711342": {
+  "pmid": "42711342",
+  "relevance": 1,
+  "finding": "This perspective reviews advances, integration challenges, and proposes a roadmap for standardized, FAIR-compliant multi-omics microbiome workflows and benchmarks.",
+  "model": "microbiome (genomic, transcriptomic, proteomic, metabolomic)",
+  "section": "other"
+ },
+ "33362867": {
+  "pmid": "33362867",
+  "relevance": 1,
+  "finding": "This review overviews the multi-omics field, available toolsets, statistics/machine learning methods, FAIR research, and benchmarking/reproducibility best practices.",
+  "model": "general multi-omics",
+  "section": "other"
+ },
+ "33686065": {
+  "pmid": "33686065",
+  "relevance": 0,
+  "finding": "The paper demonstrates stable infrared molecular fingerprints from blood serum/plasma as a 'multiomics' mode of health monitoring, not software for data integration.",
+  "model": "human (blood serum/plasma spectroscopy)",
+  "section": "applications"
+ },
+ "33868223": {
+  "pmid": "33868223",
+  "relevance": 1,
+  "finding": "This review discusses high-throughput single-cell multi-omics platforms (CyTOF, imaging, CITE-seq) and their analysis workflows for clinical trials and drug discovery.",
+  "model": "human single-cell (immune/cancer)",
+  "section": "platforms_web"
+ },
+ "37432911": {
+  "pmid": "37432911",
+  "relevance": 1,
+  "finding": "The study develops a multi-omics sample preparation method for C. elegans enabling integrated proteomics, lipidomics, and metabolomics from a single sample set.",
+  "model": "C. elegans",
+  "section": "other"
+ },
+ "41677667": {
+  "pmid": "41677667",
+  "relevance": 1,
+  "finding": "The review evaluates AI/ML approaches (Random Forest, gradient boosting, GNNs) for integrating EV-derived multi-omics profiles and clinical metadata for cardiovascular biomarker discovery.",
+  "model": "human (cardiovascular, exosomes/EVs)",
+  "section": "statistics_ml"
+ },
+ "39574772": {
+  "pmid": "39574772",
+  "relevance": 3,
+  "finding": "tcga-data-nf is a Nextflow workflow that reproducibly downloads, preprocesses, and integrates TCGA multi-omics data (RNA-seq, methylation) to infer regulatory networks using netZoo tools.",
+  "model": "human (TCGA cancer cohorts)",
+  "section": "workflows_reproducibility"
+ },
+ "37787106": {
+  "pmid": "37787106",
+  "relevance": 2,
+  "finding": "The Galaxy ecosystem provides a scalable, accessible, community-supported computing environment with open-source tools for MS-based proteomics analyses and associated multi-omic data applications.",
+  "model": "MS-based proteomics platform",
+  "section": "platforms_web"
+ },
+ "40034135": {
+  "pmid": "40034135",
+  "relevance": 1,
+  "finding": "This mini review summarizes recent advances in single-cell proteomics technology and computational solutions for data normalization and imputation, noting that integration of complementary omics and automated workflows are needed.",
+  "model": "single-cell proteomics",
+  "section": "other"
+ },
+ "37648852": {
+  "pmid": "37648852",
+  "relevance": 1,
+  "finding": "Using a multi-omics strategy combining faecal metabolomics, metagenomics, host metabolomics and transcriptomics, the study links gut microbial carbohydrate metabolism to insulin resistance in humans.",
+  "model": "human gut microbiome",
+  "section": "applications"
+ },
+ "32241904": {
+  "pmid": "32241904",
+  "relevance": 1,
+  "finding": "The study applies multidimensional integration of gut microbiome, serum and faecal metabolome and clinical phenotypes to identify microbial species and functions linked to uraemic toxins in end-stage renal disease.",
+  "model": "human gut microbiome",
+  "section": "applications"
+ },
+ "30531976": {
+  "pmid": "30531976",
+  "relevance": 1,
+  "finding": "By integrating untargeted metabolomic and shotgun metagenomic profiling of IBD stool samples, the study identifies 122 robust associations between differentially abundant species and well-characterized metabolites.",
+  "model": "human gut microbiome",
+  "section": "applications"
+ },
+ "39293401": {
+  "pmid": "39293401",
+  "relevance": 2,
+  "finding": "This review provides an overview of state-of-the-art systems biology resources and computational tools for multi-omics data integration aimed at host-microbiome interactions in inflammatory bowel disease.",
+  "model": "human gut microbiome",
+  "section": "frameworks"
+ },
+ "32968241": {
+  "pmid": "32968241",
+  "relevance": 1,
+  "finding": "The review summarizes methodologies for measuring gut microbial metabolites and proposes a potential framework for integrating discovery-based metabolite studies with mechanistic work on host-microbiota interactions.",
+  "model": "gut microbiome",
+  "section": "other"
+ },
+ "31281534": {
+  "pmid": "31281534",
+  "relevance": 1,
+  "finding": "The study performs integrated microbiome (16S rRNA) and metabolome (GC-MS) analysis of CRC fecal samples, correlating CRC-associated microbes with metabolites such as polyamines.",
+  "model": "human gut microbiome",
+  "section": "applications"
+ },
+ "40140706": {
+  "pmid": "40140706",
+  "relevance": 1,
+  "finding": "By reconstructing integrated metabolic models of the mouse host and 181 gut microorganisms using metagenomics, transcriptomics and metabolomics, the study characterizes host-microbiome metabolic interactions during aging.",
+  "model": "mouse gut microbiome",
+  "section": "applications"
+ },
+ "36624472": {
+  "pmid": "36624472",
+  "relevance": 1,
+  "finding": "Using metagenomics and untargeted metabolomics across CKD severity stages, the study constructs an integrated co-occurrence network linking CKD-related bacteria with fecal and serum metabolites.",
+  "model": "human gut microbiome",
+  "section": "applications"
+ },
+ "29804833": {
+  "pmid": "29804833",
+  "relevance": 0,
+  "finding": "The study shows that the ketogenic diet alters the gut microbiota and that microbial-dependent changes in systemic and hippocampal metabolites underlie seizure protection in mice.",
+  "model": "mouse gut microbiome",
+  "section": "applications"
+ },
+ "40239649": {
+  "pmid": "40239649",
+  "relevance": 1,
+  "finding": "The study integrates bile acid metabolomics with microbial genetics to profile microbiota BA metabolic genes, identifying previously uncharacterized BAs that antagonize the human androgen receptor.",
+  "model": "gut microbiome / mammalian",
+  "section": "applications"
+ },
+ "42785295": {
+  "pmid": "42785295",
+  "relevance": 1,
+  "finding": "MOSHPIT is a QIIME 2-based software framework that integrates CAMI II- and LEMMI-validated metagenome tools with provenance tracking for reproducible shotgun metagenomics analysis.",
+  "model": "microbiome/metagenomics",
+  "section": "workflows_reproducibility"
+ },
+ "38011287": {
+  "pmid": "38011287",
+  "relevance": 1,
+  "finding": "Provenance Replay is a QIIME 2 tool that generates executable code from prior analysis results to enable bioinformatics reproducibility.",
+  "model": "general bioinformatics platform",
+  "section": "workflows_reproducibility"
+ },
+ "34748542": {
+  "pmid": "34748542",
+  "relevance": 1,
+  "finding": "RESCRIPt is a QIIME 2 plugin for reproducible generation, management, and evaluation of nucleotide sequence and taxonomy reference databases used in microbiome analyses.",
+  "model": "microbiome/amplicon sequencing",
+  "section": "microbiome_tools"
+ },
+ "33500774": {
+  "pmid": "33500774",
+  "relevance": 0,
+  "finding": "genome-sampler is a QIIME 2 plugin for reproducibly subsampling SARS-CoV-2 genome collections along time, geography, and diversity axes for genomic epidemiology.",
+  "model": "SARS-CoV-2 viral genomes",
+  "section": "other"
+ },
+ "28903732": {
+  "pmid": "28903732",
+  "relevance": 2,
+  "finding": "The study benchmarked multiple 16S rRNA amplicon bioinformatics pipelines (QIIME de novo/open-reference, UPARSE, DADA2) across Illumina MiSeq, Ion Torrent PGM, and Roche 454 platforms, showing that platform choice affects specific taxon relative abundances though overall profiles are comparable.",
+  "model": "chicken cecum microbiome (16S rRNA)",
+  "section": "benchmarks"
+ },
+ "37651607": {
+  "pmid": "37651607",
+  "relevance": 2,
+  "finding": "The review systematically categorizes multimodal deep learning methods for single-cell multi-omics data integration by data modality, architecture, fusion strategy, and downstream tasks.",
+  "model": "single-cell multi-omics",
+  "section": "statistics_ml"
+ },
+ "40748323": {
+  "pmid": "40748323",
+  "relevance": 2,
+  "finding": "The review comprehensively surveys multi-omics data integration methods from classical statistical approaches to deep generative models, with emphasis on variational autoencoders for imputation, augmentation, and batch correction.",
+  "model": "multi-omics (general)",
+  "section": "statistics_ml"
+ },
+ "34791014": {
+  "pmid": "34791014",
+  "relevance": 2,
+  "finding": "The review outlines a roadmap of deep learning approaches for multi-omics data integration, discussing architecture choices, applications in prevention, prediction, endotyping, and personalized treatment.",
+  "model": "multi-omics (biomedical)",
+  "section": "statistics_ml"
+ },
+ "36450252": {
+  "pmid": "36450252",
+  "relevance": 2,
+  "finding": "NETTAG is a network topology-based deep learning framework that integrates non-coding GWAS effects with multi-genomic features (eQTLs, enhancers, CpG islands, protein interactome) to identify AD-risk genes and drug repurposing candidates.",
+  "model": "human (Alzheimer's disease) multi-omics",
+  "section": "applications"
+ },
+ "40171841": {
+  "pmid": "40171841",
+  "relevance": 2,
+  "finding": "Omicsformer is a deep learning model developed from multi-omics profiling of sub-healthy individuals that predicts chronic disease risk from routine blood samples.",
+  "model": "human multi-omics + clinical blood tests",
+  "section": "applications"
+ },
+ "40977229": {
+  "pmid": "40977229",
+  "relevance": 2,
+  "finding": "A supervised classifier trained on UK Biobank multi-omics and clinical data (AUC 0.931) combined with similarity network fusion identified distinct HFpEF phenotypic subgroups an average of 6.3 years before symptom onset.",
+  "model": "human (HFpEF) multi-omics",
+  "section": "applications"
+ },
+ "40874818": {
+  "pmid": "40874818",
+  "relevance": 1,
+  "finding": "The review surveys deep learning applications across cancer multi-omics (genomics, epigenomics, transcriptomics, proteomics, radiomics, single-cell) for detection, diagnosis, subtyping, biomarker discovery, and treatment response prediction.",
+  "model": "human cancer multi-omics",
+  "section": "applications"
+ },
+ "38871078": {
+  "pmid": "38871078",
+  "relevance": 1,
+  "finding": "Application study combining shotgun metagenomics with plasma HPLC-ESI-MS/MS metabolomics to associate metformin-induced gut microbiome and metabolome changes with cognition in two human cohorts.",
+  "model": "human",
+  "section": "applications"
+ },
+ "31341063": {
+  "pmid": "31341063",
+  "relevance": 0,
+  "finding": "Compares germ-free vs pathogen-free mouse skeletal muscle, gut microbiota, and NMR-based metabolomes to show microbiota influence on muscle mass and function.",
+  "model": "mouse",
+  "section": "applications"
+ },
+ "40063366": {
+  "pmid": "40063366",
+  "relevance": 1,
+  "finding": "Review introducing the interactome concept and summarizing high-throughput multi-omics methodologies, cohort resources, and computational methods used to study host-microbiota cross-talk in IBD.",
+  "model": "human",
+  "section": "other"
+ },
+ "34262212": {
+  "pmid": "34262212",
+  "relevance": 3,
+  "finding": "Describes an integrated microbiome-focused mass-spectrometry pipeline with an 833-metabolite library, machine-learning analysis, and an interactive metabolomics profile explorer for characterizing 178 gut microorganism strains.",
+  "model": "bacterial strains / gnotobiotic mice",
+  "section": "workflows_reproducibility"
+ },
+ "29942096": {
+  "pmid": "29942096",
+  "relevance": 1,
+  "finding": "Application combining fecal shotgun metagenomics with hepatic transcriptome and plasma/urine metabolomes in obese women to link the gut microbiome and host phenome to hepatic steatosis.",
+  "model": "human",
+  "section": "applications"
+ },
+ "34880489": {
+  "pmid": "34880489",
+  "relevance": 1,
+  "finding": "Applied integrated multi-omics (microbiome + serum metabolome + clinical) analysis of 2,173 MetaCardis participants using a computational framework to disentangle drug and disease effects on host and microbiome features.",
+  "model": "human",
+  "section": "applications"
+ },
+ "28764956": {
+  "pmid": "28764956",
+  "relevance": 1,
+  "finding": "Review discussing how integration of microbiome and metabolomics data paired with experimental validation can identify microbial influence on host physiology via bioactive metabolites.",
+  "model": "N/A",
+  "section": "other"
+ },
+ "39086603": {
+  "pmid": "39086603",
+  "relevance": 1,
+  "finding": "Application combining fecal 16S rRNA sequencing with metabolomics in ACE2-knockout and ACE2-overexpressing mice to correlate gut microbiota changes with host metabolite shifts.",
+  "model": "mouse",
+  "section": "applications"
+ },
+ "37848031": {
+  "pmid": "37848031",
+  "relevance": 2,
+  "finding": "Methods paper proposing in silico in vivo association pattern analyses that combine microbiome-metabolome association studies with constraint-based community modeling for causal inference in observational host-microbiome data.",
+  "model": "human",
+  "section": "statistics_ml"
+ },
+ "31399723": {
+  "pmid": "31399723",
+  "relevance": 0,
+  "finding": "Author correction notice for the QIIME 2 paper, with no substantive new content on multi-omics integration software.",
+  "model": "N/A",
+  "section": "other"
+ },
+ "39975011": {
+  "pmid": "39975011",
+  "relevance": 2,
+  "finding": "Introduces MOSHPIT, software built on the QIIME 2 framework that integrates CAMI2-validated metagenome tools with provenance tracking and multiple user interfaces for reproducible metagenomics.",
+  "model": "metagenomes (any ecosystem)",
+  "section": "microbiome_tools"
+ },
+ "32343490": {
+  "pmid": "32343490",
+  "relevance": 2,
+  "finding": "Tutorial protocol for the QIIME 2 microbiome bioinformatics platform, describing installation, plug-in use, and integration with the Qiita web-based platform for reproducible microbiome analyses and meta-analyses.",
+  "model": "human (infant cohort)",
+  "section": "microbiome_tools"
+ },
+ "33989895": {
+  "pmid": "33989895",
+  "relevance": 2,
+  "finding": "Proposes a denoising autoencoder-based method to integrate multi-omics data from 15 TCGA cancers for improved cancer prognosis prediction, improving C-index by 6.5% on average over previous methods.",
+  "model": "human cancer (multi-omics: genomics, transcriptomics)",
+  "section": "statistics_ml"
+ },
+ "32933515": {
+  "pmid": "32933515",
+  "relevance": 2,
+  "finding": "Proposes a multi-view learning strategy with concatenation and cross-modality autoencoders (ConcatAE, CrossAE) to integrate gene expression, DNA methylation, miRNA, and CNV data for breast cancer survival prediction.",
+  "model": "human breast cancer (multi-omics: expression, methylation, miRNA, CNV)",
+  "section": "statistics_ml"
+ },
+ "39215755": {
+  "pmid": "39215755",
+  "relevance": 1,
+  "finding": "Reviews the use of individual omics (genomics, transcriptomics, proteomics, metagenomics) and multi-omics approaches combined with AI for understanding inflammatory bowel disease.",
+  "model": "human (IBD; multi-omics)",
+  "section": "other"
+ },
+ "38582094": {
+  "pmid": "38582094",
+  "relevance": 0,
+  "finding": "Estimates mortality and years of life lost for 288 causes of death across 204 countries using the Cause of Death Ensemble model; unrelated to multi-omics software.",
+  "model": "human (epidemiology)",
+  "section": "other"
+ },
+ "39318761": {
+  "pmid": "39318761",
+  "relevance": 3,
+  "finding": "Presents a web-based tool for multi-omics visualization that paints up to four omics datasets onto organism-scale metabolic network diagrams using different visual channels (color, thickness, etc.).",
+  "model": "metabolic networks (multi-omics visualization)",
+  "section": "platforms_web"
+ },
+ "37740491": {
+  "pmid": "37740491",
+  "relevance": 1,
+  "finding": "Describes TBtools-II, an expanded general bioinformatics platform with over 100 features and a plugin ecosystem for comparative genomics, phylogenetics, co-expression networks, and single-cell analysis; not specifically focused on multi-omics integration.",
+  "model": "general bioinformatics platform",
+  "section": "platforms_web"
+ },
+ "40259382": {
+  "pmid": "40259382",
+  "relevance": 1,
+  "finding": "Applies WGCNA and ten machine learning algorithms to integrate multi-omics data from TCGA/GEO for building a prognostic model of mitotic catastrophe heterogeneity in bladder cancer.",
+  "model": "human bladder cancer (multi-omics)",
+  "section": "applications"
+ },
+ "39567793": {
+  "pmid": "39567793",
+  "relevance": 1,
+  "finding": "Constructs a multi-omic atlas of human embryonic skeletal development using paired transcriptional and epigenetic profiling plus spatial transcriptomics, introducing ISS-Patcher and SNP2Cell tools for spatial mapping and regulatory network-trait linking.",
+  "model": "human embryonic skeletal tissue (multi-omics)",
+  "section": "applications"
+ },
+ "34362682": {
+  "pmid": "34362682",
+  "relevance": 1,
+  "finding": "Reviews high-throughput multi-omics data acquisition and computational tools, proposing a conceptual in silico metabolic and epigenetic regulatory network (MER-Net) for cancer systems biology.",
+  "model": "cancer (metabolomics, epigenomics)",
+  "section": "other"
+ },
+ "38781369": {
+  "pmid": "38781369",
+  "relevance": 1,
+  "finding": "Generates a single-nuclei multi-omics resource of >2.8 million nuclei from 388 human prefrontal cortex samples, building cell-type regulatory and cell-to-cell communication networks with an integrative imputation/perturbation model.",
+  "model": "human brain (single-cell multi-omics)",
+  "section": "networks"
+ },
+ "35302338": {
+  "pmid": "35302338",
+  "relevance": 0,
+  "finding": "Analyzes myopathogene expression dynamics using transcriptomic data alone to evaluate satellite cell dysfunction across neuromuscular disorders; no multi-omics integration.",
+  "model": "human skeletal muscle (transcriptomics)",
+  "section": "other"
+ },
+ "35301463": {
+  "pmid": "35301463",
+  "relevance": 1,
+  "finding": "Reviews omics platforms and multi-omics data resources for understanding inflammatory bowel disease risk factors and pathways, highlighting network analysis for assembling high-throughput data.",
+  "model": "human (IBD; multi-omics)",
+  "section": "other"
+ },
+ "40967300": {
+  "pmid": "40967300",
+  "relevance": 1,
+  "finding": "This study integrated TCGA, GEO, and ENA multi-omics data with 101-combination machine learning to build a metabolism-related prognostic model for melanoma, but focuses on the biological findings rather than tool description.",
+  "model": "human (melanoma)",
+  "section": "applications"
+ },
+ "40740520": {
+  "pmid": "40740520",
+  "relevance": 3,
+  "finding": "BioNeuralNet is presented as an open-source, modular Python framework that uses Graph Neural Networks for end-to-end network-based multi-omics data analysis, supporting network construction, embedding generation, and downstream tasks.",
+  "model": "human (precision medicine)",
+  "section": "frameworks"
+ },
+ "37275552": {
+  "pmid": "37275552",
+  "relevance": 1,
+  "finding": "The study develops a consensus immunogenic cell death-related signature for clear cell renal cell carcinoma using a 101-combination machine learning framework applied to single-cell, bulk transcriptome and genome multi-omics data, primarily as a clinical/prognostic application.",
+  "model": "human (ccRCC)",
+  "section": "applications"
+ },
+ "40598554": {
+  "pmid": "40598554",
+  "relevance": 3,
+  "finding": "The paper directly benchmarks the statistical integration tool MOFA+ against the deep learning method MOGCN on 960 breast cancer samples across transcriptomics, epigenomics, and shotgun microbiome layers, finding MOFA+ superior for feature selection and pathway identification.",
+  "model": "human (breast cancer)",
+  "section": "benchmarks"
+ },
+ "38045372": {
+  "pmid": "38045372",
+  "relevance": 3,
+  "finding": "SmCCNet 2.0 is released as an R package (CRAN/GitHub) with a Shiny visualization app that integrates single or multiple omics types with a phenotype variable to reconstruct phenotype-specific multi-omics networks via sparse canonical correlation.",
+  "model": "general multi-omics",
+  "section": "networks"
+ },
+ "41051225": {
+  "pmid": "41051225",
+  "relevance": 3,
+  "finding": "NOODAI is described as a freely accessible web server (omics-oracle.com) that constructs joint interaction networks from per-omics representative traits and uses the MONET decomposition tool to identify functionally connected modules in clinical multi-omics datasets.",
+  "model": "clinical multi-omics",
+  "section": "platforms_web"
+ },
+ "36162197": {
+  "pmid": "36162197",
+  "relevance": 3,
+  "finding": "MCluster-VAEs is proposed as an end-to-end variational autoencoder-based deep learning method for unsupervised multi-omics clustering, outperforming 12 state-of-the-art multi-omics clustering methods on TCGA benchmark datasets.",
+  "model": "human (cancer, TCGA)",
+  "section": "statistics_ml"
+ },
+ "24121459": {
+  "pmid": "24121459",
+  "relevance": 2,
+  "finding": "The paper presents a multi-objective optimization method to generate biological networks incorporating multi-omics information and demonstrates its use for comparing transcriptomic variation across breast, colon, and pancreas tumors.",
+  "model": "human (breast, colon, pancreas cancer)",
+  "section": "networks"
+ },
+ "40848558": {
+  "pmid": "40848558",
+  "relevance": 3,
+  "finding": "SpaOmicsVAE is introduced as a deep learning framework combining variational autoencoders with dual graph neural networks and attention for integrative analysis of spatial multi-omics data, benchmarked against existing methods on thymus, spleen, hippocampus, and brain tissues.",
+  "model": "human/mouse tissues (spatial multi-omics)",
+  "section": "frameworks"
+ },
+ "38907114": {
+  "pmid": "38907114",
+  "relevance": 3,
+  "finding": "SpatialGlue is presented as a graph neural network with dual-attention that performs intra- and cross-omics integration of spatial multi-omics (epigenome-transcriptome, transcriptome-proteome) to identify spatial domains across tissues including brain and spleen.",
+  "model": "human/mouse tissues (spatial multi-omics)",
+  "section": "frameworks"
+ },
+ "41675959": {
+  "pmid": "41675959",
+  "relevance": 1,
+  "finding": "This is a narrative review discussing how AI, machine learning, deep learning, and neural networks are applied across multi-omics analysis and integration, without benchmarking or describing a specific new tool.",
+  "model": "general multi-omics",
+  "section": "other"
+ },
+ "41364147": {
+  "pmid": "41364147",
+  "relevance": 1,
+  "finding": "The study applies an established bioinformatics pipeline (limma, WGCNA, Mfuzz, Cox, Mendelian Randomization) across TCGA, GEO, GWAS, and scRNA-seq data to identify bladder cancer biomarkers, but does not introduce a new integration tool.",
+  "model": "human (bladder cancer)",
+  "section": "applications"
+ },
+ "42537003": {
+  "pmid": "42537003",
+  "relevance": 2,
+  "finding": "This review surveys graph construction and design choices for deep learning-based multi-omics integration, organizing methods by node schema, edge semantics, integration strategy, and model architecture across bulk, single-cell, and spatial settings.",
+  "model": "multi-omics bulk, single-cell, and spatial data",
+  "section": "statistics_ml"
+ },
+ "35089332": {
+  "pmid": "35089332",
+  "relevance": 2,
+  "finding": "This review proposes a taxonomy of deep learning-based multimodal data fusion strategies for biomedical data, finding that intermediate fusion with joint representation learning is preferred and that gradual fusion is a promising future direction.",
+  "model": "biomedical multimodal data",
+  "section": "statistics_ml"
+ },
+ "36739624": {
+  "pmid": "36739624",
+  "relevance": 3,
+  "finding": "The paper proposes MOADLN, a deep learning multi-omics integration method using self-attention to capture patient correlations and a Multi-Omics Correlation Discovery Network to learn cross-omic label correlations for biomedical data classification.",
+  "model": "human disease (mRNA, DNA methylation, miRNA)",
+  "section": "statistics_ml"
+ },
+ "41260205": {
+  "pmid": "41260205",
+  "relevance": 1,
+  "finding": "The study integrates nnUNet-derived PET/CT biomarkers with DNA and RNA sequencing and clinical factors to build the ClinicalPET LymphPlex prognostic model in diffuse large B cell lymphoma patients.",
+  "model": "human (DLBCL, imaging + multi-omics)",
+  "section": "applications"
+ },
+ "40864336": {
+  "pmid": "40864336",
+  "relevance": 3,
+  "finding": "The paper proposes MOST, a deep learning-based multi-omics SurvivalNet integrating RNA-seq, miRNA-seq, and DNA methylation to identify two LGG survival subtypes with a robust C-index of 0.92±0.02.",
+  "model": "human (low-grade glioma, TCGA + CGGA)",
+  "section": "statistics_ml"
+ },
+ "41293156": {
+  "pmid": "41293156",
+  "relevance": 1,
+  "finding": "The study applies an integrated multi-omics analysis (bulk, single-cell, and spatial transcriptomics) with a CNN+BiLSTM cross-fusion attention model to define programmed cell death-associated subtypes and a nine-gene prognostic signature in gastric cancer.",
+  "model": "human (gastric cancer, multi-omics)",
+  "section": "applications"
+ },
+ "41162770": {
+  "pmid": "41162770",
+  "relevance": 3,
+  "finding": "The paper introduces SWITCH, a deep generative model with cycle-mapping that integrates unpaired spatial multi-omics data and performs cross-modal translation without requiring paired data, outperforming existing methods in integration accuracy and spatial domain delineation.",
+  "model": "spatial multi-omics (e.g., brain cortex)",
+  "section": "frameworks"
+ },
+ "36443676": {
+  "pmid": "36443676",
+  "relevance": 3,
+  "finding": "The study proposes a deep neural network that integrates gene expression, CNV, mutations, RPPA, and metabolomics with a graph embedding of the interactome and an attention layer to predict anticancer drug responses, achieving R≈0.90 on CCLE/GDSC data.",
+  "model": "human cancer cell lines (CCLE/GDSC)",
+  "section": "statistics_ml"
+ },
+ "42379586": {
+  "pmid": "42379586",
+  "relevance": 1,
+  "finding": "This review critically assesses deep learning applications in tumor genomics, covering mutation detection, expression profiling, methylation prediction, and integrative multi-omics, including explainable AI and federated learning as emerging solutions.",
+  "model": "human (tumor genomics)",
+  "section": "statistics_ml"
+ },
+ "39695368": {
+  "pmid": "39695368",
+  "relevance": 3,
+  "finding": "The paper presents DeepMoIC, a deep Graph Convolutional Network framework that uses autoencoders and similarity network fusion to integrate heterogeneous multi-omics data for cancer subtype classification, outperforming state-of-the-art models on a pan-cancer dataset and three cancer datasets.",
+  "model": "human (pan-cancer, multi-omics)",
+  "section": "frameworks"
+ },
+ "41206113": {
+  "pmid": "41206113",
+  "relevance": 1,
+  "finding": "This survey summarizes AI applications in bioinformatics, including integrative analysis of multi-omics data, with reported quantitative metrics such as AlphaFold2's median 0.96 Å accuracy on CASP14.",
+  "model": "various bioinformatics domains",
+  "section": "other"
+ },
+ "37083575": {
+  "pmid": "37083575",
+  "relevance": 3,
+  "finding": "The study extends Convolutional Graph Neural Networks to integrate COPD-associated PPI networks with proteomics and transcriptomics data via the AhGlasso network reconstruction, improving classification accuracy over conventional methods.",
+  "model": "human (COPD, transcriptomics + proteomics + PPI)",
+  "section": "statistics_ml"
+ },
+ "36895758": {
+  "pmid": "36895758",
+  "relevance": 2,
+  "finding": "MicrobiotaProcess is an R package providing a MPSE data structure for integrating primary and intermediate microbiome data along with composable tidy-framework functions for flexible downstream analysis and visualization.",
+  "model": "microbiome (amplicon/metagenomic 16S and ecological data)",
+  "section": "microbiome_tools"
+ },
+ "37879443": {
+  "pmid": "37879443",
+  "relevance": 1,
+  "finding": "This systematic review catalogs 90 studies applying AI methods across five data modalities (genomics, radiomics, pathomics, real-world, and multimodal data) for predicting immune checkpoint inhibitor efficacy, but does not compare integration software tools.",
+  "model": "human cancer patients (multi-modal oncological data)",
+  "section": "other"
+ },
+ "40118220": {
+  "pmid": "40118220",
+  "relevance": 2,
+  "finding": "The review discusses state-of-the-art machine learning and AI methods for integrating metagenomics, metatranscriptomics, metabolomics, and metaproteomics gut microbiome data, focusing on biomarker discovery and treatment response prediction.",
+  "model": "human gut microbiome (multi-omics)",
+  "section": "statistics_ml"
+ },
+ "40663987": {
+  "pmid": "40663987",
+  "relevance": 1,
+  "finding": "This narrative review summarizes genomics, epigenomics, transcriptomics, proteomics, and metabolomics layers in atherosclerotic cardiovascular disease and discusses combining them with ML/AI for precision medicine, without benchmarking integration tools.",
+  "model": "human cardiovascular disease (multi-omics)",
+  "section": "applications"
+ },
+ "37686024": {
+  "pmid": "37686024",
+  "relevance": 0,
+  "finding": "This review covers circulating tumor DNA and cell-free DNA as oncologic markers and liquid biopsy technologies, with no focus on multi-omics integration software.",
+  "model": "human oncology (liquid biopsy biomarkers)",
+  "section": "other"
+ },
+ "36769267": {
+  "pmid": "36769267",
+  "relevance": 1,
+  "finding": "This review traces the evolution of single-cell RNA sequencing technology and its applications, briefly mentioning future combinations with multi-omics, without comparing integration software.",
+  "model": "single-cell RNA sequencing (various species/tissues)",
+  "section": "other"
+ },
+ "42234268": {
+  "pmid": "42234268",
+  "relevance": 0,
+  "finding": "This systematic review catalogs molecular associations within the muscle-brain-gut axis across 154 studies and grades evidence, without evaluating multi-omics analysis software.",
+  "model": "human exercise physiology (muscle, brain, gut microbiome)",
+  "section": "other"
+ },
+ "40404650": {
+  "pmid": "40404650",
+  "relevance": 2,
+  "finding": "benchmarKIN is an R package for evaluating kinase activity inference methods from phosphoproteomics, introducing a tumor-based benchmark that uses multi-omics data to assess kinase-substrate libraries and inference algorithms.",
+  "model": "cell lines / tumor phosphoproteomics with multi-omics",
+  "section": "benchmarks"
+ },
+ "42015346": {
+  "pmid": "42015346",
+  "relevance": 1,
+  "finding": "This review outlines mechanisms linking the gut microbiome to metabolic health and discusses multi-omics technologies, microbial metabolic modeling, and ML approaches for precision microbiome medicine, without benchmarking integration tools.",
+  "model": "human gut microbiome in metabolic disease",
+  "section": "applications"
+ },
+ "32600408": {
+  "pmid": "32600408",
+  "relevance": 3,
+  "finding": "mitch is an R package using rank-MANOVA to perform multi-contrast gene set enrichment analysis across multi-omics and single-cell data, with visualizations supporting up to 20 contrasts.",
+  "model": "multi-omics and single-cell profiling data",
+  "section": "statistics_ml"
+ },
+ "35462278": {
+  "pmid": "35462278",
+  "relevance": 1,
+  "finding": "This review describes technical advances in single-cell multiomics and their application to neuroinflammation, without comparing integration software frameworks.",
+  "model": "human CNS single-cell multiomics",
+  "section": "other"
+ },
+ "40247122": {
+  "pmid": "40247122",
+  "relevance": 3,
+  "finding": "scMultiSim is a simulator that generates multimodal single-cell data (expression, chromatin accessibility, RNA velocity, spatial locations) and is applied to benchmark multimodal integration, RNA velocity, GRN inference, and cell-cell interaction methods.",
+  "model": "single-cell multi-omics (expression, chromatin accessibility, spatial) with GRNs",
+  "section": "benchmarks"
+ },
+ "34741074": {
+  "pmid": "34741074",
+  "relevance": 3,
+  "finding": "Fibromine is an R Shiny-based integrated database and exploration environment for consistently re-analysed transcriptomic and proteomic pulmonary fibrosis datasets offering real-time multi-omics integration functionalities and a transcriptomic dataset benchmarking system.",
+  "model": "human and animal (mouse) lung tissue / transcriptomic and proteomic",
+  "section": "platforms_web"
+ },
+ "42036643": {
+  "pmid": "42036643",
+  "relevance": 1,
+  "finding": "This review outlines a multidimensional biomarker framework for cardiovascular-kidney-metabolic syndrome enabled by dried blood spots, organ-on-a-chip models, multi-omics technologies and AI-driven integration, but does not present a specific new tool.",
+  "model": "human (cardiovascular, kidney, metabolic disease)",
+  "section": "other"
+ },
+ "34895137": {
+  "pmid": "34895137",
+  "relevance": 3,
+  "finding": "OmicsOne is an interactive web-based framework that performs quality control, statistical analysis and visualization for phenotype association across multi-omic datasets in a single click and was validated on proteomic/glycoproteomic data from HGSOC and lung squamous cell carcinoma.",
+  "model": "human cancer (HGSOC, LSCC) / proteomic and glycoproteomic",
+  "section": "platforms_web"
+ },
+ "42585225": {
+  "pmid": "42585225",
+  "relevance": 3,
+  "finding": "This benchmarking study systematically evaluates and compares filter-based sure screening feature selection methods across multiple omics classification settings, identifying BcorSIS as the most effective and computationally efficient method.",
+  "model": "human (type 1 diabetes and other biomedical applications) / multiple omics types",
+  "section": "benchmarks"
+ },
+ "41403916": {
+  "pmid": "41403916",
+  "relevance": 1,
+  "finding": "This review summarizes single-cell and spatial multi-omics approaches and their applications to cancer, neurodegenerative disease and aging, including deep learning-based integration, without introducing a new software tool.",
+  "model": "human diseases (cancer, neurodegeneration, aging) / single-cell and spatial multi-omics",
+  "section": "applications"
+ },
+ "41704232": {
+  "pmid": "41704232",
+  "relevance": 1,
+  "finding": "This conceptual review proposes AI virtual extracellular vesicles (AIVEVs) built by integrating multi-omics data through knowledge-driven and data-driven modeling paradigms to simulate EV biogenesis, cargo sorting and intercellular communication, but does not provide a usable integration software tool.",
+  "model": "extracellular vesicles / multi-omics",
+  "section": "other"
+ },
+ "41049729": {
+  "pmid": "41049729",
+  "relevance": 1,
+  "finding": "This review summarizes AI-driven integration of genomic, transcriptomic, proteomic, metabolomic and microbiomic datasets for Alzheimer's disease biomarker discovery and discusses methods such as deep belief networks and joint deep semi-NMF without presenting a new tool.",
+  "model": "human (Alzheimer's disease) / genomic, transcriptomic, proteomic, metabolomic, microbiomic",
+  "section": "other"
+ },
+ "40710368": {
+  "pmid": "40710368",
+  "relevance": 1,
+  "finding": "This application study performs untargeted plasma proteomics and metabolomics in pediatric rhabdomyosarcoma subtypes and uses DIABLO and MOFA for multi-omics integration to identify subtype-specific molecular signatures.",
+  "model": "human pediatric rhabdomyosarcoma / plasma proteomic and metabolomic",
+  "section": "applications"
+ },
+ "36531462": {
+  "pmid": "36531462",
+  "relevance": 1,
+  "finding": "This application study integrates stool shotgun microbiome, viral sequencing, plasma metabolomics and lipidomics in type 1 diabetes patients with varying albuminuria using the MOFA tool for multi-omics integration.",
+  "model": "human (type 1 diabetes) / microbiome, metabolome, lipidome",
+  "section": "applications"
+ },
+ "41109923": {
+  "pmid": "41109923",
+  "relevance": 1,
+  "finding": "This application study combines transcriptomic, single-cell RNA-seq, WGCNA co-expression networks, 101 machine learning algorithms and NMF molecular subtyping to identify VDAC2 as a candidate in sepsis-associated cholesterol dysregulation.",
+  "model": "human (sepsis) / transcriptomic and single-cell transcriptomic",
+  "section": "applications"
+ },
+ "38143235": {
+  "pmid": "38143235",
+  "relevance": 1,
+  "finding": "This application study performs integrated whole-exome sequencing, bulk RNA-seq and proteomic profiling of 116 intrahepatic cholangiocarcinoma samples and uses non-negative matrix factorization on metabolic genes to define three metabolic subtypes.",
+  "model": "human (intrahepatic cholangiocarcinoma) / WES, RNA-seq, proteome",
+  "section": "applications"
+ },
+ "41451236": {
+  "pmid": "41451236",
+  "relevance": 1,
+  "finding": "This application study integrates transcriptomic, single-cell and spatial transcriptomic data in hepatocellular carcinoma with NMF-based molecular subtyping to characterize RARS1's role in tumor progression and ferroptosis.",
+  "model": "human (hepatocellular carcinoma) / transcriptomic, single-cell, spatial transcriptomic",
+  "section": "applications"
+ },
+ "34375392": {
+  "pmid": "34375392",
+  "relevance": 3,
+  "finding": "Presents mmjnmf, a novel joint Non-negative Matrix Factorization method for integrating experimental and observational multi-omic cancer data to generate co-clusters and predict profiles.",
+  "model": "human cancer (TCGA low-grade glioma + CCLE)",
+  "section": "statistics_ml"
+ },
+ "41796773": {
+  "pmid": "41796773",
+  "relevance": 1,
+  "finding": "Integrates snRNA-seq, GWAS summary and plasma proteomic data to characterize CXCL14+ inhibitory neuron dysfunction in major depressive disorder, using NMF for meta-program identification.",
+  "model": "human brain (dlPFC) + mouse stress models",
+  "section": "applications"
+ },
+ "41339793": {
+  "pmid": "41339793",
+  "relevance": 3,
+  "finding": "Describes LOSTdb, a manually curated lung cancer multi-omics database and molecular subtype annotation platform integrating 295 datasets (RNA-seq, genomic, proteomic, methylation, scRNA-seq) with NMF-derived meta-program subtypes and multiple analytical modules.",
+  "model": "human lung cancer (bulk + single-cell + mouse + cell lines)",
+  "section": "platforms_web"
+ },
+ "42304383": {
+  "pmid": "42304383",
+  "relevance": 1,
+  "finding": "Constructs a melanoma multi-omics atlas of mutations, transcription, methylation and CNVs using the MOFA algorithm to identify age-driving factors and RAM+ / RAM− cell populations linked to immunotherapy resistance.",
+  "model": "human melanoma",
+  "section": "applications"
+ },
+ "40281492": {
+  "pmid": "40281492",
+  "relevance": 1,
+  "finding": "Integrates scRNA-seq and bulk RNA-seq data in esophageal squamous cell carcinoma using NMF clustering to define four subtypes and a four-gene (CCND1-PKP1-JUP-ANKRD12) prognostic signature.",
+  "model": "human esophageal squamous cell carcinoma",
+  "section": "applications"
+ },
+ "35222516": {
+  "pmid": "35222516",
+  "relevance": 1,
+  "finding": "Combines mRNA expression, DNA methylation, CNV and mutation data from TCGA stomach adenocarcinoma using the R 'iCluster' method to identify three integrated molecular subtypes.",
+  "model": "human stomach adenocarcinoma",
+  "section": "applications"
+ },
+ "42131349": {
+  "pmid": "42131349",
+  "relevance": 1,
+  "finding": "Integrates scRNA-seq, spatial transcriptomics, GWAS and TCGA data in colorectal cancer, using AUCell, NMF, CellChat and pseudotime analysis to define glycolytic malignant subtypes and identify NEK6 as a pathogenic regulator.",
+  "model": "human colorectal cancer",
+  "section": "applications"
+ },
+ "41040192": {
+  "pmid": "41040192",
+  "relevance": 2,
+  "finding": "Applies a data-driven multi-omic integration framework to epigenomic, transcriptomic, proteomic, metabolomic and cell-type-specific data from 1,358 aged human brain samples to uncover cross-omics AD-associated factors and molecular subtypes.",
+  "model": "human brain (ROS/MAP cohort)",
+  "section": "workflows_reproducibility"
+ },
+ "36434961": {
+  "pmid": "36434961",
+  "relevance": 3,
+  "finding": "Proposes an integrative framework combining improved sparse-joint NMF with a novel adaptive gorilla troops optimizer (Ada-GTO) and consensus clustering for cancer subtype discovery from multi-omics data.",
+  "model": "human cancer (colon, breast, renal, others)",
+  "section": "statistics_ml"
+ },
+ "39546381": {
+  "pmid": "39546381",
+  "relevance": 3,
+  "finding": "Introduces OmicsNMF, a framework that combines Generative Adversarial Networks with Non-negative Matrix Factorization to impute missing omics data and predict disease phenotypes across multi-omics datasets of differing sample sizes.",
+  "model": "human breast cancer",
+  "section": "frameworks"
+ },
+ "41672979": {
+  "pmid": "41672979",
+  "relevance": 3,
+  "finding": "Presents RMzyme, a platform consolidating 378 multi-omics datasets (genomic, transcriptomic, epitranscriptomic, proteomic, PTM) across 63 human tissues for RNA-modifying enzyme research, using NMF for cell-type annotation.",
+  "model": "human multi-tissue (including AML)",
+  "section": "platforms_web"
+ },
+ "41467033": {
+  "pmid": "41467033",
+  "relevance": 1,
+  "finding": "Integrates bulk RNA-seq and scRNA-seq in periodontitis using NMF, WGCNA and ten machine-learning algorithms to identify peroxiredoxin 4 (PRDX4) as a mitochondrial-dysfunction hub gene in B cells.",
+  "model": "human periodontitis",
+  "section": "applications"
+ },
+ "38492534": {
+  "pmid": "38492534",
+  "relevance": 1,
+  "finding": "Multi-omics data (IHC, exome sequencing, whole transcriptome sequencing) from 427 SCLC patients were analyzed using NMF clustering to define molecular subtypes with distinct clinical outcomes.",
+  "model": "human (small-cell lung cancer)",
+  "section": "applications"
+ },
+ "38397401": {
+  "pmid": "38397401",
+  "relevance": 1,
+  "finding": "A computational pipeline using DPClusO and BiClusO for PPI/miRNA-target networks was applied to multi-omics data to identify 178 candidate genes and 12 key miRNAs associated with Hirschsprung disease.",
+  "model": "human (Hirschsprung disease)",
+  "section": "applications"
+ },
+ "39073027": {
+  "pmid": "39073027",
+  "relevance": 2,
+  "finding": "Six omics data blocks (transcriptomics, proteomics, 16S microbiome, metagenomics, etc.) from U-BIOPRED sputum samples were integrated using Similarity Network Fusion and Monti consensus clustering to define five asthma endotypes.",
+  "model": "human (severe asthma)",
+  "section": "statistics_ml"
+ },
+ "41135954": {
+  "pmid": "41135954",
+  "relevance": 1,
+  "finding": "A transformer-based attention model (Trans-Model) integrating radiomics, pathomics, and temporal CT imaging predicted major pathological response in NSCLC neoadjuvant immunochemotherapy with AUC 0.858.",
+  "model": "human (NSCLC)",
+  "section": "applications"
+ },
+ "40775648": {
+  "pmid": "40775648",
+  "relevance": 1,
+  "finding": "The Similarity Network Fusion algorithm was applied to multi-omics data (methylation, mutations, expression) to classify gastric cancer patients into three platinum-resistance subtypes, identifying KLF9 as a therapeutic target.",
+  "model": "human (gastric cancer)",
+  "section": "applications"
+ },
+ "41373724": {
+  "pmid": "41373724",
+  "relevance": 1,
+  "finding": "WGCNA and random walk with restart on multilayer networks integrating transcriptomic, proteomic and metabolomic data from CNM mouse models identified pathogenic and protective pathways.",
+  "model": "mouse (centronuclear myopathy models)",
+  "section": "networks"
+ },
+ "38959352": {
+  "pmid": "38959352",
+  "relevance": 2,
+  "finding": "Similarity network fusion was applied to jointly analyze copy number variations, somatic mutations, DNA methylation, and transcriptomic data to derive three prognostic HNSCC subtypes with distinct therapeutic vulnerabilities.",
+  "model": "human (HNSCC)",
+  "section": "statistics_ml"
+ },
+ "34298641": {
+  "pmid": "34298641",
+  "relevance": 3,
+  "finding": "MOUSSE is a normalization-free unsupervised multi-omics integration pipeline that builds rank-based subject-specific signature similarity networks per omics layer and was benchmarked against 10 state-of-the-art algorithms on 10 TCGA cancer cohorts.",
+  "model": "human (multi-cancer, TCGA)",
+  "section": "frameworks"
+ },
+ "41074150": {
+  "pmid": "41074150",
+  "relevance": 1,
+  "finding": "An IBD staging pipeline combined NetMoss microbial community analysis, Boruta/REF-SVM transcriptomic feature selection, and a Stacking Classifier meta-ensemble integrating 16S rRNA and RNA-seq data.",
+  "model": "human (IBD)",
+  "section": "applications"
+ },
+ "32714870": {
+  "pmid": "32714870",
+  "relevance": 3,
+  "finding": "The Integrative Network Fusion (INF) pipeline combines Similarity Network Fusion with Random Forest/SVM classifiers (juXT, rSNF, rSNFi variants) on multi-omics TCGA data and was validated under MAQC/SEQC cross-validation guidelines.",
+  "model": "human (TCGA pan-cancer)",
+  "section": "frameworks"
+ },
+ "41493977": {
+  "pmid": "41493977",
+  "relevance": 2,
+  "finding": "Multi-omics (DNA methylation, gene expression, proteomic) data from the PPMI Parkinson's disease cohort were integrated using sPLS-DA/DIABLO and combined with STRING network topology and XGBoost classifiers.",
+  "model": "human (Parkinson's disease, PPMI cohort)",
+  "section": "statistics_ml"
+ },
+ "40296012": {
+  "pmid": "40296012",
+  "relevance": 1,
+  "finding": "Plasma proteomics and metabolomics from early COPD patients were integrated via similarity network fusion and machine learning, with multi-omics yielding R²=0.74 for lung function prediction.",
+  "model": "human (early COPD)",
+  "section": "applications"
+ },
+ "38454145": {
+  "pmid": "38454145",
+  "relevance": 3,
+  "finding": "Demonstrates integration of Thermal Proteome Profiling with phosphoproteomics and transcriptomics using the COSMOS multi-omics integration framework to characterize PARP inhibition effects in ovarian cancer cells.",
+  "model": "human (ovarian cancer cells)",
+  "section": "frameworks"
+ },
+ "41399163": {
+  "pmid": "41399163",
+  "relevance": 1,
+  "finding": "Applies WGCNA-based integrative multi-omics (RNA-seq and whole-exome sequencing) analysis to identify hub genes MSRB3 and SYNPO2 in upper tract urothelial carcinoma.",
+  "model": "human (UTUC)",
+  "section": "applications"
+ },
+ "41052279": {
+  "pmid": "41052279",
+  "relevance": 1,
+  "finding": "Reviews over 20 ADMET/toxicity prediction platforms and AI methods, only briefly mentioning multi-omics integration as a future direction.",
+  "model": "chemical/drug compounds",
+  "section": "other"
+ },
+ "34439123": {
+  "pmid": "34439123",
+  "relevance": 1,
+  "finding": "Describes a multi-omics approach combining miRNA target affinity purification, RNA microarray, and mass spectrometry to construct interaction networks characterizing miR-491-5p effects in ovarian cancer.",
+  "model": "human (ovarian cancer cell lines)",
+  "section": "applications"
+ },
+ "39040605": {
+  "pmid": "39040605",
+  "relevance": 3,
+  "finding": "Uses multiXrank, a random walk with restart on multilayer network algorithm, to integrate transcriptomics, metabolomics, proteomics, and lipidomics with a COVID-19 knowledge graph for disease-phase biosignatures.",
+  "model": "human (COVID-19)",
+  "section": "networks"
+ },
+ "41114433": {
+  "pmid": "41114433",
+  "relevance": 2,
+  "finding": "Builds a multi-omics prognostic framework for gastric cancer using similarity network fusion to integrate transcriptomic, epigenomic and clinical data, with LASSO-derived signature outperforming unimodal models.",
+  "model": "human (gastric cancer)",
+  "section": "statistics_ml"
+ },
+ "38600757": {
+  "pmid": "38600757",
+  "relevance": 1,
+  "finding": "Reviews machine learning techniques for multi-omics data integration in precision oncology, covering deep learning and network-based approaches.",
+  "model": "human (cancer)",
+  "section": "other"
+ },
+ "41479904": {
+  "pmid": "41479904",
+  "relevance": 3,
+  "finding": "Introduces OmniNeo, an automated Nextflow-based multi-omics pipeline integrating WGS/WES, transcriptomics, and proteomics with a CNN-based immunogenicity predictor for neoantigen discovery in tumor immunotherapy.",
+  "model": "human (liver cancer)",
+  "section": "workflows_reproducibility"
+ },
+ "39039470": {
+  "pmid": "39039470",
+  "relevance": 2,
+  "finding": "Applies multi-omics Mendelian Randomization (MR and SMR) integrating GWAS, eQTL and pQTL summary statistics to identify GSTM4 as a potential migraine drug target.",
+  "model": "human (migraine)",
+  "section": "statistics_ml"
+ },
+ "40611294": {
+  "pmid": "40611294",
+  "relevance": 2,
+  "finding": "Uses protein-protein interaction network analysis, Random Forest/SVM machine learning, CIBERSORTx deconvolution, and MR/SMR integration of eQTL and GWAS data to identify IBD biomarker genes.",
+  "model": "human (IBD)",
+  "section": "applications"
+ },
+ "39267096": {
+  "pmid": "39267096",
+  "relevance": 2,
+  "finding": "Integrates cis-pQTLs with GWAS using Mendelian randomization, Bayesian colocalization, and the Comparative Toxicogenomics Database to identify drug targets for nonischemic cardiomyopathy.",
+  "model": "human (NISCM)",
+  "section": "applications"
+ },
+ "40653482": {
+  "pmid": "40653482",
+  "relevance": 2,
+  "finding": "Integrates AD GWAS with cell-type-specific and bulk-level brain eQTLs using SMR and COLOC to identify candidate causal genes and drug repurposing candidates for Alzheimer's disease.",
+  "model": "human (Alzheimer's disease)",
+  "section": "applications"
+ },
+ "37865667": {
+  "pmid": "37865667",
+  "relevance": 1,
+  "finding": "Integrated eQTL and pQTL datasets from blood, CSF, and brain tissues with PD GWAS summary statistics using a pipeline combining Mendelian randomization, Steiger filtering, Bayesian colocalization, fine mapping, and protein-protein network analysis to identify causal genes for Parkinson's disease.",
+  "model": "human",
+  "section": "applications"
+ },
+ "39167456": {
+  "pmid": "39167456",
+  "relevance": 1,
+  "finding": "Used an integrative systems biology approach combining transcriptomics of a multicenter PAH lung biobank with GWAS, Bayesian regulatory networks, single-cell transcriptomics, and pharmacotranscriptomics to identify protective gene modules in pulmonary arterial hypertension.",
+  "model": "human (with Sugen-hypoxia rat model validation)",
+  "section": "applications"
+ },
+ "36540984": {
+  "pmid": "36540984",
+  "relevance": 2,
+  "finding": "Proposes BaySyn, a hierarchical Bayesian evidence synthesis framework for multi-system multiomic integration that uses additive Gaussian process models and Bayesian variable selection to detect functional driver genes and drug response associations across cancer cell lines and patient datasets.",
+  "model": "human cancer cell lines and patient samples (CCLE, TCGA, pan-gynecological cancers)",
+  "section": "statistics_ml"
+ },
+ "41102562": {
+  "pmid": "41102562",
+  "relevance": 1,
+  "finding": "Developed seven MRI-based multi-organ biological age gaps (MRIBAGs) and linked them to plasma proteins, metabolites, and genetic variants using GWAS, genetic correlation, Mendelian randomization, and Bayesian co-localization to prioritize druggable aging targets.",
+  "model": "human (UK Biobank-scale cohorts via MULTI Consortium, n=313,645)",
+  "section": "applications"
+ },
+ "39707330": {
+  "pmid": "39707330",
+  "relevance": 1,
+  "finding": "Integrated mQTL, eQTL, and pQTL data with ankylosing spondylitis GWAS using summary-data-based Mendelian randomization, Bayesian co-localization, PPI networks, and enrichment analyses to prioritize therapeutic targets.",
+  "model": "human (IGAS, FinnGen, UK Biobank)",
+  "section": "applications"
+ },
+ "41438766": {
+  "pmid": "41438766",
+  "relevance": 1,
+  "finding": "Integrated scRNA-seq, spatial transcriptomics, and bulk RNA-seq datasets for idiopathic pulmonary fibrosis, applying multiple enrichment algorithms and machine learning models (LASSO, Random Forest, Boruta, Bayesian, LVQ, Treebag) with CellChat and pseudotime trajectory analysis to identify OS-related biomarkers.",
+  "model": "human IPF lungs and bleomycin-induced C57BL/6 mouse model",
+  "section": "applications"
+ },
+ "38947282": {
+  "pmid": "38947282",
+  "relevance": 3,
+  "finding": "Proposes Bayesian Simultaneous Factorization (BSF) and its extension Bayesian Simultaneous Factorization and Prediction (BSFP), a probabilistic framework that decomposes multi-omics variation into joint and individual structures with conjugate normal priors, rank selection, concurrent imputation, and full posterior inference for predicting phenotypes.",
+  "model": "human (bronchoalveolar lavage metabolome and proteome data)",
+  "section": "statistics_ml"
+ },
+ "40945087": {
+  "pmid": "40945087",
+  "relevance": 1,
+  "finding": "Integrated transcriptomic data with eQTL and grip strength GWAS using Mendelian randomization and Bayesian colocalization, supplemented by single-cell/nucleus RNA-seq, to identify causal genes linking atrazine exposure to skeletal muscle atrophy.",
+  "model": "mouse (C2C12 myoblasts, C57BL/6 mice) and human (GWAS from 454,473 individuals)",
+  "section": "applications"
+ },
+ "41333034": {
+  "pmid": "41333034",
+  "relevance": 1,
+  "finding": "Applied druggable genome-wide Mendelian randomization integrating cis-eQTL, cis-mQTL, and cis-pQTL with Sjögren's disease GWAS, validated by Bayesian colocalization, ELISA, and phenome-wide MR across UK Biobank phenotypes.",
+  "model": "human (SjD patients and controls with UK Biobank data)",
+  "section": "applications"
+ },
+ "40577117": {
+  "pmid": "40577117",
+  "relevance": 1,
+  "finding": "Integrated pQTL data from plasma and brain, MS GWAS, bulk and cell-type specific transcriptomes via PWAS, summary-data-based Mendelian randomization, HEIDI test, Bayesian colocalization, pathway annotation, and PPI network analysis to prioritize drug targets for multiple sclerosis.",
+  "model": "human (MS cases and controls with plasma and brain pQTL resources)",
+  "section": "applications"
+ },
+ "41270069": {
+  "pmid": "41270069",
+  "relevance": 1,
+  "finding": "Combined proteome- and transcriptome-wide association studies, single-cell sequencing, functional enrichment, Mendelian randomization, and Bayesian co-localization analyses to identify prostate cancer-associated genes.",
+  "model": "human (prostate cancer cohorts)",
+  "section": "applications"
+ },
+ "38058188": {
+  "pmid": "38058188",
+  "relevance": 3,
+  "finding": "Proposes Bayesian graph-guided biclustering (BGB), a novel hierarchical Bayesian method with sparsity-inducing priors and MCMC inference that incorporates biological graph knowledge to integratively analyze multi-view/multi-omics data (genome, transcriptome, epigenome).",
+  "model": "general multi-omics framework (evaluated on simulated and real biomedical data)",
+  "section": "statistics_ml"
+ },
+ "41254692": {
+  "pmid": "41254692",
+  "relevance": 1,
+  "finding": "The study integrates GWAS, cis-eQTL, cis-pQTL, and cis-mQTL data through Mendelian Randomization, Bayesian colocalization, SMR and phenome-wide MR analyses to identify WWOX and THBS2 as potential therapeutic targets in mature T/NK-cell lymphoma.",
+  "model": "human (T/NK-cell lymphoma)",
+  "section": "applications"
+ },
+ "39935429": {
+  "pmid": "39935429",
+  "relevance": 1,
+  "finding": "An integrative multi-omics approach combining scRNA-seq, bulk transcriptomics, and GWAS data with Bayesian deconvolution and machine learning identifies cellular subpopulations, molecular subtypes, and prognostic biomarkers in lung adenocarcinoma.",
+  "model": "human (lung adenocarcinoma)",
+  "section": "applications"
+ },
+ "40638267": {
+  "pmid": "40638267",
+  "relevance": 1,
+  "finding": "Summary-level GWAS, brain proteomic, and transcriptomic data are integrated via proteome-wide and transcriptome-wide association studies, Mendelian randomization, and Bayesian colocalization to prioritize candidate therapeutic genes for glioblastoma.",
+  "model": "human (glioblastoma)",
+  "section": "applications"
+ },
+ "40897285": {
+  "pmid": "40897285",
+  "relevance": 1,
+  "finding": "GWAS data for various QTLs and MS summary statistics are integrated using Mendelian Randomization, Bayesian colocalization, SMR, and two-step MR to identify FCRL3 as a protective factor for multiple sclerosis.",
+  "model": "human (multiple sclerosis)",
+  "section": "applications"
+ },
+ "41282933": {
+  "pmid": "41282933",
+  "relevance": 1,
+  "finding": "Nanopore long-read genome sequencing is integrated with matched methylation, transcriptomic, and proteomic data to build a structural variant map and identify SV-QTLs associated with molecular traits in aging and neurodegeneration.",
+  "model": "human (aging/neurodegeneration)",
+  "section": "applications"
+ },
+ "41139274": {
+  "pmid": "41139274",
+  "relevance": 1,
+  "finding": "Mendelian randomization, Bayesian colocalization, RNA sequencing, and in vitro/in vivo experiments are combined to identify Granzyme K as a causal drug target driving inflammation and fibroblast proliferation in rosacea.",
+  "model": "human/mouse (rosacea)",
+  "section": "applications"
+ },
+ "39135698": {
+  "pmid": "39135698",
+  "relevance": 1,
+  "finding": "A Bayesian linear model and population-specific expression analysis (PSEA) integrate bulk transcriptomic and single-cell sequencing data to link hepatic inflammation markers with clinical parameters in chronic hepatitis B.",
+  "model": "human (chronic hepatitis B)",
+  "section": "applications"
+ },
+ "41106624": {
+  "pmid": "41106624",
+  "relevance": 1,
+  "finding": "A multi-omics Mendelian randomization framework integrating methylation, expression (blood and 12 brain regions), and protein QTL datasets with SMR and Bayesian colocalization identifies CRAT, PRDX6, and TMEM177 as mitochondrial genes relevant to autism spectrum disorder.",
+  "model": "human (autism spectrum disorder)",
+  "section": "applications"
+ },
+ "37142594": {
+  "pmid": "37142594",
+  "relevance": 3,
+  "finding": "NetBID2 is presented as a comprehensive algorithm and toolkit that reverse-engineers context-specific interactomes and integrates multi-omics data via network-based Bayesian inference to identify hidden drivers not detectable by conventional differential expression analyses, with Viewer, Runner, and Cloud apps supporting 145 context-specific networks.",
+  "model": "human/mouse (cancer and normal tissues)",
+  "section": "statistics_ml"
+ },
+ "40317014": {
+  "pmid": "40317014",
+  "relevance": 1,
+  "finding": "Network toxicology, integrated machine learning, scRNA-seq, spatial transcriptomics, and molecular docking are combined to construct a PFAS-related HCC prognostic signature and identify core targets linking PFAS exposure to hepatocellular carcinoma.",
+  "model": "human (hepatocellular carcinoma)",
+  "section": "applications"
+ },
+ "40598539": {
+  "pmid": "40598539",
+  "relevance": 1,
+  "finding": "Multi-omics data from LIHC are integrated using 10 clustering algorithms and 101 machine learning algorithm combinations to derive matrix stiffness-related molecular subtypes and a 57-gene prognostic signature for hepatocellular carcinoma.",
+  "model": "human (hepatocellular carcinoma)",
+  "section": "applications"
+ },
+ "42304076": {
+  "pmid": "42304076",
+  "relevance": 2,
+  "finding": "A multi-omic analysis pipeline is developed that integrates physiological, radiomic, metabolomic, and genomic UK Biobank data with retinal adversarial autoencoder embeddings to link ophthalmic imaging features to cardiovascular and neurological traits.",
+  "model": "human (ophthalmic/cardiovascular/neurological)",
+  "section": "workflows_reproducibility"
+ },
+ "40330470": {
+  "pmid": "40330470",
+  "relevance": 1,
+  "finding": "Applied multi-omics study of HCC using TCGA/GEO data, consensus clustering, WGCNA, ssGSEA, and 101 machine learning algorithms to build a polyamine metabolism-related prognostic signature validated across cohorts.",
+  "model": "human (HCC); bulk RNA-seq + scRNA-seq",
+  "section": "applications"
+ },
+ "38182825": {
+  "pmid": "38182825",
+  "relevance": 2,
+  "finding": "Combines single-cell multiomics, spatial omics, MPRA, and a hierarchical deep learning model (DeepLiver) to dissect enhancer-driven gene regulatory networks across hepatocyte zonation in mouse liver.",
+  "model": "mouse liver; scRNA-seq + scATAC-seq + spatial omics",
+  "section": "statistics_ml"
+ },
+ "39843429": {
+  "pmid": "39843429",
+  "relevance": 1,
+  "finding": "Analyzes real-world multi-omics data from 400 HR+/HER2- breast cancer patients using integrative clustering, trajectory inference and machine learning to characterize CDK4/6 inhibitor resistance.",
+  "model": "human (breast cancer); genomics + transcriptomics",
+  "section": "applications"
+ },
+ "39614072": {
+  "pmid": "39614072",
+  "relevance": 3,
+  "finding": "Introduces MOSA, an unsupervised deep learning model that integrates and augments multi-omic profiles of the Cancer Dependency Map, increasing usable multi-omic profiles by 32.7% across 1523 cancer cell lines.",
+  "model": "human cancer cell lines; multi-omics",
+  "section": "statistics_ml"
+ },
+ "41507521": {
+  "pmid": "41507521",
+  "relevance": 3,
+  "finding": "Presents LyMOI, a hybrid workflow combining GPT-3.5 reasoning with a large graph model (GCN-based) that integrates protein-interaction networks and multi-omics to predict and mechanistically interpret molecular regulators.",
+  "model": "human cells; transcriptomic + proteomic + phosphoproteomic",
+  "section": "workflows_reproducibility"
+ },
+ "41112249": {
+  "pmid": "41112249",
+  "relevance": 1,
+  "finding": "Applies a multi-omics framework combining scRNA-seq, bulk RNA-seq and proteomics with random forest and SVM-RFE machine learning models to identify COVID-19 biomarkers.",
+  "model": "human (COVID-19); scRNA-seq + bulk RNA-seq + proteomics",
+  "section": "applications"
+ },
+ "38875909": {
+  "pmid": "38875909",
+  "relevance": 2,
+  "finding": "Compares multilayer network-based feature selection methods for integrating gene expression and methylation data, demonstrating improved AML survival prediction over single-omics and standard feature selection.",
+  "model": "human (AML); gene expression + methylation",
+  "section": "statistics_ml"
+ },
+ "41423668": {
+  "pmid": "41423668",
+  "relevance": 1,
+  "finding": "Develops a multi-omics framework for HCC integrating ten clustering algorithms and ten machine learning algorithms to identify four molecular subtypes and a consensus prognostic signature.",
+  "model": "human (HCC); multi-omics + scRNA-seq + spatial transcriptomics",
+  "section": "applications"
+ },
+ "41923163": {
+  "pmid": "41923163",
+  "relevance": 1,
+  "finding": "Integrates bulk transcriptomics, scRNA-seq and spatial transcriptomics with WGCNA and four machine learning algorithms to characterize oxidative stress–associated stromal states in benign prostatic hyperplasia.",
+  "model": "human (BPH); transcriptomics + scRNA-seq + spatial transcriptomics",
+  "section": "applications"
+ },
+ "40263498": {
+  "pmid": "40263498",
+  "relevance": 1,
+  "finding": "Builds the NEP100 classifier for neuroendocrine prostate cancer by combining 19 bulk transcriptomic, 14 scRNA-seq, 1 spatial transcriptomic dataset and 16 NE signatures with multiple machine learning algorithms.",
+  "model": "human (prostate cancer); bulk + scRNA-seq + spatial transcriptomics",
+  "section": "applications"
+ },
+ "39580382": {
+  "pmid": "39580382",
+  "relevance": 3,
+  "finding": "Proposes MoAGL-SA, an adaptive multi-omics integration method using graph learning and self-attention that outperforms popular algorithms for cancer subtype classification on BRCA, KIRP and KIRC datasets.",
+  "model": "human cancer (BRCA, KIRP, KIRC); multi-omics",
+  "section": "statistics_ml"
+ },
+ "41031935": {
+  "pmid": "41031935",
+  "relevance": 3,
+  "finding": "Introduces MOFNet, a supervised deep learning framework with similarity graph pooling and view correlation discovery network for fusing mRNA, methylation and miRNA data for cancer subtype classification, outperforming baselines on BRCA, LGG and STAD.",
+  "model": "human cancer (BRCA, LGG, STAD); mRNA + methylation + miRNA",
+  "section": "frameworks"
+ },
+ "41004701": {
+  "pmid": "41004701",
+  "relevance": 1,
+  "finding": "Integrates transcriptomics with MRI radiomics and single-cell/spatial transcriptomics to stratify gliomas into metabolism-immune subtypes using machine learning.",
+  "model": "human (glioma)",
+  "section": "applications"
+ },
+ "41290867": {
+  "pmid": "41290867",
+  "relevance": 1,
+  "finding": "Combines transcriptomic consensus clustering with LASSO/random forest on TCGA/GEO data to define disulfidptosis-related molecular subtypes in ovarian cancer, validated by single-cell and spatial profiling.",
+  "model": "human (ovarian cancer)",
+  "section": "applications"
+ },
+ "39756419": {
+  "pmid": "39756419",
+  "relevance": 1,
+  "finding": "Applies machine learning to integrated genomics, gut transcriptomics and plasma proteomics from the SPARC IBD cohort to classify CD vs UC and identify patient subgroups.",
+  "model": "human (IBD)",
+  "section": "applications"
+ },
+ "37965805": {
+  "pmid": "37965805",
+  "relevance": 2,
+  "finding": "Provides a tutorial-style methodological framework with practical guidelines covering plan, design, development and dissemination for multi-omics machine-learning projects.",
+  "model": "human (HR+/HER- metastatic breast cancer)",
+  "section": "other"
+ },
+ "41080564": {
+  "pmid": "41080564",
+  "relevance": 1,
+  "finding": "Combines Mendelian randomization, transcriptomics, ten machine-learning algorithms and SHAP analysis to identify immune-related candidate biomarkers in hypertrophic cardiomyopathy.",
+  "model": "human (HCM)",
+  "section": "applications"
+ },
+ "35392802": {
+  "pmid": "35392802",
+  "relevance": 3,
+  "finding": "Introduces FindIT2, an R/Bioconductor package that provides a complete framework for annotating ChIP-seq/ATAC-seq peaks, integrating them with RNA-seq to identify transcription factor targets across species.",
+  "model": "any species with genome annotation",
+  "section": "frameworks"
+ },
+ "41207909": {
+  "pmid": "41207909",
+  "relevance": 1,
+  "finding": "Integrates bulk and single-cell transcriptomics with 14 machine-learning algorithms to derive an immune-prognostic signature for prostate cancer.",
+  "model": "human (prostate cancer)",
+  "section": "applications"
+ },
+ "40302336": {
+  "pmid": "40302336",
+  "relevance": 1,
+  "finding": "Integrates bulk RNA-seq, scRNA-seq, spatial transcriptomics and flow cytometry across human and mouse ischemic stroke datasets, using scMetabolism to infer single-cell metabolic pathway activity.",
+  "model": "human and mouse (ischemic stroke)",
+  "section": "applications"
+ },
+ "39927613": {
+  "pmid": "39927613",
+  "relevance": 3,
+  "finding": "Describes UAMOCS, an unsupervised multi-omics classification system released as an R package that integrates mutation topography, DNA methylation and transcriptomics to stratify AML into three subtypes.",
+  "model": "human (AML)",
+  "section": "frameworks"
+ },
+ "29740416": {
+  "pmid": "29740416",
+  "relevance": 2,
+  "finding": "Presents splinectomeR, an R package using smoothing splines for hypothesis testing in longitudinal microbiome studies within multi-omics designs.",
+  "model": "microbiome (longitudinal studies)",
+  "section": "microbiome_tools"
+ },
+ "40303348": {
+  "pmid": "40303348",
+  "relevance": 1,
+  "finding": "Develops the DeconvCellLink R package and integrates bulk and single-cell transcriptomics to map cellular communication networks in sepsis-associated encephalopathy.",
+  "model": "human and mouse (sepsis-associated encephalopathy)",
+  "section": "applications"
+ },
+ "40028340": {
+  "pmid": "40028340",
+  "relevance": 0,
+  "finding": "Performs a bibliometric analysis of 1,657 articles on traditional Chinese medicine in cancer immunotherapy using VOSviewer, CiteSpace and Bibliometrix; does not describe a multi-omics integration tool.",
+  "model": "bibliometric (TCM cancer immunotherapy literature)",
+  "section": "other"
+ },
+ "39072393": {
+  "pmid": "39072393",
+  "relevance": 1,
+  "finding": "Uses R/Bioconductor libraries and Cytoscape with LASSO regression on TCGA-LIHC multi-omics data to build a gene correlation network and an HCC prediction signature based on KDM8 CpG methylation.",
+  "model": "human (hepatocellular carcinoma)",
+  "section": "applications"
+ },
+ "33747045": {
+  "pmid": "33747045",
+  "relevance": 3,
+  "finding": "Describes STATegra, a conceptual bioinformatics framework that stepwise combines machine learning component analysis, non-parametric data combination, and multi-omics exploratory analysis, validated on TCGA glioblastoma and melanoma datasets.",
+  "model": "human (glioblastoma, melanoma)",
+  "section": "frameworks"
+ },
+ "39101486": {
+  "pmid": "39101486",
+  "relevance": 3,
+  "finding": "Provides an interdisciplinary learning module that implements a transcriptomics and epigenetics data integration pipeline on Google Cloud Platform, guiding users through three analytical submodules.",
+  "model": "human / cloud-computing educational module",
+  "section": "workflows_reproducibility"
+ },
+ "28605519": {
+  "pmid": "28605519",
+  "relevance": 3,
+  "finding": "Introduces CancerSubtypes, an R/Bioconductor package that integrates four cancer-subtype identification methods with standardized preprocessing and validation for gene expression, miRNA expression and DNA methylation data.",
+  "model": "human (multiple cancers)",
+  "section": "frameworks"
+ },
+ "31142855": {
+  "pmid": "31142855",
+  "relevance": 1,
+  "finding": "Presents the HMP2/iHMP longitudinal multi-omics study (metagenomics, metabolomics, host transcriptomics/serology) of 132 IBD subjects and releases the IBD Multi'omics Database as a community resource.",
+  "model": "human (inflammatory bowel disease)",
+  "section": "applications"
+ },
+ "39909032": {
+  "pmid": "39909032",
+  "relevance": 1,
+  "finding": "Performs integrated metagenomic and metabolomic analyses of fecal samples from 165 ICB-treated patients plus 568 validation samples to identify microbial/metabolic signatures of anti-PD-1/PD-L1 response.",
+  "model": "human (cancer immunotherapy)",
+  "section": "applications"
+ },
+ "41219057": {
+  "pmid": "41219057",
+  "relevance": 1,
+  "finding": "Reviews the evolution of microbiome-based research in IBD, highlighting how multi-omics integration and cross-kingdom microbiome analyses have revealed host-microbiota mechanisms.",
+  "model": "human (IBD)",
+  "section": "applications"
+ },
+ "35087228": {
+  "pmid": "35087228",
+  "relevance": 1,
+  "finding": "Integrates six faecal- and serum-based omic datasets (metaproteomics, metabolomics, metagenomics, metapeptidomics, amplicon sequencing, serum proteomics) from UC patients to link Bacteroides vulgatus proteases with disease severity.",
+  "model": "human (ulcerative colitis)",
+  "section": "applications"
+ },
+ "39926224": {
+  "pmid": "39926224",
+  "relevance": 1,
+  "finding": "Reviews gut microbiota roles across diseases and discusses future research directions including integration of multi-omics, diet/lifestyle effects, and microbiota engineering for therapy.",
+  "model": "human (gut microbiota)",
+  "section": "applications"
+ },
+ "41226627": {
+  "pmid": "41226627",
+  "relevance": 1,
+  "finding": "Reviews recent biomarker breakthroughs in rheumatoid arthritis enabled by multi-omics (genomics, transcriptomics, proteomics, metabolomics, microbiome) and synovial tissue profiling for precision medicine.",
+  "model": "human (rheumatoid arthritis)",
+  "section": "applications"
+ },
+ "39978335": {
+  "pmid": "39978335",
+  "relevance": 1,
+  "finding": "Uses fecal metagenomic, metabolomic and host transcriptomic multi-omics integration with mediation analysis in 85 Crohn's disease patients to link Faecalibacterium prausnitzii-derived L-ornithine to ustekinumab response.",
+  "model": "human (Crohn's disease)",
+  "section": "applications"
+ },
+ "36376937": {
+  "pmid": "36376937",
+  "relevance": 1,
+  "finding": "Integrates fecal 16S/metagenomics, serum metabolomics, and cytokine measurements with cognitive and brain MRI data across three cohorts to associate gut microbial genera with cognitive impairment.",
+  "model": "human (cognitive impairment, brain aging)",
+  "section": "applications"
+ },
+ "39225628": {
+  "pmid": "39225628",
+  "relevance": 1,
+  "finding": "Integrated microbiome and metabolome analysis in craniopharyngioma patients and a mouse model identified associations between altered gut microbiota (e.g., Clostridium) and elevated hypoxanthine/purine metabolism linked to hypothalamic comorbidities.",
+  "model": "human/mouse craniopharyngioma",
+  "section": "applications"
+ },
+ "38941818": {
+  "pmid": "38941818",
+  "relevance": 1,
+  "finding": "Combined network pharmacology, metabolomics, lipidomics, 16S rRNA sequencing, Metorigin analysis, molecular docking and FMT to elucidate Liupao tea extract effects on NAFLD in mice, identifying naringenin, quercetin, luteolin and kaempferol as active ingredients.",
+  "model": "NAFLD mice model",
+  "section": "applications"
+ },
+ "31491384": {
+  "pmid": "31491384",
+  "relevance": 1,
+  "finding": "Multi-omics integration of microbiome and metabolomic data in antibiotic-treated vaccinated humans revealed significant associations between bacterial species and metabolic phenotypes, linking reduced secondary bile acids to impaired immune responses.",
+  "model": "human (influenza vaccination)",
+  "section": "applications"
+ },
+ "41703894": {
+  "pmid": "41703894",
+  "relevance": 1,
+  "finding": "Review of bidirectional GLP-1 agonist/microbiome interactions, discussing advances in pharmacomicrobiomics, multi-omics integration and computational modelling for dissecting host-microbe-metabolite relationships.",
+  "model": "human (T2DM/obesity)",
+  "section": "other"
+ },
+ "27150809": {
+  "pmid": "27150809",
+  "relevance": 3,
+  "finding": "KeyPathwayMinerWeb is presented as the first browser-based platform for de novo pathway enrichment that integrates biological interaction networks with multi-OMICS profiles and provides batch runs, visualization and a RESTful API.",
+  "model": "multi-omics + PPI networks",
+  "section": "platforms_web"
+ },
+ "41738161": {
+  "pmid": "41738161",
+  "relevance": 1,
+  "finding": "A trans-omics gene-smoking interaction study of lung cancer integrated consortium genotype data with DNA methylation, gene expression, protein and metabolite xQTLs to identify biomarkers and build a molecular modifying score.",
+  "model": "human (lung cancer cohorts)",
+  "section": "applications"
+ },
+ "37200674": {
+  "pmid": "37200674",
+  "relevance": 3,
+  "finding": "A user-friendly interactive website hosting Halomonas bluephagenesis multi-omics data with KEGG pathway enrichment, bio-cluster heatmap and genome-scale metabolic model, demonstrated via unsupervised ML on varied cultivation conditions.",
+  "model": "Halomonas bluephagenesis TD1.0",
+  "section": "platforms_web"
+ },
+ "35788653": {
+  "pmid": "35788653",
+  "relevance": 2,
+  "finding": "The OAOB database integrates OA-related GWAS, differentially expressed genes, differential methylation regions, and single-cell RNA-seq cell-type markers from 159 publications into an online multi-omics biomarker resource.",
+  "model": "human (osteoarthritis)",
+  "section": "platforms_web"
+ },
+ "41107232": {
+  "pmid": "41107232",
+  "relevance": 3,
+  "finding": "Systematic benchmarking of four high-throughput subcellular spatial transcriptomics platforms (Stereo-seq v1.3, Visium HD FFPE, CosMx 6K, Xenium 5K) against CODEX and scRNA-seq ground truths across colon, liver and ovarian tumors, with data accessible via the SPATCH web server.",
+  "model": "human tumor tissue (colon, liver, ovarian)",
+  "section": "benchmarks"
+ },
+ "40469516": {
+  "pmid": "40469516",
+  "relevance": 3,
+  "finding": "Single-cell analyst is a code-free, web-based platform supporting six single-cell omics types and spatial transcriptomics, automating QC, processing, phenotype-specific analyses and providing over 20 interactive visualization tools with online and offline modes.",
+  "model": "multi-omics single-cell (scRNA-seq, scATAC-seq, scImmune, scCNV, CyTOF, flow, spatial)",
+  "section": "platforms_web"
+ },
+ "42630486": {
+  "pmid": "42630486",
+  "relevance": 2,
+  "finding": "The Human Biomarker Navigator is an integrated web platform and conceptual framework that maps biomarker interaction networks across systems, organs and diseases to support systems-level biomarker navigation.",
+  "model": "human multi-disease biomarkers",
+  "section": "platforms_web"
+ },
+ "33154995": {
+  "pmid": "33154995",
+  "relevance": 3,
+  "finding": "Argonaut is a code-free web platform for building customizable, interactive multi-omic data portals that perform real-time statistical analyses and visualizations, demonstrated on a published multi-omics mitochondrial protease deletion dataset.",
+  "model": "multi-omic mass spectrometry datasets",
+  "section": "platforms_web"
+ },
+ "31811943": {
+  "pmid": "31811943",
+  "relevance": 3,
+  "finding": "GliomaDB is a web server that integrates genomic, transcriptomic, epigenomic, clinical, and gene-drug association data from multiple sources and offers multi-omics data visualization and interactive analysis for glioma research.",
+  "model": "human (glioma, GBM/LGG)",
+  "section": "platforms_web"
+ },
+ "36035123": {
+  "pmid": "36035123",
+  "relevance": 3,
+  "finding": "CCAS is a one-stop web annotation system that integrates 20 recognized resources to provide consensus multi-omics annotation of individual cancer genomes (SNV/InDel, expression, CNV, methylation) across 395 cancer subtypes.",
+  "model": "human (cancer, 10 categories)",
+  "section": "platforms_web"
+ },
+ "27131784": {
+  "pmid": "27131784",
+  "relevance": 3,
+  "finding": "ICM is a web tool that fuses, clusters, and visualizes multi-dimensional biomedical data to identify patient subgroups, supporting integrated clustering for precision medicine without requiring programming skills.",
+  "model": "human (multiple diseases)",
+  "section": "platforms_web"
+ },
+ "38405883": {
+  "pmid": "38405883",
+  "relevance": 2,
+  "finding": "HiCrayon is an R Shiny/Python GUI tool that integrates 3D chromatin contact maps with 1D omics signals (e.g., ChIP-seq) by coloring interactions according to 1D data, available as web or containerized app.",
+  "model": "3D genome / chromatin",
+  "section": "platforms_web"
+ },
+ "40778317": {
+  "pmid": "40778317",
+  "relevance": 2,
+  "finding": "The study develops a multi-omics and clinical data integration framework using 45 machine learning algorithms (with RF+SVM best) to predict lung cancer chemotherapy response, and provides a Shiny web server for use.",
+  "model": "human (lung cancer cell lines and patients)",
+  "section": "statistics_ml"
+ },
+ "35586378": {
+  "pmid": "35586378",
+  "relevance": 1,
+  "finding": "This narrative review introduces the concept of precision interventional radiology and mentions that integration of multi-omics with molecular imaging supports interventional procedures, without presenting specific software tools.",
+  "model": "human (interventional radiology)",
+  "section": "other"
+ },
+ "39664569": {
+  "pmid": "39664569",
+  "relevance": 1,
+  "finding": "This systematic review of 69 studies summarizes how multi-omics approaches (genomics, transcriptomics, proteomics, metabolomics, microbiomics) have been applied to discover biomarkers for thyroid eye disease.",
+  "model": "human (thyroid eye disease)",
+  "section": "applications"
+ },
+ "39947372": {
+  "pmid": "39947372",
+  "relevance": 1,
+  "finding": "This review surveys network toxicology tools, databases, and methods used in traditional Chinese medicine safety assessment, including their combination with omics technologies, but does not benchmark integration software.",
+  "model": "TCM toxicology",
+  "section": "other"
+ },
+ "40740914": {
+  "pmid": "40740914",
+  "relevance": 1,
+  "finding": "This PRISMA systematic review of 20 studies summarizes multi-omics integration applications (genomic, transcriptomic, proteomic, metabolomic, microbiome) for early detection, risk stratification, and biomarker discovery in gastrointestinal malignancies.",
+  "model": "human (GI cancers)",
+  "section": "applications"
+ },
+ "40981471": {
+  "pmid": "40981471",
+  "relevance": 1,
+  "finding": "This study integrates multi-omics data with machine learning (8 algorithms via SHAP), single-cell sequencing, and molecular docking to identify hub genes and build a risk prediction nomogram for PET-microplastics-induced ulcerative colitis.",
+  "model": "human/mouse (UC, DSS model)",
+  "section": "applications"
+ },
+ "41164190": {
+  "pmid": "41164190",
+  "relevance": 1,
+  "finding": "The study integrates multi-omics data with Mendelian randomization and Random Survival Forest machine learning to build an energy-metabolism-related prognostic model and nomogram for lung adenocarcinoma.",
+  "model": "human (lung adenocarcinoma)",
+  "section": "applications"
+ },
+ "35681780": {
+  "pmid": "35681780",
+  "relevance": 3,
+  "finding": "The authors present an intuitive self-organizing-map-based method that portrays expression, methylation, and CNV landscapes of each tumor in a shared gene-centered coordinate system, enabling combined multi-omics analysis of lower-grade gliomas.",
+  "model": "human (lower-grade gliomas)",
+  "section": "frameworks"
+ },
+ "35473910": {
+  "pmid": "35473910",
+  "relevance": 3,
+  "finding": "Introduces a two-dimensional enrichment analysis (2DEA) approach implemented as a plugin suite for the MINERVA platform to infer downstream and upstream elements by integrating network topology and molecular perturbation data, facilitating multi-omics data integration and exploration on disease maps.",
+  "model": "human (inflammation resolution datasets); disease maps / RNA-seq",
+  "section": "networks"
+ },
+ "32780568": {
+  "pmid": "32780568",
+  "relevance": 2,
+  "finding": "OpenProt is a proteogenomic web resource that enforces a polycistronic annotation model across an exhaustive transcriptome for 10 species and integrates re-analyzed mass spectrometry and ribosome profiling evidence with predicted functional domains and conservation.",
+  "model": "10 species; proteogenomics (mass spectrometry, ribosome profiling)",
+  "section": "platforms_web"
+ },
+ "33452365": {
+  "pmid": "33452365",
+  "relevance": 3,
+  "finding": "MuSA is a Shiny-based GUI tool built around the MultiAssayExperiment data structure to combine and analyze multi-omics data together with radiomic features for radiogenomic studies.",
+  "model": "human (breast cancer, TCGA-TCIA); genomics, transcriptomics, proteomics, radiomics",
+  "section": "platforms_web"
+ },
+ "41029413": {
+  "pmid": "41029413",
+  "relevance": 3,
+  "finding": "CPMOAD is an online platform that uniformly integrates RNA-seq, DNA methylation and curated molecular interaction data for preeclampsia with interactive differential expression, methylation and pathway enrichment analysis modules.",
+  "model": "human (preeclampsia); RNA-seq, DNA methylation",
+  "section": "platforms_web"
+ },
+ "35395670": {
+  "pmid": "35395670",
+  "relevance": 3,
+  "finding": "CAMOIP is a web-based tool that integrates survival, expression, mutational, immune infiltration, immunogenicity and pathway enrichment analyses for screening prognostic markers and mechanisms related to immunotherapy across pan-cancer cohorts.",
+  "model": "human (pan-cancer immunotherapy cohorts); genomics, transcriptomics",
+  "section": "platforms_web"
+ },
+ "37342652": {
+  "pmid": "37342652",
+  "relevance": 3,
+  "finding": "MOPAW is a point-and-click graphical workflow hosted on the Cancer Genomics Cloud that automates preprocessing, dimensionality reduction and MOGSA pathway analysis across copy number alteration, transcriptomic, proteomic and phosphoproteomic data.",
+  "model": "human (cancer, TCGA/CPTAC); CNA, transcriptomics, proteomics, phosphoproteomics",
+  "section": "workflows_reproducibility"
+ },
+ "38430745": {
+  "pmid": "38430745",
+  "relevance": 3,
+  "finding": "CFViSA is a free web platform integrating two omics pipelines (microbiome and transcriptome analyses) and 79 analysis tools for sequence processing, visualization and statistical analysis of omics data.",
+  "model": "microbiome and transcriptome data",
+  "section": "platforms_web"
+ },
+ "29199021": {
+  "pmid": "29199021",
+  "relevance": 3,
+  "finding": "An open-access web server (systems-genetics.org) implementing multi-layered systems-genetics approaches—ePhenome-wide association, transcriptome/proteome-wide association, and (reverse-) mediation analysis—for dissecting gene function from multi-omics datasets.",
+  "model": "mouse (BXD genetic reference population) and human; multi-omics",
+  "section": "platforms_web"
+ },
+ "39418180": {
+  "pmid": "39418180",
+  "relevance": 3,
+  "finding": "PhenoMultiOmics is a web server that visualizes enzymatic-reaction-based multi-omics networks integrating genes, proteins and metabolites across cancer types, with biomarker discovery modules for differential expression and pathway enrichment.",
+  "model": "human (multiple cancers); transcriptomics, metabolomics",
+  "section": "networks"
+ },
+ "38919019": {
+  "pmid": "38919019",
+  "relevance": 3,
+  "finding": "An online Multi-Omics Analysis Sandbox Toolkit that integrates clinical data with single- and multi-omics datasets to support data selection, gene-set analysis, visualization and collaborative biomarker discovery.",
+  "model": "human (clinical/disease cohorts); single- and multi-omics",
+  "section": "platforms_web"
+ },
+ "39128019": {
+  "pmid": "39128019",
+  "relevance": 3,
+  "finding": "ExpOmics is a comprehensive web platform with 7 applications and 4 toolkits providing 28 customizable analysis functions—differential expression, co-expression, WGCNA, feature selection and functional enrichment—for organism-agnostic multi-omics data and 22,427 TCGA transcriptomic datasets.",
+  "model": "multiple species (no organism restriction), human cancers (TCGA); genes, mRNAs, lncRNAs, miRNAs, circRNAs, piRNAs, proteins",
+  "section": "platforms_web"
+ },
+ "38884000": {
+  "pmid": "38884000",
+  "relevance": 3,
+  "finding": "IntelliGenes is an interactive, cross-platform AI/ML application that combines conventional statistical techniques with machine-learning algorithms for multi-omics data exploration, biomarker discovery and disease prediction.",
+  "model": "human (rare, common and complex diseases); multi-omics",
+  "section": "statistics_ml"
+ },
+ "41543776": {
+  "pmid": "41543776",
+  "relevance": 1,
+  "finding": "Integrated GWAS with expression, methylation, protein and splicing QTL data using Mendelian Randomization, SMR, colocalization and machine learning to identify candidate therapeutic targets for Alzheimer's and Parkinson's diseases.",
+  "model": "human (Alzheimer's and Parkinson's disease)",
+  "section": "applications"
+ },
+ "42231304": {
+  "pmid": "42231304",
+  "relevance": 1,
+  "finding": "Combined GWAS of MS progression with proteome-wide association studies, SMR, colocalization, pathway enrichment, drug-target mapping and protein-protein interaction networks to prioritize therapeutic proteins for multiple sclerosis progression.",
+  "model": "human (multiple sclerosis)",
+  "section": "applications"
+ },
+ "42106791": {
+  "pmid": "42106791",
+  "relevance": 1,
+  "finding": "Performed genome-wide cross-trait analysis integrating GWAS summary statistics with eQTL and pQTL data from multiple tissues to identify pleiotropic loci and druggable targets linking MASLD and cardiometabolic syndromes.",
+  "model": "human (MASLD and cardiometabolic traits)",
+  "section": "applications"
+ },
+ "40469055": {
+  "pmid": "40469055",
+  "relevance": 1,
+  "finding": "Used a multi-omics approach combining fecal/gut microbiota profiling, metabolomics and gut immunity analyses to characterize age-dependent microbiota-immune interplay during chikungunya virus infection.",
+  "model": "mouse (CHIKV infection model)",
+  "section": "applications"
+ },
+ "40386420": {
+  "pmid": "40386420",
+  "relevance": 1,
+  "finding": "Constructed an integrated molecular, histopathological and clinical atlas of IBD incorporating whole-exome sequencing, tissue RNA-seq, serum proteomics and deep-learning-based histology scoring across 1,002 patients.",
+  "model": "human (inflammatory bowel disease)",
+  "section": "applications"
+ },
+ "41559659": {
+  "pmid": "41559659",
+  "relevance": 1,
+  "finding": "Applied WGCNA, single-cell RNA-seq, LASSO Cox regression, xCell cell-type enrichment, TIDE and oncoPredict to glutamine-related genes in TCGA-CRC and GSE17537 for prognosis prediction in colorectal cancer.",
+  "model": "human (colorectal cancer)",
+  "section": "applications"
+ },
+ "37263023": {
+  "pmid": "37263023",
+  "relevance": 1,
+  "finding": "Integrated transcriptomics, proteomics and metabolomics profiles via knowledge-based integration to compare developmental neurotoxicity mechanisms of PFBS and PFOS in zebrafish embryos.",
+  "model": "zebrafish (PFBS/PFOS exposure)",
+  "section": "applications"
+ },
+ "38969985": {
+  "pmid": "38969985",
+  "relevance": 3,
+  "finding": "Introduced the MTBE-SP3 workflow, a unified single-sample protocol integrating EtOH/MTBE metabolomic extraction with autoSP3 proteomic sample preparation, applicable to FFPE tissue, fresh-frozen tissue, plasma, serum and cells.",
+  "model": "clinical specimens (multi-tissue, human)",
+  "section": "workflows_reproducibility"
+ },
+ "33575609": {
+  "pmid": "33575609",
+  "relevance": 3,
+  "finding": "Presented gNOMO, a Snakemake-based bioinformatic pipeline for integrative analysis of up to three meta-omics levels (metagenomics, metatranscriptomics, metaproteomics) from non-model organisms, demonstrated on the cockroach Blattella germanica gut microbiome.",
+  "model": "non-model organism (Blattella germanica) gut microbiome",
+  "section": "workflows_reproducibility"
+ },
+ "33060801": {
+  "pmid": "33060801",
+  "relevance": 2,
+  "finding": "Demonstrated a reproducible network-based workflow integrating time-resolved proteome, transcriptome and methylome measurements in iPSC-derived human 3D cardiac microtissues to model anthracycline cardiotoxicity drug responses.",
+  "model": "human iPSC-derived 3D cardiac microtissues",
+  "section": "networks"
+ },
+ "31672980": {
+  "pmid": "31672980",
+  "relevance": 2,
+  "finding": "Designed and released a Digital Research Object (DRO) embedding data, documentation and an analytic pipeline for a multi-modal mouse systems genetics sleep-regulation dataset (genome, brain/liver transcriptome, plasma metabolome, sleep phenome), with reproducibility tested by an independent bioinformatician.",
+  "model": "mouse (BXD genetic reference population)",
+  "section": "workflows_reproducibility"
+ },
+ "35046932": {
+  "pmid": "35046932",
+  "relevance": 3,
+  "finding": "Proposed a novel pipeline integrating RNA-seq, ATAC-seq and ChIP-seq data with reduced-Cox regression to identify transcription factors regulating immune-related targets, exemplified by GATA4 binding at the GPRC5B promoter in colon adenocarcinoma.",
+  "model": "human (colon adenocarcinoma cell lines and patient samples)",
+  "section": "workflows_reproducibility"
+ },
+ "39537649": {
+  "pmid": "39537649",
+  "relevance": 3,
+  "finding": "The authors developed an integration pipeline combining multi-omics data with clinical and laboratory values to enable machine-learning-based classification of autoimmune diseases, achieving up to 96% prediction accuracy.",
+  "model": "human",
+  "section": "workflows_reproducibility"
+ },
+ "36760650": {
+  "pmid": "36760650",
+  "relevance": 0,
+  "finding": "A web/mobile variety test platform (VTP) was built to manage multi-location, multi-year crop variety testing workflows and phenotype data standardization, not for omics integration.",
+  "model": "crop plants",
+  "section": "platforms_web"
+ },
+ "37191795": {
+  "pmid": "37191795",
+  "relevance": 3,
+  "finding": "The chapter describes Omics Notebook, an open-source reproducible framework for automated exploratory analysis, reporting and integration of mass spectrometry-based proteomic and metabolomic data.",
+  "model": "MS-based proteomics + metabolomics",
+  "section": "workflows_reproducibility"
+ },
+ "34036326": {
+  "pmid": "34036326",
+  "relevance": 3,
+  "finding": "A generic, reproducible, open-access R-package data harmonisation framework is presented for parallel multi-omics integration and applied to COVID-19 drug-target discovery.",
+  "model": "human (SARS-CoV-2)",
+  "section": "workflows_reproducibility"
+ },
+ "38412834": {
+  "pmid": "38412834",
+  "relevance": 3,
+  "finding": "Decomprolute is introduced as a Common Workflow Language, containerized benchmarking platform for comparing tumor deconvolution algorithms across matched transcriptomic and proteomic CPTAC datasets.",
+  "model": "human tumors (proteogenomic)",
+  "section": "benchmarks"
+ },
+ "37961197": {
+  "pmid": "37961197",
+  "relevance": 3,
+  "finding": "SPEEDI is described as a fully automated end-to-end framework with data-driven batch inference for preprocessing, integration, and cell-type labeling in single-cell multi-omics, available as a web application.",
+  "model": "single-cell multi-omics",
+  "section": "workflows_reproducibility"
+ },
+ "37779245": {
+  "pmid": "37779245",
+  "relevance": 3,
+  "finding": "ScSmOP is presented as a universal, C-language computational pipeline for barcode identification, mapping and deconvolution of single-cell single-molecule multi-omics data (scRNA-seq, scATAC-seq, scSPRITE, spatial).",
+  "model": "single-cell multi-omics",
+  "section": "workflows_reproducibility"
+ },
+ "41917819": {
+  "pmid": "41917819",
+  "relevance": 1,
+  "finding": "Lipidomic and proteomic profiling of a COVID-19 biobank cohort was used to stratify acutely infected versus convalescent patients and compare severity scores.",
+  "model": "human (COVID-19)",
+  "section": "applications"
+ },
+ "34429148": {
+  "pmid": "34429148",
+  "relevance": 2,
+  "finding": "A combinatorial multi-omics data analysis pipeline integrating ATAC-seq, RNA-seq, WGBS, Hi-C, Cut&Run, proteomics and phosphoproteomics was established to identify CTCF co-regulatory partners.",
+  "model": "human cell line",
+  "section": "workflows_reproducibility"
+ },
+ "39366377": {
+  "pmid": "39366377",
+  "relevance": 3,
+  "finding": "The peer-reviewed publication of SPEEDI presents it as an automated end-to-end single-cell multi-omics framework with data-driven batch inference, parameter-free execution and an interactive web application.",
+  "model": "single-cell multi-omics",
+  "section": "workflows_reproducibility"
+ },
+ "37879938": {
+  "pmid": "37879938",
+  "relevance": 3,
+  "finding": "MICA is a non-linear mutual-information-based method, benchmarked against alternatives, that integrates single-cell transcriptome with chromatin accessibility to infer gene regulatory networks in early human embryos.",
+  "model": "human early embryo (single-cell)",
+  "section": "statistics_ml"
+ },
+ "35662721": {
+  "pmid": "35662721",
+  "relevance": 1,
+  "finding": "An integrative framework (ProLnc) was applied to multi-cohort hepatocellular carcinoma data to identify proliferation-derived lncRNA signatures for risk stratification, rather than serving as a general multi-omics software tool.",
+  "model": "human (HCC)",
+  "section": "applications"
+ },
+ "41034612": {
+  "pmid": "41034612",
+  "relevance": 3,
+  "finding": "Giotto Suite is a suite of modular R packages providing scalable, technology-agnostic end-to-end solutions for multiscale spatial multiomic data analysis, integration and visualization built around an innovative spatial data framework.",
+  "model": "spatial multiomics (molecular, morphology, spatial, annotated features)",
+  "section": "frameworks"
+ },
+ "40681987": {
+  "pmid": "40681987",
+  "relevance": 2,
+  "finding": "SCNT is an R package that wraps Seurat/ggplot2 for QC, dimensionality reduction, doublet detection and high-resolution visualization of single-cell and spatial transcriptomics data, with stated future plans for multi-omics integration.",
+  "model": "single-cell and spatial transcriptomics",
+  "section": "workflows_reproducibility"
+ },
+ "38452346": {
+  "pmid": "38452346",
+  "relevance": 2,
+  "finding": "Shu is a Python/web visualization tool that integrates diverse data types (including multi-omics) onto metabolic maps using a Grammar-of-Graphics API for easy pipeline integration.",
+  "model": "multi-omics onto metabolic pathway maps",
+  "section": "platforms_web"
+ },
+ "35047813": {
+  "pmid": "35047813",
+  "relevance": 3,
+  "finding": "InterTADs is a framework for integrating same-sample multi-omics data within topologically associating domains, with downstream statistical, enrichment (KEGG/GO/TFBS) and visualization analyses, demonstrated on chronic lymphocytic leukemia.",
+  "model": "human multi-omics (CLL patients)",
+  "section": "frameworks"
+ },
+ "37673036": {
+  "pmid": "37673036",
+  "relevance": 1,
+  "finding": "A 4-month NAFLD randomized trial couples metagenomics and metabolomics with multi-omics integrative analyses, fecal microbiota transplantation and monocolonization to link resistant starch, Bacteroides stercoris, BCAAs and hepatic steatosis.",
+  "model": "human gut microbiome + serum metabolome (NAFLD patients, mice)",
+  "section": "applications"
+ },
+ "29173869": {
+  "pmid": "29173869",
+  "relevance": 1,
+  "finding": "A perspective/review arguing that functional contributions of the human gut microbiome require molecular high-throughput measurements, experimental models and integrative multi-omics approaches.",
+  "model": "human gut microbiome",
+  "section": "other"
+ },
+ "40213833": {
+  "pmid": "40213833",
+  "relevance": 1,
+  "finding": "A review summarizing how gut microbiota and microbial metabolites interface with host DNA methylation, histone methylation, lactylation, glycosylation and non-coding RNAs in IBD, highlighting multi-omics for dissecting host-microbe interactions.",
+  "model": "gut microbiome + host epigenomics/metabolomics (IBD)",
+  "section": "applications"
+ },
+ "35953094": {
+  "pmid": "35953094",
+  "relevance": 1,
+  "finding": "Integrated metagenomic and metabolomic analyses in 266 CRC subjects identify distinct microbiome-metabolome signatures (e.g., F. nucleatum/GABA in late-onset; F. plauti/tryptophan-bile acid-choline in early-onset) and build multi-omics classifiers for EO-CRC.",
+  "model": "fecal metagenome + metabolome (human CRC)",
+  "section": "applications"
+ },
+ "31171880": {
+  "pmid": "31171880",
+  "relevance": 1,
+  "finding": "Large-cohort (n=616) fecal metagenomic and metabolomic study identifies stage-specific microbial (F. nucleatum, A. parvulum, A. odontolyticus) and metabolic (BCAAs, phenylalanine, bile acids) shifts across colorectal adenoma-carcinoma progression.",
+  "model": "fecal metagenome + metabolome (human CRC)",
+  "section": "applications"
+ },
+ "32152478": {
+  "pmid": "32152478",
+  "relevance": 1,
+  "finding": "A review of human NAFLD gut microbiome signatures discussing confounding by obesity/T2D, methodological heterogeneity and the need for multi-omics systems-biology approaches to derive robust microbiome biomarkers.",
+  "model": "human gut microbiome (NAFLD)",
+  "section": "other"
+ },
+ "31142858": {
+  "pmid": "31142858",
+  "relevance": 1,
+  "finding": "Longitudinal profiling of transcriptomes, metabolomes, cytokines, proteomes and the microbiome in 106 prediabetic/healthy individuals reveals host-microbe co-associations and early molecular signatures preceding T2D onset.",
+  "model": "host multi-omics + gut microbiome (human prediabetes/T2D)",
+  "section": "applications"
+ },
+ "38042287": {
+  "pmid": "38042287",
+  "relevance": 1,
+  "finding": "Machine learning (logistic regression, SVM, Gaussian naive Bayes, random forest) applied to gut microbiome, serum metabolome and lipidome data identifies metabolite-based classifiers (3-hydroxybutyric acid, 9-oxo-ode) for type 1 diabetes.",
+  "model": "gut microbiome + serum metabolome + lipidome (human T1D)",
+  "section": "applications"
+ },
+ "32076369": {
+  "pmid": "32076369",
+  "relevance": 2,
+  "finding": "This review collects and summarizes tools and methods that adopt integrative approaches to analyze multiple omics data, including their methodology, use-cases, and limitations for applications such as disease subtyping and biomarker prediction.",
+  "model": "general / human multi-omics",
+  "section": "frameworks"
+ },
+ "31114869": {
+  "pmid": "31114869",
+  "relevance": 3,
+  "finding": "MEXPRESS is an online tool that integrates and visualizes gene expression, DNA methylation, and clinical data from TCGA, uniquely depicting expression and methylation together with precise genomic methylation location.",
+  "model": "human (TCGA cancer)",
+  "section": "platforms_web"
+ },
+ "41251150": {
+  "pmid": "41251150",
+  "relevance": 2,
+  "finding": "Reactome is a curated pathway knowledgebase whose new analysis tools support multi-omics integration and customizable visualizations.",
+  "model": "human",
+  "section": "platforms_web"
+ },
+ "40934376": {
+  "pmid": "40934376",
+  "relevance": 2,
+  "finding": "The paper presents a new approach using deep learning on subsampled nonlinear dimensionality reduction (t-SNE/UMAP) to extract features and integrate large multi-omics datasets including mass spectrometry imaging.",
+  "model": "mass spectrometry imaging / general omics",
+  "section": "statistics_ml"
+ },
+ "41054136": {
+  "pmid": "41054136",
+  "relevance": 1,
+  "finding": "A bibliometric and visualization analysis of 1148 omics articles on osteoporosis using CiteSpace, VOSviewer, and R, describing the historical evolution of the field rather than any software tool.",
+  "model": "human (osteoporosis)",
+  "section": "applications"
+ },
+ "42665670": {
+  "pmid": "42665670",
+  "relevance": 1,
+  "finding": "An integrative multi-omics analysis of non-histone acetylation substrate-related transcriptional landscapes in colon adenocarcinoma that uses deep learning-based pathomics but is an application rather than a software description.",
+  "model": "human (COAD cancer)",
+  "section": "applications"
+ },
+ "39522934": {
+  "pmid": "39522934",
+  "relevance": 0,
+  "finding": "A bibliometric analysis of nutrition and radiotherapy research using VOSviewer, Bibliometrix, and Citespace that does not describe or compare multi-omics integration software.",
+  "model": "human (cancer patients)",
+  "section": "applications"
+ },
+ "40106419": {
+  "pmid": "40106419",
+  "relevance": 3,
+  "finding": "HemAtlas is a multi-omics platform that systematically integrates functional genomics datasets from humans, mice, zebrafish, and HSPC in vitro culture systems with cross-stage, cross-species, and cross-model analyses.",
+  "model": "human, mouse, zebrafish (hematopoiesis)",
+  "section": "platforms_web"
+ },
+ "40948029": {
+  "pmid": "40948029",
+  "relevance": 3,
+  "finding": "ggalign is an R package extending ggplot2 with composable, data-aware layouts and a linking mechanism for visualizing interconnections across heterogeneous data types in genomic and microbiome studies.",
+  "model": "genomic and microbiome data",
+  "section": "platforms_web"
+ },
+ "38664601": {
+  "pmid": "38664601",
+  "relevance": 2,
+  "finding": "OMIC is a method for orthogonal multimodality integration and clustering of CITE-seq data that accounts for dependence among modalities and outperforms existing methods in accuracy and efficiency.",
+  "model": "human (CITE-seq, single-cell)",
+  "section": "statistics_ml"
+ },
+ "40355757": {
+  "pmid": "40355757",
+  "relevance": 3,
+  "finding": "A comprehensive SLC knowledgebase integrates systematic multi-omics datasets with curated information and is exposed through a web portal with interactive dashboards and visualization tools for human solute carrier analysis.",
+  "model": "human (SLC superfamily)",
+  "section": "platforms_web"
+ },
+ "38163104": {
+  "pmid": "38163104",
+  "relevance": 2,
+  "finding": "The study introduces a method that uses PaCMAP to merge CNA, DNA methylation, and gene expression into a 2D colored map fed into a CNN, outperforming the i-SOM-GSN model for prostate cancer Gleason score prediction.",
+  "model": "human (prostate cancer)",
+  "section": "statistics_ml"
+ },
+ "39604623": {
+  "pmid": "39604623",
+  "relevance": 1,
+  "finding": "An observational trial in 61 healthy adults used multi-omics over 9 days to profile gut microbiome composition and metabolism, linking variations to gut physiology and environmental factors such as transit time, pH, and stool moisture.",
+  "model": "human gut microbiome",
+  "section": "applications"
+ },
+ "37165188": {
+  "pmid": "37165188",
+  "relevance": 1,
+  "finding": "An ingestible sampling device was used to collect 240 intestinal samples from 15 healthy individuals and multi-omics analyses revealed differences in bacteria, phages, host proteins and metabolites along the intestines versus stool.",
+  "model": "human intestinal microbiome",
+  "section": "applications"
+ },
+ "37611587": {
+  "pmid": "37611587",
+  "relevance": 1,
+  "finding": "Multi-omics (microbiome and metabolome) studies in genetically controlled mouse cohorts identified diet-driven shifts in microbial and metabolomic profiles associated with colorectal cancer progression.",
+  "model": "mouse gut microbiome (CRC model)",
+  "section": "applications"
+ },
+ "41950533": {
+  "pmid": "41950533",
+  "relevance": 1,
+  "finding": "A review examining how gut microbiota-centered multi-omics can be translated into decision support for treat-to-target IBD management, proposing a pragmatic tiered workflow combining minimal signatures with clinical markers.",
+  "model": "human gut microbiome (IBD)",
+  "section": "applications"
+ },
+ "41613079": {
+  "pmid": "41613079",
+  "relevance": 1,
+  "finding": "An integrative review synthesizes five omics layers (host miRNAs, host-pathogen genetic markers, microbiome, viromics, transcriptomics) into a predictive framework for zoonotic spillover detection.",
+  "model": "wildlife/zoonotic multi-omics",
+  "section": "applications"
+ },
+ "41651877": {
+  "pmid": "41651877",
+  "relevance": 1,
+  "finding": "A review outlines a multi-omics-guided Assembly-Assessment-Redesign (A-A-R) workflow for designing defined microbial consortia for reproducible fermented food production.",
+  "model": "fermented food microbial communities",
+  "section": "applications"
+ },
+ "27986083": {
+  "pmid": "27986083",
+  "relevance": 3,
+  "finding": "The IMP pipeline is a reproducible, modular, Docker-based workflow for reference-independent integrated analysis of coupled metagenomic and metatranscriptomic microbiome data, including co-assembly, binning, and signature-based visualizations.",
+  "model": "microbiome (metagenomics + metatranscriptomics)",
+  "section": "workflows_reproducibility"
+ },
+ "36864178": {
+  "pmid": "36864178",
+  "relevance": 2,
+  "finding": "A review of single-cell and spatial multi-omics technologies highlights computational strategies and tools needed to integrate genome, epigenome, transcriptome, proteome, and/or metabolome data from single cells.",
+  "model": "single-cell multi-omics",
+  "section": "statistics_ml"
+ },
+ "37280296": {
+  "pmid": "37280296",
+  "relevance": 2,
+  "finding": "A comprehensive review of single-cell multi-omics technologies discusses bioinformatics tools and mathematical/computational methods developed to link and integrate different omics modalities.",
+  "model": "single-cell multi-omics",
+  "section": "statistics_ml"
+ },
+ "37119971": {
+  "pmid": "37119971",
+  "relevance": 1,
+  "finding": "A review highlights current and emerging multi-omics modalities for precision health, discussing their applications in genetic variation, cardio-metabolic diseases, cancer, infectious diseases and other clinical areas.",
+  "model": "human multi-omics for health",
+  "section": "applications"
+ },
+ "36596352": {
+  "pmid": "36596352",
+  "relevance": 2,
+  "finding": "The review outlines a roadmap of multi-omics integration analysis using artificial intelligence strategies for cancer precision medicine, including dimensionality reduction and multimodal data integration.",
+  "model": "cancer multi-omics",
+  "section": "statistics_ml"
+ },
+ "39182134": {
+  "pmid": "39182134",
+  "relevance": 2,
+  "finding": "A review of spatial multi-omics examines the evolution of multi-omics technologies and computational methods for modality integration, including improvements in throughput, resolution, and accuracy.",
+  "model": "spatial multi-omics",
+  "section": "statistics_ml"
+ },
+ "38837434": {
+  "pmid": "38837434",
+  "relevance": 1,
+  "finding": "This review synthesizes insights from genomics, transcriptomics, proteomics, epigenomics and lipidomics to unravel atopic dermatitis pathogenesis, projecting future trajectories of multi-omics integration for personalized medicine.",
+  "model": "human (atopic dermatitis patients)",
+  "section": "applications"
+ },
+ "38286161": {
+  "pmid": "38286161",
+  "relevance": 1,
+  "finding": "This review summarizes current research on using multi-omics technologies (genomics, transcriptomics, proteomics, metabolomics) combined with AI methodologies to predict neoadjuvant chemoradiotherapy response in esophageal cancer.",
+  "model": "human (esophageal cancer patients)",
+  "section": "applications"
+ },
+ "41591802": {
+  "pmid": "41591802",
+  "relevance": 1,
+  "finding": "This review highlights AI-based habitat imaging analysis (Radiomics++) workflow and methodology for decoding intratumor heterogeneity, and anticipates integration of AI-defined habitats with multi-omics for precision medicine.",
+  "model": "human (tumor imaging)",
+  "section": "applications"
+ },
+ "41882401": {
+  "pmid": "41882401",
+  "relevance": 2,
+  "finding": "This chapter outlines key features, experimental and bioinformatic workflows, and commonly used computational tools for genomics, transcriptomics, proteomics, metabolomics and meta-omics approaches in microbial ecosystems, including integrative multi-omics strategies.",
+  "model": "microorganisms / microbial communities",
+  "section": "microbiome_tools"
+ },
+ "38184138": {
+  "pmid": "38184138",
+  "relevance": 1,
+  "finding": "This review examines the roles of biomolecules and functional pathways across genomics, transcriptomics, proteomics and metabolomics in myocarditis pathogenesis, underscoring the need for a multi-omics approach.",
+  "model": "human (myocarditis patients)",
+  "section": "applications"
+ },
+ "41922965": {
+  "pmid": "41922965",
+  "relevance": 2,
+  "finding": "This systematic review synthesizes applications of machine learning methods (random forest, XGBoost, autoencoders, stacking ensembles, CNN-LSTM) for multi-omics data integration in crop improvement across 76 eligible studies.",
+  "model": "crop plants",
+  "section": "statistics_ml"
+ },
+ "41453552": {
+  "pmid": "41453552",
+  "relevance": 1,
+  "finding": "This review synthesizes multi-omics evidence (single-cell transcriptomics, proteomics, metabolomics, spatial profiling) to define immunometabolic phenotypes and resistance mechanisms in the lung cancer tumor-immune interface.",
+  "model": "human (lung cancer patients)",
+  "section": "applications"
+ },
+ "40565540": {
+  "pmid": "40565540",
+  "relevance": 2,
+  "finding": "This review provides a detailed overview of deep learning model architectures, datasets and innovations applied to multi-omics data for cancer type classification, driver gene identification, survival analysis and drug response prediction.",
+  "model": "human (cancer)",
+  "section": "statistics_ml"
+ }
+}

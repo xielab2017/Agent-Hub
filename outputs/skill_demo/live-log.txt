@@ -32,3 +32,9 @@
 [    29s]     5 ← "EasyMultiProfiler"[tiab] OR ("multi-omics"[tiab] AND "microbiome"[tiab] AND ("workflow"[t
 [    29s]    25 ← ("Multiomics"[Mesh] OR "multi-omics"[tiab] OR "integrative omics"[tiab]) AND ("Computation
 [    45s] records with abstracts: 500
+[   184s] screened: 500 (239 relevant)
+[   184s] evidence cards: 60
+[   184s] featured work: EasyMultiProfiler (EMP) → card R1
+[   225s] outline: Software for multi-omics data integration and analysis: a systematic and critical comparison of frameworks, packages, workflows and platforms, with EasyMultiProfiler as a featured workflow for microbiome research — 10 sections
+[   234s]   drafted 2/10 A taxonomy of integration strategies: early, intermediate an (1119 words, 19 cards)
+[   237s]   drafted 1/10 Introduction: why multi-omics integration demands dedicated  (720 words, 32 cards)
