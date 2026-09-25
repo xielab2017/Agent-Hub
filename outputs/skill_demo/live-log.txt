@@ -12,3 +12,7 @@
 [    85s] outline: Software for multi-omics data integration and analysis: a systematic and critical comparison of frameworks, packages, workflows and platforms, with EasyMultiProfiler as a featured workflow for microbiome research — 2 sections
 [   103s]   drafted 2/2 A taxonomy of integration strategies: unsupervised, supervis (725 words, 2 cards)
 [   111s]   drafted 1/2 Introduction: the multi-omics integration imperative and the (769 words, 12 cards)
+[   174s] reviews: reviewer-bioinformatics-methods (1387 words), reviewer-microbiome-user (1191 words), reviewer-editor-integrity (1338 words)
+[   189s]   revised 2/2 (701 words, 5 cards)
+[   204s]   revised 1/2 (855 words, 12 cards)
+[   216s]   audited 1/2: 0 unsupported citation(s) corrected
