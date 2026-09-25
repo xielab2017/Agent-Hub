@@ -170,6 +170,27 @@ def test_author_skill_installs_model_written_skill_md_with_the_package():
         assert '"references": 59' in llm.prompts[0] and "BUNDLED PROFILES: p" in llm.prompts[0]
 
 
+def test_author_skill_self_check_rejects_invented_options():
+    replies = iter([
+        "---\nname: literature-review\ndescription: d\n---\n\n# LR\n\nUse `--profile x` or `--model m`.\n",
+        "---\nname: literature-review\ndescription: d\n---\n\n# LR\n\nUse `--profile x`.\n",
+    ])
+    prompts = []
+
+    def llm(system, user, **kw):
+        prompts.append(user)
+        return next(replies)
+
+    with tempfile.TemporaryDirectory() as tmp, hub(Path(tmp)) as (root, _l, _m):
+        src = Path(tmp) / "src" / "literature-review"
+        src.mkdir(parents=True)
+        (src / "run.py").write_text('import argparse\nap = argparse.ArgumentParser()\nap.add_argument("--profile")\n')
+        res = skill_runner.author_skill("literature-review", source=src, llm=llm)
+        assert "--model" in prompts[1] and "--model" not in res["markdown"] and len(prompts) == 2
+        assert res["checked_flags"] == ["--help", "--profile"]
+    assert skill_runner.cli_flags(ROOT / "skills" / "literature-review" / "run.py") >= {"--profile", "--topic", "--smoke"}
+
+
 def test_bundled_literature_review_skill_cli():
     skill = ROOT / "skills" / "literature-review"
     out = subprocess.run([sys.executable, str(skill / "run.py"), "--help"], capture_output=True, text=True,

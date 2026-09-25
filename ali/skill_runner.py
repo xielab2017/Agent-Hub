@@ -306,6 +306,16 @@ def _frontmatter(md: str) -> tuple[dict[str, str], str]:
     return meta, m.group(2)
 
 
+def cli_flags(script: Path) -> set[str]:
+    """The ``--flags`` an entry script really defines (argparse ``add_argument("--x"``), plus ``--help``."""
+    text = script.read_text(encoding="utf-8")
+    return set(re.findall(r"add_argument\(\s*[\"'](--[a-z][a-z0-9-]*)", text)) | {"--help"}
+
+
+def unknown_flags(markdown: str, real: set[str]) -> list[str]:
+    return sorted(set(re.findall(r"(?<![\w-])(--[a-z][a-z0-9-]*)", markdown)) - real)
+
+
 def author_skill(skill_id: str = "literature-review", *, source: str | Path | None = None,
                  run_dir: str | Path | None = None, llm: Callable[..., str] | None = None,
                  load: bool = True) -> dict[str, Any]:
@@ -329,6 +339,16 @@ def author_skill(skill_id: str = "literature-review", *, source: str | Path | No
         "'## Recovery' (checkpoints / resume / smoke), '## Transfer' (how to export and install on another Agent Hub "
         "and what it needs there). Be precise and faithful to the pipeline; do not invent features.\n\n"
         + _pipeline_context(src, Path(run_dir) if run_dir else None)), max_tokens=12000, temperature=0.2)
+    real = cli_flags(src / "run.py")
+    bad = unknown_flags(reply, real)
+    if bad:  # self-check: the skill may only document options the entry really has
+        reply = llm(AUTHOR_SYSTEM, (
+            f"Your SKILL.md documents command-line options that run.py does not have: {', '.join(bad)}. The real "
+            f"options are: {', '.join(sorted(real))}. Remove or correct every mention and return the whole SKILL.md "
+            f"again.\n\n{reply}"), max_tokens=12000, temperature=0.1)
+        bad = unknown_flags(reply, real)
+        if bad:
+            raise ValueError(f"authored SKILL.md still documents non-existent options: {', '.join(bad)}")
     reply = re.sub(r"^\s*```(?:markdown|md)?\s*\n|\n\s*```\s*$", "", reply.strip())  # a fenced whole reply
     meta, body = _frontmatter(reply)
     body = body.strip()
@@ -349,4 +369,4 @@ def author_skill(skill_id: str = "literature-review", *, source: str | Path | No
         skills.load_skill_to_hub(skill_id)
     audit.log_event("skill_authored", {"id": skill_id, "model": model, "path": result.get("path")})
     return {"ok": True, "id": skill_id, "path": result.get("path"), "markdown": markdown, "model": model,
-            "entry": "run.py"}
+            "entry": "run.py", "checked_flags": sorted(real)}
