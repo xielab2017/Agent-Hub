@@ -102,7 +102,7 @@ class FakeLLM:
         if "Design the review" in user:
             half = max(1, len(ids) // 2)
             return json.dumps({"title": "THBS4 review", "sections": [
-                {"heading": "Introduction", "goal": "g", "cards": [f"R{i}" for i in ids[:half]], "words": 300},
+                {"heading": "1. Introduction", "goal": "g", "cards": [f"R{i}" for i in ids[:half]], "words": 300},
                 {"heading": "Critical perspectives and controversies", "goal": "g", "cards": ids[half:], "words": 300}]})
         if "most important primary studies" in user:
             return json.dumps([{"card": i, "model": "mouse", "finding": "f", "limitation": "l"} for i in ids[:3]])
@@ -146,7 +146,7 @@ def test_run_end_to_end_offline(tmp_path, monkeypatch):
     from docx import Document
 
     text = "\n".join(p.text for p in Document(str(tmp_path / "review.docx")).paragraphs)
-    assert "1. Introduction" in text and "[45] " in text and "Keywords:" in text
+    assert "1. Introduction" in text and "1. 1." not in text and "[45] " in text and "Keywords:" in text
 
 
 def _offline(monkeypatch, n=45):

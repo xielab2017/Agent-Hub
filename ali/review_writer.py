@@ -785,7 +785,8 @@ def run(topic: str, out_dir: Path, *, seed_queries: list[str], seed_pmids: list[
 
     outline = ck.stage("outline", lambda: make_outline(llm, topic, cards))
     title = str(outline.get("title") or topic)
-    sections = [s for s in outline["sections"] if isinstance(s, dict) and s.get("heading")]
+    sections = [{**s, "heading": re.sub(r"^\s*(?:section\s+)?[\dIVX]+[.):]\s*", "", str(s["heading"]), flags=re.I).strip()}
+                for s in outline["sections"] if isinstance(s, dict) and s.get("heading")]  # the document numbers them
     if max_sections:
         sections = sections[:max_sections]
     log(f"outline: {title} — {len(sections)} sections")
