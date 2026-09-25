@@ -1,0 +1,11 @@
+[     0s] model: minimax-cn/MiniMax-M3 via https://api.minimaxi.com/v1
+[     0s] profile: 16 seed queries, focus ['multi-omics', 'multiomics', 'omics integration', 'integrative analysis', 'data integration', 'software'], reviewers reviewer-bioinformatics-methods, reviewer-microbiome-user, reviewer-editor-integrity
+[     9s] queries: 4
+[     9s]     8 ← multi-omics integration software
+[     9s]     8 ← multi-omics data integration R package
+[    10s]     8 ← microbiome multi-omics integration analysis
+[    11s]     5 ← MultiAssayExperiment Bioconductor
+[    12s] records with abstracts: 28
+[    38s] screened: 27 (19 relevant)
+[    38s] evidence cards: 12
+[    38s] featured work: EasyMultiProfiler (EMP) → card R1

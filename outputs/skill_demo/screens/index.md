@@ -1,0 +1,7 @@
+- 2026-09-25 19:29:14 UTC — `001_A_home.png` — Hub A started (fresh state, model configured)
+- 2026-09-25 19:29:17 UTC — `002_A_authoring.png` — typed: /skill-author literature-review run=outputs/thbs4_review
+- 2026-09-25 19:29:29 UTC — `003_A_authored.png` — skill authored: ✓ 已安装并加载（minimax-cn/MiniMax-M3）
+- 2026-09-25 19:29:30 UTC — `004_A_exported.png` — skill exported: literature-review.zip (8759 bytes)
+- 2026-09-25 19:29:34 UTC — `005_B_home.png` — Hub B started — fresh state, no literature-review skill
+- 2026-09-25 19:29:38 UTC — `006_B_imported.png` — bundle uploaded in Control Center → Skills and installed
+- 2026-09-25 19:29:41 UTC — `007_B_run-started.png` — typed: /skill literature-review profile=multiomics-emp out=outputs/skill_demo/smoke smoke

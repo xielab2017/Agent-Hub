@@ -1,0 +1,804 @@
+[
+ {
+  "pmid": "40932530",
+  "title": "EasyMultiProfiler: an efficient multi-omics data integration and analysis workflow for microbiome research.",
+  "abstract": "Host-microbiome interactions are crucial for physiological homeostasis and disease progression. While traditional microbiome research provided foundational insights, multi-omics approaches enable a more comprehensive and systems-level understanding. However, integrating multi-omics data presents significant methodological challenges, including inconsistent sample coverage, heterogeneous data formats, and complex analytical workflows, which collectively impair reproducibility and reliability. To address these critical challenges, we developed the EasyMultiProfiler (EMP), a streamlined and efficient analytical workflow. EMP utilizes SummarizedExperiment and MultiAssayExperiment classes to establish a unified multi-omics data storage and analysis framework. Its architecture comprises five interconnected functional modules: data extraction, preparation, support, analysis, and visualization, integrated into a user-friendly and natural language-style workflow. This design offers an efficient and standardized solution, directly resolving data integration issues, workflow standardization, and result reproducibility. EMP provides researchers and clinicians with a robust and flexible platform to systematically extract biologically relevant insights from complex multi-omics datasets, overcoming key barriers in contemporary microbiome research.",
+  "journal": "Sci China Life Sci",
+  "year": "2026",
+  "volume": "69",
+  "issue": "2",
+  "pages": "321-330",
+  "doi": "10.1007/s11427-025-3035-0",
+  "authors": [
+   "Liu B",
+   "Liu Y",
+   "Xu S",
+   "Wu Q",
+   "Wu D",
+   "Zhan L",
+   "Liao Y",
+   "Mai Y",
+   "Zheng M",
+   "Wang S",
+   "Chen Y",
+   "Huang Z",
+   "Luo X",
+   "Xie Z",
+   "Pan X",
+   "Yu G",
+   "Xie L"
+  ],
+  "types": [
+   "Journal Article"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "29925568",
+  "title": "Multi-Omics Factor Analysis-a framework for unsupervised integration of multi-omics data sets.",
+  "abstract": "Multi-omics studies promise the improved characterization of biological processes across molecular layers. However, methods for the unsupervised integration of the resulting heterogeneous data sets are lacking. We present Multi-Omics Factor Analysis (MOFA), a computational method for discovering the principal sources of variation in multi-omics data sets. MOFA infers a set of (hidden) factors that capture biological and technical sources of variability. It disentangles axes of heterogeneity that are shared across multiple modalities and those specific to individual data modalities. The learnt factors enable a variety of downstream analyses, including identification of sample subgroups, data imputation and the detection of outlier samples. We applied MOFA to a cohort of 200 patient samples of chronic lymphocytic leukaemia, profiled for somatic mutations, RNA expression, DNA methylation and ex vivo drug responses. MOFA identified major dimensions of disease heterogeneity, including immunoglobulin heavy-chain variable region status, trisomy of chromosome 12 and previously underappreciated drivers, such as response to oxidative stress. In a second application, we used MOFA to analyse single-cell multi-omics data, identifying coordinated transcriptional and epigenetic changes along cell differentiation.",
+  "journal": "Mol Syst Biol",
+  "year": "2018",
+  "volume": "14",
+  "issue": "6",
+  "pages": "e8124",
+  "doi": "10.15252/msb.20178124",
+  "authors": [
+   "Argelaguet R",
+   "Velten B",
+   "Arnol D",
+   "Dietrich S",
+   "Zenz T",
+   "Marioni JC",
+   "Buettner F",
+   "Huber W",
+   "Stegle O"
+  ],
+  "types": [
+   "Journal Article",
+   "Research Support, Non-U.S. Gov't",
+   "Validation Study"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "38355833",
+  "title": "Web-based multi-omics integration using the Analyst software suite.",
+  "abstract": "The growing number of multi-omics studies demands clear conceptual workflows coupled with easy-to-use software tools to facilitate data analysis and interpretation. This protocol covers three key components involved in multi-omics analysis, including single-omics data analysis, knowledge-driven integration using biological networks and data-driven integration through joint dimensionality reduction. Using the dataset from a recent multi-omics study of human pancreatic islet tissue and plasma samples, the first section introduces how to perform transcriptomics/proteomics data analysis using ExpressAnalyst and lipidomics data analysis using MetaboAnalyst. On the basis of significant features detected in these workflows, the second section demonstrates how to perform knowledge-driven integration using OmicsNet. The last section illustrates how to perform data-driven integration from the normalized omics data and metadata using OmicsAnalyst. The complete protocol can be executed in ~2 h. Compared with other available options for multi-omics integration, the Analyst software suite described in this protocol enables researchers to perform a wide range of omics data analysis tasks via a user-friendly web interface.",
+  "journal": "Nat Protoc",
+  "year": "2024",
+  "volume": "19",
+  "issue": "5",
+  "pages": "1467-1497",
+  "doi": "10.1038/s41596-023-00950-4",
+  "authors": [
+   "Ewald JD",
+   "Zhou G",
+   "Lu Y",
+   "Kolic J",
+   "Ellis C",
+   "Johnson JD",
+   "Macdonald PE",
+   "Xia J"
+  ],
+  "types": [
+   "Journal Article",
+   "Research Support, Non-U.S. Gov't",
+   "Review"
+  ],
+  "review": true
+ },
+ {
+  "pmid": "30657866",
+  "title": "DIABLO: an integrative approach for identifying key molecular drivers from multi-omics assays.",
+  "abstract": "MOTIVATION: In the continuously expanding omics era, novel computational and statistical strategies are needed for data integration and identification of biomarkers and molecular signatures. We present Data Integration Analysis for Biomarker discovery using Latent cOmponents (DIABLO), a multi-omics integrative method that seeks for common information across different data types through the selection of a subset of molecular features, while discriminating between multiple phenotypic groups. RESULTS: Using simulations and benchmark multi-omics studies, we show that DIABLO identifies features with superior biological relevance compared with existing unsupervised integrative methods, while achieving predictive performance comparable to state-of-the-art supervised approaches. DIABLO is versatile, allowing for modular-based analyses and cross-over study designs. In two case studies, DIABLO identified both known and novel multi-omics biomarkers consisting of mRNAs, miRNAs, CpGs, proteins and metabolites. AVAILABILITY AND IMPLEMENTATION: DIABLO is implemented in the mixOmics R Bioconductor package with functions for parameters' choice and visualization to assist in the interpretation of the integrative analyses, along with tutorials on http://mixomics.org and in our Bioconductor vignette. SUPPLEMENTARY INFORMATION: Supplementary data are available at Bioinformatics online.",
+  "journal": "Bioinformatics",
+  "year": "2019",
+  "volume": "35",
+  "issue": "17",
+  "pages": "3055-3062",
+  "doi": "10.1093/bioinformatics/bty1054",
+  "authors": [
+   "Singh A",
+   "Shannon CP",
+   "Gautier B",
+   "Rohart F",
+   "Vacher M",
+   "Tebbutt SJ",
+   "Lê Cao KA"
+  ],
+  "types": [
+   "Journal Article",
+   "Research Support, N.I.H., Extramural",
+   "Research Support, Non-U.S. Gov't"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "32916129",
+  "title": "Longitudinal Multi-omics Reveals Subset-Specific Mechanisms Underlying Irritable Bowel Syndrome.",
+  "abstract": "The gut microbiome has been implicated in multiple human chronic gastrointestinal (GI) disorders. Determining its mechanistic role in disease has been difficult due to apparent disconnects between animal and human studies and lack of an integrated multi-omics view of disease-specific physiological changes. We integrated longitudinal multi-omics data from the gut microbiome, metabolome, host epigenome, and transcriptome in the context of irritable bowel syndrome (IBS) host physiology. We identified IBS subtype-specific and symptom-related variation in microbial composition and function. A subset of identified changes in microbial metabolites correspond to host physiological mechanisms that are relevant to IBS. By integrating multiple data layers, we identified purine metabolism as a novel host-microbial metabolic pathway in IBS with translational potential. Our study highlights the importance of longitudinal sampling and integrating complementary multi-omics data to identify functional mechanisms that can serve as therapeutic targets in a comprehensive treatment strategy for chronic GI diseases. VIDEO ABSTRACT.",
+  "journal": "Cell",
+  "year": "2020",
+  "volume": "182",
+  "issue": "6",
+  "pages": "1460-1473.e17",
+  "doi": "10.1016/j.cell.2020.08.007",
+  "authors": [
+   "Mars RAT",
+   "Yang Y",
+   "Ward T",
+   "Houtti M",
+   "Priya S",
+   "Lekatz HR",
+   "Tang X",
+   "Sun Z",
+   "Kalari KR",
+   "Korem T",
+   "Bhattarai Y",
+   "Zheng T",
+   "Bar N",
+   "Frost G",
+   "Johnson AJ",
+   "van Treuren W",
+   "Han S",
+   "Ordog T",
+   "Grover M",
+   "Sonnenburg J",
+   "D'Amato M",
+   "Camilleri M",
+   "Elinav E",
+   "Segal E",
+   "Blekhman R",
+   "Farrugia G",
+   "Swann JR",
+   "Knights D",
+   "Kashyap PC"
+  ],
+  "types": [
+   "Journal Article",
+   "Research Support, N.I.H., Extramural",
+   "Research Support, Non-U.S. Gov't"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "31953831",
+  "title": "Network-Based Approaches for Multi-omics Integration.",
+  "abstract": "Network-based approach is rapidly emerging as a promising strategy to integrate and interpret different -omics datasets, including metabolomics. The first section of this chapter introduces the current progresses and main concepts in multi-omics integration. The second section provides an overview of the public resources available for creation of biological networks. The third section describes three common application scenarios including subnetwork identification, network-based enrichment analysis, and systems metabolomics. The section four introduces the concept of hierarchical community network analysis. The section five discusses different tools for network visualization. The chapter ends with a future perspective on multi-omics integration.",
+  "journal": "Methods Mol Biol",
+  "year": "2020",
+  "volume": "2104",
+  "issue": "",
+  "pages": "469-487",
+  "doi": "10.1007/978-1-0716-0239-3_23",
+  "authors": [
+   "Zhou G",
+   "Li S",
+   "Xia J"
+  ],
+  "types": [
+   "Journal Article",
+   "Research Support, N.I.H., Extramural",
+   "Research Support, Non-U.S. Gov't",
+   "Review"
+  ],
+  "review": true
+ },
+ {
+  "pmid": "39019974",
+  "title": "Using clusterProfiler to characterize multiomics data.",
+  "abstract": "With the advent of multiomics, software capable of multidimensional enrichment analysis has become increasingly crucial for uncovering gene set variations in biological processes and disease pathways. This is essential for elucidating disease mechanisms and identifying potential therapeutic targets. clusterProfiler stands out for its comprehensive utilization of databases and advanced visualization features. Importantly, clusterProfiler supports various biological knowledge, including Gene Ontology and Kyoto Encyclopedia of Genes and Genomes, through performing over-representation and gene set enrichment analyses. A key feature is that clusterProfiler allows users to choose from various graphical outputs to visualize results, enhancing interpretability. This protocol describes innovative ways in which clusterProfiler has been used for integrating metabolomics and metagenomics analyses, identifying and characterizing transcription factors under stress conditions, and annotating cells in single-cell studies. In all cases, the computational steps can be completed within ~2 min. clusterProfiler is released through the Bioconductor project and can be accessed via https://bioconductor.org/packages/clusterProfiler/ .",
+  "journal": "Nat Protoc",
+  "year": "2024",
+  "volume": "19",
+  "issue": "11",
+  "pages": "3292-3320",
+  "doi": "10.1038/s41596-024-01020-z",
+  "authors": [
+   "Xu S",
+   "Hu E",
+   "Cai Y",
+   "Xie Z",
+   "Luo X",
+   "Zhan L",
+   "Tang W",
+   "Wang Q",
+   "Liu B",
+   "Wang R",
+   "Xie W",
+   "Wu T",
+   "Xie L",
+   "Yu G"
+  ],
+  "types": [
+   "Journal Article",
+   "Review",
+   "Research Support, Non-U.S. Gov't"
+  ],
+  "review": true
+ },
+ {
+  "pmid": "40593592",
+  "title": "GAUDI: interpretable multi-omics integration with UMAP embeddings and density-based clustering.",
+  "abstract": "Integrating high-dimensional cellular multi-omics data is crucial for understanding various layers of biological control. Single 'omic methods provide important insights, but often fall short in handling the complex relationships between genes, proteins, metabolites and beyond. Here, we present a novel, non-linear, and unsupervised method called GAUDI (Group Aggregation via UMAP Data Integration) that leverages independent UMAP embeddings for the concurrent analysis of multiple data types. GAUDI uncovers non-linear relationships among different omics data better than several state-of-the-art methods. This approach not only clusters samples by their multi-omic profiles but also identifies latent factors across each omics dataset, thereby enabling interpretation of the underlying features contributing to each cluster. Consequently, GAUDI facilitates more intuitive, interpretable visualizations to identify novel insights and potential biomarkers from a wide range of experimental designs.",
+  "journal": "Nat Commun",
+  "year": "2025",
+  "volume": "16",
+  "issue": "1",
+  "pages": "5771",
+  "doi": "10.1038/s41467-025-60822-1",
+  "authors": [
+   "Castellano-Escuder P",
+   "Zachman DK",
+   "Han K",
+   "Hirschey MD"
+  ],
+  "types": [
+   "Journal Article"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "35925427",
+  "title": "Uncertainty-aware dynamic integration for multi-omics classification of tumors.",
+  "abstract": "PURPOSE: Omics data are crucial for medical diagnosis as it contains intrinsic biomedical information. Multi-omics integrated analysis has become a new direction for scientists to explore life mechanisms. Nevertheless, the quality of complex omics data often varies greatly due to different samples or even different omics types, it is challenging to dynamically capture the uncertainty for different kinds of omics data. METHODS: This paper proposes a uncertainty-aware dynamic integration framework for multi-omics classification. The framework consists of three modules: deep embedding, confidence prediction, and downstream tasks. The deep embedding module extract key information from multi-omics data to obtain a low-dimensional feature representation which is used to train downstream tasks. Combined with the deep embedding module, the confidence prediction module is used to dynamically capture the uncertainty of the data. We introduce \"confidNet\" to assign a confidence value for each type of omics data, which is used for dynamic integration between multi-omics. RESULTS: Compared with other integration methods, the proposed method can contain more crucial biomedical information in the obtained low-dimensional representation. Our framework realizes reliable integration among multiple omics, and it can still achieve high accuracy on small sample data sets. We have verified the effectiveness of the model in a large number of experiments. CONCLUSION: Our framework can be widely applied to high-dimensional omics data and has great potential to facilitate medical decision-making and biological analysis.",
+  "journal": "J Cancer Res Clin Oncol",
+  "year": "2023",
+  "volume": "149",
+  "issue": "7",
+  "pages": "3301-3312",
+  "doi": "10.1007/s00432-022-04219-3",
+  "authors": [
+   "Du L",
+   "Liu C",
+   "Wei R",
+   "Chen J"
+  ],
+  "types": [
+   "Journal Article"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "34554215",
+  "title": "timeOmics: an R package for longitudinal multi-omics data integration.",
+  "abstract": "MOTIVATION: Multi-omics data integration enables the global analysis of biological systems and discovery of new biological insights. Multi-omics experimental designs have been further extended with a longitudinal dimension to study dynamic relationships between molecules. However, methods that integrate longitudinal multi-omics data are still in their infancy. RESULTS: We introduce the R package timeOmics, a generic analytical framework for the integration of longitudinal multi-omics data. The framework includes pre-processing, modeling and clustering to identify molecular features strongly associated with time. We illustrate this framework in a case study to detect seasonal patterns of mRNA, metabolites, gut taxa and clinical variables in patients with diabetes mellitus from the integrative Human Microbiome Project. AVAILABILITYAND IMPLEMENTATION: timeOmics is available on Bioconductor and github.com/abodein/timeOmics. SUPPLEMENTARY INFORMATION: Supplementary data are available at Bioinformatics online.",
+  "journal": "Bioinformatics",
+  "year": "2022",
+  "volume": "38",
+  "issue": "2",
+  "pages": "577-579",
+  "doi": "10.1093/bioinformatics/btab664",
+  "authors": [
+   "Bodein A",
+   "Scott-Boyer MP",
+   "Perin O",
+   "Lê Cao KA",
+   "Droit A"
+  ],
+  "types": [
+   "Journal Article",
+   "Research Support, Non-U.S. Gov't"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "33315104",
+  "title": "MOVICS: an R package for multi-omics integration and visualization in cancer subtyping.",
+  "abstract": "SUMMARY: Stratification of cancer patients into distinct molecular subgroups based on multi-omics data is an important issue in the context of precision medicine. Here, we present MOVICS, an R package for multi-omics integration and visualization in cancer subtyping. MOVICS provides a unified interface for 10 state-of-the-art multi-omics integrative clustering algorithms, and incorporates the most commonly used downstream analyses in cancer subtyping researches, including characterization and comparison of identified subtypes from multiple perspectives, and verification of subtypes in external cohort using two model-free approaches for multiclass prediction. MOVICS also creates feature rich customizable visualizations with minimal effort. By analysing two published breast cancer cohort, we signifies that MOVICS can serve a wide range of users and assist cancer therapy by moving away from the 'one-size-fits-all' approach to patient care. AVAILABILITY AND IMPLEMENTATION: MOVICS package and online tutorial are freely available at https://github.com/xlucpu/MOVICS. SUPPLEMENTARY INFORMATION: Supplementary data are available at Bioinformatics online.",
+  "journal": "Bioinformatics",
+  "year": "2021",
+  "volume": "36",
+  "issue": "22-23",
+  "pages": "5539-5541",
+  "doi": "10.1093/bioinformatics/btaa1018",
+  "authors": [
+   "Lu X",
+   "Meng J",
+   "Zhou Y",
+   "Jiang L",
+   "Yan F"
+  ],
+  "types": [
+   "Journal Article"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "39027644",
+  "title": "consICA: an R package for robust reference-free deconvolution of multi-omics data.",
+  "abstract": "MOTIVATION: Deciphering molecular signals from omics data helps understanding cellular processes and disease progression. Effective algorithms for extracting these signals are essential, with a strong emphasis on robustness and reproducibility. RESULTS: R/Bioconductor package consICA implements consensus independent component analysis (ICA)-a data-driven deconvolution method to decompose heterogeneous omics data and extract features suitable for patient stratification and multimodal data integration. The method separates biologically relevant molecular signals from technical effects and provides information about the cellular composition and biological processes. Build-in annotation, survival analysis, and report generation provide useful tools for the interpretation of extracted signals. The implementation of parallel computing in the package ensures efficient analysis using modern multicore systems. The package offers a reproducible and efficient data-driven solution for the analysis of complex molecular profiles, with significant implications for cancer research. AVAILABILITY AND IMPLEMENTATION: The package is implemented in R and available under MIT license at Bioconductor (https://bioconductor.org/packages/consICA) or at GitHub (https://github.com/biomod-lih/consICA).",
+  "journal": "Bioinform Adv",
+  "year": "2024",
+  "volume": "4",
+  "issue": "1",
+  "pages": "vbae102",
+  "doi": "10.1093/bioadv/vbae102",
+  "authors": [
+   "Chepeleva M",
+   "Kaoma T",
+   "Zinovyev A",
+   "Toth R",
+   "Nazarov PV"
+  ],
+  "types": [
+   "Journal Article"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "41278008",
+  "title": "SUMO: an R package for simulating multi-omics data for methods development and testing.",
+  "abstract": "MOTIVATION: Insights from integrative multi-omics analyses have fueled demand for innovative computational methods and tools in multi-omics research. However, the scarcity of multi-omics datasets with user-defined signal structures hinders the evaluation of these newly developed tools. SUMO (SimUlating Multi-Omics), an open-source R package, was developed to address this gap by enabling the generation of high-quality factor analysis-based datasets with full control over the dataset's structure such as latent structures, noise, and complexity. Users can configure datasets with distinct and/or shared non-overlapping latent factors, enabling flexible and precise control over the signal structures. Consequently, SUMO allows reproducible testing and validation of methods, fostering methodological innovation. AVAILABILITY AND IMPLEMENTATION: The SUMO R package is freely available and accessible on the Comprehensive R Archive Network https://doi.org/10.32614/CRAN.package.SUMO and on GitHub https://github.com/lucp12891/SUMO.git under CC-BY 4.0 license.",
+  "journal": "Bioinform Adv",
+  "year": "2025",
+  "volume": "5",
+  "issue": "1",
+  "pages": "vbaf264",
+  "doi": "10.1093/bioadv/vbaf264",
+  "authors": [
+   "Osang'ir BI",
+   "Gupta S",
+   "Shkedy Z",
+   "Claesen J"
+  ],
+  "types": [
+   "Journal Article"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "41120838",
+  "title": "MultiModalGraphics: an R package for graphical integration of multi-omics datasets.",
+  "abstract": "Multimodal visualizations are essential for identifying and interpreting complex relationships in diverse, high-dimensional biological datasets. However, existing visualization tools often lack native capabilities for embedding explicit statistical and computational annotations, hindering effective quantitative interpretation. We introduce MultiModalGraphics, an R package designed specifically for creating annotated scatterplots and heatmaps of multi-omics and high-dimensional biological data. The package allows seamless embedding of statistical summaries such as fold-changes, p-values, q-values, and standard deviations, facilitating direct quantitative comparisons. MultiModalGraphics interoperates with Bioconductor packages including MultiAssayExperiment, limma, voom, and iClusterPlus, streamlining workflows from data preprocessing and differential expression analysis to visualization. Case studies on three distinct real-world multimodal datasets illustrate its practical utility. Source code, documentation, and example datasets are available via GitHub ( https://github.com/famanalytics0/MultiModalGraphics ) and under review for inclusion into Bioconductor.",
+  "journal": "BMC Bioinformatics",
+  "year": "2025",
+  "volume": "26",
+  "issue": "1",
+  "pages": "259",
+  "doi": "10.1186/s12859-025-06265-3",
+  "authors": [
+   "Mohammed FA",
+   "Fall EHM",
+   "Tune KK",
+   "Hammamieh R",
+   "Jett M",
+   "Muhie S"
+  ],
+  "types": [
+   "Journal Article"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "38105215",
+  "title": "TCGAplot: an R package for integrative pan-cancer analysis and visualization of TCGA multi-omics data.",
+  "abstract": "BACKGROUND: Pan-cancer analysis examines both the commonalities and heterogeneity among genomic and cellular alterations across numerous types of tumors. Pan-cancer analysis of gene expression, tumor mutational burden (TMB), microsatellite instability (MSI), and tumor immune microenvironment (TIME), and methylation becomes available based on the multi-omics data from The Cancer Genome Atlas Program (TCGA). Some online tools provide analysis of gene and protein expression, mutation, methylation, and survival for TCGA data. However, these online tools were either Uni-functional or were not able to perform analysis of user-defined functions. Therefore, we created the TCGAplot R package to facilitate perform pan-cancer analysis and visualization of the built-in multi-omic TCGA data. RESULTS: TCGAplot provides several functions to perform pan-cancer paired/unpaired differential gene expression analysis, pan-cancer correlation analysis between gene expression and TMB, MSI, TIME, and promoter methylation. Functions for visualization include paired/unpaired boxplot, survival plot, ROC curve, heatmap, scatter, radar chart, and forest plot. Moreover, gene set based pan-cancer and tumor specific analyses were also available. Finally, all these built-in multi-omic data could be extracted for implementation for user-defined functions, making the pan-cancer analysis much more convenient.\\ CONCLUSIONS: We developed an R-package for integrative pan-cancer analysis and visualization of TCGA multi-omics data. The source code and pre-built package are available at GitHub ( https://github.com/tjhwangxiong/TCGAplot ).",
+  "journal": "BMC Bioinformatics",
+  "year": "2023",
+  "volume": "24",
+  "issue": "1",
+  "pages": "483",
+  "doi": "10.1186/s12859-023-05615-3",
+  "authors": [
+   "Liao C",
+   "Wang X"
+  ],
+  "types": [
+   "Journal Article"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "40305217",
+  "title": "A Map of the Lipid-Metabolite-Protein Network to Aid Multi-Omics Integration.",
+  "abstract": "The integration of multi-omics data offers transformative potential for elucidating complex molecular mechanisms underlying biological processes and diseases. In this study, we developed a lipid-metabolite-protein network that combines a protein-protein interaction network and enzymatic and genetic interactions of proteins with metabolites and lipids to provide a unified framework for multi-omics integration. Using hyperbolic embedding, the network visualizes connections across omics layers, accessible through a user-friendly Shiny R (version 1.10.0) software package. This framework ranks molecules across omics layers based on functional proximity, enabling intuitive exploration. Application in a cardiovascular disease (CVD) case study identified lipids and metabolites associated with CVD-related proteins. The analysis confirmed known associations, like cholesterol esters and sphingomyelin, and highlighted potential novel biomarkers, such as 4-imidazoleacetate and indoleacetaldehyde. Furthermore, we used the network to analyze empagliflozin's temporal effects on lipid metabolism. Functional enrichment analysis of proteins associated with lipid signatures revealed dynamic shifts in biological processes, with early effects impacting phospholipid metabolism and long-term effects affecting sphingolipid biosynthesis. Our framework offers a versatile tool for hypothesis generation, functional analysis, and biomarker discovery. By bridging molecular layers, this approach advances our understanding of disease mechanisms and therapeutic effects, with broad applications in computational biology and precision medicine.",
+  "journal": "Biomolecules",
+  "year": "2025",
+  "volume": "15",
+  "issue": "4",
+  "pages": "484",
+  "doi": "10.3390/biom15040484",
+  "authors": [
+   "Anyaegbunam UA",
+   "Vagiona AC",
+   "Ten Cate V",
+   "Bauer K",
+   "Schmidlin T",
+   "Distler U",
+   "Tenzer S",
+   "Araldi E",
+   "Bindila L",
+   "Wild P",
+   "Andrade-Navarro MA"
+  ],
+  "types": [
+   "Journal Article",
+   "Research Support, Non-U.S. Gov't"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "37932270",
+  "title": "Microbiome and metabolome features in inflammatory bowel disease via multi-omics integration analyses across cohorts.",
+  "abstract": "The perturbations of the gut microbiota and metabolites are closely associated with the progression of inflammatory bowel disease (IBD). However, inconsistent findings across studies impede a comprehensive understanding of their roles in IBD and their potential as reliable diagnostic biomarkers. To address this challenge, here we comprehensively analyze 9 metagenomic and 4 metabolomics cohorts of IBD from different populations. Through cross-cohort integrative analysis (CCIA), we identify a consistent characteristic of commensal gut microbiota. Especially, three bacteria, namely Asaccharobacter celatus, Gemmiger formicilis, and Erysipelatoclostridium ramosum, which are rarely reported in IBD. Metagenomic functional analysis reveals that essential gene of Two-component system pathway, linked to fecal calprotectin, are implicated in IBD. Metabolomics analysis shows 36 identified metabolites with significant differences, while the roles of these metabolites in IBD are still unknown. To further elucidate the relationship between gut microbiota and metabolites, we construct multi-omics biological correlation (MOBC) maps, which highlights gut microbial biotransformation deficiencies and significant alterations in aminoacyl-tRNA synthetases. Finally, we identify multi-omics biomarkers for IBD diagnosis, validated across multiple global cohorts (AUROC values ranging from 0.92 to 0.98). Our results offer valuable insights and a significant resource for developing mechanistic hypotheses on host-microbiome interactions in IBD.",
+  "journal": "Nat Commun",
+  "year": "2023",
+  "volume": "14",
+  "issue": "1",
+  "pages": "7135",
+  "doi": "10.1038/s41467-023-42788-0",
+  "authors": [
+   "Ning L",
+   "Zhou YL",
+   "Sun H",
+   "Zhang Y",
+   "Shen C",
+   "Wang Z",
+   "Xuan B",
+   "Zhao Y",
+   "Ma Y",
+   "Yan Y",
+   "Tong T",
+   "Huang X",
+   "Hu M",
+   "Zhu X",
+   "Ding J",
+   "Zhang Y",
+   "Cui Z",
+   "Fang JY",
+   "Chen H",
+   "Hong J"
+  ],
+  "types": [
+   "Journal Article",
+   "Research Support, Non-U.S. Gov't"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "41939867",
+  "title": "Multi-omics integration and machine learning reveal gut-immune signatures in idiopathic pulmonary fibrosis: insights from bulk RNA-seq, single-cell profiles, spatial transcriptomics, and experimental validation.",
+  "abstract": "BACKGROUND: Idiopathic pulmonary fibrosis (IPF) is a progressive, fatal lung disease with limited treatment options and a poor prognosis. Recent studies suggest a critical role for the gut-immune-lung axis in IPF, yet the underlying molecular mechanisms remain unclear. METHODS: The current study performed in silico multi-omics integration of publicly available datasets, including bulk RNA-seq, single-cell and spatial transcriptomics, as well as peripheral blood multi-omics data to uncover key molecular signatures in IPF. Furthermore, machine learning techniques were utilized to identify core genes, whereas functional analyses and Mendelian randomization were conducted to evaluate the causal relationships among gut microbiota, immune cells, and IPF. Additionally, experimental validation using qPCR and ELISA assays was conducted in vitro, in vivo, and in patient plasma to confirm the expression patterns of key genes. RESULTS: Across integrated public bulk, single-cell, spatial, and blood multi-omics, CXCL13, IL33, TLR4, and IGF1 were identified as core IPF genes consistently linked to immune infiltration and fibrotic remodeling. Deconvolution, scRNA-seq, and spatial mapping localized their dysregulation to fibroblasts and immune compartments (notably B-cell, macrophage, and mast-cell axes), highlighting fibroblast-immune crosstalk in fibrotic foci. A four-gene model robustly distinguished IPF from controls across cohorts. Mendelian randomization supported a gut-immune-lung axis, indicating causal effects of specific gut taxa on IPF risk via immune phenotypes. qPCR/ELISA in TGF-β1-stimulated fibroblasts, bleomycin mouse lungs, and patient plasma corroborated upregulation of IL33, CXCL13, IGF1 and downregulation of TLR4. Drug-signature reversal nominated cucurbitacin I and temsirolimus; molecular docking was performed as a preliminary in silico, computer-simulation-based assessment of potential ligand-protein interactions between these compounds and the four core targets. CONCLUSION: This study provides new insights into the importance of gut-immune-lung axis in IPF and identifies CXCL13, IL33, TLR4, and IGF1 as diagnostic signatures and therapeutic targets. By integrating public multi-omics resources with experimental validation, our findings offer a foundation for future diagnostic and treatment strategies aimed at modulating the gut microbiota and immune system in IPF.",
+  "journal": "Front Immunol",
+  "year": "2026",
+  "volume": "17",
+  "issue": "",
+  "pages": "1730289",
+  "doi": "10.3389/fimmu.2026.1730289",
+  "authors": [
+   "Hu Z",
+   "Wang J",
+   "Yu J",
+   "Hu Z",
+   "Xue J",
+   "Ma Z",
+   "Nian M",
+   "Qi R",
+   "Zhao T",
+   "Cao X",
+   "Xin H",
+   "Wang X",
+   "Yang G",
+   "Gui Z",
+   "Liu X",
+   "Chen J"
+  ],
+  "types": [
+   "Journal Article"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "40785047",
+  "title": "Multi-omics integration reveals functional signatures of gut microbiome in atherosclerosis.",
+  "abstract": "Atherosclerosis (AS), a predominant contributor to global cardiovascular disease burden, exhibits complex interplay with gut microbiota dysbiosis. While the associations between microbial imbalance and AS pathogenesis are well-documented, the pathophysiological mechanisms governing microbe-host crosstalk remain incompletely characterized. Current research limitations stem from methodological heterogeneity across studies and the absence of consensus regarding disease-specific microbial signatures. In this study, we conducted an integrated multi-omics analysis to characterize the functional signatures of gut microbiome in AS. We collected all public AS-related 6 microbiome datasets and 8 peripheral blood host transcriptomic datasets from across the world, comprising 456 metagenomic samples and 111 16S rRNA gene sequencing samples for microbial profiling, alongside 118 RNA-Seq samples and 302 microarray samples. We systematically characterized AS microbial taxa and computationally inferred the metabolic potential for the gut microbiome using metabolomic-related data. Metabolite-host gene interactions were further predicted based on the synergistic effects between microbiome and host transcriptome in AS. Five \"microbe-metabolite-host gene\" tripartite associations related to AS were identified involving 5 microbial genera (Actinomyces, Bacteroides, Eisenbergiella, Gemella, and Veillonella), 2 metabolites (Ethanol and H2O2), and 2 host genes (FANCD2 and GPX2), and the reliability of these associations was validated. Five microbial genera demonstrated robust diagnostic potential as noninvasive biomarkers, with 5-fold cross-validation, study-to-study transfer validation, and leave-one-study-out (LOSO) validation confirming good diagnostic performance. Additionally, the specificity of the biomarkers was validated against hypertension, inflammatory bowel disease (IBD), diabetes, and obesity cohorts. Our study unveiled the functional characteristics of gut microbiota interacting with AS host genes and highlighted the potential of gut microbiota as both diagnostic biomarkers and therapeutic targets for AS. However, the findings should be interpreted considering the inherent heterogeneity of the integrated datasets and the preliminary diagnostic value of the biomarkers.",
+  "journal": "Gut Microbes",
+  "year": "2025",
+  "volume": "17",
+  "issue": "1",
+  "pages": "2542384",
+  "doi": "10.1080/19490976.2025.2542384",
+  "authors": [
+   "Shi H",
+   "Wu M",
+   "Wu X",
+   "Liu Z",
+   "Jiang S",
+   "Li G",
+   "Yang Y",
+   "Fu Y",
+   "Wang Q",
+   "Zhang G",
+   "Cheng L"
+  ],
+  "types": [
+   "Journal Article",
+   "Research Support, Non-U.S. Gov't"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "41052276",
+  "title": "Multi-omics time-series analysis in microbiome research: a systematic review.",
+  "abstract": "Recent developments in data generation have opened up unprecedented insights into living systems. It has been recognized that integrating and characterizing temporal variation simultaneously across multiple scales, from specific molecular interactions to entire ecosystems, is crucial for uncovering biological mechanisms and understanding the emergence of complex phenotypes. With the increasing number of studies incorporating multi-omics data sampled over time, it has become clear that integrated approaches are pivotal for these efforts. However, standard data analytical practices in longitudinal multi-omics are still shaping up and many of the available methods have not yet been widely evaluated and adopted. To address this gap, we performed the first systematic literature review that comprehensively categorizes, compares, and evaluates computational methods for longitudinal multi-omics integration, with a particular emphasis on four categories of the studies: (i) host and host-associated microbiome studies, (ii) microbiome-free host studies, (iii) host-free microbiome studies, and (iv) methodological framework studies. Our review highlights current methodological trends, identifies widely used and high-performing frameworks, and assesses each method across performance, interpretability, and ease of use. We further organize these methods into thematic groups-such as statistical modeling, machine learning, dimensionality reduction, and latent factor approaches-to provide a clear roadmap for future research and application. This work offers a critical foundation for advancing integrative longitudinal data science and supporting reproducible, scalable analysis in this rapidly evolving field.",
+  "journal": "Brief Bioinform",
+  "year": "2025",
+  "volume": "26",
+  "issue": "5",
+  "pages": "bbaf502",
+  "doi": "10.1093/bib/bbaf502",
+  "authors": [
+   "Sherwani MK",
+   "Ruuskanen MO",
+   "Feldner-Busztin D",
+   "Nisantzis Firbas P",
+   "Boza G",
+   "Móréh Á",
+   "Borman T",
+   "Putu Erawijantari P",
+   "Scheuring I",
+   "Gopalakrishnan S",
+   "Lahti L"
+  ],
+  "types": [
+   "Journal Article",
+   "Systematic Review"
+  ],
+  "review": true
+ },
+ {
+  "pmid": "39358810",
+  "title": "Multi-omics analysis reveals the key factors involved in the severity of the Alzheimer's disease.",
+  "abstract": "Alzheimer's disease (AD) is a debilitating neurodegenerative disorder with a global impact, yet its pathogenesis remains poorly understood. While age, metabolic abnormalities, and accumulation of neurotoxic substances are potential risk factors for AD, their effects are confounded by other factors. To address this challenge, we first utilized multi-omics data from 87 well phenotyped AD patients and generated plasma proteomics and metabolomics data, as well as gut and saliva metagenomics data to investigate the molecular-level alterations accounting the host-microbiome interactions. Second, we analyzed individual omics data and identified the key parameters involved in the severity of the dementia in AD patients. Next, we employed Artificial Intelligence (AI) based models to predict AD severity based on the significantly altered features identified in each omics analysis. Based on our integrative analysis, we found the clinical relevance of plasma proteins, including SKAP1 and NEFL, plasma metabolites including homovanillate and glutamate, and Paraprevotella clara in gut microbiome in predicting the AD severity. Finally, we validated the predictive power of our AI based models by generating additional multi-omics data from the same group of AD patients by following up for 3 months. Hence, we observed that these results may have important implications for the development of potential diagnostic and therapeutic approaches for AD patients.",
+  "journal": "Alzheimers Res Ther",
+  "year": "2024",
+  "volume": "16",
+  "issue": "1",
+  "pages": "213",
+  "doi": "10.1186/s13195-024-01578-6",
+  "authors": [
+   "Meng L",
+   "Jin H",
+   "Yulug B",
+   "Altay O",
+   "Li X",
+   "Hanoglu L",
+   "Cankaya S",
+   "Coskun E",
+   "Idil E",
+   "Nogaylar R",
+   "Ozsimsek A",
+   "Shoaie S",
+   "Turkez H",
+   "Nielsen J",
+   "Zhang C",
+   "Borén J",
+   "Uhlén M",
+   "Mardinoglu A"
+  ],
+  "types": [
+   "Journal Article",
+   "Research Support, Non-U.S. Gov't"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "36624530",
+  "title": "Multi-omics profiles of the intestinal microbiome in irritable bowel syndrome and its bowel habit subtypes.",
+  "abstract": "BACKGROUND: Irritable bowel syndrome (IBS) is a common gastrointestinal disorder that is thought to involve alterations in the gut microbiome, but robust microbial signatures have been challenging to identify. As prior studies have primarily focused on composition, we hypothesized that multi-omics assessment of microbial function incorporating both metatranscriptomics and metabolomics would further delineate microbial profiles of IBS and its subtypes. METHODS: Fecal samples were collected from a racially/ethnically diverse cohort of 495 subjects, including 318 IBS patients and 177 healthy controls, for analysis by 16S rRNA gene sequencing (n = 486), metatranscriptomics (n = 327), and untargeted metabolomics (n = 368). Differentially abundant microbes, predicted genes, transcripts, and metabolites in IBS were identified by multivariate models incorporating age, sex, race/ethnicity, BMI, diet, and HAD-Anxiety. Inter-omic functional relationships were assessed by transcript/gene ratios and microbial metabolic modeling. Differential features were used to construct random forests classifiers. RESULTS: IBS was associated with global alterations in microbiome composition by 16S rRNA sequencing and metatranscriptomics, and in microbiome function by predicted metagenomics, metatranscriptomics, and metabolomics. After adjusting for age, sex, race/ethnicity, BMI, diet, and anxiety, IBS was associated with differential abundance of bacterial taxa such as Bacteroides dorei; metabolites including increased tyramine and decreased gentisate and hydrocinnamate; and transcripts related to fructooligosaccharide and polyol utilization. IBS further showed transcriptional upregulation of enzymes involved in fructose and glucan metabolism as well as the succinate pathway of carbohydrate fermentation. A multi-omics classifier for IBS had significantly higher accuracy (AUC 0.82) than classifiers using individual datasets. Diarrhea-predominant IBS (IBS-D) demonstrated shifts in the metatranscriptome and metabolome including increased bile acids, polyamines, succinate pathway intermediates (malate, fumarate), and transcripts involved in fructose, mannose, and polyol metabolism compared to constipation-predominant IBS (IBS-C). A classifier incorporating metabolites and gene-normalized transcripts differentiated IBS-D from IBS-C with high accuracy (AUC 0.86). CONCLUSIONS: IBS is characterized by a multi-omics microbial signature indicating increased capacity to utilize fermentable carbohydrates-consistent with the clinical benefit of diets restricting this energy source-that also includes multiple previously unrecognized metabolites and metabolic pathways. These findings support the need for integrative assessment of microbial function to investigate the microbiome in IBS and identify novel microbiome-related therapeutic targets. Video Abstract.",
+  "journal": "Microbiome",
+  "year": "2023",
+  "volume": "11",
+  "issue": "1",
+  "pages": "5",
+  "doi": "10.1186/s40168-022-01450-5",
+  "authors": [
+   "Jacobs JP",
+   "Lagishetty V",
+   "Hauer MC",
+   "Labus JS",
+   "Dong TS",
+   "Toma R",
+   "Vuyisich M",
+   "Naliboff BD",
+   "Lackner JM",
+   "Gupta A",
+   "Tillisch K",
+   "Mayer EA"
+  ],
+  "types": [
+   "Video-Audio Media",
+   "Journal Article",
+   "Research Support, U.S. Gov't, Non-P.H.S.",
+   "Research Support, N.I.H., Extramural"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "39870302",
+  "title": "Integrative multi-omics analysis of autism spectrum disorder reveals unique microbial macromolecules interactions.",
+  "abstract": "INTRODUCTION: Gut microbiota alterations have been implicated in Autism Spectrum Disorder (ASD), yet the mechanisms linking these changes to ASD pathophysiology remain unclear. OBJECTIVES: This study utilized a multi-omics approach to uncover mechanisms linking gut microbiota to ASD by examining microbial diversity, bacterial metaproteins, associated metabolic pathways and host proteome. METHODS: The gut microbiota of 30 children with severe ASD and 30 healthy controls was analyzed. Microbial diversity was assessed using 16S rRNA V3 and V4 sequencing. A novel metaproteomics pipeline identified bacterial proteins, while untargeted metabolomics explored altered metabolic pathways. Finally, multi-omics integration was employed to connect macromolecular changes to neurodevelopmental deficits. RESULTS: Children with ASD exhibited significant alterations in gut microbiota, including lower diversity and richness compared to controls. Tyzzerella was uniquely associated with the ASD group. Microbial network analysis revealed rewiring and reduced stability in ASD. Major metaproteins identified were produced by Bifidobacterium and Klebsiella (e.g., xylose isomerase and NADH peroxidase). Metabolomics profiling identified neurotransmitters (e.g., glutamate, DOPAC), lipids, and amino acids capable of crossing the blood-brain barrier, potentially contributing to neurodevelopmental and immune dysregulation. Host proteome analysis revealed altered proteins, including kallikrein (KLK1) and transthyretin (TTR), involved in neuroinflammation and immune regulation. Finally, multi-omics integration supported single-omics findings and reinforced the hypothesis that gut microbiota and their macromolecular products may contribute to ASD-associated symptoms. CONCLUSIONS: The integration of multi-omics data provided critical evidence that alteration in gut microbiota and associated macromolecule production may play a role in ASD-related symptoms and co-morbidities. Key bacterial metaproteins and metabolites were identified as potential contributors to neurological and immune dysregulation in ASD, underscoring possible novel targets for therapeutic intervention.",
+  "journal": "J Adv Res",
+  "year": "2025",
+  "volume": "77",
+  "issue": "",
+  "pages": "265-279",
+  "doi": "10.1016/j.jare.2025.01.036",
+  "authors": [
+   "Osama A",
+   "Anwar AM",
+   "Ezzeldin S",
+   "Ahmed EA",
+   "Mahgoub S",
+   "Ibrahim O",
+   "Ibrahim SA",
+   "Abdelhamid IA",
+   "Bakry U",
+   "Diab AA",
+   "A Sayed A",
+   "Magdeldin S"
+  ],
+  "types": [
+   "Journal Article",
+   "Research Support, Non-U.S. Gov't"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "39660865",
+  "title": "Multi-omics analysis reveals the interplay between intratumoral bacteria and glioma.",
+  "abstract": "UNLABELLED: Emerging evidence highlights the potential impact of intratumoral microbiota on cancer. However, the microbial composition and function in glioma remains elusive. Consequently, our study aimed to investigate the microbial community composition in glioma tissues and elucidate its role in glioma development. We parallelly performed microbial profiling, transcriptome sequencing, and metabolomics detection on tumor and adjacent normal brain tissues obtained from 50 glioma patients. We employed immunohistochemistry, multicolor immunofluorescence, and fluorescence in situ hybridization (FISH) staining to observe the presence and location of bacteria. Furthermore, an animal model was employed to validate the impact of key bacteria on glioma development. Six genera were found to be significantly enriched in glioma tissues compared to adjacent normal brain tissues, including Fusobacterium, Longibaculum, Intestinimonas, Pasteurella, Limosilactobacillus, and Arthrobacter. Both bacterial RNA and lipopolysaccharides (LPS) were observed in glioma tissues. Integrated microbiomics, transcriptomics, and metabolomics revealed that genes associated with intratumoral microbes were enriched in multiple synapse-associated pathways and that metabolites associated with intratumoral microbes were (R)-N-methylsalsolinol, N-acetylaspartylglutamic acid, and N-acetyl-l-aspartic acid. Further mediation analysis suggested that the intratumoral microbiome may affect the expression of neuron-related genes through bacteria-associated metabolites. In addition, both in vivo and in vitro models of glioma show that Fusobacterium nucleatum promotes glioma proliferation and upregulates CCL2, CXCL1, and CXCL2 levels. Our findings shed light on the intricate interplay between intratumoral bacteria and glioma. IMPORTANCE: Our study adopted a multi-omics approach to unravel the impact of intratumoral microbes on neuron-related gene expression through bacteria-associated metabolites. Importantly, we found bacterial RNA and LPS signals within glioma tissues, which were traditionally considered sterile. We identified key microbiota within glioma tissues, including Fusobacterium nucleatum (Fn). Through in vivo and in vitro experiments, we identified the crucial role of Fn in promoting glioma progression, suggesting that Fn could be a potential diagnostic and therapeutic target for glioma patients. These findings offer valuable insights into the intricate interplay between intratumoral bacteria and glioma, offering novel inspiration to the realm of glioma biology.",
+  "journal": "mSystems",
+  "year": "2025",
+  "volume": "10",
+  "issue": "1",
+  "pages": "e0045724",
+  "doi": "10.1128/msystems.00457-24",
+  "authors": [
+   "Li T",
+   "Zhao Z",
+   "Peng M",
+   "Zhang L",
+   "Wang C",
+   "Luo F",
+   "Zeng M",
+   "Sun K",
+   "Fang Z",
+   "Luo Y",
+   "Xie Y",
+   "Lv C",
+   "Wang J",
+   "Huang J-D",
+   "Zhou H",
+   "Sun H"
+  ],
+  "types": [
+   "Journal Article"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "33119407",
+  "title": "Multiomic Integration of Public Oncology Databases in Bioconductor.",
+  "abstract": "PURPOSE: Investigations of the molecular basis for the development, progression, and treatment of cancer increasingly use complementary genomic assays to gather multiomic data, but management and analysis of such data remain complex. The cBioPortal for cancer genomics currently provides multiomic data from > 260 public studies, including The Cancer Genome Atlas (TCGA) data sets, but integration of different data types remains challenging and error prone for computational methods and tools using these resources. Recent advances in data infrastructure within the Bioconductor project enable a novel and powerful approach to creating fully integrated representations of these multiomic, pan-cancer databases. METHODS: We provide a set of R/Bioconductor packages for working with TCGA legacy data and cBioPortal data, with special considerations for loading time; efficient representations in and out of memory; analysis platform; and an integrative framework, such as MultiAssayExperiment. Large methylation data sets are provided through out-of-memory data representation to provide responsive loading times and analysis capabilities on machines with limited memory. RESULTS: We developed the curatedTCGAData and cBioPortalData R/Bioconductor packages to provide integrated multiomic data sets from the TCGA legacy database and the cBioPortal web application programming interface using the MultiAssayExperiment data structure. This suite of tools provides coordination of diverse experimental assays with clinicopathological data with minimal data management burden, as demonstrated through several greatly simplified multiomic and pan-cancer analyses. CONCLUSION: These integrated representations enable analysts and tool developers to apply general statistical and plotting methods to extensive multiomic data through user-friendly commands and documented examples.",
+  "journal": "JCO Clin Cancer Inform",
+  "year": "2020",
+  "volume": "4",
+  "issue": "",
+  "pages": "958-971",
+  "doi": "10.1200/CCI.19.00119",
+  "authors": [
+   "Ramos M",
+   "Geistlinger L",
+   "Oh S",
+   "Schiffer L",
+   "Azhar R",
+   "Kodali H",
+   "de Bruijn I",
+   "Gao J",
+   "Carey VJ",
+   "Morgan M",
+   "Waldron L"
+  ],
+  "types": [
+   "Journal Article",
+   "Research Support, N.I.H., Extramural",
+   "Research Support, Non-U.S. Gov't"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "37624866",
+  "title": "Curated single cell multimodal landmark datasets for R/Bioconductor.",
+  "abstract": "BACKGROUND: The majority of high-throughput single-cell molecular profiling methods quantify RNA expression; however, recent multimodal profiling methods add simultaneous measurement of genomic, proteomic, epigenetic, and/or spatial information on the same cells. The development of new statistical and computational methods in Bioconductor for such data will be facilitated by easy availability of landmark datasets using standard data classes. RESULTS: We collected, processed, and packaged publicly available landmark datasets from important single-cell multimodal protocols, including CITE-Seq, ECCITE-Seq, SCoPE2, scNMT, 10X Multiome, seqFISH, and G&T. We integrate data modalities via the MultiAssayExperiment Bioconductor class, document and re-distribute datasets as the SingleCellMultiModal package in Bioconductor's Cloud-based ExperimentHub. The result is single-command actualization of landmark datasets from seven single-cell multimodal data generation technologies, without need for further data processing or wrangling in order to analyze and develop methods within Bioconductor's ecosystem of hundreds of packages for single-cell and multimodal data. CONCLUSIONS: We provide two examples of integrative analyses that are greatly simplified by SingleCellMultiModal. The package will facilitate development of bioinformatic and statistical methods in Bioconductor to meet the challenges of integrating molecular layers and analyzing phenotypic outputs including cell differentiation, activity, and disease.",
+  "journal": "PLoS Comput Biol",
+  "year": "2023",
+  "volume": "19",
+  "issue": "8",
+  "pages": "e1011324",
+  "doi": "10.1371/journal.pcbi.1011324",
+  "authors": [
+   "Eckenrode KB",
+   "Righelli D",
+   "Ramos M",
+   "Argelaguet R",
+   "Vanderaa C",
+   "Geistlinger L",
+   "Culhane AC",
+   "Gatto L",
+   "Carey V",
+   "Morgan M",
+   "Risso D",
+   "Waldron L"
+  ],
+  "types": [
+   "Journal Article",
+   "Research Support, N.I.H., Extramural",
+   "Research Support, Non-U.S. Gov't"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "37208161",
+  "title": "RaggedExperiment: the missing link between genomic ranges and matrices in Bioconductor.",
+  "abstract": "SUMMARY: The RaggedExperiment R / Bioconductor package provides lossless representation of disparate genomic ranges across multiple specimens or cells, in conjunction with efficient and flexible calculations of rectangular-shaped summaries for downstream analysis. Applications include statistical analysis of somatic mutations, copy number, methylation, and open chromatin data. RaggedExperiment is compatible with multimodal data analysis as a component of MultiAssayExperiment data objects, and simplifies data representation and transformation for software developers and analysts. MOTIVATION AND RESULTS: Measurement of copy number, mutation, single nucleotide polymorphism, and other genomic attributes that may be stored as VCF files produce \"ragged\" genomic ranges data: i.e. across different genomic coordinates in each sample. Ragged data are not rectangular or matrix-like, presenting informatics challenges for downstream statistical analyses. We present the RaggedExperiment R/Bioconductor data structure for lossless representation of ragged genomic data, with associated reshaping tools for flexible and efficient calculation of tabular representations to support a wide range of downstream statistical analyses. We demonstrate its applicability to copy number and somatic mutation data across 33 TCGA cancer datasets.",
+  "journal": "Bioinformatics",
+  "year": "2023",
+  "volume": "39",
+  "issue": "6",
+  "pages": "btad330",
+  "doi": "10.1093/bioinformatics/btad330",
+  "authors": [
+   "Ramos M",
+   "Morgan M",
+   "Geistlinger L",
+   "Carey VJ",
+   "Waldron L"
+  ],
+  "types": [
+   "Journal Article",
+   "Research Support, N.I.H., Extramural"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "29092936",
+  "title": "Software for the Integration of Multiomics Experiments in Bioconductor.",
+  "abstract": "Multiomics experiments are increasingly commonplace in biomedical research and add layers of complexity to experimental design, data integration, and analysis. R and Bioconductor provide a generic framework for statistical analysis and visualization, as well as specialized data classes for a variety of high-throughput data types, but methods are lacking for integrative analysis of multiomics experiments. The MultiAssayExperiment software package, implemented in R and leveraging Bioconductor software and design principles, provides for the coordinated representation of, storage of, and operation on multiple diverse genomics data. We provide the unrestricted multiple 'omics data for each cancer tissue in The Cancer Genome Atlas as ready-to-analyze MultiAssayExperiment objects and demonstrate in these and other datasets how the software simplifies data representation, statistical analysis, and visualization. The MultiAssayExperiment Bioconductor package reduces major obstacles to efficient, scalable, and reproducible statistical analysis of multiomics data and enhances data science applications of multiple omics datasets. Cancer Res; 77(21); e39-42. ©2017 AACR.",
+  "journal": "Cancer Res",
+  "year": "2017",
+  "volume": "77",
+  "issue": "21",
+  "pages": "e39-e42",
+  "doi": "10.1158/0008-5472.CAN-17-0344",
+  "authors": [
+   "Ramos M",
+   "Schiffer L",
+   "Re A",
+   "Azhar R",
+   "Basunia A",
+   "Rodriguez C",
+   "Chan T",
+   "Chapman P",
+   "Davis SR",
+   "Gomez-Cabrero D",
+   "Culhane AC",
+   "Haibe-Kains B",
+   "Hansen KD",
+   "Kodali H",
+   "Louis MS",
+   "Mer AS",
+   "Riester M",
+   "Morgan M",
+   "Carey V",
+   "Waldron L"
+  ],
+  "types": [
+   "Journal Article",
+   "Research Support, N.I.H., Extramural"
+  ],
+  "review": false
+ }
+]

@@ -1,0 +1,33 @@
+{
+ "run_url": "https://github.com/xielab2017/Agent-Hub/actions/runs/36179912098",
+ "profile": "multiomics-emp",
+ "smoke": true,
+ "steps": [
+  {
+   "hub": "A",
+   "step": "author",
+   "status": "✓ 已安装并加载（minimax-cn/MiniMax-M3）"
+  },
+  {
+   "hub": "A",
+   "step": "export",
+   "bytes": 8759
+  },
+  {
+   "hub": "B",
+   "step": "import",
+   "installed": true,
+   "entry": "run.py",
+   "origin": "agent-hub-authored"
+  }
+ ],
+ "run": {
+  "id": "literature-review-20260925-192938-fe4e",
+  "status": "running",
+  "stage": "featured work: EasyMultiProfiler (EMP) → card R1",
+  "returncode": null,
+  "outputs": [],
+  "summary": null,
+  "error": null
+ }
+}

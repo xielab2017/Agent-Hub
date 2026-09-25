@@ -1,0 +1,191 @@
+{
+ "33119407": {
+  "pmid": "33119407",
+  "relevance": 3,
+  "finding": "Describes the curatedTCGAData and cBioPortalData R/Bioconductor packages that provide integrated multiomic TCGA and cBioPortal datasets using the MultiAssayExperiment data structure for coordinated analysis with clinicopathological data.",
+  "model": "human cancer (TCGA / cBioPortal pan-cancer)",
+  "section": "frameworks"
+ },
+ "37624866": {
+  "pmid": "37624866",
+  "relevance": 2,
+  "finding": "Presents the SingleCellMultiModal Bioconductor package that delivers curated single-cell multimodal landmark datasets (CITE-Seq, scNMT, 10X Multiome, etc.) integrated via the MultiAssayExperiment class to facilitate method development for multimodal single-cell analysis.",
+  "model": "human single-cell multimodal (CITE-Seq, ECCITE-Seq, SCoPE2, scNMT, 10X Multiome, seqFISH, G&T)",
+  "section": "frameworks"
+ },
+ "37208161": {
+  "pmid": "37208161",
+  "relevance": 2,
+  "finding": "Introduces the RaggedExperiment R/Bioconductor data structure for lossless representation of ragged genomic-range data (mutations, CNV, methylation, open chromatin) that is compatible with MultiAssayExperiment for multimodal data analysis.",
+  "model": "human cancer (33 TCGA datasets)",
+  "section": "frameworks"
+ },
+ "29092936": {
+  "pmid": "29092936",
+  "relevance": 3,
+  "finding": "Describes the MultiAssayExperiment R/Bioconductor package for coordinated representation, storage and operation on multiple diverse genomics assays, providing ready-to-analyze multi-omics objects including full TCGA data.",
+  "model": "human cancer (TCGA) and other multi-omics datasets",
+  "section": "frameworks"
+ },
+ "40932530": {
+  "pmid": "40932530",
+  "relevance": 3,
+  "finding": "EasyMultiProfiler (EMP) is a streamlined multi-omics workflow using SummarizedExperiment and MultiAssayExperiment classes, organized into five modules (data extraction, preparation, support, analysis, visualization) for standardized and reproducible microbiome multi-omics analysis.",
+  "model": "data type: microbiome multi-omics (host-microbiome)",
+  "section": "workflows_reproducibility"
+ },
+ "29925568": {
+  "pmid": "29925568",
+  "relevance": 3,
+  "finding": "MOFA is an unsupervised computational framework that infers latent factors capturing shared and modality-specific variation across multi-omics datasets, enabling sample subgrouping, imputation, and outlier detection.",
+  "model": "system: human chronic lymphocytic leukaemia + single-cell; data type: multi-omics (mutations, RNA, methylation, drug response)",
+  "section": "frameworks"
+ },
+ "38355833": {
+  "pmid": "38355833",
+  "relevance": 3,
+  "finding": "The Analyst software suite (ExpressAnalyst, MetaboAnalyst, OmicsNet, OmicsAnalyst) provides a web-based workflow covering single-omics analysis, knowledge-driven biological network integration, and data-driven joint dimensionality reduction integration across transcriptomics, proteomics, and lipidomics.",
+  "model": "system: human pancreatic islet and plasma; data type: multi-omics (transcriptomics, proteomics, lipidomics)",
+  "section": "platforms_web"
+ },
+ "30657866": {
+  "pmid": "30657866",
+  "relevance": 3,
+  "finding": "DIABLO is a multi-omics integrative method in the mixOmics R/Bioconductor package that identifies correlated discriminative features across omics layers using sparse latent component analysis.",
+  "model": "data type: multi-omics (mRNA, miRNA, CpGs, proteins, metabolites)",
+  "section": "statistics_ml"
+ },
+ "32916129": {
+  "pmid": "32916129",
+  "relevance": 1,
+  "finding": "An application study integrates longitudinal microbiome, metabolome, host epigenome and transcriptome data to identify IBS subtype-specific host-microbiome metabolic pathways such as purine metabolism.",
+  "model": "system: human IBS patients; data type: microbiome, metabolome, epigenome, transcriptome",
+  "section": "applications"
+ },
+ "39019974": {
+  "pmid": "39019974",
+  "relevance": 3,
+  "finding": "clusterProfiler (Bioconductor R package) supports multiomics enrichment analyses, with demonstrated use for integrating metabolomics and metagenomics, annotating transcription factors, and characterizing single-cell data.",
+  "model": "data type: metabolomics, metagenomics, single-cell transcriptomics",
+  "section": "statistics_ml"
+ },
+ "40593592": {
+  "pmid": "40593592",
+  "relevance": 3,
+  "finding": "GAUDI is a non-linear unsupervised multi-omics integration method using independent UMAP embeddings and density-based clustering that outperforms several state-of-the-art methods at uncovering non-linear relationships and latent factors across omics datasets.",
+  "model": "system: cellular; data type: multi-omics (genes, proteins, metabolites)",
+  "section": "frameworks"
+ },
+ "35925427": {
+  "pmid": "35925427",
+  "relevance": 2,
+  "finding": "An uncertainty-aware dynamic integration framework that combines deep embedding and confidence prediction modules to weight omics types by their data quality for multi-omics tumor classification.",
+  "model": "system: tumor samples; data type: multi-omics classification",
+  "section": "frameworks"
+ },
+ "34554215": {
+  "pmid": "34554215",
+  "relevance": 3,
+  "finding": "timeOmics is an R/Bioconductor package providing a generic analytical framework (pre-processing, modeling, clustering) for longitudinal multi-omics data integration to identify time-associated molecular features.",
+  "model": "system: human diabetes; data type: longitudinal multi-omics (mRNA, metabolites, gut taxa, clinical variables)",
+  "section": "workflows_reproducibility"
+ },
+ "33315104": {
+  "pmid": "33315104",
+  "relevance": 3,
+  "finding": "MOVICS is an R package that unifies 10 state-of-the-art multi-omics integrative clustering algorithms for cancer subtyping, including downstream characterization, visualization, and external validation via multiclass prediction.",
+  "model": "system: cancer (breast); data type: multi-omics",
+  "section": "statistics_ml"
+ },
+ "39027644": {
+  "pmid": "39027644",
+  "relevance": 3,
+  "finding": "consICA is an R/Bioconductor package implementing consensus independent component analysis for reference-free deconvolution and extraction of biologically relevant signals from heterogeneous multi-omics data for patient stratification and integration.",
+  "model": "system: cancer; data type: multi-omics molecular profiles",
+  "section": "statistics_ml"
+ },
+ "41278008": {
+  "pmid": "41278008",
+  "relevance": 3,
+  "finding": "SUMO is an open-source R package for generating factor-analysis-based simulated multi-omics datasets with controllable latent structures, noise and complexity to enable reproducible testing and validation of integration methods.",
+  "model": "data type",
+  "section": "benchmarks"
+ },
+ "41120838": {
+  "pmid": "41120838",
+  "relevance": 3,
+  "finding": "MultiModalGraphics is an R/Bioconductor package that produces annotated scatterplots and heatmaps for multi-omics data, embedding statistical summaries (fold-changes, p-values, q-values, SDs) and interoperating with MultiAssayExperiment, limma, voom and iClusterPlus.",
+  "model": "data type",
+  "section": "frameworks"
+ },
+ "38105215": {
+  "pmid": "38105215",
+  "relevance": 3,
+  "finding": "TCGAplot is an R package that performs integrative pan-cancer analysis and visualization of TCGA multi-omics data, including differential expression, correlation with TMB/MSI/TIME/methylation, survival, ROC, and gene-set analyses.",
+  "model": "human (TCGA cancer)",
+  "section": "frameworks"
+ },
+ "40305217": {
+  "pmid": "40305217",
+  "relevance": 3,
+  "finding": "The authors developed a lipid–metabolite–protein network combining protein-protein, enzymatic and genetic interactions, implemented as a Shiny R package that uses hyperbolic embedding to visualize and rank molecules across omics layers for multi-omics integration.",
+  "model": "human (cardiovascular)",
+  "section": "networks"
+ },
+ "37932270": {
+  "pmid": "37932270",
+  "relevance": 1,
+  "finding": "Through cross-cohort integrative analysis of 9 metagenomic and 4 metabolomic IBD cohorts, the authors identified consistent microbial taxa, metabolites and multi-omics biomarkers (AUROC 0.92–0.98) for IBD diagnosis.",
+  "model": "human gut microbiome",
+  "section": "applications"
+ },
+ "41939867": {
+  "pmid": "41939867",
+  "relevance": 1,
+  "finding": "Integrative multi-omics of bulk, single-cell, spatial and blood transcriptomic data with machine learning identified a four-gene (CXCL13, IL33, TLR4, IGF1) signature of IPF and supported a causal gut-immune-lung axis via Mendelian randomization.",
+  "model": "human (lung + gut)",
+  "section": "applications"
+ },
+ "40785047": {
+  "pmid": "40785047",
+  "relevance": 1,
+  "finding": "By integrating 6 microbiome datasets and 8 host blood transcriptomic datasets, the study identified five 'microbe–metabolite–host gene' tripartite associations and microbial genera with diagnostic potential for atherosclerosis.",
+  "model": "human gut microbiome",
+  "section": "applications"
+ },
+ "41052276": {
+  "pmid": "41052276",
+  "relevance": 2,
+  "finding": "A systematic review categorizes, compares and evaluates computational methods for longitudinal multi-omics integration in microbiome and host studies, organizing them into statistical modeling, machine learning, dimensionality reduction and latent factor approaches.",
+  "model": "data type",
+  "section": "benchmarks"
+ },
+ "39358810": {
+  "pmid": "39358810",
+  "relevance": 1,
+  "finding": "Integration of plasma proteomics, metabolomics, and gut/saliva metagenomics from 87 AD patients identified SKAP1, NEFL, homovanillate, glutamate and Paraprevotella clara as predictors of AD severity validated by AI-based models.",
+  "model": "human (Alzheimer's + microbiome)",
+  "section": "applications"
+ },
+ "36624530": {
+  "pmid": "36624530",
+  "relevance": 1,
+  "finding": "Multi-omics (16S, metatranscriptomics, metabolomics) profiling of 495 subjects identified IBS-associated taxa, transcripts and metabolites and built random-forest classifiers distinguishing IBS subtypes.",
+  "model": "human gut microbiome",
+  "section": "applications"
+ },
+ "39870302": {
+  "pmid": "39870302",
+  "relevance": 1,
+  "finding": "Integrative 16S, metaproteomic, metabolomic and host proteomic analyses in 30 children with severe ASD identified Tyzzerella enrichment, Bifidobacterium/Klebsiella-derived metaproteins and altered neurotransmitters linking gut microbiota to neurodevelopmental deficits.",
+  "model": "human gut microbiome",
+  "section": "applications"
+ },
+ "39660865": {
+  "pmid": "39660865",
+  "relevance": 1,
+  "finding": "Parallel microbial profiling, transcriptomics and metabolomics of tumor and adjacent tissues from 50 glioma patients linked intratumoral bacteria to synapse-associated genes and bacterial-associated metabolites via mediation analysis.",
+  "model": "human (glioma + intratumoral microbiome)",
+  "section": "applications"
+ }
+}
