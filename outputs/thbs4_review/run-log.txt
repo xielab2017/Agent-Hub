@@ -1,69 +1,78 @@
 backend: minimax-cn https://api.minimaxi.com/v1 MiniMax-M3
 [     0s] model: minimax-cn/MiniMax-M3 via https://api.minimaxi.com/v1
-[    26s] queries: 29
-[    26s]     6 ← THBS4 skeletal muscle
-[    27s]    25 ← thrombospondin-4 muscle
-[    28s]     3 ← thrombospondin-4 ATF6 endoplasmic reticulum stress
-[    28s]     3 ← thrombospondin-4 sarcolemma muscular dystrophy
-[    29s]    15 ← thrombospondin-4 heart hypertrophy
-[    30s]    25 ← thrombospondin-4 aging OR ageing
-[    30s]    25 ← THBS4 obesity OR adipose OR insulin OR diabetes
-[    31s]    25 ← THBS4 liver fibrosis OR NAFLD OR MASLD
-[    32s]    25 ← thrombospondin-4 exercise OR mechanical load
-[    33s]    11 ← thrombospondin-4 tendon extracellular matrix
-[    34s]     2 ← THBS4 fibroblast TGF-beta fibrosis
-[    34s]     2 ← THBS4 proteomics plasma
-[    35s]     8 ← thrombospondin-4 angiogenesis inflammation
-[    36s]    25 ← thrombospondin family matricellular review
-[    36s]    25 ← myokines skeletal muscle endocrine organ review
-[    37s]    18 ← muscle secretome aging sarcopenia
-[    38s]    14 ← "Thrombospondin-4"[tiab] AND "Muscle, Skeletal"[MeSH]
-[    38s]     1 ← "THBS4"[tiab] AND (myokine[tiab] OR "secreted factor"[tiab] OR "secretory protein"[tiab])
-[    39s]     9 ← "Thrombospondin-4"[tiab] AND ("Aging"[MeSH] OR aging[tiab] OR ageing[tiab])
-[    39s]     9 ← "THBS4"[tiab] AND ("Insulin Resistance"[MeSH] OR insulin[tiab] OR glucose[tiab] OR "diabet
-[    40s]     3 ← "Thrombospondin-4"[tiab] AND ("Exercise"[MeSH] OR exercise[tiab] OR "physical activity"[ti
-[    41s]     3 ← "THBS4"[tiab] AND ("Adipose Tissue"[MeSH] OR adipocyte[tiab] OR adipogenesis[tiab])
-[    41s]     6 ← "Thrombospondin-4"[tiab] AND ("Liver"[MeSH] OR hepatic[tiab] OR hepatocyte[tiab])
-[    42s]    25 ← "THBS4"[tiab] AND ("Heart"[MeSH] OR cardiac[tiab] OR cardiomyocyte[tiab] OR myocardium[tia
-[    43s]    25 ← "Thrombospondin-4"[tiab] AND ("Fibrosis"[MeSH] OR "Extracellular Matrix"[MeSH] OR fibrosis
-[    43s]    25 ← "THBS4"[tiab] AND ("Proteomics"[MeSH] OR proteomics[tiab] OR cohort[tiab] OR biomarker[tia
-[    44s]     0 ← "THBS4"[tiab] AND ("Sarcopenia"[MeSH] OR sarcopenia[tiab] OR "Muscular Atrophy"[MeSH])
-[    45s]     9 ← "Thrombospondin-4"[tiab] AND ("review"[Publication Type] OR "review literature"[Publicatio
-[    45s]    10 ← "THBS4"[tiab] AND ("Endoplasmic Reticulum Stress"[MeSH] OR "Unfolded Protein Response"[MeS
-[    52s] records with abstracts: 310
-[   164s] screened: 310 (93 relevant)
-[   164s] evidence cards: 60
-[   189s] outline: Thrombospondin-4: a matricellular candidate at the intersection of skeletal muscle, ageing and systemic metabolism — 9 sections
-Traceback (most recent call last):
-  File "/home/runner/work/Agent-Hub/Agent-Hub/scripts/review_pipeline.py", line 122, in <module>
-    sys.exit(main())
-             ^^^^^^
-  File "/home/runner/work/Agent-Hub/Agent-Hub/scripts/review_pipeline.py", line 107, in main
-    summary = review_writer.run(TOPIC, out, seed_queries=SEED_QUERIES, seed_pmids=SEED_PMIDS,
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/Agent-Hub/Agent-Hub/ali/review_writer.py", line 622, in run
-    list(pool.map(draft, range(len(sections))))
-  File "/opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/concurrent/futures/_base.py", line 619, in result_iterator
-    yield _result_or_cancel(fs.pop())
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/concurrent/futures/_base.py", line 317, in _result_or_cancel
-    return fut.result(timeout)
-           ^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/concurrent/futures/_base.py", line 449, in result
-    return self.__get_result()
-           ^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
-    raise self._exception
-  File "/opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/concurrent/futures/thread.py", line 59, in run
-    result = self.fn(*self.args, **self.kwargs)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/Agent-Hub/Agent-Hub/ali/review_writer.py", line 618, in draft
-    drafts[i] = write_section(llm, topic, outline, sections[i], cards, check=section_problems)
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/Agent-Hub/Agent-Hub/ali/review_writer.py", line 426, in write_section
-    use = [c for c in cards if c["id"] in set(int(x) for x in sec.get("cards") or [])] or cards[:12]
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/Agent-Hub/Agent-Hub/ali/review_writer.py", line 426, in <genexpr>
-    use = [c for c in cards if c["id"] in set(int(x) for x in sec.get("cards") or [])] or cards[:12]
-                                              ^^^^^^
-ValueError: invalid literal for int() with base 10: 'R1'
+[     7s] queries: 30
+[     8s]     6 ← THBS4 skeletal muscle
+[     9s]    25 ← thrombospondin-4 muscle
+[    10s]     3 ← thrombospondin-4 ATF6 endoplasmic reticulum stress
+[    10s]     3 ← thrombospondin-4 sarcolemma muscular dystrophy
+[    11s]    15 ← thrombospondin-4 heart hypertrophy
+[    12s]    25 ← thrombospondin-4 aging OR ageing
+[    14s]    25 ← THBS4 obesity OR adipose OR insulin OR diabetes
+[    15s]    25 ← THBS4 liver fibrosis OR NAFLD OR MASLD
+[    16s]    25 ← thrombospondin-4 exercise OR mechanical load
+[    17s]    11 ← thrombospondin-4 tendon extracellular matrix
+[    18s]     2 ← THBS4 fibroblast TGF-beta fibrosis
+[    19s]     2 ← THBS4 proteomics plasma
+[    20s]     8 ← thrombospondin-4 angiogenesis inflammation
+[    20s]    25 ← thrombospondin family matricellular review
+[    21s]    25 ← myokines skeletal muscle endocrine organ review
+[    22s]    18 ← muscle secretome aging sarcopenia
+[    23s]    25 ← THBS4[tiab] OR "thrombospondin-4"[tiab]
+[    24s]    25 ← "Thrombospondins"[Mesh] AND "Muscle, Skeletal"[Mesh]
+[    25s]     6 ← THBS4[tiab] AND ("Muscle, Skeletal"[Mesh] OR skeletal muscle[tiab] OR myotube[tiab])
+[    26s]    25 ← THBS4[tiab] AND (secret*[tiab] OR serum[tiab] OR plasma[tiab] OR circulat*[tiab] OR myokin
+[    27s]     9 ← THBS4[tiab] AND ("Aging"[Mesh] OR aging[tiab] OR ageing[tiab] OR elderly[tiab] OR aged[tia
+[    28s]    25 ← THBS4[tiab] AND ("Metabolism"[Mesh] OR metabolism[tiab] OR insulin[tiab] OR diabetes[tiab]
+[    29s]    13 ← THBS4[tiab] AND ("Exercise"[Mesh] OR exercise[tiab] OR training[tiab] OR contraction[tiab]
+[    30s]    25 ← THBS4[tiab] AND ("Fibrosis"[Mesh] OR fibrosis[tiab] OR "Extracellular Matrix"[Mesh] OR ECM
+[    31s]    25 ← THBS4[tiab] AND (proteomic*[tiab] OR biomarker*[tiab] OR cohort[tiab] OR "mass spectrometr
+[    32s]    25 ← THBS4[tiab] AND ("Heart"[Mesh] OR cardiac[tiab] OR cardiomyopath*[tiab] OR myocard*[tiab])
+[    32s]     1 ← THBS4[tiab] AND ("Sarcopenia"[Mesh] OR sarcopen*[tiab] OR muscle atroph*[tiab] OR muscle r
+[    33s]     3 ← THBS4[tiab] AND (adipocyte[tiab] OR hepatocyte[tiab] OR "insulin resistance"[tiab] OR gluc
+[    34s]     6 ← THBS4[tiab] AND (review[pt] OR review[tiab] OR systematic review[tiab] OR meta-analysis[pt
+[    35s]     0 ← THBS4[tiab] AND (frailty[tiab] OR longevity[tiab] OR healthy aging[tiab] OR caloric restri
+[    46s] records with abstracts: 343
+[   173s] screened: 343 (76 relevant)
+[   173s] evidence cards: 60
+[   235s] outline: Thrombospondin-4 (THBS4) as a Skeletal Muscle-Derived Secreted Factor: Regulatory Mechanisms in Ageing and Metabolism — 10 sections
+[   245s]   drafted 1/10 Introduction: THBS4 at the crossroads of muscle biology, age (739 words)
+[   270s]   drafted 2/10 THBS4 protein structure, gene family and evolutionary conser (702 words)
+[   271s]   drafted 4/10 Molecular mechanisms I: From the ECM to integrin signalling  (900 words)
+[   282s]   drafted 3/10 Expression in skeletal muscle: is THBS4 a bona fide myokine? (836 words)
+[   294s]   drafted 6/10 Ageing, sarcopenia and the 'rejuvenating factor' hypothesis (733 words)
+[   301s]   drafted 5/10 Molecular mechanisms II: The unconventional intracellular ER (741 words)
+[   310s]   drafted 7/10 Systemic metabolism and inter-organ crosstalk (919 words)
+[   316s]   drafted 9/10 Critical perspectives and controversies (873 words)
+[   365s]   drafted 10/10 Open questions and experimental roadmap (852 words)
+[   410s]   drafted 8/10 Cardiovascular THBS4: a parallel paradigm with implications  (1030 words)
+[   752s] reviews: reviewer-muscle-biology, reviewer-ageing-metabolism, reviewer-citation-integrity
+[   774s]   revised 2/10
+[   788s]   revised 3/10
+[   840s]   revised 5/10
+[   843s]   revised 4/10
+[   867s]   revised 1/10
+[   878s]   revised 6/10
+[   881s]   revised 7/10
+[   892s]   revised 8/10
+[   968s]   revised 9/10
+[  1215s]   revised 10/10
+[  1278s] citations: {'cited': 60, 'references': 60, 'out_of_range': [], 'uncited': [], 'citations': 386}
+{
+ "title": "Thrombospondin-4 (THBS4) as a Skeletal Muscle-Derived Secreted Factor: Regulatory Mechanisms in Ageing and Metabolism",
+ "model": "minimax-cn/MiniMax-M3",
+ "llm_calls": 66,
+ "queries": 30,
+ "records": 343,
+ "cards": 60,
+ "sections": 10,
+ "references": 60,
+ "citation_check": {
+  "cited": 60,
+  "references": 60,
+  "out_of_range": [],
+  "uncited": [],
+  "citations": 386
+ },
+ "words": 12461
+}
+RESULT: PASS — 60 distinct references cited

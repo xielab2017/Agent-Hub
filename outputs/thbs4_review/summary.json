@@ -1,0 +1,18 @@
+{
+ "title": "Thrombospondin-4 (THBS4) as a Skeletal Muscle-Derived Secreted Factor: Regulatory Mechanisms in Ageing and Metabolism",
+ "model": "minimax-cn/MiniMax-M3",
+ "llm_calls": 66,
+ "queries": 30,
+ "records": 343,
+ "cards": 60,
+ "sections": 10,
+ "references": 60,
+ "citation_check": {
+  "cited": 60,
+  "references": 60,
+  "out_of_range": [],
+  "uncited": [],
+  "citations": 386
+ },
+ "words": 12461
+}
