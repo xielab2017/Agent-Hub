@@ -94,3 +94,35 @@ def test_probe_minimax_region_picks_the_region_that_accepts_the_key():
 
     none = probe_minimax_region(FAKE_KEY, list_fn=lambda *a, **k: {"ok": False, "error": "HTTP 403", "models": []})
     assert none["region"] is None
+
+
+def test_probe_falls_back_to_a_chat_when_the_model_list_is_unavailable():
+    from ali.providers import probe_minimax_region
+
+    pings = []
+
+    def no_models(base, key, timeout=6.0, verify_tls=True):
+        return {"ok": False, "error": "HTTP 404: not found", "models": []}
+
+    def chat(base, key, timeout=15.0, verify_tls=True):
+        pings.append(base)
+        if "minimaxi.com" in base:
+            return {"ok": True, "models": [], "count": 0, "via": "chat"}
+        return {"ok": False, "error": "HTTP 401 Unauthorized", "models": [], "via": "chat"}
+
+    res = probe_minimax_region(FAKE_KEY, list_fn=no_models, chat_fn=chat)
+    assert res["region"] == "minimax-cn" and res["results"]["minimax-cn"]["via"] == "chat"
+    assert len(pings) == 2
+    # an auth failure on the model list is final for that region: no extra chat request
+    pings.clear()
+    probe_minimax_region(FAKE_KEY, list_fn=lambda *a, **k: {"ok": False, "error": "HTTP 401: bad key", "models": []}, chat_fn=chat)
+    assert pings == []
+
+
+def test_minimax_error_envelope_in_a_200_reply_is_an_error():
+    from ali.llm_client import provider_error
+
+    assert provider_error({"choices": [{"message": {"content": "hi"}}], "base_resp": {"status_code": 0}}) == ""
+    msg = provider_error({"base_resp": {"status_code": 1004, "status_msg": "login fail"}})
+    assert "1004" in msg and "api.minimaxi.com" in msg
+    assert provider_error({"base_resp": {"status_code": 2013, "status_msg": "invalid params"}}).startswith("MiniMax error 2013")

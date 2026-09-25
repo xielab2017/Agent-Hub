@@ -1,5 +1,18 @@
 # Changelog
 
+## v5.3.4 — 2026-09-25
+
+- `scripts/minimax_live_check.py`: one command checks a real MiniMax account
+  end to end in a throw-away state directory — region and models, a streamed
+  reply with review and provenance, web search with evidence, memory across
+  turns, a 3-step scientific task, and a wrong model coming back as a clear
+  error. The key is read from `MINIMAX_KEY` and masked in all output.
+- Region probe: when `GET /v1/models` is unavailable (not an auth error), a
+  one-line chat request decides which region accepts the key.
+- MiniMax's error envelope in an HTTP 200 reply (`base_resp.status_code` ≠ 0,
+  e.g. 1004 login fail) is reported as an error with a region hint instead of
+  an empty reply.
+
 ## v5.3.3 — 2026-09-25
 
 Search, problem handling, scientific tasks and continuity, tested end to end

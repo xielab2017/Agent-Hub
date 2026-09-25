@@ -75,6 +75,25 @@ def _request(
     return urllib.request.urlopen(req, timeout=timeout, context=ctx)
 
 
+def provider_error(obj: Any) -> str:
+    """Error carried in an HTTP 200 body (MiniMax ``base_resp``: status_code != 0)."""
+    if not isinstance(obj, dict):
+        return ""
+    br = obj.get("base_resp")
+    if isinstance(br, dict):
+        try:
+            code = int(br.get("status_code") or 0)
+        except (TypeError, ValueError):
+            code = -1
+        if code:
+            msg = str(br.get("status_msg") or "error")
+            hint = ""
+            if code in (1004, 2049) or "login" in msg.lower() or "api key" in msg.lower():
+                hint = "（API Key 无效，或与所选区域不符：中国区 api.minimaxi.com / 国际区 api.minimax.io）"
+            return f"MiniMax error {code}: {msg}{hint}"
+    return ""
+
+
 def list_models(
     base_url: str,
     api_key: str,
@@ -90,6 +109,9 @@ def list_models(
         with _request("GET", url, api_key=api_key, timeout=timeout, verify_tls=verify_tls) as resp:
             raw = resp.read().decode("utf-8", errors="replace")
         payload = json.loads(raw)
+        vendor_error = provider_error(payload)
+        if vendor_error:
+            return {"ok": False, "error": vendor_error, "models": [], "url": url}
         items = payload.get("data") if isinstance(payload, dict) else None
         if not isinstance(items, list):
             # some gateways return {models:[...]} 
@@ -530,6 +552,9 @@ def _chat_once(
     except urllib.error.HTTPError as exc:
         raise RuntimeError(_format_http_error(exc, url=url, model=model)) from exc
     obj = json.loads(raw)
+    vendor_error = provider_error(obj)
+    if vendor_error:
+        raise RuntimeError(f"{vendor_error} url={url} model={model}")
     content = ""
     choices = obj.get("choices") or []
     if choices:

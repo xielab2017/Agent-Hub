@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from copy import deepcopy
 from typing import Any
 
@@ -1134,26 +1135,46 @@ from .secrets import mask_key  # noqa: E402
 MINIMAX_REGIONS = ("minimax-cn", "minimax")
 
 
+def _minimax_chat_ping(base: str, api_key: str, *, timeout: float, verify_tls: bool) -> dict[str, Any]:
+    """Tiny chat request: proves the key works even where GET /models is not offered."""
+    from .llm_client import _chat_once
+
+    try:
+        _chat_once(base, api_key, model=PROVIDERS["minimax"]["models"]["main"],
+                   messages=[{"role": "user", "content": "ping"}], timeout=timeout, verify_tls=verify_tls,
+                   max_tokens=16)
+        return {"ok": True, "models": [], "count": 0, "via": "chat"}
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "error": str(exc), "models": [], "via": "chat"}
+
+
 def probe_minimax_region(api_key: str, *, timeout: float = 6.0, verify_tls: bool = True,
-                         list_fn: Any = None) -> dict[str, Any]:
+                         list_fn: Any = None, chat_fn: Any = None) -> dict[str, Any]:
     """Find which MiniMax region accepts this key (China first, then global).
 
     MiniMax keys only work on the region they were issued for, and the key
     format does not say which.  Returns ``{"region": "minimax-cn"|"minimax"|None,
-    "results": {provider_id: {ok, count, models, error}}}``.
+    "results": {provider_id: {ok, count, models, error}}}``.  When the model
+    list is unavailable (not an auth error), a one-line chat decides.
     """
     if list_fn is None:
         from .llm_client import list_models as list_fn
+    if chat_fn is None:
+        chat_fn = _minimax_chat_ping
     results: dict[str, Any] = {}
     region = None
     for pid in MINIMAX_REGIONS:
         base = PROVIDERS[pid]["base_url"]
         r = list_fn(base, api_key, timeout=timeout, verify_tls=verify_tls)
+        if not r.get("ok") and not re.search(r"HTTP 40[13]\b|MiniMax error (1004|2049)\b", str(r.get("error") or "")):
+            r = {**chat_fn(base, api_key, timeout=max(timeout, 15.0), verify_tls=verify_tls),
+                 "models_error": str(r.get("error") or "")[:200]}
         err = str(r.get("error") or "")
         if api_key and api_key in err:
             err = err.replace(api_key, mask_key(api_key))
         results[pid] = {"ok": bool(r.get("ok")), "count": int(r.get("count") or 0),
-                        "models": list(r.get("models") or [])[:30], "error": err[:300]}
+                        "models": list(r.get("models") or [])[:30], "error": err[:300],
+                        "via": r.get("via") or "models"}
         if r.get("ok") and region is None:
             region = pid
     return {"region": region, "results": results}
