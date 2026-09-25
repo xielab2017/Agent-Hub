@@ -80,7 +80,7 @@ jobs:
           kill "$(cat /tmp/push_loop.pid 2>/dev/null)" 2>/dev/null || true
           sleep 2
           git rebase --abort 2>/dev/null || true
-          git add outputs/skill_demo
+          git add outputs/skill_demo && git add -f outputs/skill_demo/*.zip 2>/dev/null || true
           # the live loop may already have committed the last files without pushing them: push whenever ahead
           git diff --cached --quiet || git commit -m "Skill demo outputs (run ${{ github.run_id }})"
           git fetch -q origin "${{ github.ref_name }}"
