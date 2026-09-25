@@ -1,0 +1,11 @@
+{
+ "abstract": "Multi-omics integration has matured from an opportunistic by-product of running several assays on a sample into a distinct analytical discipline, yet the software landscape that supports it remains fragmented across methodological lineages, data structures and reproducibility conventions. This review systematically compares general-purpose integration frameworks — including MOFA and its single-cell extensions, the mixOmics family with DIABLO and mixMC, similarity-network fusion methods and their deep-learning descendants, and graph- and attention-based architectures — alongside microbiome-centred pipelines (phyloseq, QIIME 2, MaAsLin2, ANCOM-BC, metaQuantome, gNOMO, PALM, timeOmics, netOmics), web platforms (MicrobiomeAnalyst, 3Omics), and the workflow managers and multi-assay data structures that underpin reproducible execution. The methodological space is organised around a three-stage taxonomy of early, intermediate and late integration, augmented by orthogonal axes of supervision and knowledge-drivenness, with each tool examined through a consistent critical lens: what it assumes about its inputs, what integration strategy it implements, and how its performance claims hold outside the authors' own benchmarks. EasyMultiProfiler is featured as an R/Bioconductor workflow built on SummarizedExperiment and MultiAssayExperiment that consolidates extraction, preparation, support, analysis and visualisation modules for microbiome and host-microbiome studies. Rather than ranking tools, we use EMP and its alternatives to make the design space legible, highlighting where compositionality, phylogenetic autocorrelation, longitudinal sampling and block-missingness still require deliberate stitching of microbial-aware ingestion, temporal modelling and cross-kingdom integration.",
+ "keywords": [
+  "multi-omics integration",
+  "microbiome bioinformatics",
+  "workflow reproducibility",
+  "matrix factorization",
+  "data integration software",
+  "EasyMultiProfiler"
+ ]
+}

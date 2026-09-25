@@ -1,0 +1,74 @@
+[
+ {
+  "card": "R1",
+  "tool": "EasyMultiProfiler (EMP) — R multi-omics workflow for microbiome research",
+  "strengths": "Unified five-module pipeline (extraction→visualization) on SummarizedExperiment/MultiAssayExperiment; standardised, reproducible microbiome multi-omics integration.",
+  "limitations": "Restricted to microbiome/host-microbiome contexts; advanced modules assume R/Bioconductor proficiency; community validation still maturing."
+ },
+ {
+  "card": "R2",
+  "tool": "MOFA — statistical framework for unsupervised multi-omics integration",
+  "strengths": "Discovers shared and modality-specific latent factors; handles missing values and heterogeneous variance; yields interpretable factor loadings.",
+  "limitations": "Linear-Gaussian core limits non-linear modelling; scaling to very large or single-cell datasets requires MOFA+ extensions."
+ },
+ {
+  "card": "R3",
+  "tool": "mixOmics — R/Bioconductor package for multi-omics integration",
+  "strengths": "Mature PLS-based integrative methods (sPLS, DIABLO) with built-in feature selection and rich visualisation across multiple omics.",
+  "limitations": "Predominantly linear methods; native scalability limited for very large single-cell datasets; some methods require careful tuning."
+ },
+ {
+  "card": "R4",
+  "tool": "MOFA+ — scalable framework for single-cell multi-modal omics",
+  "strengths": "Variational-inference extension of MOFA; flexible sparsity priors; joint decomposition across multiple sample groups and modalities.",
+  "limitations": "Steep learning curve; designed primarily for single-cell multi-modal data; downstream interpretation often needs ML expertise."
+ },
+ {
+  "card": "R5",
+  "tool": "Similarity Network Fusion (SNF) — multi-omics integration method",
+  "strengths": "Builds and fuses per-modality sample similarity networks into a unified graph; effective for subtype discovery across heterogeneous data.",
+  "limitations": "Sensitive to similarity-network hyperparameters; lacks native missing-data handling; limited interpretability of the fused network."
+ },
+ {
+  "card": "R6",
+  "tool": "phyloseq — R/Bioconductor package for microbiome census analysis",
+  "strengths": "Object-oriented infrastructure for reproducible import, manipulation, statistical analysis and graphics of 16S/metagenomic data.",
+  "limitations": "Single-omics (microbiome-only) with no native multi-omics integration; newer specialised algorithms live in sibling packages."
+ },
+ {
+  "card": "R7",
+  "tool": "MetaboAnalyst 6.0 — web platform for metabolomics analysis",
+  "strengths": "Unified web platform for LC-MS metabolomics processing, statistics, MS2 annotation and interpretation across ~130 species.",
+  "limitations": "Focused on metabolomics; web deployment limits data size; native multi-omics integration remains comparatively limited."
+ },
+ {
+  "card": "R8",
+  "tool": "QIIME 2 — extensible microbiome data analysis platform",
+  "strengths": "Standardised, reproducible, extensible microbiome workflows with plugin architecture and shareable analysis artifacts.",
+  "limitations": "Microbiome-only, not a native multi-omics framework; plugin compatibility and learning curve can hinder new users."
+ },
+ {
+  "card": "R9",
+  "tool": "MicrobiomeAnalyst — web tool for microbiome statistical, visual and meta-analysis",
+  "strengths": "Comprehensive web-based statistical, visual and meta-analysis for 16S and shotgun metagenomic/metatranscriptomic datasets.",
+  "limitations": "Single-omics focus; web upload constraints on dataset size; multi-omics integration largely outside its core scope."
+ },
+ {
+  "card": "R10",
+  "tool": "MUUMI — R package for multi-omics meta-analysis and network integration",
+  "strengths": "Unifies statistical meta-analysis with network-based integration (SNF, interactome inference) to identify robust molecular signatures.",
+  "limitations": "Newer R package with narrower adoption; performance depends on availability and quality of underlying interactome priors."
+ },
+ {
+  "card": "R11",
+  "tool": "BioNeuralNet — Python graph-neural-network framework for multi-omics networks",
+  "strengths": "Modular Python framework using GNNs for end-to-end multi-omics network construction, embedding and downstream analyses.",
+  "limitations": "Requires familiarity with graph neural networks and Python ML ecosystems; computational cost scales steeply with network size."
+ },
+ {
+  "card": "R16",
+  "tool": "Profiler — open-source Python/Streamlit web platform for multi-omics analysis",
+  "strengths": "Modular web platform with QC, statistics, ML/deep-learning, biomarker discovery, enrichment and survival analysis across modalities.",
+  "limitations": "Currently emphasises proteomics, transcriptomics, lipidomics and EEG; web deployment constraints; still building community adoption."
+ }
+]
