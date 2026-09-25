@@ -43,3 +43,6 @@
 [   320s]   drafted 6/10 Data structures, workflow systems and reproducibility infras (747 words, 13 cards)
 [   335s]   drafted 5/10 Web servers and point-and-click platforms for multi-omics (842 words, 13 cards)
 [   336s]   drafted 8/10 EasyMultiProfiler (EMP): design, strengths and limitations r (807 words, 23 cards)
+[   340s]   drafted 7/10 Benchmarking evidence and evaluation criteria (754 words, 5 cards)
+[   361s]   drafted 10/10 Recommendations for users and developers, roadmap and conclu (746 words, 21 cards)
+[   381s]   drafted 9/10 Critical perspectives and controversies (916 words, 28 cards)
