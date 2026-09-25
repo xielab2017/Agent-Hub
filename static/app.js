@@ -15,7 +15,7 @@ const FONT_SIZE_LABELS = {
   zh: { 13: "小 13", 14: "中 14", 15: "中大 15", 16: "大 16", 18: "特大 18" },
   en: { 13: "S 13", 14: "M 14", 15: "M+ 15", 16: "L 16", 18: "XL 18" },
 };
-const LOGO_VER = "5.2.0";
+const LOGO_VER = "5.3.0";
 const DEFAULT_LOGO = `/brand/suat-logo-color.png?v=${LOGO_VER}`;
 const LOGO_PRESETS = [
   { id: "suat-color", src: `/brand/suat-logo-color.png?v=${LOGO_VER}`, labelKey: "appearance.logoPresetColor" },
@@ -200,7 +200,7 @@ const I18N = {
     "composer.thinkingDepth": "思考深度",
     "composer.workspace": "工作区",
     "composer.workspacePh": "可选：工作目录路径",
-    "composer.inputPh": "描述办公/科研任务… Enter 换行 · ⌘/Ctrl+Enter 运行工作流",
+    "composer.inputPh": "描述办公/科研任务… Enter 换行 · ⌘/Ctrl+Enter 运行工作流 · 输入 / 查看命令",
     "composer.send": "运行",
     "composer.search": "联网搜索",
     "composer.deepSearch": "深度搜索",
@@ -244,6 +244,40 @@ const I18N = {
     "msg.bad": "待改进",
     "msg.provenance": "溯源",
     "msg.saveSkill": "存为技能",
+    "slash.task": "按步骤执行任务，自动进入下一步",
+    "slash.search": "联网检索后回答",
+    "slash.deep": "深度检索：多引擎 + 打开原文 + 交叉核对",
+    "slash.summary": "把上一条回复整理成结构化总结",
+    "slash.verify": "联网核验上一条回复的 DOI / PMID",
+    "slash.next": "继续任务的下一步",
+    "slash.stop": "停止当前任务",
+    "slash.help": "查看全部命令",
+    "task.title": "任务",
+    "task.step": "步骤 {n}/{total}",
+    "task.auto": "自动推进",
+    "task.confirm": "逐步确认",
+    "task.continue": "继续下一步",
+    "task.forceContinue": "仍然继续",
+    "task.stop": "停止",
+    "task.done": "任务完成",
+    "task.stopped": "任务已停止",
+    "task.blockedReview": "审查发现待核实项，已暂停自动推进",
+    "task.blockedError": "本步出错，已暂停",
+    "task.waiting": "等待确认：",
+    "task.resume": "回到此会话后可继续",
+    "task.detected": "检测到 {n} 个步骤，要按任务逐步执行吗？",
+    "task.runAsTask": "按任务执行",
+    "task.sendPlain": "直接发送",
+    "task.none": "当前没有进行中的任务",
+    "evidence.title": "来源与证据",
+    "evidence.summary": "{s} 条来源 · 权威 {a} · 已读原文 {p} · 多源一致 {c} · 冲突 {x}",
+    "evidence.facts": "关键数值",
+    "evidence.conflicts": "来源分歧",
+    "evidence.single": "单一来源",
+    "evidence.agree": "{n} 个域名一致",
+    "evidence.ugcOnly": "来源全部是论坛 / 自媒体，结论需谨慎",
+    "next.title": "下一步",
+    "verify.noReply": "没有可核验的回复",
     "control.science": "科学数据库",
     "review.ok": "审查通过",
     "rv.citation_out_of_range": "引用编号越界",
@@ -447,7 +481,7 @@ const I18N = {
     "composer.thinkingDepth": "Thinking depth",
     "composer.workspace": "Workspace",
     "composer.workspacePh": "Optional workspace path",
-    "composer.inputPh": "Describe an office/research task… Enter = newline · ⌘/Ctrl+Enter run workflow",
+    "composer.inputPh": "Describe an office/research task… Enter = newline · ⌘/Ctrl+Enter run workflow · type / for commands",
     "composer.send": "Run",
     "composer.search": "Web search",
     "composer.deepSearch": "Deep search",
@@ -491,6 +525,40 @@ const I18N = {
     "msg.bad": "Needs work",
     "msg.provenance": "Provenance",
     "msg.saveSkill": "Save as skill",
+    "slash.task": "Run as a multi-step task that advances automatically",
+    "slash.search": "Search the web, then answer",
+    "slash.deep": "Deep search: multi-engine + read pages + cross-check",
+    "slash.summary": "Turn the last reply into a structured summary",
+    "slash.verify": "Verify DOIs / PMIDs of the last reply online",
+    "slash.next": "Continue the task with the next step",
+    "slash.stop": "Stop the current task",
+    "slash.help": "Show all commands",
+    "task.title": "Task",
+    "task.step": "Step {n}/{total}",
+    "task.auto": "Auto-advance",
+    "task.confirm": "Confirm each step",
+    "task.continue": "Next step",
+    "task.forceContinue": "Continue anyway",
+    "task.stop": "Stop",
+    "task.done": "Task complete",
+    "task.stopped": "Task stopped",
+    "task.blockedReview": "Reviewer flagged items to verify — auto-advance paused",
+    "task.blockedError": "This step failed — paused",
+    "task.waiting": "Waiting for confirmation: ",
+    "task.resume": "Continue when you return to this chat",
+    "task.detected": "Found {n} steps — run them as a task?",
+    "task.runAsTask": "Run as task",
+    "task.sendPlain": "Send as is",
+    "task.none": "No task in progress",
+    "evidence.title": "Sources & evidence",
+    "evidence.summary": "{s} sources · authoritative {a} · pages read {p} · corroborated {c} · conflicts {x}",
+    "evidence.facts": "Key numbers",
+    "evidence.conflicts": "Sources disagree",
+    "evidence.single": "single source",
+    "evidence.agree": "{n} domains agree",
+    "evidence.ugcOnly": "All sources are forums / self-media — be careful",
+    "next.title": "Next steps",
+    "verify.noReply": "No reply to verify",
     "control.science": "Science DBs",
     "review.ok": "Review passed",
     "rv.citation_out_of_range": "Citation out of range",
@@ -629,6 +697,9 @@ const state = {
   streaming: false,
   streamingSessionId: "",
   sessionRuns: {}, // id -> { pct, streaming }
+  tasks: {}, // session id -> multi-step task (from /api/tasks)
+  taskPending: {}, // session id -> { task_id, step } while a task step is streaming
+  taskResume: {}, // session id -> next step waiting for the user to come back / continue
   status: null,
   streamMeta: null,
   streamConsumers: {},
@@ -2259,6 +2330,425 @@ async function openProvenance(sessionId, messageId) {
   };
 }
 
+// ── Composer slash commands ────────────────────────────────────────────
+
+const SLASH_COMMANDS = [
+  { cmd: "/task", arg: true, key: "slash.task" },
+  { cmd: "/search", arg: true, key: "slash.search" },
+  { cmd: "/deep", arg: true, key: "slash.deep" },
+  { cmd: "/summary", arg: false, key: "slash.summary" },
+  { cmd: "/verify", arg: false, key: "slash.verify" },
+  { cmd: "/next", arg: false, key: "slash.next" },
+  { cmd: "/stop", arg: false, key: "slash.stop" },
+  { cmd: "/help", arg: false, key: "slash.help" },
+];
+
+function hideSlashMenu() {
+  $("#slash-menu")?.classList.add("hidden");
+}
+
+function updateSlashMenu() {
+  const menu = $("#slash-menu");
+  const input = $("#input");
+  if (!menu || !input) return;
+  const v = input.value;
+  // Only while typing the command word itself ("/", "/ta" …), not its argument.
+  if (!/^\/\S*$/.test(v)) { hideSlashMenu(); return; }
+  const word = v.toLowerCase();
+  const hits = SLASH_COMMANDS.filter((c) => c.cmd.startsWith(word));
+  if (!hits.length) { hideSlashMenu(); return; }
+  menu.innerHTML = hits.map((c) => `<button type="button" class="slash-item" data-cmd="${c.cmd}" role="option">
+      <code>${c.cmd}${c.arg ? " …" : ""}</code><span class="muted">${escapeHtml(t(c.key))}</span></button>`).join("");
+  menu.classList.remove("hidden");
+  menu.querySelectorAll(".slash-item").forEach((b) => {
+    b.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      const c = SLASH_COMMANDS.find((x) => x.cmd === b.dataset.cmd);
+      input.value = c.cmd + (c.arg ? " " : "");
+      hideSlashMenu();
+      input.focus();
+      updateSendEnabled();
+      if (!c.arg) sendMessage();
+    });
+  });
+}
+
+function lastAssistantEl() {
+  const els = Array.from(document.querySelectorAll("#messages .msg.assistant")).filter((el) => el.dataset.mid);
+  return els[els.length - 1] || null;
+}
+
+function showComposerNote(text) {
+  const st = $("#settings-status");
+  if (st) st.textContent = text;
+  const hint = $("#stream-status-hint");
+  if (hint) hint.textContent = text;
+}
+
+async function runSlashCommand(text, sessionId, fromInput) {
+  const [word, ...rest] = text.split(/\s+/);
+  const arg = text.slice(word.length).trim();
+  const cmd = word.toLowerCase();
+  const clear = () => { if (fromInput) { $("#input").value = ""; updateSendEnabled(); } };
+  const zh = state.prefs.language !== "en";
+  switch (cmd) {
+    case "/task":
+      if (!arg) return false;
+      if (state.sessionRuns[sessionId]?.streaming) {
+        showComposerNote(zh ? "当前还有任务在运行，请等它完成或先停止" : "A run is still in progress — wait for it or stop it first");
+        return true;
+      }
+      clear();
+      await startTask(sessionId, arg);
+      return true;
+    case "/search":
+    case "/deep":
+      if (!arg) return false;
+      clear();
+      await sendMessage(arg, { web_search: true, deep_search: cmd === "/deep", _no_task_detect: true,
+        display_message: `${cmd} ${arg}` });
+      return true;
+    case "/summary": {
+      clear();
+      const prompt = zh
+        ? "请把上一条回复整理成结构化总结：\n1. 结论摘要（3–5 条，保留来源编号 [n]）\n2. 关键数据表（指标 | 数值 | 来源 [n] | 一致性：多源一致 / 单一来源 / 有分歧）\n3. 分歧与不确定\n4. 下一步（2–4 条可执行行动）\n只使用上一条回复与其来源中的信息，不要新增未经来源支持的数字。"
+        : "Reorganise the previous reply as a structured summary:\n1. Summary (3–5 bullets, keep source numbers [n])\n2. Key data table (metric | value | source [n] | agreement: corroborated / single source / conflicting)\n3. Disagreements & uncertainty\n4. Next steps (2–4 concrete actions)\nUse only information from the previous reply and its sources; add no unsupported numbers.";
+      await sendMessage(prompt, { display_message: "/summary", _no_task_detect: true, _skip_multi: true });
+      return true;
+    }
+    case "/verify": {
+      clear();
+      const el = lastAssistantEl();
+      if (!el) { showComposerNote(t("verify.noReply")); return true; }
+      try {
+        const res = await api(`/api/review/${encodeURIComponent(sessionId)}/${encodeURIComponent(el.dataset.mid)}`, {
+          method: "POST", body: JSON.stringify({ online: true }),
+        });
+        renderReviewBox(el, res.review);
+        el.querySelector(".review-box")?.setAttribute("open", "");
+        el.scrollIntoView({ block: "nearest" });
+      } catch (err) { showComposerNote(String(err.message || err)); }
+      return true;
+    }
+    case "/next":
+      clear();
+      await continueTask(sessionId, true);
+      return true;
+    case "/stop":
+      clear();
+      await stopTask(sessionId);
+      return true;
+    case "/help":
+    case "/":
+      $("#input").value = "/";
+      updateSlashMenu();
+      return true;
+    default:
+      return false;
+  }
+}
+
+// ── Multi-step tasks: dock, auto-advance, gates ────────────────────────
+
+function detectTaskSteps(text) {
+  const tx = String(text || "");
+  if (tx.length < 12) return 0;
+  const nums = [];
+  const re = /(?:^|[\s：:，,；;。])(\d{1,2})[.、)）](?!\d)\s*\S/g;
+  let m;
+  while ((m = re.exec(tx))) {
+    const n = Number(m[1]);
+    if (n === nums.length + 1) nums.push(n);
+  }
+  if (nums.length >= 2) return nums.length;
+  const ord = tx.match(/第[一二三四五六七八九十\d]+(?:步|阶段)/g) || [];
+  if (ord.length >= 2) return ord.length;
+  if (/(首先|先)[\s\S]{2,}(然后|接着|再)[\s\S]{2,}/.test(tx)) {
+    return 1 + (tx.match(/然后|接着|随后|之后|最后/g) || []).length;
+  }
+  return 0;
+}
+
+function offerTaskMode(sessionId, text, n) {
+  const host = $("#messages");
+  if (!host) return;
+  host.querySelector(".task-offer")?.remove();
+  const card = document.createElement("div");
+  card.className = "task-offer";
+  card.innerHTML = `<div>${escapeHtml(tpl("task.detected", { n }))}</div>
+    <div class="task-offer-text muted">${escapeHtml(text.slice(0, 240))}</div>
+    <div class="row gap" style="justify-content:flex-start">
+      <button type="button" class="btn primary chip" data-act="task">${escapeHtml(t("task.runAsTask"))}</button>
+      <button type="button" class="btn ghost chip" data-act="plain">${escapeHtml(t("task.sendPlain"))}</button>
+    </div>`;
+  host.appendChild(card);
+  host.scrollTop = host.scrollHeight;
+  card.querySelector('[data-act="task"]').onclick = () => { card.remove(); startTask(sessionId, text); };
+  card.querySelector('[data-act="plain"]').onclick = () => { card.remove(); sendMessage(text, { _no_task_detect: true }); };
+}
+
+async function startTask(sessionId, text) {
+  try {
+    const res = await api("/api/tasks", {
+      method: "POST",
+      body: JSON.stringify({ session_id: sessionId, message: text, mode: state.prefs.taskMode || "auto" }),
+    });
+    state.tasks[sessionId] = res.task;
+    renderTaskDock(sessionId);
+    await runTaskStep(sessionId, res.next);
+  } catch (err) {
+    showComposerNote(String(err.message || err));
+  }
+}
+
+async function runTaskStep(sessionId, nxt) {
+  const task = state.tasks[sessionId];
+  if (!task || !nxt) return;
+  if (state.currentId !== sessionId) {
+    // The user moved to another chat: keep the step for when they come back.
+    state.taskResume[sessionId] = nxt;
+    return;
+  }
+  state.taskPending[sessionId] = { task_id: task.id, step: nxt.step };
+  renderTaskDock(sessionId);
+  await sendMessage(nxt.prompt, {
+    task_id: task.id,
+    task_step: nxt.step,
+    display_message: nxt.display,
+    web_search: nxt.web_search || state.webSearch ? true : undefined,
+    deep_search: nxt.web_search ? !!state.deepSearch : undefined,
+    _skip_multi: true,
+    _from_task: true,
+  });
+}
+
+function waitIdle(sessionId, tries = 60) {
+  return new Promise((resolve) => {
+    const tick = (n) => {
+      if (!state.sessionRuns[sessionId]?.streaming || n <= 0) return resolve();
+      setTimeout(() => tick(n - 1), 200);
+    };
+    tick(tries);
+  });
+}
+
+async function onTaskStepDone(sessionId, taskId, messageId, hold) {
+  let res;
+  try {
+    res = await api(`/api/tasks/${encodeURIComponent(taskId)}/advance`, {
+      method: "POST", body: JSON.stringify({ message_id: messageId }),
+    });
+  } catch (err) {
+    showComposerNote(String(err.message || err));
+    return;
+  }
+  applyTaskResult(sessionId, res);
+  if (res.status === "next") {
+    if (hold) {
+      // The user queued their own message — let it run; the task continues on /next.
+      state.taskResume[sessionId] = res;
+      renderTaskDock(sessionId);
+      return;
+    }
+    await waitIdle(sessionId);
+    await runTaskStep(sessionId, res);
+  }
+}
+
+function applyTaskResult(sessionId, res) {
+  if (!res || !res.task) return;
+  state.tasks[sessionId] = { ...res.task, _last: res };
+  if (res.status !== "next") delete state.taskResume[sessionId];
+  renderTaskDock(sessionId);
+}
+
+async function continueTask(sessionId, force) {
+  const task = state.tasks[sessionId];
+  if (!task) { showComposerNote(t("task.none")); return; }
+  const resume = state.taskResume[sessionId];
+  if (resume && resume.status === "next") {
+    delete state.taskResume[sessionId];
+    await runTaskStep(sessionId, resume);
+    return;
+  }
+  try {
+    const res = await api(`/api/tasks/${encodeURIComponent(task.id)}/advance`, {
+      method: "POST", body: JSON.stringify({ force: !!force }),
+    });
+    applyTaskResult(sessionId, res);
+    if (res.status === "next") await runTaskStep(sessionId, res);
+  } catch (err) {
+    showComposerNote(String(err.message || err));
+  }
+}
+
+async function stopTask(sessionId) {
+  const task = state.tasks[sessionId];
+  if (!task) { showComposerNote(t("task.none")); return; }
+  try {
+    const res = await api(`/api/tasks/${encodeURIComponent(task.id)}/stop`, { method: "POST", body: "{}" });
+    delete state.taskPending[sessionId];
+    applyTaskResult(sessionId, res);
+  } catch (err) {
+    showComposerNote(String(err.message || err));
+  }
+}
+
+async function setTaskMode(sessionId, mode) {
+  state.prefs.taskMode = mode;
+  try { persistPrefsLocal(); } catch (_) { /* ignore */ }
+  const task = state.tasks[sessionId];
+  if (!task) return;
+  try {
+    const res = await api(`/api/tasks/${encodeURIComponent(task.id)}/mode`, { method: "POST", body: JSON.stringify({ mode }) });
+    state.tasks[sessionId] = { ...res.task, _last: task._last };
+    renderTaskDock(sessionId);
+  } catch (err) { showComposerNote(String(err.message || err)); }
+}
+
+async function restoreTaskDock(sessionId) {
+  if (!state.tasks[sessionId]) {
+    try {
+      const res = await api(`/api/sessions/${encodeURIComponent(sessionId)}/task`);
+      if (res && res.task) state.tasks[sessionId] = res.task;
+    } catch (_) { /* ignore */ }
+  }
+  if (state.currentId === sessionId) renderTaskDock(sessionId);
+}
+
+function renderTaskDock(sessionId) {
+  const dock = $("#task-dock");
+  if (!dock) return;
+  if (sessionId !== state.currentId) return;
+  const task = state.tasks[sessionId];
+  if (!task) { dock.classList.add("hidden"); dock.innerHTML = ""; return; }
+  const last = task._last || {};
+  const steps = task.steps || [];
+  const cur = steps[Math.min(task.cursor || 0, steps.length - 1)] || {};
+  const icon = { done: "✓", running: "●", pending: "○", blocked: "!", skipped: "–" };
+  let statusLine = "";
+  let actions = "";
+  const pendingHere = !!state.taskPending[sessionId];
+  const resume = state.taskResume[sessionId];
+  if (task.status === "done") statusLine = `✓ ${t("task.done")}`;
+  else if (task.status === "stopped") statusLine = t("task.stopped");
+  else if (task.status === "blocked") {
+    statusLine = task.blocked_reason === "error" ? t("task.blockedError") : t("task.blockedReview");
+    if ((last.issues || []).length) statusLine += ` — ${last.issues.join("；")}`;
+    actions = `<button type="button" class="btn primary chip" data-task="force">${escapeHtml(t("task.forceContinue"))}</button>`;
+  } else if (task.status === "waiting") {
+    statusLine = t("task.waiting") + (last.upcoming || "");
+    actions = `<button type="button" class="btn primary chip" data-task="force">${escapeHtml(t("task.continue"))}</button>`;
+  } else if (resume && !pendingHere) {
+    statusLine = resume.display || t("task.resume");
+    actions = `<button type="button" class="btn primary chip" data-task="next">${escapeHtml(t("task.continue"))}</button>`;
+  } else if (!pendingHere && cur.status === "running" && !state.sessionRuns[sessionId]?.streaming) {
+    statusLine = t("task.resume");
+    actions = `<button type="button" class="btn primary chip" data-task="force">${escapeHtml(t("task.continue"))}</button>`;
+  } else {
+    statusLine = `${tpl("task.step", { n: (task.cursor || 0) + 1, total: steps.length })} · ${cur.title || ""}`;
+  }
+  const active = !["done", "stopped"].includes(task.status);
+  dock.className = `task-dock status-${task.status}`;
+  dock.innerHTML = `
+    <div class="task-dock-head">
+      <strong>${escapeHtml(t("task.title"))}</strong>
+      <span class="task-goal" title="${escapeHtml(task.goal || "")}">${escapeHtml((task.goal || "").slice(0, 80))}</span>
+      <span class="task-count muted">${task.done_steps || 0}/${steps.length}</span>
+      ${active ? `<select class="task-mode" aria-label="mode">
+        <option value="auto" ${task.mode === "auto" ? "selected" : ""}>${escapeHtml(t("task.auto"))}</option>
+        <option value="confirm" ${task.mode === "confirm" ? "selected" : ""}>${escapeHtml(t("task.confirm"))}</option>
+      </select>
+      <button type="button" class="btn ghost chip" data-task="stop">${escapeHtml(t("task.stop"))}</button>` : `<button type="button" class="btn ghost chip" data-task="close">×</button>`}
+    </div>
+    <ol class="task-steps">${steps.map((st) => `<li class="ts-${escapeHtml(st.status)}" title="${escapeHtml(st.instruction || "")}">
+        <span class="ts-icon">${icon[st.status] || "○"}</span>${escapeHtml(st.title)}${
+          (st.review && st.review.warn) ? ` <span class="ts-warn">⚠${st.review.warn}</span>` : ""}</li>`).join("")}</ol>
+    <div class="task-dock-foot"><span class="task-status">${escapeHtml(statusLine)}</span>${actions}</div>`;
+  dock.querySelector(".task-mode")?.addEventListener("change", (e) => setTaskMode(sessionId, e.target.value));
+  dock.querySelectorAll("[data-task]").forEach((b) => {
+    b.addEventListener("click", () => {
+      const act = b.dataset.task;
+      if (act === "stop") stopTask(sessionId);
+      else if (act === "force") continueTask(sessionId, true);
+      else if (act === "next") continueTask(sessionId, false);
+      else if (act === "close") { delete state.tasks[sessionId]; renderTaskDock(sessionId); }
+    });
+  });
+}
+
+// ── Sources & evidence panel ───────────────────────────────────────────
+
+function renderEvidenceBox(msgEl, ev) {
+  if (!msgEl || !ev || !(ev.sources || []).length) return;
+  let box = msgEl.querySelector(".evidence-box");
+  if (!box) {
+    box = document.createElement("details");
+    box.className = "evidence-box";
+    const anchor = msgEl.querySelector(".review-box") || msgEl.querySelector(".msg-actions");
+    if (anchor) anchor.insertAdjacentElement("beforebegin", box);
+    else msgEl.appendChild(box);
+  }
+  const zh = state.prefs.language !== "en";
+  const cov = ev.coverage || {};
+  const head = tpl("evidence.summary", {
+    s: cov.sources || 0, a: cov.authoritative || 0, p: cov.pages_read || 0,
+    c: cov.corroborated_facts || 0, x: (ev.conflicts || []).length,
+  });
+  const srcs = (ev.sources || []).map((s) => {
+    const url = /^https?:\/\//i.test(s.url || "") ? s.url : "";
+    const label = zh ? (s.tier_label_zh || s.tier_label) : s.tier_label;
+    return `<li value="${Number(s.n) || ""}"><span class="tier tier-${escapeHtml(s.tier || "other")}">${escapeHtml(label || "")}</span>
+      ${url ? `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(s.title || url)}</a>` : escapeHtml(s.title || "")}
+      <span class="muted"> · ${escapeHtml(s.domain || "")}${s.date ? " · " + escapeHtml(s.date) : ""}${s.page_read ? " · 📖" : ""}</span></li>`;
+  }).join("");
+  const facts = (ev.facts || []).slice(0, 10).map((f) => {
+    const refs = (f.sources || []).map((n) => `[${n}]`).join("");
+    const agree = f.conflict ? `<span class="ev-bad">${escapeHtml(t("evidence.conflicts"))}</span>`
+      : (f.domains >= 2 ? `<span class="ev-ok">${escapeHtml(tpl("evidence.agree", { n: f.domains }))}</span>`
+        : `<span class="muted">${escapeHtml(t("evidence.single"))}</span>`);
+    return `<tr><td>${escapeHtml(f.key || f.kind || "")}</td><td><code>${escapeHtml(f.display || f.value || "")}</code></td><td>${refs}</td><td>${agree}</td></tr>`;
+  }).join("");
+  const conflicts = (ev.conflicts || []).map((c) => `<li>“${escapeHtml(c.key)}”：${(c.values || [])
+    .map((v) => `<code>${escapeHtml(v.display)}</code> ${(v.sources || []).map((n) => `[${n}]`).join("")}`).join(" vs ")}</li>`).join("");
+  box.innerHTML = `<summary><span class="ev-badge">📚 ${escapeHtml(t("evidence.title"))}</span><span class="muted"> · ${escapeHtml(head)}</span></summary>
+    <div class="ev-body">
+      ${cov.ugc_only ? `<p class="prov-warn">${escapeHtml(t("evidence.ugcOnly"))}</p>` : ""}
+      <ol class="prov-sources">${srcs}</ol>
+      ${facts ? `<h4>${escapeHtml(t("evidence.facts"))}</h4><div class="ev-table-wrap"><table class="ev-table"><tbody>${facts}</tbody></table></div>` : ""}
+      ${conflicts ? `<h4>${escapeHtml(t("evidence.conflicts"))}</h4><ul class="rv-list">${conflicts}</ul>` : ""}
+    </div>`;
+}
+
+// ── Next-step suggestions ──────────────────────────────────────────────
+
+function extractNextSteps(md) {
+  const text = String(md || "");
+  const m = text.match(/^#{1,4}\s*(?:\d+[.、]\s*)?(?:\*\*)?(?:下一步(?:建议|行动)?|后续(?:建议|行动)?|Next steps?)(?:\*\*)?[^\n]*\n([\s\S]*?)(?=^#{1,4}\s|$(?![\s\S]))/im);
+  if (!m) return [];
+  return m[1].split("\n")
+    .map((l) => l.replace(/^\s*(?:[-*+]|\d+[.)、])\s+/, "").replace(/\*\*/g, "").trim())
+    .filter((l) => l.length >= 4 && l.length <= 160)
+    .slice(0, 4);
+}
+
+function renderNextChips(msgEl, content) {
+  if (!msgEl) return;
+  msgEl.querySelector(".next-chips")?.remove();
+  const items = extractNextSteps(content);
+  if (!items.length) return;
+  const wrap = document.createElement("div");
+  wrap.className = "next-chips";
+  wrap.innerHTML = `<span class="muted">${escapeHtml(t("next.title"))}：</span>` +
+    items.map((x, i) => `<button type="button" class="btn ghost chip next-chip" data-i="${i}" title="${escapeHtml(x)}">${escapeHtml(x.length > 36 ? x.slice(0, 36) + "…" : x)}</button>`).join("");
+  const anchor = msgEl.querySelector(".msg-actions");
+  if (anchor) anchor.insertAdjacentElement("beforebegin", wrap);
+  else msgEl.appendChild(wrap);
+  wrap.querySelectorAll(".next-chip").forEach((b) => {
+    b.addEventListener("click", () => sendMessage(items[Number(b.dataset.i)], { _no_task_detect: true }));
+  });
+}
+
 function tpl(key, vars) {
   return t(key).replace(/\{(\w+)\}/g, (_, k) => (vars && vars[k] != null ? String(vars[k]) : ""));
 }
@@ -3058,6 +3548,8 @@ function makeStreamHandlers(sessionId, assistantEl, bodyEl, startRoute, stateBag
         if (payload && payload.grounding_check) showGroundingWarn(payload.grounding_check, a);
         if (a && payload && payload.provenance) ensureProvenanceButton(a);
         if (a && payload && payload.review) renderReviewBox(a, payload.review);
+        if (a && payload && payload.evidence) renderEvidenceBox(a, payload.evidence);
+        if (a && payload && payload.content && !state.taskPending[sessionId]) renderNextChips(a, payload.content);
         if (b) {
           b.innerHTML = renderMd(bag.full || "(完成)");
           bindCodeBoxActions(b);
@@ -3068,6 +3560,16 @@ function makeStreamHandlers(sessionId, assistantEl, bodyEl, startRoute, stateBag
         }
       }
       setSessionRun(sessionId, { pct: 100 });
+      // Task mode: record this step and automatically move to the next one.
+      if (state.taskPending[sessionId] && payload && payload.message_id) {
+        const pending = state.taskPending[sessionId];
+        delete state.taskPending[sessionId];
+        onTaskStepDone(sessionId, pending.task_id, payload.message_id, !!(payload && payload.queued_message));
+      } else if (state.taskPending[sessionId] && payload && payload.error) {
+        const pending = state.taskPending[sessionId];
+        delete state.taskPending[sessionId];
+        onTaskStepDone(sessionId, pending.task_id, payload.message_id || "", true);
+      }
       // ── Token usage from done payload (OpenSquilla) ─────────────────────
       if (payload && payload.usage) {
         const u = payload.usage;
@@ -3482,6 +3984,7 @@ async function renameSession(id, current) {
 async function backupSession(id, titleHint) {
   const langZh = state.prefs.language !== "en";
   try {
+    restoreTaskDock(id).catch(() => {});
     const s = await api(`/api/sessions/${id}`);
     const payload = {
       backed_up_at: new Date().toISOString(),
@@ -4447,6 +4950,8 @@ function appendMessage(m, scroll = true) {
   if (m.role !== "user") bindCodeBoxActions(div);
   if (m.role === "assistant" && m.grounding_check) showGroundingWarn(m.grounding_check, div);
   if (m.role === "assistant" && m.review) renderReviewBox(div, m.review);
+  if (m.role === "assistant" && m.evidence) renderEvidenceBox(div, m.evidence);
+  if (m.role === "assistant" && m.content && !(m.route && m.route.task_id) && !m.error) renderNextChips(div, m.content);
   $("#messages").appendChild(div);
   if (m.role === "assistant" && m.route && m.route.multi_subagents) {
     restoreOrchFromRoute(div, m.route, m.content || "");
@@ -6109,6 +6614,22 @@ async function sendMessage(overrideText, extra = {}) {
   let text = (overrideText != null ? overrideText : $("#input").value).trim();
   const sessionId = state.currentId;
   if (!text || !sessionId) return;
+  hideSlashMenu();
+
+  // Slash commands typed in the composer (/task /search /deep /summary /verify /next /stop /help)
+  if (!extra._from_task && !extra._from_queue && text.startsWith("/")) {
+    const handled = await runSlashCommand(text, sessionId, overrideText == null);
+    if (handled) return;
+  }
+  // Explicit multi-step requests ("1. … 2. …", "第一步…", "首先…然后…") can run as a task.
+  if (!extra._from_task && !extra._from_queue && !extra._no_task_detect && !state.sessionRuns[sessionId]?.streaming) {
+    const n = detectTaskSteps(text);
+    if (n >= 2) {
+      if (overrideText == null) { $("#input").value = ""; updateSendEnabled(); }
+      offerTaskMode(sessionId, text, n);
+      return;
+    }
+  }
 
   // Phase 2: while this session is streaming, Queue or Steer instead of starting a second run.
   if (state.sessionRuns[sessionId]?.streaming && !extra._from_queue) {
@@ -6258,6 +6779,7 @@ async function sendMessage(overrideText, extra = {}) {
         soul_role: "",
         subagent_id: extra.subagent_id || state.activeSubagent || "",
         web_search: wantSearch ? true : undefined,
+        deep_search: wantSearch ? !!state.deepSearch : undefined,
         ...extra,
       }),
     });
@@ -6361,6 +6883,8 @@ function readSSE(url, handlers) {
             if (event === "subagent_done" && handlers.onSubagentDone) handlers.onSubagentDone(payload);
             if (event === "error" && handlers.onError) handlers.onError(payload.message || "error");
             if (event === "done") {
+              // Release the connection right away (browsers allow ~6 per host).
+              try { reader.cancel(); } catch (_) { /* ignore */ }
               if (handlers.onDone) handlers.onDone(payload);
               resolve();
               return;
@@ -6544,8 +7068,18 @@ async function renderSearchPanel(langZh) {
           { value: "serpapi", label: "SerpAPI Google" },
           { value: "bing", label: "Bing RSS" },
           { value: "so360", label: langZh ? "360 搜索" : "360 so.com" },
+          { value: "sogou", label: langZh ? "搜狗" : "Sogou" },
+          { value: "baidu", label: langZh ? "百度" : "Baidu" },
+          { value: "ddg", label: "DuckDuckGo" },
+          { value: "brave", label: "Brave Search API" },
+          { value: "tavily", label: "Tavily" },
+          { value: "searxng", label: "SearXNG" },
         ],
       }, "select")}
+      ${field(langZh ? "深度搜索时打开原文页面" : "Read result pages in deep search", "search.fetch_pages", cfg.fetch_pages !== false, "checkbox")}
+      ${field(langZh ? "最多打开页数（0–6）" : "Max pages to read (0–6)", "search.max_pages", String(cfg.max_pages ?? 3))}
+      ${field(langZh ? "每次检索结果数（4–16）" : "Results per search (4–16)", "search.max_results", String(cfg.max_results ?? 10))}
+      ${field(langZh ? "SearXNG 实例地址（可选）" : "SearXNG instance URL (optional)", "search.searxng_url", cfg.searxng_url || "")}
       ${field(langZh ? "HTTPS 代理（可选，打通 Google）" : "HTTPS proxy (optional, for Google)", "search.proxy", cfg.proxy || "")}
       ${field("Google CSE CX", "search.google_cse_cx", cfg.google_cse_cx || "")}
       ${field(langZh ? "校验证书" : "Verify TLS", "search.verify_tls", cfg.verify_tls !== false, "checkbox")}
@@ -6556,6 +7090,19 @@ async function renderSearchPanel(langZh) {
     <label class="field"><span>SerpAPI Key（Google 深度结果）</span>
       <input type="password" id="search-serpapi-key" placeholder="${status.serpapi_configured ? (langZh ? "已配置（留空保留）" : "configured (leave blank to keep)") : "serpapi…"}" autocomplete="off" />
     </label>
+    <label class="field"><span>Brave Search API Key</span>
+      <input type="password" id="search-brave-key" placeholder="${status.brave_configured ? (langZh ? "已配置（留空保留）" : "configured (leave blank to keep)") : "BSA…"}" autocomplete="off" />
+    </label>
+    <label class="field"><span>Tavily API Key</span>
+      <input type="password" id="search-tavily-key" placeholder="${status.tavily_configured ? (langZh ? "已配置（留空保留）" : "configured (leave blank to keep)") : "tvly-…"}" autocomplete="off" />
+    </label>
+    <h4>${langZh ? "搜索引擎开关" : "Search engines"}</h4>
+    <div class="skill-list" id="search-engines">${(status.engines || []).map((e) => `<div class="skill-row">
+        <div style="flex:1"><strong>${escapeHtml(e.label)}</strong>
+          <div class="muted">${e.needs === "key" ? (langZh ? "需要 API Key" : "needs API key") : e.needs === "url" ? (langZh ? "需要实例地址" : "needs instance URL") : (langZh ? "免密钥" : "key-free")}
+          · ${e.configured ? (langZh ? "可用" : "ready") : (langZh ? "未配置" : "not configured")}</div></div>
+        <label class="check"><input type="checkbox" data-engine="${escapeHtml(e.id)}" ${e.enabled ? "checked" : ""} /> ${langZh ? "启用" : "On"}</label>
+      </div>`).join("")}</div>
     <p class="muted">${langZh
       ? `状态：Google CSE ${status.google_cse_configured ? "✓" : "—"} · SerpAPI ${status.serpapi_configured ? "✓" : "—"} · 代理 ${status.proxy_configured ? "✓" : "—"}`
       : `Status: CSE ${status.google_cse_configured ? "on" : "off"} · SerpAPI ${status.serpapi_configured ? "on" : "off"} · proxy ${status.proxy_configured ? "on" : "off"}`}</p>
@@ -6573,11 +7120,20 @@ async function renderSearchPanel(langZh) {
       proxy: document.querySelector('[data-key="search.proxy"]')?.value || "",
       google_cse_cx: document.querySelector('[data-key="search.google_cse_cx"]')?.value || "",
       verify_tls: !!document.querySelector('[data-key="search.verify_tls"]')?.checked,
+      fetch_pages: !!document.querySelector('[data-key="search.fetch_pages"]')?.checked,
+      max_pages: Number(document.querySelector('[data-key="search.max_pages"]')?.value || 3),
+      max_results: Number(document.querySelector('[data-key="search.max_results"]')?.value || 10),
+      searxng_url: document.querySelector('[data-key="search.searxng_url"]')?.value || "",
+      engines: Object.fromEntries(Array.from(document.querySelectorAll("[data-engine]")).map((b) => [b.dataset.engine, b.checked])),
     };
     const cse = $("#search-google-cse-key")?.value?.trim();
     const serp = $("#search-serpapi-key")?.value?.trim();
+    const brave = $("#search-brave-key")?.value?.trim();
+    const tavily = $("#search-tavily-key")?.value?.trim();
     if (cse) body.google_cse_key = cse;
     if (serp) body.serpapi_key = serp;
+    if (brave) body.brave_key = brave;
+    if (tavily) body.tavily_key = tavily;
     try {
       const data = await api("/api/search/keys", { method: "POST", body: JSON.stringify(body) });
       state.settings = data;
@@ -7032,12 +7588,14 @@ async function renderControl() {
     ${field("Import campus-office-ai.json path", "import_path", "")}
     <button type="button" class="btn ghost" id="btn-import-cfg">Import</button>`;
 
+  // Self-contained panels first so their tabs are usable while slower probes
+  // (runtimes / ecosystem) are still loading.
+  await renderSearchPanel(langZh);
+  await renderSciencePanel(langZh);
   await renderRuntimesPanel(langZh);
   await renderEcosystemRecommend(langZh);
   await renderMcpPanel(langZh);
-  await renderSciencePanel(langZh);
   await renderSkillsSoulAgents(langZh);
-  await renderSearchPanel(langZh);
 
   const importBtn = $("#btn-import-cfg");
   if (importBtn) {
@@ -8861,6 +9419,9 @@ window.addEventListener("focus", () => {
 
 bindProvenanceOverlay();
 bindSkillCaptureOverlay();
+$("#input")?.addEventListener("input", updateSlashMenu);
+$("#input")?.addEventListener("blur", () => setTimeout(hideSlashMenu, 150));
+$("#input")?.addEventListener("keydown", (e) => { if (e.key === "Escape") hideSlashMenu(); });
 boot().then(() => {
   startGatewayHealthPoll();
   setTimeout(() => { checkScheduleTips({ force: true }).catch(() => {}); }, 700);

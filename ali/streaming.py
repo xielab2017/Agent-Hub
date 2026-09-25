@@ -621,6 +621,9 @@ def start_chat(
     subagent_id: str = "",
     web_search: bool | None = None,
     thinking_depth: str = "",
+    deep_search: bool | None = None,
+    task_id: str = "",
+    task_step: int = 0,
 ) -> dict[str, Any]:
     """Start a background agent run; returns stream_id for SSE."""
     from . import agents as agents_mod, audit, ecosystem, routing, skills as skills_mod, soul as soul_mod
@@ -639,6 +642,17 @@ def start_chat(
             system = (system + "\n\n【同文件夹相关会话摘要】\n" + folder_memory).strip()
     except Exception:  # noqa: BLE001
         pass
+
+    # Guidance the user typed while the previous run was still going.
+    steer_note = ""
+    try:
+        from . import pending_intent as _pi
+
+        steer_note = _pi.take_carried(session_id)
+        if steer_note:
+            system = (system + "\n\n## 用户在上一轮运行中补充的指引（必须遵循）\n" + steer_note).strip()
+    except Exception:  # noqa: BLE001
+        steer_note = ""
 
     cfg = load_campus_config()
     # Sync selected soul into config before routing/preamble (skip disk SOUL rewrite for speed)
@@ -771,6 +785,11 @@ def start_chat(
     route_info["workspace"] = ws
     route_info["_user_message"] = msg
     route_info["_workflow_id"] = workflow_id or None
+    if steer_note:
+        route_info["steer_applied"] = steer_note[:500]
+    if task_id:
+        route_info["task_id"] = task_id
+        route_info["task_step"] = int(task_step or 0)
     route_info["runtime_active"] = rt_info.get("active")
     route_info["runtime_auto"] = rt_info.get("auto_runtime")
     route_info["runtime_resolved"] = runtime_resolved
@@ -916,7 +935,12 @@ def start_chat(
             from . import websearch as websearch_mod
 
             route_info.setdefault("_thinking_notes", []).append("正在深度联网检索…")
-            search_res = websearch_mod.search_structured(msg, limit=8, deep=True)
+            scfg = cfg.get("search") if isinstance(cfg.get("search"), dict) else {}
+            try:
+                search_limit = max(4, min(16, int(scfg.get("max_results") or 8)))
+            except (TypeError, ValueError):
+                search_limit = 8
+            search_res = websearch_mod.search_structured(msg, limit=search_limit, deep=True)
             search_block = str(search_res.get("context_markdown") or "")
             try:
                 from . import provenance as provenance_mod
@@ -924,6 +948,32 @@ def start_chat(
                 route_info["_search"] = provenance_mod.compact_search(search_res)
             except Exception:  # noqa: BLE001
                 pass
+            # Deep search opens the top pages; every search gets graded + cross-checked evidence.
+            read_pages = bool(deep_search) if deep_search is not None else (
+                scfg.get("fetch_pages", True) is not False and scfg.get("deep", True) is not False
+            )
+            route_info["deep_search"] = read_pages
+            try:
+                from . import evidence as evidence_mod, page_fetch
+
+                srcs = list(search_res.get("sources") or [])
+                pages = []
+                if read_pages and srcs and scfg.get("fetch_pages", True) is not False:
+                    route_info.setdefault("_thinking_notes", []).append("正在打开原文页面提取关键段落…")
+                    pages = page_fetch.fetch_pages(srcs, msg, max_pages=int(scfg.get("max_pages") or 3))
+                ev = evidence_mod.build_evidence(msg, srcs, pages)
+                ev_block = evidence_mod.render_block(ev)
+                if ev_block:
+                    search_block = (search_block + "\n\n" + ev_block).strip()
+                route_info["_evidence"] = evidence_mod.compact(ev)
+                cov = ev.get("coverage") or {}
+                route_info.setdefault("_thinking_notes", []).append(
+                    f"证据核对：{cov.get('sources', 0)} 条来源 · 权威 {cov.get('authoritative', 0)} · "
+                    f"已读原文 {cov.get('pages_read', 0)} · 多源一致数值 {cov.get('corroborated_facts', 0)} · "
+                    f"冲突 {len(ev.get('conflicts') or [])}"
+                )
+            except Exception as exc:  # noqa: BLE001
+                route_info.setdefault("_thinking_notes", []).append(f"证据核对跳过：{exc}")
             extra_system = (extra_system + "\n\n" + search_block).strip() if extra_system else search_block
             route_info["web_search"] = True
             route_info["web_search_deep"] = True
@@ -1135,6 +1185,7 @@ def _attach_provenance(
             sources=list(search.get("sources") or []),
             evidence_texts=[msg_text, preamble, " ".join(str(t.get("preview") or "") for t in tools or [])],
             simple_chat=bool(route_info.get("simple_chat")),
+            evidence=route_info.get("_evidence") if isinstance(route_info.get("_evidence"), dict) else None,
         )
     except Exception:  # noqa: BLE001
         pass
@@ -1157,7 +1208,10 @@ def _attach_provenance(
             healed=bool(assistant_msg.get("healed") or route_info.get("_heal_attempted")),
             history_messages=len(session.messages) if session else None,
             review=assistant_msg.get("review"),
+            evidence=route_info.get("_evidence") if isinstance(route_info.get("_evidence"), dict) else None,
         )
+        if isinstance(route_info.get("_evidence"), dict) and route_info["_evidence"].get("sources"):
+            assistant_msg["evidence"] = route_info["_evidence"]
     except Exception:  # noqa: BLE001
         pass
 
@@ -1738,6 +1792,8 @@ def _run_agent_streaming(
             done_payload["provenance"] = assistant_msg["provenance"]
         if assistant_msg.get("review"):
             done_payload["review"] = assistant_msg["review"]
+        if assistant_msg.get("evidence"):
+            done_payload["evidence"] = assistant_msg["evidence"]
         if assistant_msg.get("elapsed_ms") is not None:
             done_payload["elapsed_ms"] = assistant_msg["elapsed_ms"]
             done_payload["started_at"] = assistant_msg.get("started_at")
@@ -1982,7 +2038,7 @@ def _openclaw_cli_reply(
     from . import claw_cli
     from .providers import key_provider_mismatch
     from .secrets import resolve_api_key
-    from .settings import load_campus_config
+    from .settings import load_campus_config, resolve_backend_verify_tls
 
     if not claw_cli.find_openclaw_bin():
         return False
@@ -2452,6 +2508,9 @@ def drain_queued_after_done(session_id: str) -> str | None:
     try:
         from . import pending_intent
 
+        leftover = pending_intent.consume_steer_for_prompt(session_id)
+        if leftover:
+            pending_intent.carry_steer(session_id, leftover)
         pending_intent.clear_run(session_id)
         return pending_intent.pop_queue(session_id)
     except Exception:  # noqa: BLE001

@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/xielab2017/Agent-Hub/releases"><img alt="version" src="https://img.shields.io/badge/version-5.2.0-rose.svg" /></a>
+  <a href="https://github.com/xielab2017/Agent-Hub/releases"><img alt="version" src="https://img.shields.io/badge/version-5.3.0-rose.svg" /></a>
   <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-MIT-blue.svg" /></a>
   <a href="https://www.python.org/"><img alt="python" src="https://img.shields.io/badge/python-%3E%3D3.9-brightgreen.svg" /></a>
   <a href="https://github.com/xielab2017/Agent-Hub"><img alt="platform" src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg" /></a>
@@ -38,6 +38,9 @@
 | **审查代理** | 自动核查引用编号、链接、DOI/PMID 与无出处的数字，可联网核验 |
 | **科学数据库** | UniProt · PDB · Ensembl · ChEMBL · ClinicalTrials · GEO · ClinVar · Reactome · Europe PMC · Crossref |
 | **流程存为技能** | 一键把会话保存为 SKILL.md，后续相似请求自动套用 |
+| **任务 · 自动下一步** | 在对话框输入任务（`/task` 或列出步骤），逐步执行、审查通过自动进入下一步 |
+| **多引擎 + 读原文** | Bing / 360 / 百度 / 搜狗 / DuckDuckGo / SearXNG / Brave / Tavily / Google；深度搜索打开原文 |
+| **数据核对与总结** | 来源分级、跨来源数值一致性与冲突检测；结构化总结与「来源与证据」面板 |
 | **跨设备** | 默认监听 `0.0.0.0:8765`，同局域网可用 IP 访问 |
 
 <p align="center">
@@ -97,7 +100,7 @@ chmod +x ctl.sh "Start Agent Hub.command" start.sh
 curl -s http://127.0.0.1:8765/api/health
 ```
 
-确认健康检查里显示 `"version": "5.2.0"`。如果仍然不对，可临时换端口验证当前源码：
+确认健康检查里显示 `"version": "5.3.0"`。如果仍然不对，可临时换端口验证当前源码：
 
 ```bash
 python3 server.py --host 127.0.0.1 --port 9876 --open
@@ -229,6 +232,46 @@ python3 server.py --host 0.0.0.0 --port 8765
 | `POST /api/skills/from-session` | 生成技能草稿 |
 | `POST /api/skills/from-session/save` | 保存并加载技能 |
 
+### 在对话框输入任务 · 自动进入下一步
+
+在输入框里直接写任务即可：
+
+- `/task 调研 TP53 突变：1. 检索最新文献 2. 核对突变频率 3. 写总结` —— 按列出的步骤执行
+- 消息里本身有 `1. … 2. …`、`第一步…第二步…`、`首先…然后…最后…` 时，会询问是否「按任务执行」
+- 没有列步骤时，研究/检索类任务自动套用「检索资料 → 核对数据 → 整理总结 → 下一步建议」
+
+每一步都走完整流程（检索、证据核对、审查、溯源）。输入框上方的**任务栏**显示进度：
+
+- **自动推进**（默认）：本步审查无警告就自动进入下一步；有警告时暂停并显示原因，可「仍然继续」或「停止」
+- **逐步确认**：每步完成后等你点「继续下一步」
+- 运行中在输入框补充的「中途指引」会带入下一步
+
+| 命令 | 作用 |
+|------|------|
+| `/task <描述>` | 按步骤执行任务，自动进入下一步 |
+| `/search <问题>` · `/deep <问题>` | 联网检索 / 深度检索（多引擎 + 打开原文 + 交叉核对） |
+| `/summary` | 把上一条回复整理成结构化总结 |
+| `/verify` | 联网核验上一条回复的 DOI / PMID |
+| `/next` · `/stop` | 继续下一步 / 停止当前任务 |
+
+### 外部搜索引擎与读原文
+
+控制中心 → **搜索**：可选引擎优先级，并逐个开关——Bing RSS、360、百度、搜狗、DuckDuckGo、SearXNG（填自建实例地址）、Brave Search / Tavily（填 API Key）、Google CSE / SerpAPI。深度搜索会并行打开前几个结果页面（默认 3 个），提取与问题最相关的段落；只访问公网地址，不会访问本机或内网。
+
+### 数据准确性与总结梳理
+
+- 每个来源自动分级：官方 / 数据库 / 学术 / 预印本 / 新闻 / 社区自媒体，并识别日期
+- 从来源中提取数值，统计**多少个独立域名一致**，发现**来源之间的数值分歧**
+- 审查代理额外标记：来源间有分歧的数字（警告）、只有单一来源的数字、来源全部是论坛/自媒体
+- 检索类回复按「结论摘要 / 关键数据表（指标 | 数值 | 来源 | 一致性）/ 分歧与不确定 / 下一步」组织；回复下方有「来源与证据」面板和可点击的「下一步」建议
+- 表单 / Excel 联网填写优先采用多个来源一致的值，并给出 high / medium / low 置信度
+
+| API | 说明 |
+|-----|------|
+| `POST /api/tasks` · `POST /api/tasks/preview` | 创建任务（返回第一步）/ 预览拆分的步骤 |
+| `GET /api/tasks/<id>` · `GET /api/sessions/<id>/task` | 任务状态 / 会话当前任务 |
+| `POST /api/tasks/<id>/advance` · `stop` · `mode` | 推进（`force` 跳过闸门）/ 停止 / 切换 auto·confirm |
+
 ### 外观
 
 中英、浅/深色、主题色；Logo 可上传或选内置品牌（SUAT 彩标 / 白板）。
@@ -257,7 +300,7 @@ Agent-Hub/
 
 ## 开发与版本
 
-当前版本：**v5.2.0**（分支 `main`）
+当前版本：**v5.3.0**（分支 `main`）
 
 ```bash
 # 健康检查
@@ -271,6 +314,7 @@ git pull
 
 简要更新：
 
+- **v5.3.0** — 对话框任务与自动下一步、多引擎搜索与读原文、来源分级与跨来源核对、结构化总结
 - **v5.2.0** — 审查代理、科学数据库连接器、流程存为技能；CI 自动测试
 - **v5.1.0** — 对标 Claude Science 的可审计溯源：每条回复的溯源记录、完整性校验、报告与复现包导出
 - **v5.0.0** — 强化 Agent Hub 本地网关、启动器与跨平台使用体验；新增 macOS 首次启动排查说明

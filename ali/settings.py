@@ -107,9 +107,13 @@ DEFAULT_CAMPUS: dict[str, Any] = {
     },
     "search": {
         "enabled": True,
-        "provider": "auto",  # auto | google_cse | serpapi | bing | so360
+        "provider": "auto",  # auto | google_cse | serpapi | bing | so360 | sogou | baidu | ddg | brave | tavily | searxng
         "deep": True,
         "max_results": 10,
+        "engines": {},  # per-engine switches, e.g. {"baidu": false}; missing = on
+        "searxng_url": "",  # your SearXNG instance, e.g. http://127.0.0.1:8888
+        "fetch_pages": True,  # deep search opens the top result pages
+        "max_pages": 3,
         "google_cse_cx": "",
         "proxy": "",  # e.g. http://127.0.0.1:7890 for Google CSE/SerpAPI on campus
         "verify_tls": True,

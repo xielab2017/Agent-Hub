@@ -201,6 +201,12 @@ from ali import sessions as store, streaming, provenance, websearch
 
 SEARCH = json.loads(sys.argv[2])
 websearch.search_structured = lambda *a, **k: SEARCH
+from ali import page_fetch
+PAGES_CALLED = []
+def _fake_pages(sources, query, **k):
+    PAGES_CALLED.append(len(sources))
+    return [{"n": 1, "ok": True, "passages": ["Off-target edits were seen in 12% of cells."]}]
+page_fetch.fetch_pages = _fake_pages
 s = store.create_session(title="e2e")
 sid = s.id
 res = streaming.start_chat(sid, "请检索 CRISPR 脱靶效应的最新文献并总结", web_search=True)
@@ -226,6 +232,10 @@ print(json.dumps({
     "second_route_skills": res2["route"].get("skills"),
     "second_skills_source": res2["route"].get("skills_source"),
     "second_captured": res2["route"].get("skills_captured"),
+    "pages_called": PAGES_CALLED,
+    "evidence_cov": ((rec or {}).get("evidence") or {}).get("coverage"),
+    "msg_evidence": bool(msg.get("evidence")),
+    "prompt_has_digest": "## Evidence digest" in (((rec or {}).get("context") or {}).get("system_prompt") or {}).get("text", ""),
 }))
 print(json.dumps({
     "summary": msg.get("provenance"),
@@ -270,6 +280,10 @@ def test_start_chat_records_verified_provenance_end_to_end():
     assert extra["second_captured"] == ["crispr-off-target-review"]
     assert "crispr-off-target-review" in extra["second_route_skills"]
     assert extra["second_skills_source"] == "captured"
+    # deep search read the result pages and the graded evidence was sealed into the record
+    assert extra["pages_called"] == [2]
+    assert extra["evidence_cov"]["sources"] == 2 and extra["evidence_cov"]["pages_read"] == 1
+    assert extra["msg_evidence"] and extra["prompt_has_digest"]
     assert out["summary"] and out["summary"]["schema"] == "agent-hub.provenance/1"
     assert out["verified"] is True
     assert out["sources"] == [s["url"] for s in SEARCH["sources"]]

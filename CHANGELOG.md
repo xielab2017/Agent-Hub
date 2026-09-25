@@ -1,5 +1,56 @@
 # Changelog
 
+## v5.3.0 — 2026-09-25
+
+Type a task in the chat box → search → check the data → summarise → move on
+to the next step automatically.
+
+- **Tasks & auto next step** — `ali/task_runner.py` (new). `/task …` (or a
+  message with explicit steps: `1. … 2. …`, `第一步…`, `首先…然后…最后…`)
+  becomes a multi-step task; otherwise a research / general template is used
+  (max 8 steps; a final "汇总与下一步" step is added when missing). Each step
+  runs through the normal chat pipeline with the goal, earlier step
+  conclusions and open issues in its prompt. After every step the reviewer
+  gate decides: **auto** mode continues unless the reviewer raised warnings;
+  **confirm** mode waits for 「继续下一步」. Tasks persist
+  (`STATE_DIR/tasks/`) and the dock restores after reload. APIs:
+  `POST /api/tasks`, `POST /api/tasks/preview`, `GET /api/tasks/<id>`,
+  `POST /api/tasks/<id>/advance|stop|mode`, `GET /api/sessions/<id>/task`.
+- **Composer** — slash commands with a hint menu: `/task`, `/search`, `/deep`,
+  `/summary`, `/verify`, `/next`, `/stop`, `/help`; the 深度搜索 toggle is now
+  actually sent (`deep_search`); guidance typed while a run is going ("steer")
+  is carried into the next turn / task step instead of being dropped.
+- **External search engines** — `ali/search_engines.py` (new): DuckDuckGo,
+  百度 (best-effort), SearXNG (your instance), Brave Search API, Tavily; per-engine
+  switches, new keys, provider choices and page-reading options in Control
+  Center → 搜索. (Bing Web Search API was retired in 2025 and is not used.)
+- **Read the pages** — `ali/page_fetch.py` (new): deep search opens the top
+  results (default 3, parallel, 10 s budget) and keeps the passages that answer
+  the query. Only public addresses are fetched; redirects to localhost / LAN /
+  metadata endpoints are refused (SSRF guard).
+- **Data accuracy** — `ali/source_quality.py` (new) grades every source
+  (official / database / academic / preprint / news / user content) and dates
+  it; `ali/evidence.py` (new) extracts the numbers the sources state, counts how
+  many independent domains agree and detects conflicting values. The reviewer
+  now also reports `conflicting_number` (warn), `single_source_number` and
+  forum-only evidence. Form / Excel web-fill picks the value most domains agree
+  on (confidence high / medium / low).
+- **Summaries** — an evidence digest (graded sources, key passages, cross-checked
+  numbers, conflicts) goes into the prompt with a required answer structure
+  (结论摘要 / 关键数据表 / 分歧与不确定 / 下一步); replies show a 「来源与证据」
+  panel and clickable 「下一步」 suggestions; `/summary` restructures the last
+  reply; provenance records and reports include the evidence.
+- **Fixes** — search `_fetch` ignored `verify_tls` and its relaxed-TLS retry
+  (opener built without SSL context); the MiniMax-parity engine could recurse
+  when the provider was not `auto`; `search.max_results` was unused; the OpenClaw
+  reply path crashed with a NameError (`resolve_backend_verify_tls` not
+  imported); finished SSE streams kept their connection open (keep-alive with no
+  length), which after a few runs exhausted the browser's per-host connection
+  pool and stalled other requests; Control Center rendered the search tab last.
+- Tests: `test_search_engines.py`, `test_evidence.py`, `test_task_runner.py`
+  (new, incl. a 4-step task end to end), `tests/conftest.py` blocks real network
+  in every in-process test — 163 passing.
+
 ## v5.2.0 — 2026-09-25
 
 The rest of the Claude Science standard: a background reviewer, scientific

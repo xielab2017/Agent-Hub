@@ -118,3 +118,24 @@ def consume_steer_for_prompt(session_id: str) -> str | None:
         if row:
             row["steer"] = None
         return str(msg).strip() if msg else None
+
+
+# Steer typed during a run is carried into the next turn (e.g. the next task step)
+# instead of being dropped when the run ends.
+_CARRY: dict[str, list[str]] = {}
+
+
+def carry_steer(session_id: str, text: str) -> None:
+    sid = (session_id or "").strip()
+    t = (text or "").strip()
+    if sid and t:
+        with _lock:
+            _CARRY.setdefault(sid, []).append(t[:2000])
+
+
+def take_carried(session_id: str) -> str:
+    """Return (and clear) steer carried over from earlier runs, oldest first."""
+    sid = (session_id or "").strip()
+    with _lock:
+        items = _CARRY.pop(sid, [])
+    return "\n".join(f"- {t}" for t in items)

@@ -1978,3 +1978,84 @@ hr.soft {
   border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 13px;
 }
 .sci-results .prov-sources li { margin-bottom: 4px; }
+
+/* ── Composer slash commands ──────────────────────────────────────── */
+.composer-row-ext { position: relative; }
+.slash-menu {
+  position: absolute; left: 0; right: 0; bottom: calc(100% + 6px); z-index: 30;
+  background: var(--bg-elev); border: 1px solid var(--border); border-radius: 12px;
+  box-shadow: var(--shadow); padding: 6px; display: flex; flex-direction: column; gap: 2px;
+  max-height: 260px; overflow: auto;
+}
+.slash-item {
+  display: flex; gap: 12px; align-items: baseline; text-align: left; width: 100%;
+  background: transparent; border: 0; border-radius: 8px; padding: 7px 10px; color: var(--text);
+  font: inherit; font-size: 13px; cursor: pointer;
+}
+.slash-item:hover, .slash-item:focus-visible { background: var(--bg-soft); outline: none; }
+.slash-item code { font-family: var(--mono); min-width: 84px; color: var(--accent); }
+.slash-item .muted { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── Task dock (multi-step tasks) ─────────────────────────────────── */
+.task-dock {
+  margin: 0 0 8px; padding: 8px 10px; border-radius: 12px; font-size: 13px;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+  background: color-mix(in srgb, var(--accent) 6%, var(--bg-elev));
+  display: flex; flex-direction: column; gap: 6px; min-width: 0;
+}
+.task-dock.status-blocked, .task-dock.status-waiting { border-color: color-mix(in srgb, var(--warn) 55%, var(--border)); }
+.task-dock.status-done { border-color: color-mix(in srgb, var(--ok) 50%, var(--border)); }
+.task-dock-head { display: flex; align-items: center; gap: 8px; min-width: 0; flex-wrap: wrap; }
+.task-goal { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.task-mode {
+  border: 1px solid var(--border); background: var(--bg); color: var(--text);
+  border-radius: 8px; padding: 3px 6px; font: inherit; font-size: 12px;
+}
+.task-steps { list-style: none; margin: 0; padding: 0; display: flex; gap: 6px; flex-wrap: wrap; }
+.task-steps li {
+  display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--bg); font-size: 12px; max-width: 100%;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.task-steps .ts-running { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.task-steps .ts-done { color: var(--ok); }
+.task-steps .ts-blocked { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 55%, var(--border)); }
+.task-steps .ts-skipped { color: var(--muted); text-decoration: line-through; }
+.ts-warn { color: var(--warn); font-size: 11px; }
+.task-dock-foot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.task-status { flex: 1; min-width: 0; color: var(--muted); overflow-wrap: anywhere; }
+.task-offer {
+  margin: 10px 0; padding: 10px 12px; border-radius: 12px; font-size: 13px;
+  border: 1px dashed color-mix(in srgb, var(--accent) 45%, var(--border)); background: var(--bg-soft);
+  display: flex; flex-direction: column; gap: 6px;
+}
+.task-offer-text { overflow-wrap: anywhere; }
+
+/* ── Sources & evidence panel ─────────────────────────────────────── */
+.evidence-box {
+  margin-top: 8px; border-radius: 10px; font-size: 12px;
+  border: 1px solid var(--border); background: var(--bg-soft);
+}
+.evidence-box summary { cursor: pointer; padding: 6px 10px; list-style: none; display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+.evidence-box summary::-webkit-details-marker { display: none; }
+.ev-badge { font-weight: 600; }
+.ev-body { padding: 0 10px 10px; }
+.ev-body h4 { margin: 8px 0 4px; font-size: 12px; color: var(--muted); }
+.tier {
+  display: inline-block; font-size: 10.5px; padding: 0 6px; border-radius: 999px; margin-right: 4px;
+  border: 1px solid var(--border); color: var(--muted); vertical-align: 1px;
+}
+.tier-official, .tier-database { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 50%, var(--border)); }
+.tier-academic { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); }
+.tier-ugc { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 50%, var(--border)); }
+.ev-table-wrap { overflow-x: auto; }
+.ev-table { border-collapse: collapse; width: 100%; font-size: 12px; }
+.ev-table td { padding: 3px 8px 3px 0; border-bottom: 1px solid var(--border); vertical-align: top; }
+.ev-table code { font-family: var(--mono); }
+.ev-ok { color: var(--ok); }
+.ev-bad { color: var(--warn); font-weight: 600; }
+
+/* ── Next-step suggestions ────────────────────────────────────────── */
+.next-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; font-size: 12px; }
+.next-chip { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.task-dock .btn { width: auto; flex: 0 0 auto; min-width: 0; }

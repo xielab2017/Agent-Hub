@@ -251,6 +251,7 @@ def build_record(
     healed: bool = False,
     history_messages: int | None = None,
     review: dict[str, Any] | None = None,
+    evidence: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     ri = route_info or {}
     finished = time.time()
@@ -325,6 +326,9 @@ def build_record(
         },
         "healed": bool(healed),
         "review": _redact(review) if isinstance(review, dict) else {},
+        "evidence": _redact(evidence) if isinstance(evidence, dict) else {},
+        "task": {"id": ri.get("task_id"), "step": ri.get("task_step")} if ri.get("task_id") else {},
+        "steer": str(ri.get("steer_applied") or "")[:500],
         "environment": environment(),
         "journal": journal,
     }
@@ -493,6 +497,25 @@ def render_markdown(record: dict[str, Any]) -> str:
             lines.append(f"| {s.get('n')} | {link} | {_md_cell(s.get('domain'))} | {_md_cell(s.get('engine'))} |")
     else:
         lines.append("No web sources were retrieved for this reply. · 本次回复未使用联网来源。")
+
+    ev = record.get("evidence") or {}
+    if ev.get("sources"):
+        cov = ev.get("coverage") or {}
+        lines += ["", "## 证据核对 · Evidence", ""]
+        lines.append(
+            f"- Authoritative {cov.get('authoritative', 0)}/{cov.get('sources', 0)} · pages read {cov.get('pages_read', 0)}"
+            f" · corroborated numbers {cov.get('corroborated_facts', 0)} · conflicts {len(ev.get('conflicts') or [])}"
+            + (f" · latest {cov['latest_date']}" if cov.get("latest_date") else "")
+        )
+        lines += ["", "| # | Tier | Date | Domain |", "|---|---|---|---|"]
+        for s_ in ev.get("sources") or []:
+            lines.append(f"| {s_.get('n')} | {_md_cell(s_.get('tier_label'))} | {_md_cell(s_.get('date'))} | {_md_cell(s_.get('domain'))} |")
+        facts = ev.get("facts") or []
+        if facts:
+            lines += ["", "| Metric | Value | Sources | Agreement |", "|---|---|---|---|"]
+            for f in facts[:12]:
+                agree = "conflict" if f.get("conflict") else (f"{f.get('domains')} domains" if (f.get("domains") or 0) >= 2 else "single source")
+                lines.append(f"| {_md_cell(f.get('key'))} | {_md_cell(f.get('display'))} | {''.join(f'[{n}]' for n in f.get('sources') or [])} | {agree} |")
 
     lines += ["", "## 工具调用 · Tool calls", ""]
     tools = record.get("tools") or []

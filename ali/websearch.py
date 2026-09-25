@@ -21,9 +21,8 @@ import time
 import xml.etree.ElementTree as ET
 from html import unescape
 from typing import Any
-from urllib.error import URLError
 from urllib.parse import urlencode
-from urllib.request import ProxyHandler, Request, build_opener, urlopen
+from urllib.request import HTTPRedirectHandler, HTTPSHandler, ProxyHandler, Request, build_opener
 
 _UA = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
@@ -76,47 +75,74 @@ def _ssl_context(*, relaxed: bool = False) -> ssl.SSLContext | None:
     return ctx
 
 
-def _fetch(url: str, *, timeout: float = 8.0, relaxed_tls: bool = False) -> str:
+class _CheckedRedirect(HTTPRedirectHandler):
+    """Refuse redirects whose target fails ``check`` (e.g. a public page → localhost)."""
+
+    def __init__(self, check: Any) -> None:
+        super().__init__()
+        self._check = check
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: D401, ANN001
+        if not self._check(newurl):
+            raise OSError(f"redirect to a non-public address refused: {newurl}")
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+def _opener(*, relaxed: bool = False, redirect_check: Any = None) -> Any:
+    """Opener with the search proxy AND the TLS policy applied.
+
+    (Previously the proxy opener was built without an SSL context, so
+    ``verify_tls=False`` and the relaxed retry silently did nothing.)
+    """
+    handlers = list(_proxy_handlers())
+    ctx = _ssl_context(relaxed=relaxed)
+    if ctx is not None:
+        handlers.append(HTTPSHandler(context=ctx))
+    if redirect_check is not None:
+        handlers.append(_CheckedRedirect(redirect_check))
+    return build_opener(*handlers)
+
+
+def _http(
+    url: str,
+    *,
+    data: bytes | None = None,
+    headers: dict[str, str] | None = None,
+    timeout: float = 8.0,
+    relaxed_tls: bool = False,
+    max_timeout: float = 4.0,
+    redirect_check: Any = None,
+) -> str:
+    """GET (or POST when ``data`` is given) with proxy/TLS policy and one relaxed-TLS retry."""
     # A stalled public endpoint must not freeze auto-plan or chat.  The caller
     # can still fan out across engines, so a short per-request cap is safer.
-    timeout = min(max(float(timeout), 1.0), 4.0)
-    req = Request(
-        url,
-        headers={
-            "User-Agent": _UA,
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,application/json,*/*;q=0.8",
-            "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
-            "Accept-Encoding": "identity",
-            "Connection": "close",
-        },
-    )
-    handlers = _proxy_handlers()
-    ctx = _ssl_context(relaxed=relaxed_tls)
-    opener = build_opener(*handlers) if handlers else None
-
-    def _open():
-        if opener is not None:
-            return opener.open(req, timeout=timeout)
-        if ctx is not None:
-            return urlopen(req, timeout=timeout, context=ctx)
-        return urlopen(req, timeout=timeout)
-
+    timeout = min(max(float(timeout), 1.0), max_timeout)
+    h = {
+        "User-Agent": _UA,
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,application/json,*/*;q=0.8",
+        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+        "Accept-Encoding": "identity",
+        "Connection": "close",
+    }
+    if headers:
+        h.update(headers)
+    req = Request(url, data=data, headers=h, method="POST" if data is not None else "GET")
     try:
-        with _open() as resp:
+        with _opener(relaxed=relaxed_tls, redirect_check=redirect_check).open(req, timeout=timeout) as resp:
             return resp.read().decode("utf-8", errors="replace")
     except Exception as first:  # noqa: BLE001
         msg = str(first).lower()
         sslish = any(
             k in msg for k in ("ssl", "handshake", "certificate", "timed out", "timeout", "eof")
-        ) or isinstance(first, (ssl.SSLError, TimeoutError, socket.timeout, URLError))
+        ) or isinstance(first, (ssl.SSLError, TimeoutError, socket.timeout))
         if relaxed_tls or not sslish:
             raise
-        with (
-            build_opener(*handlers).open(req, timeout=min(timeout, 3.5))
-            if handlers
-            else urlopen(req, timeout=min(timeout, 3.5), context=_ssl_context(relaxed=True))
-        ) as resp:
+        with _opener(relaxed=True, redirect_check=redirect_check).open(req, timeout=min(timeout, 3.5)) as resp:
             return resp.read().decode("utf-8", errors="replace")
+
+
+def _fetch(url: str, *, timeout: float = 8.0, relaxed_tls: bool = False) -> str:
+    return _http(url, timeout=timeout, relaxed_tls=relaxed_tls)
 
 
 def _strip_html(s: str) -> str:
@@ -491,6 +517,8 @@ def _intent_engines(query: str) -> list[Any]:
     """Return specialized engines for the query's intent (event / academic / news / code / general)."""
     try:
         from . import search_extensions as _se
+        if _se.in_parity_call():
+            return []
         intent = _se.classify_intent(query)
         return _se.engines_for_intent(intent)
     except Exception:  # noqa: BLE001
@@ -507,32 +535,77 @@ def _apply_grounding(query: str, results: list[dict[str, Any]]) -> dict[str, Any
         return {"ok": bool(results), "results": results}
 
 
+_BUILTIN_FNS = {
+    "bing": lambda: search_bing_rss,
+    "so360": lambda: search_so360,
+    "sogou": lambda: search_sogou,
+    "wikipedia": lambda: search_wikipedia,
+    "google_cse": lambda: search_google_cse,
+    "serpapi": lambda: search_serpapi_google,
+}
+
+
+def _google_cse_ready() -> bool:
+    return bool((_secret("google_cse") or os.environ.get("GOOGLE_CSE_API_KEY")) and (
+        _search_cfg().get("google_cse_cx") or os.environ.get("GOOGLE_CSE_CX")
+    ))
+
+
+def _serpapi_ready() -> bool:
+    return bool(_secret("serpapi") or _secret("SERPAPI_API_KEY") or os.environ.get("SERPAPI_API_KEY"))
+
+
+def _engine_cascade(provider: str, intent_first: list[Any]) -> list[Any]:
+    """Ordered engine list for one search, honouring per-engine switches.
+
+    auto: intent engines → keyed engines (SerpAPI / Google CSE / Tavily / Brave)
+          → campus-reachable scrapers (Bing RSS / 360 / 百度 / 搜狗) → DDG / SearXNG → Wikipedia.
+    <engine id>: that engine first, then Bing RSS / 360 as fallbacks.
+    """
+    from . import search_engines as extra
+
+    cfg = _search_cfg()
+    on = lambda eid: extra.is_enabled(eid, cfg)  # noqa: E731
+    builtin = {k: f() for k, f in _BUILTIN_FNS.items()}
+    if provider == "fast":
+        return [builtin["bing"], builtin["so360"]]
+    chosen: list[Any] = []
+    if provider not in ("", "auto"):
+        fn = builtin.get(provider) or builtin.get({"360": "so360"}.get(provider, "")) or extra.engine_by_id(
+            {"ddg": "duckduckgo"}.get(provider, provider)
+        )
+        if fn is not None:
+            chosen = list(intent_first) + [fn]
+        tail = [builtin["bing"], builtin["so360"], builtin["sogou"]]
+        return chosen + [f for f in tail if f not in chosen]
+    engines = list(intent_first)
+    if _serpapi_ready() and on("serpapi"):
+        engines.append(builtin["serpapi"])
+    if _google_cse_ready() and on("google_cse"):
+        engines.append(builtin["google_cse"])
+    extras = extra.available_engines(cfg)
+    keyed = [f for f in extras if f in (extra.search_tavily, extra.search_brave)]
+    free = [f for f in extras if f not in keyed]
+    engines.extend(keyed)
+    for eid in ("bing", "so360"):
+        if on(eid):
+            engines.append(builtin[eid])
+    engines.extend(f for f in free if f is extra.search_baidu)
+    if on("sogou"):
+        engines.append(builtin["sogou"])
+    engines.extend(f for f in free if f is not extra.search_baidu)
+    if on("wikipedia"):
+        engines.append(builtin["wikipedia"])
+    return engines
+
+
 def _search_once(query: str, *, limit: int, provider: str = "auto") -> dict[str, Any]:
     q = (query or "").strip()
     if not q:
         return {"ok": False, "error": "empty query", "results": []}
     # Intent-first routing: specialized engines go to the front of the cascade.
     intent_first = _intent_engines(q)
-    engines: list[Any] = []
-    if provider == "fast":
-        engines = [search_bing_rss, search_so360]
-    elif provider == "google_cse":
-        engines = list(intent_first) + [search_google_cse, search_bing_rss, search_so360]
-    elif provider == "serpapi":
-        engines = list(intent_first) + [search_serpapi_google, search_bing_rss, search_so360]
-    elif provider == "bing":
-        engines = list(intent_first) + [search_bing_rss, search_so360, search_sogou]
-    elif provider in ("so360", "360"):
-        engines = list(intent_first) + [search_so360, search_bing_rss, search_sogou]
-    else:  # auto: prefer configured Google, then campus-reachable engines
-        engines = list(intent_first)
-        if _secret("serpapi") or _secret("SERPAPI_API_KEY") or os.environ.get("SERPAPI_API_KEY"):
-            engines.append(search_serpapi_google)
-        if (_secret("google_cse") or os.environ.get("GOOGLE_CSE_API_KEY")) and (
-            _search_cfg().get("google_cse_cx") or os.environ.get("GOOGLE_CSE_CX")
-        ):
-            engines.append(search_google_cse)
-        engines.extend([search_bing_rss, search_so360, search_sogou, search_wikipedia])
+    engines = _engine_cascade(provider, intent_first)
 
     results: list[dict[str, Any]] = []
     errors: list[str] = []
@@ -695,12 +768,10 @@ def deep_search(query: str, *, limit: int = 10) -> dict[str, Any]:
             "provider": provider,
         }
     uniq = list(gated.get("results") or uniq)[:limit]
+    from .source_quality import is_authoritative
+
     authoritative_count = sum(
-        1 for r in uniq
-        if any(host in str(r.get("url") or "").lower() for host in (
-            "fifa.com", "reuters.com", "apnews.com", "bbc.com", "who.int",
-            "nature.com", "science.org", "gov.cn", "cctv.com",
-        ))
+        1 for r in uniq if is_authoritative(str(r.get("url") or ""), str(r.get("source") or ""))
     )
     return {
         "ok": bool(uniq),
@@ -741,10 +812,31 @@ def search_status() -> dict[str, Any]:
         "serpapi_configured": has_serp,
         "google_cse_cx": bool(sc.get("google_cse_cx") or os.environ.get("GOOGLE_CSE_CX")),
         "proxy_configured": proxy,
+        "brave_configured": bool(_secret("brave") or _secret("BRAVE_API_KEY")),
+        "tavily_configured": bool(_secret("tavily") or _secret("TAVILY_API_KEY")),
+        "searxng_url": str(sc.get("searxng_url") or ""),
+        "fetch_pages": sc.get("fetch_pages", True) is not False,
+        "max_pages": int(sc.get("max_pages") or 3),
+        "max_results": int(sc.get("max_results") or 10),
+        "engines": _engines_status(sc),
         "campus_note_zh": "校园网下 Google 直连常 SSL 超时；已启用 Bing RSS + 360/搜狗深搜。配置 Google CSE / SerpAPI（可加代理）可强化 Google 结果。",
         "campus_note_en": "Campus nets often block Google SSL; Bing RSS + 360/Sogou deep search are active. Add Google CSE / SerpAPI (+ proxy) for Google-strength results.",
         "extensions": _extensions_status(),
     }
+
+
+def _engines_status(sc: dict[str, Any]) -> list[dict[str, Any]]:
+    from . import search_engines as extra
+
+    ready = {"google_cse": _google_cse_ready(), "serpapi": _serpapi_ready()}
+    labels = {"bing": "Bing RSS", "so360": "360 搜索", "sogou": "搜狗", "wikipedia": "Wikipedia",
+              "google_cse": "Google CSE", "serpapi": "SerpAPI (Google)"}
+    rows = [
+        {"id": eid, "label": labels[eid], "needs": "key" if eid in ready else "",
+         "enabled": extra.is_enabled(eid, sc), "configured": ready.get(eid, True)}
+        for eid in extra.BUILTIN_IDS
+    ]
+    return rows + extra.status(sc)
 
 
 def _extensions_status() -> dict[str, Any]:
@@ -799,7 +891,6 @@ def fill_form_from_search(
     limit: int = 6,
 ) -> dict[str, Any]:
     search = search_web(query, limit=limit, deep=True)
-    blob = " ".join(f"{r.get('title') or ''} {r.get('snippet') or ''}" for r in (search.get("results") or []))
     filled: list[dict[str, Any]] = []
     for f in fields or []:
         if isinstance(f, dict):
@@ -812,13 +903,16 @@ def fill_form_from_search(
             hint = name
         if not name:
             continue
-        value = _extract_field_value(hint or name, blob, search.get("results") or [])
+        picked = _extract_field(hint or name, search.get("results") or [])
         filled.append(
             {
                 "name": name,
                 "label": label,
-                "value": value,
-                "confidence": "medium" if value else "low",
+                "value": picked["value"],
+                "confidence": picked["confidence"],
+                "agreeing_domains": picked["domains"],
+                "sources": picked["sources"],
+                "alternatives": picked["alternatives"],
                 "source": "web_search",
             }
         )
@@ -827,9 +921,61 @@ def fill_form_from_search(
         "query": query,
         "search": search,
         "fields": filled,
-        "note_zh": "字段值来自多引擎公开摘要，请人工核对后再写入。",
-        "note_en": "Values from multi-engine snippets — verify before writing.",
+        "note_zh": "字段值来自多引擎公开摘要：confidence=high 表示至少 2 个独立域名一致；medium 为单一来源；low 为未匹配到关键词。写入前请核对。",
+        "note_en": "Values from multi-engine snippets: high = ≥2 independent domains agree, medium = one source, low = no keyword match. Verify before writing.",
     }
+
+
+_FIELD_PATTERNS = (
+    (("email", "邮箱", "mail"), re.compile(r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}")),
+    (("phone", "电话", "手机", "tel"), re.compile(r"(?:\+?\d[\d\- ()]{7,}\d)")),
+    (("year", "年份", "年度"), re.compile(r"\b(?:19|20)\d{2}\b")),
+)
+
+
+def _extract_field(hint: str, results: list[dict[str, Any]]) -> dict[str, Any]:
+    """Pick a field value by cross-source agreement.
+
+    Pattern fields (email / phone / year): the value stated by the most
+    independent domains wins; confidence ``high`` needs ≥2 domains.
+    Text fields: first keyword-matching sentence (``medium``), else ``low``.
+    """
+    from .source_quality import host_of
+
+    hint_l = (hint or "").lower()
+    for keys, pat in _FIELD_PATTERNS:
+        if not any(k in hint_l for k in keys):
+            continue
+        votes: dict[str, dict[str, str]] = {}
+        for r in results:
+            text = f"{r.get('title') or ''} {r.get('snippet') or ''}"
+            dom = host_of(str(r.get("url") or "")) or str(r.get("url") or "")
+            for m in pat.finditer(text):
+                val = re.sub(r"\s+", " ", m.group(0)).strip()
+                votes.setdefault(val.lower(), {"value": val}).setdefault(dom, str(r.get("url") or ""))
+        if votes:
+            ranked = sorted(votes.values(), key=lambda v: -(len(v) - 1))
+            best = ranked[0]
+            doms = [d for d in best if d != "value"]
+            return {
+                "value": best["value"],
+                "confidence": "high" if len(doms) >= 2 else "medium",
+                "domains": len(doms),
+                "sources": [best[d] for d in doms][:4],
+                "alternatives": [v["value"] for v in ranked[1:4]],
+            }
+    keys = [k for k in re.split(r"[\s_/|，,]+", hint) if len(k) >= 2][:4]
+    for r in results:
+        text = f"{r.get('title') or ''}。{r.get('snippet') or ''}"
+        if any(k.lower() in text.lower() for k in keys):
+            value = next((p.strip() for p in re.split(r"[。；;\n]", text) if any(k.lower() in p.lower() for k in keys)), text.strip())
+            return {"value": value[:200], "confidence": "medium", "domains": 1,
+                    "sources": [str(r.get("url") or "")], "alternatives": []}
+    if results:
+        r0 = results[0]
+        return {"value": ((r0.get("snippet") or r0.get("title") or "")[:200]).strip(), "confidence": "low",
+                "domains": 0, "sources": [str(r0.get("url") or "")], "alternatives": []}
+    return {"value": "", "confidence": "low", "domains": 0, "sources": [], "alternatives": []}
 
 
 def _extract_field_value(hint: str, blob: str, results: list[dict[str, Any]]) -> str:
@@ -1013,13 +1159,12 @@ def search_structured(query: str, *, limit: int = 8, deep: bool = True) -> dict[
         return sum(1 for token in tokens if token.lower() in blob) / len(tokens)
 
     quality_scores = [_coverage(s) for s in sources]
+    from .source_quality import annotate, is_authoritative
+
     authoritative = sum(
-        1 for s in sources
-        if any(host in str(s.get("url") or "").lower() for host in (
-            "fifa.com", "reuters.com", "apnews.com", "bbc.com", "who.int",
-            "nature.com", "science.org", "gov.cn", "cctv.com",
-        ))
+        1 for s in sources if is_authoritative(str(s.get("url") or ""), str(s.get("source") or ""))
     )
+    sources = [annotate(s) for s in sources]
     quality = {
         "relevance": round(sum(quality_scores) / max(len(quality_scores), 1), 3),
         "source_count": len(sources),

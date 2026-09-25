@@ -41,6 +41,7 @@ from . import (
     run_journal,
     science_connectors,
     skill_capture,
+    task_runner,
     streaming,
     subagent_planner,
     uploads,
@@ -470,6 +471,16 @@ def handle_get(handler) -> None:
 
     if len(parts) == 4 and parts[0] == "api" and parts[1] == "sessions" and parts[3] == "pending":
         return _json(handler, 200, {"ok": True, "session_id": parts[2], **pending_intent.get(parts[2])})
+
+    if len(parts) == 3 and parts[0] == "api" and parts[1] == "tasks":
+        task = task_runner.get_task(parts[2])
+        if task is None:
+            return _json(handler, 404, {"error": "task not found"})
+        return _json(handler, 200, {"task": task_runner.public(task)})
+
+    if len(parts) == 4 and parts[0] == "api" and parts[1] == "sessions" and parts[3] == "task":
+        task = task_runner.active_for_session(parts[2])
+        return _json(handler, 200, {"task": task_runner.public(task) if task else None})
 
     if path == "/api/science/connectors":
         return _json(handler, 200, science_connectors.list_connectors())
@@ -1023,6 +1034,9 @@ def handle_post(handler) -> None:
                 subagent_id=str(body.get("subagent_id") or ""),
                 web_search=body.get("web_search") if "web_search" in body else None,
                 thinking_depth=str(body.get("thinking_depth") or ""),
+                deep_search=bool(body.get("deep_search")) if "deep_search" in body else None,
+                task_id=str(body.get("task_id") or ""),
+                task_step=int(body.get("task_step") or 0) if str(body.get("task_step") or "0").isdigit() else 0,
             )
             return _json(handler, 200, result)
         except ValueError as exc:
@@ -1620,6 +1634,11 @@ def handle_post(handler) -> None:
         if serp or body.get("clear_serpapi"):
             set_api_key("serpapi", "" if body.get("clear_serpapi") else serp)
             out["saved"].append("serpapi")
+        for slot in ("brave", "tavily"):
+            val = str(body.get(f"{slot}_key") or body.get(slot) or "").strip()
+            if val or body.get(f"clear_{slot}"):
+                set_api_key(slot, "" if body.get(f"clear_{slot}") else val)
+                out["saved"].append(slot)
         # Persist non-secret search config
         cfg = load_campus_config()
         search_cfg = dict(cfg.get("search") or {})
@@ -1635,6 +1654,27 @@ def handle_post(handler) -> None:
             search_cfg["enabled"] = bool(body.get("enabled"))
         if "verify_tls" in body:
             search_cfg["verify_tls"] = bool(body.get("verify_tls"))
+        if "searxng_url" in body:
+            url = str(body.get("searxng_url") or "").strip().rstrip("/")
+            if url and not url.startswith(("http://", "https://")):
+                return _json(handler, 400, {"error": "searxng_url must start with http:// or https://"})
+            search_cfg["searxng_url"] = url
+        if "fetch_pages" in body:
+            search_cfg["fetch_pages"] = bool(body.get("fetch_pages"))
+        if "max_pages" in body:
+            try:
+                search_cfg["max_pages"] = max(0, min(6, int(body.get("max_pages"))))
+            except (TypeError, ValueError):
+                return _json(handler, 400, {"error": "max_pages must be an integer 0-6"})
+        if "max_results" in body:
+            try:
+                search_cfg["max_results"] = max(4, min(16, int(body.get("max_results"))))
+            except (TypeError, ValueError):
+                return _json(handler, 400, {"error": "max_results must be an integer 4-16"})
+        if isinstance(body.get("engines"), dict):
+            sw = dict(search_cfg.get("engines") or {})
+            sw.update({str(k): bool(v) for k, v in body["engines"].items()})
+            search_cfg["engines"] = sw
         cfg["search"] = search_cfg
         save_campus_config(cfg)
         out.update(public_settings_view())
@@ -1690,6 +1730,39 @@ def handle_post(handler) -> None:
         snap = grounding.snapshot_workspace(ws, session_id=str(body.get("session_id") or ""))
         result = grounding.verify_response_paths(str(body.get("text") or ""), snap)
         return _json(handler, 200, {**result, "snapshot_count": snap.get("entry_count")})
+
+    if path == "/api/tasks/preview":
+        body = _read_json(handler)
+        return _json(handler, 200, task_runner.plan_steps(str(body.get("message") or "")))
+
+    if path == "/api/tasks":
+        body = _read_json(handler)
+        steps = body.get("steps") if isinstance(body.get("steps"), list) else None
+        try:
+            result = task_runner.create_task(
+                str(body.get("session_id") or ""), str(body.get("message") or ""),
+                mode=str(body.get("mode") or "auto"), steps=steps,
+            )
+        except FileNotFoundError as exc:
+            return _json(handler, 404, {"error": str(exc)})
+        except ValueError as exc:
+            return _json(handler, 400, {"error": str(exc)})
+        return _json(handler, 200, result)
+
+    if len(parts) == 4 and parts[0] == "api" and parts[1] == "tasks" and parts[3] in ("advance", "stop", "mode"):
+        body = _read_json(handler)
+        try:
+            if parts[3] == "advance":
+                result = task_runner.advance(parts[2], message_id=str(body.get("message_id") or ""), force=bool(body.get("force")))
+            elif parts[3] == "stop":
+                result = task_runner.stop(parts[2])
+            else:
+                result = task_runner.set_mode(parts[2], str(body.get("mode") or ""))
+        except FileNotFoundError as exc:
+            return _json(handler, 404, {"error": str(exc)})
+        except ValueError as exc:
+            return _json(handler, 400, {"error": str(exc)})
+        return _json(handler, 200, result)
 
     if path == "/api/science/connectors":
         body = _read_json(handler)
@@ -1869,10 +1942,14 @@ def _serve_file(handler, filepath: Path, root: Path | None = None) -> None:
 
 
 def _sse_stream(handler, stream_id: str, *, from_seq: int = 0) -> None:
+    # The stream has no Content-Length, so its end must be signalled by closing
+    # the socket. (With keep-alive the finished stream stayed open, and a few
+    # sequential runs exhausted the browser's per-host connection pool.)
+    handler.close_connection = True
     handler.send_response(200)
     handler.send_header("Content-Type", "text/event-stream; charset=utf-8")
     handler.send_header("Cache-Control", "no-cache")
-    handler.send_header("Connection", "keep-alive")
+    handler.send_header("Connection", "close")
     handler.send_header("X-Accel-Buffering", "no")
     handler.end_headers()
     try:

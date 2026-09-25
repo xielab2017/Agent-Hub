@@ -151,8 +151,14 @@ def review_reply(
     sources: list[dict[str, Any]] | None = None,
     evidence_texts: list[str] | None = None,
     simple_chat: bool = False,
+    evidence: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Review one reply against its retrieved sources and evidence."""
+    """Review one reply against its retrieved sources and evidence.
+
+    ``evidence`` (from ``evidence.build_evidence``) adds corroboration checks:
+    numbers stated by a single source, numbers the sources disagree on, and
+    evidence bases made only of forums / self-media.
+    """
     body = text or ""
     if simple_chat or not body.strip():
         return {"ok": True, "skipped": True, "checked_at": _iso(), "issues": [], "counts": {}, "stats": {}}
@@ -160,10 +166,10 @@ def review_reply(
     srcs = [s for s in (sources or []) if isinstance(s, dict)]
     n_sources = len(srcs)
     source_blob = "\n".join(f"{s.get('title') or ''} {s.get('snippet') or ''} {s.get('url') or ''}" for s in srcs)
-    evidence = "\n".join([source_blob] + [str(e or "") for e in (evidence_texts or [])])
-    evidence_lower = evidence.lower()
+    evidence_blob = "\n".join([source_blob] + [str(e or "") for e in (evidence_texts or [])])
+    evidence_lower = evidence_blob.lower()
     known_urls = {_norm_url(s.get("url") or "") for s in srcs if s.get("url")}
-    known_urls |= {_norm_url(u) for u in _URL_RE.findall(evidence)}
+    known_urls |= {_norm_url(u) for u in _URL_RE.findall(evidence_blob)}
     known_domains = {_domain(s.get("url") or "") for s in srcs if s.get("url")}
     prose = _prose(body)
     issues: list[dict[str, str]] = []
@@ -225,12 +231,20 @@ def review_reply(
             issues.append(_issue("unverified_identifier", "info", f"doi:{d}", "DOI not found in retrieved sources — use online verification.",
                                  "检索来源中没有这个 DOI——可点“联网核验引用”。"))
     for p in pmids:
-        if not re.search(r"(?<!\d)" + re.escape(p) + r"(?!\d)", evidence):
+        if not re.search(r"(?<!\d)" + re.escape(p) + r"(?!\d)", evidence_blob):
             issues.append(_issue("unverified_identifier", "info", f"PMID {p}", "PMID not found in retrieved sources — use online verification.",
                                  "检索来源中没有这个 PMID——可点“联网核验引用”。"))
 
     # 4) untraceable numbers
-    evidence_nums = _evidence_numbers(evidence)
+    evidence_nums = _evidence_numbers(evidence_blob)
+    facts_ev = list((evidence or {}).get("facts") or [])
+    conflicts_ev = list((evidence or {}).get("conflicts") or [])
+    if ((evidence or {}).get("coverage") or {}).get("ugc_only"):
+        issues.append(_issue(
+            "ugc_only_sources", "info", "UGC",
+            "Every retrieved source is a forum / Q&A / self-media page — treat conclusions as unverified.",
+            "检索到的来源全部是论坛 / 问答 / 自媒体——结论需视为未经核实。",
+        ))
     claims = 0
     traced = 0
     seen: set[str] = set()
@@ -251,6 +265,23 @@ def review_reply(
             claims += 1
             if _traceable(raw if kind != "p_value" else norm, kind, evidence_nums):
                 traced += 1
+                support = [f for f in facts_ev if f.get("value") == norm]
+                if support:
+                    shown = m.group(0).strip()
+                    if any(f.get("conflict") for f in support):
+                        alt = next((c for c in conflicts_ev if any(v["value"] == norm for v in c["values"])), None)
+                        others = ", ".join(v["display"] for v in (alt or {}).get("values", []) if v["value"] != norm)
+                        issues.append(_issue(
+                            "conflicting_number", "warn", shown,
+                            f"Sources disagree on this metric (other values: {others or 'n/a'}) — state both and justify the choice.",
+                            f"来源对该指标的数值不一致（其他值：{others or '无'}）——应同时列出并说明取舍理由。",
+                        ))
+                    elif max(int(f.get("domains") or 0) for f in support) < 2:
+                        issues.append(_issue(
+                            "single_source_number", "info", shown,
+                            "Backed by only one source domain — corroborate before relying on it.",
+                            "只有一个来源域名支持——建议再找独立来源核对。",
+                        ))
                 continue
             snippet = number_prose[max(0, m.start() - 24): m.end() + 12].replace("\n", " ").strip()
             issues.append(_issue(

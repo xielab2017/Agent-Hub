@@ -15,15 +15,11 @@ All engines return the same dict shape as `websearch.search_*`:
 from __future__ import annotations
 
 import json
-import os
 import re
-import socket
-import ssl
+import threading
 from html import unescape
 from typing import Any
-from urllib.error import URLError
 from urllib.parse import urlencode, quote_plus
-from urllib.request import ProxyHandler, Request, build_opener, urlopen
 
 _UA = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
@@ -111,71 +107,11 @@ def _secret(slot: str) -> str:
         return ""
 
 
-def _proxy_handlers() -> list[Any]:
-    proxy = ""
-    try:
-        from .settings import load_campus_config
-        cfg = load_campus_config() or {}
-        proxy = str(cfg.get("search", {}).get("proxy") or "").strip()
-    except Exception:  # noqa: BLE001
-        proxy = ""
-    # Only use a proxy when explicitly configured for Search.
-    if proxy.strip():
-        return [ProxyHandler({"http": proxy, "https": proxy})]
-    # Bypass broken macOS system proxies (e.g. Clash :7890 TLS hangs)
-    return [ProxyHandler({})]
-
-
-def _ssl_context() -> ssl.SSLContext | None:
-    verify = True
-    try:
-        from .settings import load_campus_config
-        cfg = load_campus_config() or {}
-        verify = cfg.get("search", {}).get("verify_tls", True) is not False
-    except Exception:  # noqa: BLE001
-        verify = True
-    if verify:
-        return None
-    ctx = ssl.create_default_context()
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
-    return ctx
-
-
 def _fetch(url: str, *, timeout: float = 6.0, headers: dict[str, str] | None = None) -> str:
-    # Specialized feeds are optional; cap each outbound request so they cannot
-    # block the planner when a campus network silently drops a connection.
-    timeout = min(max(float(timeout), 1.0), 4.0)
-    h = {"User-Agent": _UA, "Accept": "*/*", "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8"}
-    if headers:
-        h.update(headers)
-    req = Request(url, headers=h)
-    handlers = _proxy_handlers()
-    ctx = _ssl_context()
-    opener = build_opener(*handlers) if handlers else None
+    """Shared network path (proxy + TLS policy + relaxed retry) — see websearch._http."""
+    from .websearch import _http
 
-    def _open():
-        if opener is not None:
-            return opener.open(req, timeout=timeout)
-        if ctx is not None:
-            return urlopen(req, timeout=timeout, context=ctx)
-        return urlopen(req, timeout=timeout)
-
-    try:
-        with _open() as resp:
-            data = resp.read()
-            return data.decode("utf-8", errors="replace")
-    except Exception as first:  # noqa: BLE001
-        msg = str(first).lower()
-        if any(k in msg for k in ("ssl", "handshake", "certificate", "timed out", "timeout", "eof")) \
-                or isinstance(first, (ssl.SSLError, TimeoutError, socket.timeout, URLError)):
-            # relaxed retry
-            relaxed = ssl.create_default_context()
-            relaxed.check_hostname = False
-            relaxed.verify_mode = ssl.CERT_NONE
-            with urlopen(req, timeout=min(timeout, 3.5), context=relaxed) as resp:
-                return resp.read().decode("utf-8", errors="replace")
-        raise
+    return _http(url, headers={"Accept": "*/*", **(headers or {})}, timeout=timeout)
 
 
 def _strip_html(s: str) -> str:
@@ -584,6 +520,14 @@ def search_pubmed(query: str, *, limit: int = 8, timeout: float = 8.0) -> dict[s
     }
 
 
+_PARITY = threading.local()
+
+
+def in_parity_call() -> bool:
+    """True inside a parity engine worker: nested cascades must not re-run intent engines."""
+    return bool(getattr(_PARITY, "active", False))
+
+
 def search_minimax_parity(
     query: str,
     *,
@@ -610,6 +554,9 @@ def search_minimax_parity(
     q = (query or "").strip()
     if not q:
         return {"ok": False, "error": "empty query", "results": [], "engine": "minimax_parity"}
+    if in_parity_call():
+        # Re-entered from our own worker's cascade — stop the recursion here.
+        return {"ok": False, "results": [], "engine": "minimax_parity", "errors": ["re-entry skipped"]}
 
     parsed = parse_query(q)
     cleaned = parsed.cleaned or (parsed.exact[0] if parsed.exact else q)
@@ -621,7 +568,12 @@ def search_minimax_parity(
         # Lazy import to avoid cycles; `websearch` does the real work.
         from . import websearch as _ws
 
-        return _ws.search_structured(qu, limit=min(limit, 6), deep=False)
+        # Runs in a worker thread: mark it so the nested cascade skips intent engines.
+        _PARITY.active = True
+        try:
+            return _ws.search_structured(qu, limit=min(limit, 6), deep=False)
+        finally:
+            _PARITY.active = False
 
     par = parallel_search(queries_to_run, search_fn=_call, max_workers=len(queries_to_run))
 
