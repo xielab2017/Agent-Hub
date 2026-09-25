@@ -64,3 +64,4 @@
 [   458s]   revised 1/10 (849 words, 36 cards)
 [   494s]   revised 6/10 (960 words, 17 cards)
 [   513s]   revised 9/10 (906 words, 30 cards)
+[   556s]   revised 10/10 (958 words, 36 cards)
