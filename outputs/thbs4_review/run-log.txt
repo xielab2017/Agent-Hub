@@ -1,5 +1,39 @@
 backend: minimax-cn https://api.minimaxi.com/v1 MiniMax-M3
 [     0s] model: minimax-cn/MiniMax-M3 via https://api.minimaxi.com/v1
+[    26s] queries: 29
+[    26s]     6 ← THBS4 skeletal muscle
+[    27s]    25 ← thrombospondin-4 muscle
+[    28s]     3 ← thrombospondin-4 ATF6 endoplasmic reticulum stress
+[    28s]     3 ← thrombospondin-4 sarcolemma muscular dystrophy
+[    29s]    15 ← thrombospondin-4 heart hypertrophy
+[    30s]    25 ← thrombospondin-4 aging OR ageing
+[    30s]    25 ← THBS4 obesity OR adipose OR insulin OR diabetes
+[    31s]    25 ← THBS4 liver fibrosis OR NAFLD OR MASLD
+[    32s]    25 ← thrombospondin-4 exercise OR mechanical load
+[    33s]    11 ← thrombospondin-4 tendon extracellular matrix
+[    34s]     2 ← THBS4 fibroblast TGF-beta fibrosis
+[    34s]     2 ← THBS4 proteomics plasma
+[    35s]     8 ← thrombospondin-4 angiogenesis inflammation
+[    36s]    25 ← thrombospondin family matricellular review
+[    36s]    25 ← myokines skeletal muscle endocrine organ review
+[    37s]    18 ← muscle secretome aging sarcopenia
+[    38s]    14 ← "Thrombospondin-4"[tiab] AND "Muscle, Skeletal"[MeSH]
+[    38s]     1 ← "THBS4"[tiab] AND (myokine[tiab] OR "secreted factor"[tiab] OR "secretory protein"[tiab])
+[    39s]     9 ← "Thrombospondin-4"[tiab] AND ("Aging"[MeSH] OR aging[tiab] OR ageing[tiab])
+[    39s]     9 ← "THBS4"[tiab] AND ("Insulin Resistance"[MeSH] OR insulin[tiab] OR glucose[tiab] OR "diabet
+[    40s]     3 ← "Thrombospondin-4"[tiab] AND ("Exercise"[MeSH] OR exercise[tiab] OR "physical activity"[ti
+[    41s]     3 ← "THBS4"[tiab] AND ("Adipose Tissue"[MeSH] OR adipocyte[tiab] OR adipogenesis[tiab])
+[    41s]     6 ← "Thrombospondin-4"[tiab] AND ("Liver"[MeSH] OR hepatic[tiab] OR hepatocyte[tiab])
+[    42s]    25 ← "THBS4"[tiab] AND ("Heart"[MeSH] OR cardiac[tiab] OR cardiomyocyte[tiab] OR myocardium[tia
+[    43s]    25 ← "Thrombospondin-4"[tiab] AND ("Fibrosis"[MeSH] OR "Extracellular Matrix"[MeSH] OR fibrosis
+[    43s]    25 ← "THBS4"[tiab] AND ("Proteomics"[MeSH] OR proteomics[tiab] OR cohort[tiab] OR biomarker[tia
+[    44s]     0 ← "THBS4"[tiab] AND ("Sarcopenia"[MeSH] OR sarcopenia[tiab] OR "Muscular Atrophy"[MeSH])
+[    45s]     9 ← "Thrombospondin-4"[tiab] AND ("review"[Publication Type] OR "review literature"[Publicatio
+[    45s]    10 ← "THBS4"[tiab] AND ("Endoplasmic Reticulum Stress"[MeSH] OR "Unfolded Protein Response"[MeS
+[    52s] records with abstracts: 310
+[   164s] screened: 310 (93 relevant)
+[   164s] evidence cards: 60
+[   189s] outline: Thrombospondin-4: a matricellular candidate at the intersection of skeletal muscle, ageing and systemic metabolism — 9 sections
 Traceback (most recent call last):
   File "/home/runner/work/Agent-Hub/Agent-Hub/scripts/review_pipeline.py", line 122, in <module>
     sys.exit(main())
@@ -7,12 +41,29 @@ Traceback (most recent call last):
   File "/home/runner/work/Agent-Hub/Agent-Hub/scripts/review_pipeline.py", line 107, in main
     summary = review_writer.run(TOPIC, out, seed_queries=SEED_QUERIES, seed_pmids=SEED_PMIDS,
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/Agent-Hub/Agent-Hub/ali/review_writer.py", line 543, in run
-    queries = plan_queries(llm, topic, seed_queries)
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/Agent-Hub/Agent-Hub/ali/review_writer.py", line 311, in plan_queries
-    queries = [str(q).strip() for q in extract_json(reply) if str(q).strip()]
-                                       ^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/Agent-Hub/Agent-Hub/ali/review_writer.py", line 123, in extract_json
-    raise ValueError("no JSON found in model reply")
-ValueError: no JSON found in model reply
+  File "/home/runner/work/Agent-Hub/Agent-Hub/ali/review_writer.py", line 622, in run
+    list(pool.map(draft, range(len(sections))))
+  File "/opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/concurrent/futures/_base.py", line 619, in result_iterator
+    yield _result_or_cancel(fs.pop())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/concurrent/futures/_base.py", line 317, in _result_or_cancel
+    return fut.result(timeout)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Agent-Hub/Agent-Hub/ali/review_writer.py", line 618, in draft
+    drafts[i] = write_section(llm, topic, outline, sections[i], cards, check=section_problems)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Agent-Hub/Agent-Hub/ali/review_writer.py", line 426, in write_section
+    use = [c for c in cards if c["id"] in set(int(x) for x in sec.get("cards") or [])] or cards[:12]
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/Agent-Hub/Agent-Hub/ali/review_writer.py", line 426, in <genexpr>
+    use = [c for c in cards if c["id"] in set(int(x) for x in sec.get("cards") or [])] or cards[:12]
+                                              ^^^^^^
+ValueError: invalid literal for int() with base 10: 'R1'
