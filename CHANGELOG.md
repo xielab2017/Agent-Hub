@@ -1,5 +1,39 @@
 # Changelog
 
+## v5.3.6 — 2026-09-25
+
+Tested against the real MiniMax API from GitHub runners (workflow
+"MiniMax live check", key from the `MINIMAX_KEY` repository secret, runs on
+a push tagged `[minimax-live]` or manually). Final run: region, chat, web
+search + evidence, memory, a 4-step scientific task, Hermes Agent chat /
+`read_file` tool call / memory, and error handling all pass with
+**MiniMax-M3**, now the default MiniMax model (the key belongs to the China
+region, `api.minimaxi.com/v1`; the account lists M2 … M2.7-highspeed and M3).
+
+Fixed on the way:
+- **Tool-call markup as the answer.** MiniMax-M2 answered a search request
+  with its own `<minimax:tool_call><invoke …>` text. Direct mode now says no
+  tools exist (search is already done), hides tool-call markup and retries a
+  tool-call-only reply once.
+- **No article read.** DOI links lead to publisher pages that block
+  automated readers; PubMed / DOI sources are now read through Europe PMC
+  abstracts (0 → 3 of 3 papers read).
+- **Newest-first PubMed.** E-utilities default to newest-first; the search
+  asks for relevance (it had returned last week's unrelated papers).
+- **Chinese research questions reached no English database.** When a question
+  has no English term, the configured model writes a short English keyword
+  query first (reasoning models get room to think); it is used for search,
+  passage selection and evidence. Task steps search their topic (goal + step),
+  not the whole step prompt.
+- **Unrelated papers as sources.** A research query whose English terms no
+  result mentions now reports "no relevant results" instead of passing e.g.
+  reporting guidelines to the model.
+- **Reviewer.** Numbers the reply sets itself in a design (power, dropout,
+  CI level, HRmax / VO₂max, CV, LOA, per-group n — also inside table rows)
+  are design parameters, not untraceable facts; a named reference ("Jensen et
+  al. 2015") that no retrieved source mentions is flagged — it caught one
+  made-up citation. Evidence records why a page could not be read.
+
 ## v5.3.5 — 2026-09-25
 
 - **Anthropic-compatible endpoints.** A base URL ending in `/anthropic`

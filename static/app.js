@@ -15,7 +15,7 @@ const FONT_SIZE_LABELS = {
   zh: { 13: "小 13", 14: "中 14", 15: "中大 15", 16: "大 16", 18: "特大 18" },
   en: { 13: "S 13", 14: "M 14", 15: "M+ 15", 16: "L 16", 18: "XL 18" },
 };
-const LOGO_VER = "5.3.5";
+const LOGO_VER = "5.3.6";
 const DEFAULT_LOGO = `/brand/suat-logo-color.png?v=${LOGO_VER}`;
 const LOGO_PRESETS = [
   { id: "suat-color", src: `/brand/suat-logo-color.png?v=${LOGO_VER}`, labelKey: "appearance.logoPresetColor" },

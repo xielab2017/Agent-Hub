@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/xielab2017/Agent-Hub/releases"><img alt="version" src="https://img.shields.io/badge/version-5.3.5-rose.svg" /></a>
+  <a href="https://github.com/xielab2017/Agent-Hub/releases"><img alt="version" src="https://img.shields.io/badge/version-5.3.6-rose.svg" /></a>
   <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-MIT-blue.svg" /></a>
   <a href="https://www.python.org/"><img alt="python" src="https://img.shields.io/badge/python-%3E%3D3.9-brightgreen.svg" /></a>
   <a href="https://github.com/xielab2017/Agent-Hub"><img alt="platform" src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg" /></a>
@@ -100,7 +100,7 @@ chmod +x ctl.sh "Start Agent Hub.command" start.sh
 curl -s http://127.0.0.1:8765/api/health
 ```
 
-确认健康检查里显示 `"version": "5.3.5"`。如果仍然不对，可临时换端口验证当前源码：
+确认健康检查里显示 `"version": "5.3.6"`。如果仍然不对，可临时换端口验证当前源码：
 
 ```bash
 python3 server.py --host 127.0.0.1 --port 9876 --open
@@ -309,7 +309,7 @@ Agent-Hub/
 
 ## 开发与版本
 
-当前版本：**v5.3.5**（分支 `main`）
+当前版本：**v5.3.6**（分支 `main`）
 
 ```bash
 # 健康检查
@@ -323,6 +323,7 @@ git pull
 
 简要更新：
 
+- **v5.3.6** — 真实 MiniMax 实测（GitHub Actions「MiniMax live check」，默认模型 MiniMax-M3）：直连 / Hermes 全部通过；修复工具调用标记外泄、文献摘要读取、PubMed 排序、中文科研问题的英文检索词、无关文献过滤、设计参数误报与点名文献核查
 - **v5.3.5** — 支持 Anthropic 兼容接口（如 MiniMax `https://api.minimax.cn/anthropic`，Coding Plan / Claude Code 用的地址）：地址以 `/anthropic` 结尾时自动走 Messages API；可在 MiniMax 厂商下选用该地址
 - **v5.3.4** — MiniMax 实测脚本 `scripts/minimax_live_check.py`（一条命令测区域、对话、检索、记忆、多步任务与报错）；无模型列表时用一次对话判断区域；识别 MiniMax `base_resp` 错误
 - **v5.3.3** — 搜索、问题处理、科学任务与连续性实测修复：检索词清洗、中文科研问题走文献库、同一论文去重、来源按可信度编号、浓度单位与数量级冲突核对；模型 429/5xx 自动重试、断流标记、停止生成真正生效；任务内统一来源编号、重启后任务可继续、被中断的提问有提示

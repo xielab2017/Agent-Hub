@@ -1485,8 +1485,9 @@ def _run_deferred_search(q: queue.Queue, route_info: dict[str, Any], *, quiet: b
             pages = []
             if read_pages and srcs and scfg.get("fetch_pages", True) is not False:
                 note("正在打开原文页面提取关键段落…")
-                pages = page_fetch.fetch_pages(srcs, msg, max_pages=int(scfg.get("max_pages") or 3))
-            ev = evidence_mod.build_evidence(msg, srcs, pages)
+                # English terms too: passages of English abstracts are picked by English words
+                pages = page_fetch.fetch_pages(srcs, f"{msg} {english}".strip(), max_pages=int(scfg.get("max_pages") or 3))
+            ev = evidence_mod.build_evidence(f"{msg} {english}".strip(), srcs, pages)
             ev_block = evidence_mod.render_block(ev)
             if ev_block:
                 search_block = (search_block + "\n\n" + ev_block).strip()

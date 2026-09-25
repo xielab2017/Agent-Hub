@@ -1,3 +1,3 @@
 """Hermes-ALI — lightweight cross-platform Hermes Agent terminal."""
 
-__version__ = "5.3.5"
+__version__ = "5.3.6"
