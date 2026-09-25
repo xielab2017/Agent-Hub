@@ -430,7 +430,7 @@ def _card_id(x: Any) -> int:
 
 def evidence_cards(recs: list[dict[str, Any]], screened: dict[str, dict[str, Any]], *, limit: int = 60,
                    min_relevance: int = 2, focus: str = "", seeds: list[str] | tuple[str, ...] = (),
-                   context_slots: int = 8) -> list[dict[str, Any]]:
+                   context_slots: int = 8, context_focus: str = "") -> list[dict[str, Any]]:
     """Evidence cards, best first.
 
     Primary cards (relevance ≥ ``min_relevance``) must mention the ``focus`` regex (the topic protein) in the title
@@ -452,7 +452,9 @@ def evidence_cards(recs: list[dict[str, Any]], screened: dict[str, dict[str, Any
     primary = [r for r in recs if _rel(screened.get(r["pmid"])) >= min_relevance
                and (r["pmid"] in seeds or not focus_re or any(mentions(r)))]
     context = [r for r in recs if _rel(screened.get(r["pmid"])) == 1 and r not in primary]
-    context.sort(key=lambda r: (not r.get("review"), not any(mentions(r)), -(int(r["year"] or 0))))
+    ctx_re = re.compile(context_focus, re.I) if context_focus else None
+    context.sort(key=lambda r: (not (ctx_re and ctx_re.search(r.get("title") or "")), not r.get("review"),
+                                not any(mentions(r)), -(int(r["year"] or 0))))
     chosen = sorted(primary, key=key)[:max(0, limit - min(context_slots, len(context)))]
     chosen += context[:limit - len(chosen)]
     cards = []
@@ -730,7 +732,7 @@ class Checkpoints:
 
 
 def run(topic: str, out_dir: Path, *, seed_queries: list[str], seed_pmids: list[str] | None = None, focus: str = "",
-        min_refs: int = 40, max_cards: int = 60, retmax: int = 25, max_queries: int = 0, max_sections: int = 0,
+        context_focus: str = "", min_refs: int = 40, max_cards: int = 60, retmax: int = 25, max_queries: int = 0, max_sections: int = 0,
         log: Callable[[str], None] = print, llm: HubLLM | None = None) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
     llm = llm or HubLLM()
@@ -738,7 +740,7 @@ def run(topic: str, out_dir: Path, *, seed_queries: list[str], seed_pmids: list[
         llm.trace = out_dir / "llm_trace.jsonl"
     log(f"model: {llm.provider}/{llm.model} via {llm.base_url}")
     ck = Checkpoints(out_dir, {"topic": topic, "seed_queries": seed_queries, "seed_pmids": seed_pmids or [],
-                               "focus": focus, "min_refs": min_refs, "max_cards": max_cards, "retmax": retmax,
+                               "focus": focus, "context_focus": context_focus, "min_refs": min_refs, "max_cards": max_cards, "retmax": retmax,
                                "max_queries": max_queries, "max_sections": max_sections,
                                "model": f"{llm.provider}/{llm.model}"}, log=log)
 
@@ -773,9 +775,11 @@ def run(topic: str, out_dir: Path, *, seed_queries: list[str], seed_pmids: list[
 
     screened = ck.stage("screened", do_screen)
     log(f"screened: {len(screened)} ({sum(1 for r in screened.values() if _rel(r) >= 2)} relevant)")
-    cards = evidence_cards(recs, screened, limit=max_cards, focus=focus, seeds=seed_pmids or ())
+    cards = evidence_cards(recs, screened, limit=max_cards, focus=focus, seeds=seed_pmids or (),
+                           context_focus=context_focus)
     if len(cards) < min_refs:
-        cards = evidence_cards(recs, screened, limit=max_cards, min_relevance=1, focus=focus, seeds=seed_pmids or ())
+        cards = evidence_cards(recs, screened, limit=max_cards, min_relevance=1, focus=focus, seeds=seed_pmids or (),
+                               context_focus=context_focus)
     log(f"evidence cards: {len(cards)}")
     (out_dir / "evidence_cards.json").write_text(json.dumps(cards, ensure_ascii=False, indent=1), encoding="utf-8")
 

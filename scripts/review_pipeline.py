@@ -45,6 +45,7 @@ SEED_QUERIES = [
     "muscle secretome aging sarcopenia",
 ]
 FOCUS = r"\bTHBS-?4\b|\bTSP-?4\b|thrombospondin[- ]?4\b"
+CONTEXT_FOCUS = r"myokine|secretome|skeletal muscle|matricellular|thrombospondin|sarcopenia|muscle ag(?:e)?ing"
 SEED_PMIDS = ["27669143", "30622267", "34168130", "29712757", "26459760", "24573206", "23287452", "29138119",
               "32795101", "37582915", "24589453", "28481870", "39373248", "38876442", "39154161", "41873540"]
 
@@ -117,7 +118,7 @@ def main() -> int:
 
         shutil.rmtree(out / "checkpoints")
     summary = review_writer.run(TOPIC, out, seed_queries=SEED_QUERIES, seed_pmids=SEED_PMIDS,
-                                focus=FOCUS, min_refs=args.min_refs, max_cards=args.max_cards, **limits,
+                                focus=FOCUS, context_focus=CONTEXT_FOCUS, min_refs=args.min_refs, max_cards=args.max_cards, **limits,
                                 log=lambda m: say(f"[{time.time() - t0:6.0f}s]", m))
     say(json.dumps(summary, ensure_ascii=False, indent=1))
     chk = summary["citation_check"]
