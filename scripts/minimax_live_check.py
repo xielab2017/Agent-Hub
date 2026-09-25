@@ -55,6 +55,8 @@ def main() -> int:
     ap.add_argument("--region", default="auto", choices=("auto", "minimax-cn", "minimax"))
     ap.add_argument("--model", default="", help="model id (default: MiniMax-M2, or the first listed)")
     ap.add_argument("--quick", action="store_true", help="skip the multi-step task")
+    ap.add_argument("--hermes", action="store_true", help="also run chat / tool call / memory through Hermes Agent "
+                                                          "(pip install hermes-agent)")
     args = ap.parse_args()
     if not KEY:
         say("Set MINIMAX_KEY (or MINIMAX_CN_API_KEY / MINIMAX_API_KEY) first.")
@@ -193,6 +195,39 @@ def main() -> int:
             f"{len(final.get('sources') or [])} task sources")
         results["task"] = steps_ok
         all_ok &= steps_ok
+
+    if args.hermes:
+        say("== 5b. Hermes Agent (in-process)")
+        from ali import runtimes
+
+        cfg = load_campus_config()
+        cfg.setdefault("ali", {})["hub_chat_mode"] = "agent"
+        save_campus_config(cfg)
+        try:
+            conn = runtimes.connect_runtime("hermes")
+            say("   connect:", json.dumps({k: (v.get("ok") if isinstance(v, dict) else v) for k, v in conn.items()
+                                          if k in ("ok", "llm_sync", "skills_sync", "claw_sync")}, ensure_ascii=False))
+        except Exception as exc:  # noqa: BLE001
+            say("   ✗ connect failed:", exc)
+        st = streaming.agent_status()
+        say("   status:", json.dumps({k: st.get(k) for k in ("chat_engine", "hermes_import", "import_error")}, ensure_ascii=False))
+        hsid = store.create_session(title="hermes live").id
+        probe_file = tmp / "hermes_probe.txt"
+        probe_file.write_text("AGENT-HUB-PROBE-7731\nsecond line\n", encoding="utf-8")
+        h1 = run(hsid, "用一句话介绍你自己，并说明你正在使用哪个模型。", web_search=False)
+        eng = (h1["msg"].get("route") or {}).get("chat_engine")
+        ok1 = eng == "hermes" and not h1["msg"].get("error")
+        all_ok &= show("hermes_chat", h1, ok1)
+        h2 = run(hsid, f"请用 read_file 工具读取文件 {probe_file} ，告诉我第一行的内容。", web_search=False)
+        tools = [t.get("name") for t in h2["msg"].get("tools") or []]
+        ok2 = "AGENT-HUB-PROBE-7731" in (h2["msg"].get("content") or "") and not h2["msg"].get("error")
+        say("     tools:", tools)
+        all_ok &= show("hermes_tool", h2, ok2)
+        h3 = run(hsid, "我第一句话让你做了什么？一句话回答。", web_search=False)
+        all_ok &= show("hermes_memory", h3, not h3["msg"].get("error") and bool(re.search(r"介绍|自己|模型", h3["msg"].get("content") or "")))
+        cfg = load_campus_config()
+        cfg.setdefault("ali", {})["hub_chat_mode"] = "direct"
+        save_campus_config(cfg)
 
     say("== 6. errors")
     cfg = load_campus_config()

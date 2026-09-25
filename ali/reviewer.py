@@ -56,7 +56,7 @@ _MAX_ISSUES_PER_KIND = 12
 # Words that mark a number as a parameter the author sets, e.g. in an experiment design.
 _DESIGN_CUES = re.compile(
     r"脱落|失访|统计功效|功效|把握度|检验效能|显著性水平|置信区间|置信水平|最大心率|HRmax|VO2max|最大摄氧|剂量|给药|"
-    r"样本量|每组|总样本|假设为|设定为|设为|预计|预期|阈值|截断值|"
+    r"样本量|每组|/组|总样本|假设为|设定为|设为|预计|预期|阈值|截断值|变异系数|\bCV\b|LOA|一致性界限|检出限|定量限|LOD|LOQ|"
     r"dropout|attrition|power|alpha|α|β|confidence|\bCI\b|sample size|per group|dose|assum|threshold",
     re.I,
 )

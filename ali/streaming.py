@@ -1355,6 +1355,55 @@ def _renumber_sources_block(block: str, sources: list[dict[str, Any]]) -> str:
     return "\n".join(out)
 
 
+_EN_TERMS_PROMPT = (
+    "Turn the research question into an English literature-search query: 3-8 keywords or short phrases, "
+    "standard scientific terms (e.g. irisin, FNDC5, exercise, plasma concentration). Output only the query, one line."
+)
+
+
+def english_search_terms(query: str, route_info: dict[str, Any] | None = None, *, timeout: float = 20.0) -> str:
+    """English keywords for a Chinese research question that has none.
+
+    PubMed / OpenAlex / arXiv only understand English; without this a question
+    like "运动能否提高鸢尾素水平" reaches them as nothing.  Uses the configured
+    model once; returns "" when not needed or not available.
+    """
+    q = (query or "").strip()
+    if not re.search(r"[\u4e00-\u9fff]", q) or re.search(r"[A-Za-z]{3,}", q):
+        return ""
+    try:
+        from .search_extensions import classify_intent
+
+        if classify_intent(q) != "academic":
+            return ""
+        from . import llm_client
+        from .providers import get_provider, pick_base_url
+        from .secrets import resolve_api_key
+        from .settings import load_campus_config, resolve_backend_verify_tls
+
+        cfg = load_campus_config()
+        backend = cfg.get("backend") or {}
+        provider = str(backend.get("type") or "").strip()
+        prov = get_provider(provider) if provider and provider != "hybrid" else None
+        base = pick_base_url(prov, str(backend.get("base_url") or "")) if prov else str(backend.get("base_url") or "")
+        models = cfg.get("models") or {}
+        model = str(models.get("fast") or models.get("main") or backend.get("model") or "").strip()
+        key = (resolve_api_key(cfg, provider=provider).get("key") or "") if provider else ""
+        if not base or not model or (not key and provider != "local-ollama"):
+            return ""
+        text = llm_client._chat_once(
+            base, key, model=model, timeout=timeout, max_tokens=400, temperature=0.0,
+            verify_tls=resolve_backend_verify_tls(cfg, route_info or {}),
+            messages=[{"role": "system", "content": _EN_TERMS_PROMPT}, {"role": "user", "content": q[:500]}],
+        )
+    except Exception:  # noqa: BLE001 — search still runs with the original words
+        return ""
+    line = strip_model_think_tags(text or "").strip().splitlines()
+    terms = re.sub(r"[^A-Za-z0-9 ,\-()/+.]", " ", line[0] if line else "")
+    terms = re.sub(r"\s+", " ", terms).strip(" ,.")
+    return terms[:120] if len(re.findall(r"[A-Za-z]{3,}", terms)) >= 1 else ""
+
+
 def _run_deferred_search(q: queue.Queue, route_info: dict[str, Any], *, quiet: bool = False) -> str:
     """Web search + page reading + evidence digest for one turn; returns the prompt block."""
     from .settings import load_campus_config
@@ -1377,7 +1426,12 @@ def _run_deferred_search(q: queue.Queue, route_info: dict[str, Any], *, quiet: b
             search_limit = max(4, min(16, int(scfg.get("max_results") or 8)))
         except (TypeError, ValueError):
             search_limit = 8
-        search_res = websearch_mod.search_structured(msg, limit=search_limit, deep=True)
+        english = english_search_terms(msg, route_info)
+        if english:
+            note(f"英文检索词：{english}")
+            route_info["search_terms_en"] = english
+        search_res = websearch_mod.search_structured(f"{msg} {english}".strip() if english else msg,
+                                                     limit=search_limit, deep=True)
         search_block = str(search_res.get("context_markdown") or "")
         if route_info.get("task_id") and search_res.get("sources"):
             # Multi-step task: one numbering for the whole task, so [n] stays unambiguous across steps.

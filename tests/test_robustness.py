@@ -440,3 +440,27 @@ def test_search_runs_in_the_stream_and_task_steps_share_source_numbers():
     assert out["review"] == 0
     # the task step searched its topic (goal + step), not the whole prompt with its rules
     assert out["queries"][1] == "检索文献" or "【" not in out["queries"][1]
+
+
+def test_chinese_research_question_gets_english_search_terms(monkeypatch):
+    from ali import streaming
+
+    asked = {}
+
+    def fake_chat(base, key, *, model, messages, **kw):
+        asked["model"], asked["q"] = model, messages[-1]["content"]
+        return "<think>translate</think>exercise irisin FNDC5 circulating plasma level"
+
+    cfg = {"backend": {"type": "minimax-cn", "base_url": "https://api.minimaxi.com/v1", "model": "MiniMax-M2"},
+           "models": {"fast": "MiniMax-M2.7-highspeed"}}
+    monkeypatch.setattr("ali.settings.load_campus_config", lambda: cfg)
+    monkeypatch.setattr("ali.secrets.resolve_api_key", lambda *a, **k: {"key": "sk-test", "present": True})
+    monkeypatch.setattr("ali.llm_client._chat_once", fake_chat)
+    terms = streaming.english_search_terms("运动能否提高人体循环中鸢尾素的血浆浓度")
+    assert terms == "exercise irisin FNDC5 circulating plasma level" and asked["model"] == "MiniMax-M2.7-highspeed"
+    # not needed: English terms already present, or not a research question
+    assert streaming.english_search_terms("人血浆中鸢尾素（irisin）的浓度") == ""
+    assert streaming.english_search_terms("明天深圳天气") == ""
+    # a failing model never blocks the search
+    monkeypatch.setattr("ali.llm_client._chat_once", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("down")))
+    assert streaming.english_search_terms("运动能否提高人体循环中鸢尾素的血浆浓度") == ""
