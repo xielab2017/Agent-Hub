@@ -605,96 +605,177 @@ def build_docx(path: Path, *, title: str, abstract: str, keywords: list[str], se
 # ── orchestration ─────────────────────────────────────────────────────
 
 
-def run(topic: str, out_dir: Path, *, seed_queries: list[str], seed_pmids: list[str] | None = None, focus: str = "", min_refs: int = 40,
-        max_cards: int = 60, log: Callable[[str], None] = print, llm: HubLLM | None = None) -> dict[str, Any]:
+class Checkpoints:
+    """Stage results under ``out_dir/checkpoints`` so a re-run resumes at the stage that failed.
+
+    A change of run parameters (topic, limits, model) discards them.  Per-section stages save after every
+    section, so one failing section does not lose the others.
+    """
+
+    def __init__(self, out_dir: Path, params: dict[str, Any], *, log: Callable[[str], None] = print) -> None:
+        self.dir = out_dir / "checkpoints"
+        self.dir.mkdir(parents=True, exist_ok=True)
+        self.log = log
+        self._lock = threading.Lock()
+        pfile = self.dir / "params.json"
+        stamp = json.dumps(params, sort_keys=True, ensure_ascii=False)
+        if pfile.exists() and pfile.read_text(encoding="utf-8") != stamp:
+            for f in self.dir.glob("*.json"):
+                f.unlink()
+            log("checkpoints: parameters changed — starting fresh")
+        pfile.write_text(stamp, encoding="utf-8")
+
+    def get(self, name: str) -> Any:
+        f = self.dir / f"{name}.json"
+        return json.loads(f.read_text(encoding="utf-8")) if f.exists() else None
+
+    def put(self, name: str, value: Any) -> Any:
+        with self._lock:
+            tmp = self.dir / f".{name}.tmp"
+            tmp.write_text(json.dumps(value, ensure_ascii=False, indent=1), encoding="utf-8")
+            tmp.replace(self.dir / f"{name}.json")
+        return value
+
+    def stage(self, name: str, fn: Callable[[], Any]) -> Any:
+        got = self.get(name)
+        if got is not None:
+            self.log(f"{name}: resumed from checkpoint")
+            return got
+        return self.put(name, fn())
+
+    def per_item(self, name: str, n: int, fn: Callable[[int], str], *, workers: int = 3) -> list[str]:
+        """``fn(i)`` for every item without a saved result; raises after the stage if any item failed."""
+        done = self.get(name) or []
+        items: list[str] = (list(done) + [""] * n)[:n]
+        todo = [i for i in range(n) if not items[i]]
+        if len(todo) < n:
+            self.log(f"{name}: {n - len(todo)}/{n} resumed from checkpoint")
+        errors: list[str] = []
+
+        def one(i: int) -> None:
+            try:
+                items[i] = fn(i)
+            except Exception as exc:  # noqa: BLE001 — recorded, the stage fails after the others finish
+                errors.append(f"item {i + 1}: {type(exc).__name__}: {exc}")
+                return
+            self.put(name, items)
+
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            list(pool.map(one, todo))
+        if errors:
+            raise RuntimeError(f"{name}: {len(errors)} of {n} failed — " + "; ".join(errors)[:1500])
+        return items
+
+
+def run(topic: str, out_dir: Path, *, seed_queries: list[str], seed_pmids: list[str] | None = None, focus: str = "",
+        min_refs: int = 40, max_cards: int = 60, retmax: int = 25, max_queries: int = 0, max_sections: int = 0,
+        log: Callable[[str], None] = print, llm: HubLLM | None = None) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
     llm = llm or HubLLM()
     if isinstance(llm, HubLLM):
         llm.trace = out_dir / "llm_trace.jsonl"
     log(f"model: {llm.provider}/{llm.model} via {llm.base_url}")
+    ck = Checkpoints(out_dir, {"topic": topic, "seed_queries": seed_queries, "seed_pmids": seed_pmids or [],
+                               "focus": focus, "min_refs": min_refs, "max_cards": max_cards, "retmax": retmax,
+                               "max_queries": max_queries, "max_sections": max_sections,
+                               "model": f"{llm.provider}/{llm.model}"}, log=log)
 
-    queries = plan_queries(llm, topic, seed_queries)
+    queries = ck.stage("queries", lambda: plan_queries(llm, topic, seed_queries))
+    if max_queries:
+        queries = queries[:max_queries]
     log(f"queries: {len(queries)}")
-    pmids: list[str] = list(dict.fromkeys(seed_pmids or []))  # known key papers are always screened
-    for q in queries:
-        try:
-            got = pubmed_search(q, retmax=25)
-        except Exception as exc:  # noqa: BLE001
-            log(f"  search failed ({q[:60]}): {exc}")
-            continue
-        pmids.extend(p for p in got if p not in pmids)
-        log(f"  {len(got):3d} ← {q[:90]}")
-        time.sleep(0.4)
-    recs = [r for r in pubmed_fetch(pmids) if r.get("abstract")]
+
+    def search() -> list[dict[str, Any]]:
+        pmids: list[str] = list(dict.fromkeys(seed_pmids or []))  # known key papers are always screened
+        for q in queries:
+            try:
+                got = pubmed_search(q, retmax=retmax)
+            except Exception as exc:  # noqa: BLE001
+                log(f"  search failed ({q[:60]}): {exc}")
+                continue
+            pmids.extend(p for p in got if p not in pmids)
+            log(f"  {len(got):3d} ← {q[:90]}")
+            time.sleep(0.4)
+        return [r for r in pubmed_fetch(pmids) if r.get("abstract")]
+
+    recs = ck.stage("records", search)
     log(f"records with abstracts: {len(recs)}")
-    screened = screen(llm, topic, recs)
-    for pid in seed_pmids or []:  # a key paper the screen found at least context-relevant stays in
-        row = screened.get(pid)
-        if row and _rel(row) >= 1:
-            row["relevance"] = max(2, _rel(row))
+
+    def do_screen() -> dict[str, Any]:
+        screened = screen(llm, topic, recs)
+        for pid in seed_pmids or []:  # a key paper the screen found at least context-relevant stays in
+            row = screened.get(pid)
+            if row and _rel(row) >= 1:
+                row["relevance"] = max(2, _rel(row))
+        return screened
+
+    screened = ck.stage("screened", do_screen)
     log(f"screened: {len(screened)} ({sum(1 for r in screened.values() if _rel(r) >= 2)} relevant)")
-    (out_dir / "screening.json").write_text(json.dumps(screened, ensure_ascii=False, indent=1), encoding="utf-8")
     cards = evidence_cards(recs, screened, limit=max_cards, focus=focus, seeds=seed_pmids or ())
     if len(cards) < min_refs:
         cards = evidence_cards(recs, screened, limit=max_cards, min_relevance=1, focus=focus, seeds=seed_pmids or ())
     log(f"evidence cards: {len(cards)}")
     (out_dir / "evidence_cards.json").write_text(json.dumps(cards, ensure_ascii=False, indent=1), encoding="utf-8")
 
-    outline = make_outline(llm, topic, cards)
+    outline = ck.stage("outline", lambda: make_outline(llm, topic, cards))
     title = str(outline.get("title") or topic)
     sections = [s for s in outline["sections"] if isinstance(s, dict) and s.get("heading")]
+    if max_sections:
+        sections = sections[:max_sections]
     log(f"outline: {title} — {len(sections)} sections")
 
-    drafts: list[str] = [""] * len(sections)
+    def draft(i: int) -> str:
+        text = write_section(llm, topic, outline, sections[i], cards, check=section_problems)
+        log(f"  drafted {i + 1}/{len(sections)} {sections[i]['heading'][:60]} ({len(text.split())} words, "
+            f"{len(set(cited_ids(text)))} cards)")
+        return text
 
-    def draft(i: int) -> None:
-        drafts[i] = write_section(llm, topic, outline, sections[i], cards, check=section_problems)
-        log(f"  drafted {i + 1}/{len(sections)} {sections[i]['heading'][:60]} ({len(drafts[i].split())} words)")
-
-    with ThreadPoolExecutor(max_workers=3) as pool:
-        list(pool.map(draft, range(len(sections))))
+    drafts = ck.per_item("drafts", len(sections), draft)
     draft_md = "\n\n".join(f"## {s['heading']}\n\n{t}" for s, t in zip(sections, drafts))
     (out_dir / "draft_v1.md").write_text(f"# {title}\n\n{draft_md}", encoding="utf-8")
 
-    reviews = run_reviewers(llm, draft_md, cards)
+    reviews = ck.stage("reviews", lambda: run_reviewers(llm, draft_md, cards))
     (out_dir / "reviewer_reports.md").write_text(
         "\n\n".join(f"# {r['label']}\n\n{r['report']}" for r in reviews), encoding="utf-8")
-    log("reviews: " + ", ".join(r["id"] for r in reviews))
+    log("reviews: " + ", ".join(f"{r['id']} ({len(r['report'].split())} words)" for r in reviews))
 
-    revised: list[str] = [""] * len(sections)
-
-    def revise(i: int) -> None:
-        text = revise_section(llm, sections[i]["heading"], drafts[i], reviews, cards)
+    def revise(i: int) -> str:
+        text = clean_section(revise_section(llm, sections[i]["heading"], drafts[i], reviews, cards), sections[i]["heading"])
         problems = section_problems(text, cards)
         if problems:
-            text = llm(WRITER_SYSTEM, "Fix these problems in the section and return it in full:\n- " + "\n- ".join(problems)
-                       + f"\n\nSECTION\n{text}\n\nEVIDENCE CARDS\n{card_block(cards, abstract_chars=400)}", max_tokens=12000)
-        revised[i] = clean_section(text, sections[i]["heading"])
-        log(f"  revised {i + 1}/{len(sections)}")
+            text = clean_section(llm(WRITER_SYSTEM, "Fix these problems in the section and return it in full:\n- "
+                                     + "\n- ".join(problems) + f"\n\nSECTION\n{text}\n\nEVIDENCE CARDS\n"
+                                     + card_block(cards, abstract_chars=400), max_tokens=12000), sections[i]["heading"])
+        log(f"  revised {i + 1}/{len(sections)} ({len(text.split())} words, {len(set(cited_ids(text)))} cards)")
+        return text
 
-    with ThreadPoolExecutor(max_workers=3) as pool:
-        list(pool.map(revise, range(len(sections))))
+    revised = ck.per_item("revised", len(sections), revise)
 
-    # enough distinct references? ask the weakest-cited sections to use more cards
-    valid = {c["id"] for c in cards}
-    used = {i for t in revised for i in cited_ids(t) if i in valid}
-    if len(used) < min_refs:
+    def integrate() -> list[str]:  # enough distinct references? ask sections to use unused cards where they fit
+        out = list(revised)
+        valid = {c["id"] for c in cards}
+        used = {i for t in out for i in cited_ids(t) if i in valid}
+        if len(used) >= min_refs:
+            return out
         unused = [c for c in cards if c["id"] not in used]
         log(f"only {len(used)} distinct references cited — integrating {len(unused)} more cards")
         for i, sec in enumerate(sections):
             fit = [c for c in unused if c.get("section") and c["section"].lower() in sec["heading"].lower()] or unused[:6]
             if not fit:
                 continue
-            revised[i] = clean_section(llm(WRITER_SYSTEM, (
+            out[i] = clean_section(llm(WRITER_SYSTEM, (
                 "Integrate the additional evidence cards below where they genuinely strengthen or qualify the argument "
-                "(cite as [R<id>]); do not pad. Return the full section.\n\nSECTION\n" + revised[i]
+                "(cite as [R<id>]); do not pad. Return the full section.\n\nSECTION\n" + out[i]
                 + "\n\nADDITIONAL CARDS\n" + card_block(fit[:8], abstract_chars=500)), max_tokens=12000), sec["heading"])
-            used = {x for t in revised for x in cited_ids(t) if x in valid}
+            used = {x for t in out for x in cited_ids(t) if x in valid}
             unused = [c for c in cards if c["id"] not in used]
             if len(used) >= min_refs or not unused:
                 break
+        return out
 
-    table_rows = key_studies_table(llm, cards)
+    revised = ck.stage("integrated", integrate)
+    valid = {c["id"] for c in cards}
+    table_rows = ck.stage("table", lambda: key_studies_table(llm, cards))
     table_texts = [r.get("finding", "") for r in table_rows]
     body_texts = revised + [f"[R{_card_id(r['card'])}]" for r in table_rows]
     numbered, order = renumber(body_texts, valid)
@@ -707,9 +788,9 @@ def run(topic: str, out_dir: Path, *, seed_queries: list[str], seed_pmids: list[
     log(f"citations: {check}")
 
     body_plain = "\n\n".join(f"{h}\n{t}" for h, t in sections_final)
-    meta = write_abstract(llm, title, body_plain)
+    meta = ck.stage("abstract", lambda: write_abstract(llm, title, body_plain))
     changes = "\n".join(f"- {s['heading']}: revised against the reviews" for s in sections)
-    letter = response_letter(llm, reviews, changes)
+    letter = ck.stage("response", lambda: response_letter(llm, reviews, changes))
     (out_dir / "response_to_reviewers.md").write_text(letter, encoding="utf-8")
     final_md = f"# {title}\n\n## Abstract\n\n{meta.get('abstract', '')}\n\n" + "\n\n".join(
         f"## {i}. {h}\n\n{t}" for i, (h, t) in enumerate(sections_final, start=1)) + "\n\n## References\n\n" + "\n".join(

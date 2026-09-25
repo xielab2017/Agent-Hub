@@ -133,3 +133,55 @@ def test_run_end_to_end_offline(tmp_path, monkeypatch):
 
     text = "\n".join(p.text for p in Document(str(tmp_path / "review.docx")).paragraphs)
     assert "1. Introduction" in text and "[45] " in text and "Keywords:" in text
+
+
+def _offline(monkeypatch, n=45):
+    recs = []
+    for k in range(1, n + 1):
+        [r] = rw.parse_pubmed_xml(XML)
+        recs.append({**r, "pmid": str(1000 + k), "title": f"Paper {k}"})
+    monkeypatch.setattr(rw, "pubmed_search", lambda q, retmax=25: [r["pmid"] for r in recs])
+    monkeypatch.setattr(rw, "pubmed_fetch", lambda pmids: [r for r in recs if r["pmid"] in pmids])
+    from ali import agents
+
+    monkeypatch.setattr(agents, "upsert_subagent", lambda spec: {})
+
+
+def test_run_resumes_from_the_failed_stage(tmp_path, monkeypatch):
+    pytest.importorskip("docx")
+    _offline(monkeypatch)
+
+    class FailingReviews(FakeLLM):
+        def __call__(self, system, user, **kw):
+            if "Review this manuscript" in user:
+                raise RuntimeError("reviewer call failed")
+            return super().__call__(system, user, **kw)
+
+    first = FailingReviews()
+    with pytest.raises(RuntimeError, match="reviewer call failed"):
+        rw.run("THBS4", tmp_path, seed_queries=["thbs4"], min_refs=40, max_cards=45, log=lambda m: None, llm=first)
+    assert (tmp_path / "checkpoints" / "drafts.json").exists() and (tmp_path / "draft_v1.md").exists()
+
+    second, logs = FakeLLM(), []
+    summary = rw.run("THBS4", tmp_path, seed_queries=["thbs4"], min_refs=40, max_cards=45, log=logs.append, llm=second)
+    assert summary["citation_check"]["cited"] == 45
+    assert not any("screen papers" in s for s in second.systems)  # screening, outline and drafts were reused
+    assert "drafts: 2/2 resumed from checkpoint" in logs
+    # changed parameters discard the checkpoints
+    logs.clear()
+    rw.run("THBS4", tmp_path, seed_queries=["thbs4"], min_refs=40, max_cards=44, log=logs.append, llm=FakeLLM())
+    assert "checkpoints: parameters changed — starting fresh" in logs
+
+
+def test_per_item_keeps_finished_items_when_one_fails(tmp_path):
+    ck = rw.Checkpoints(tmp_path, {"a": 1}, log=lambda m: None)
+
+    def fn(i):
+        if i == 1:
+            raise ValueError("boom")
+        return f"text {i}"
+
+    with pytest.raises(RuntimeError, match="1 of 3 failed"):
+        ck.per_item("drafts", 3, fn)
+    assert ck.get("drafts") == ["text 0", "", "text 2"]
+    assert ck.per_item("drafts", 3, lambda i: f"again {i}") == ["text 0", "again 1", "text 2"]

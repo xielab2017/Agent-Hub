@@ -6,7 +6,11 @@ name: Review pipeline (THBS4)
 # repository secret MINIMAX_KEY.  Outputs are uploaded as an artifact and
 # committed back to the branch under outputs/thbs4_review/.
 #
-# Triggers: manual, or a push whose commit message contains "[review-thbs4]".
+# Triggers (commit message tags):
+#   [review-smoke]  fast check of every stage (few papers, 2 sections) → outputs/thbs4_smoke/
+#   [review-thbs4]  the full review                                    → outputs/thbs4_review/
+#   add [review-fresh] to ignore saved checkpoints; otherwise a re-run resumes at the stage that failed
+#   (checkpoints are committed back with the outputs).
 
 on:
   workflow_dispatch:
@@ -18,9 +22,12 @@ permissions:
 
 jobs:
   review:
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[review-thbs4]')
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[review-thbs4]') || contains(github.event.head_commit.message, '[review-smoke]')
     runs-on: ubuntu-latest
     timeout-minutes: 150
+    env:
+      SMOKE: ${{ contains(github.event.head_commit.message, '[review-smoke]') && !contains(github.event.head_commit.message, '[review-thbs4]') }}
+      FRESH: ${{ contains(github.event.head_commit.message, '[review-fresh]') }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -34,24 +41,28 @@ jobs:
         run: |
           if [ -z "$MINIMAX_KEY" ]; then echo "::error::Repository secret MINIMAX_KEY is not set."; exit 1; fi
           set -o pipefail
-          python scripts/review_pipeline.py --out outputs/thbs4_review 2>&1 | tee review-log.txt
+          if [ "$SMOKE" = "true" ]; then OUT=outputs/thbs4_smoke; ARGS=--smoke; else OUT=outputs/thbs4_review; ARGS=; fi
+          [ "$FRESH" = "true" ] && ARGS="$ARGS --fresh"
+          echo "OUT=$OUT" >> "$GITHUB_ENV"
+          python scripts/review_pipeline.py --out "$OUT" $ARGS 2>&1 | tee review-log.txt
       - name: Upload
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: thbs4-review
           path: |
-            outputs/thbs4_review/
+            outputs/
             review-log.txt
           if-no-files-found: ignore
       - name: Commit outputs
         if: always()
         run: |
-          [ -d outputs/thbs4_review ] || exit 0
-          cp review-log.txt outputs/thbs4_review/run-log.txt 2>/dev/null || true
+          OUT=${OUT:-outputs/thbs4_review}
+          [ -d "$OUT" ] || exit 0
+          cp review-log.txt "$OUT/run-log.txt" 2>/dev/null || true
           git config user.name "agent-hub-bot"
           git config user.email "agent-hub-bot@users.noreply.github.com"
-          git add outputs/thbs4_review
+          git add "$OUT"
           git diff --cached --quiet && exit 0
-          git commit -m "THBS4 review outputs (run ${{ github.run_id }})"
+          git commit -m "Review outputs: $OUT (run ${{ github.run_id }})"
           for i in 1 2 3; do git pull --rebase origin "${{ github.ref_name }}" && git push origin "HEAD:${{ github.ref_name }}" && break; sleep 5; done

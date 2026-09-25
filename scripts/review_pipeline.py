@@ -88,7 +88,14 @@ def main() -> int:
     ap.add_argument("--model", default="MiniMax-M3")
     ap.add_argument("--min-refs", type=int, default=40)
     ap.add_argument("--max-cards", type=int, default=60)
+    ap.add_argument("--smoke", action="store_true",
+                    help="fast end-to-end check of every stage: 4 queries × 8 papers, 12 cards, 2 sections, ≥8 refs")
+    ap.add_argument("--fresh", action="store_true", help="ignore saved checkpoints")
     args = ap.parse_args()
+    limits = {"retmax": 25, "max_queries": 0, "max_sections": 0}
+    if args.smoke:
+        args.min_refs, args.max_cards = 8, 12
+        limits = {"retmax": 8, "max_queries": 4, "max_sections": 2}
     if not KEY:
         say("Set MINIMAX_KEY first.")
         return 2
@@ -105,8 +112,12 @@ def main() -> int:
 
     t0 = time.time()
     out = Path(args.out)
+    if args.fresh and (out / "checkpoints").exists():
+        import shutil
+
+        shutil.rmtree(out / "checkpoints")
     summary = review_writer.run(TOPIC, out, seed_queries=SEED_QUERIES, seed_pmids=SEED_PMIDS,
-                                focus=FOCUS, min_refs=args.min_refs, max_cards=args.max_cards,
+                                focus=FOCUS, min_refs=args.min_refs, max_cards=args.max_cards, **limits,
                                 log=lambda m: say(f"[{time.time() - t0:6.0f}s]", m))
     say(json.dumps(summary, ensure_ascii=False, indent=1))
     chk = summary["citation_check"]
