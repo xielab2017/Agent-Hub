@@ -1,287 +1,108 @@
-# Response to Reviewers
+# Response to reviewers
 
-We thank the three reviewers for their detailed and constructive critiques. The revision has re-grounded the manuscript in the evidence actually supported by the cited sources, neutralised promotional language around EasyMultiProfiler (EMP), expanded the tool coverage, and operationalised the previously declarative evaluation criteria. Below we address each comment in turn. Section references in the response correspond to the revised manuscript.
-
----
-
-## Reviewer 1 — bioinformatics methods & software engineering
-
-### Major comments
-
-**M1. Promotional framing of EMP violates the review's stated neutrality.**
-
-*Comment (excerpt):* "The manuscript repeatedly violates its own 'not to crown a winner' pledge. EMP is given dedicated exposition, positive qualifiers, and the explicit recommendation in the final roadmap."
-
-**Response.** We have revised the framing throughout. The dedicated EMP section is retained but its closing paragraph no longer uses "excellent," "battle-tested," or "lowers the activation energy," and the final sentence now reads as a defensible positioning rather than an endorsement. The roadmap recommendation has been softened from "anchor on … EMP first" to a structurally even-handed statement that lists several candidate anchor data structures (MultiAssayExperiment, SummarizedExperiment, the mixOmics `MultiAssayExperiment`-compatible containers, and the gNOMO-class feature-table convention) and only then notes that EMP instantiates the first on a microbiome corpus. The Introduction's final paragraph has been rephrased to remove the "featured example" asymmetry and to clarify that EMP is treated under the same criteria as the other tools.
-
-**M2. Specific EMP claims that the primary EMP card does not support.**
-
-*Comment (excerpt):* "The following manuscript claims therefore exceed [the EMP card] — 'natural-language-style pipeline syntax'; 'explicit support for matched human and mouse host multi-omics'; 'embed microbiome-specific QC, taxonomic aggregation and pathway mapping'; 'microbiome-aware extension in EasyMultiProfiler'; 'battle-tested Bioconductor back-end'; 'an excellent microbiome-oriented workflow.'"
-
-**Response.** We have audited every EMP claim against the primary EMP publication. Specifically:
-
-- The "natural-language-style pipeline syntax" descriptors have been removed wherever they appeared (EMP design section, Critical perspectives). They are replaced by "module-oriented, R-based interface" or "five-module decomposition" — language directly supported by the EMP card.
-- The "QC, taxonomic aggregation, and pathway mapping" triad has been rewritten as "modules for extraction, preparation, support, analysis and visualisation of microbiome data," with the triad reinstated only when the broader primary publication is cited.
-- "Microbiome-aware extension" has been corrected to "a workflow built on MultiAssayExperiment with five named modules."
-- "Battle-tested Bioconductor back-end" has been deleted.
-- "An excellent microbiome-oriented workflow" has been replaced by "an R-based workflow coupling SummarizedExperiment/MultiAssayExperiment containers with a five-module pipeline, illustrated on human and mouse host–microbiome cohorts."
-- "Explicit support" has been softened to "documented application to matched human and mouse host multi-omics alongside microbiome layers."
-
-**M3. Unfair editorialising about competing tools.**
-
-*Comment (excerpt):* "Several sentences disparage alternatives using criteria not grounded in the cited cards … 'ergonomics are oriented to statisticians rather than bench scientists' … 'agnostic to the experimental provenance' … 'these assumptions are not simultaneously testable with current benchmarks.'"
-
-**Response.** All three passages have been removed or rewritten:
-
-- The mixOmics sentence about audience-oriented ergonomics has been deleted; the remaining contrast now states only that EMP is a workflow-layer tool while MOFA/MOFA+ and mixOmics are inferential engines.
-- The SNF "agnostic to experimental provenance" clause has been deleted.
-- The sentence about simultaneous testability of SNF vs. factor-analytic assumptions has been rephrased as "and benchmarking studies have not, to date, formally distinguished these assumptions empirically" and flagged as an author observation rather than a card-supported statement.
-
-**M4. Mislabelled taxonomic placement of MUUMI and incorrect configurability claims.**
-
-*Comment (excerpt):* "ref. 8 (MUUMI) is … not itself a matrix-factorisation method, nor does it specifically handle incomplete blocks … Neither ref. 14 nor ref. 15 abstract states configurability across intermediate/late integration modes."
-
-**Response.** The Introduction sentence that bracketed MUUMI with incomplete-block handling has been corrected to cite the incomplete-block matrix-factorisation tool (MLMF) alone, and MUUMI is now correctly introduced in the Reproducibility section as "unifies statistical meta-analysis with network-based multi-omics integration (including similarity network fusion)," consistent with its later correct description in the same section. The DeepMoIC/MOADLN configurability sentence has been replaced with: "DeepMoIC and MOADLN instantiate intermediate (representation-fusion) integration, with downstream classification heads that some authors have characterised as decision-level," and is now flagged as an author taxonomy rather than a property of the cited papers.
-
-**M5. Evaluation criteria are declared but not operationalised.**
-
-*Comment (excerpt):* "The introduction lists criteria … yet the manuscript never populates a comparison matrix or even an itemised scoring rubric."
-
-**Response.** We have added a comparison matrix in a new Appendix A1, with rows for twelve representative tools (EMP, MOFA2, mixOmics-DIABLO, MLMF, SNF, DeepMoIC, MO-GCAN, gNOMO2, PALM, moiraine, timeOmics, SUMO) and columns matching the declared criteria (input data structures, missingness handling, supervision, scalability ceiling, biological target, reproducibility infrastructure, independent benchmarking evidence). Cells are populated only with card-supported statements; where evidence is silent, the cell is explicitly marked "not in cited card." The matrix is referenced from the Benchmarking section.
-
-**M6. Critical gaps in tool coverage.**
-
-*Comment (excerpt):* "The manuscript omits … single-cell multi-omics, bulk multi-omics canonical baselines, microbiome-centric toolchain, pathway/functional integration, container formats."
-
-**Response.** We have expanded the coverage and added an explicit "Scope and exclusions" paragraph in the Introduction:
-
-- **Single-cell multi-omics:** the manuscript now discusses scVI/scANVI, totalVI, scArches, GLUE, MultiVI, Cobolt, LIGER, bindSC and scGen alongside the previously named leaders, and clarifies that these are out of scope for the microbiome-centric focus of the EMP section.
-- **Bulk multi-omics baselines:** MOFA2 is now introduced explicitly as the actively maintained successor to MOFA/MOFA+, with a note that the bulk/single-cell claims attributed to MOFA and MOFA+ transfer in principle but are not independently re-evaluated here. iCluster+/iClusterBayes, JIVE, AJIVE and intNMF are briefly situated in the matrix-factorisation lineage.
-- **Microbiome-centric toolchain:** HUMAnN, MetaWRAP, Anvi'o, QIIME 2 and MEGAN are now named as the de facto microbiome multi-omics processing stack and acknowledged as a prerequisite layer rather than a competitor to EMP.
-- **Pathway / functional integration:** FELLA, decoupleR, GSVA/ssGSEA, and the progeny / ProseMirror ecosystem are now mentioned alongside pathwayMultiomics, and the pathway-analysis comparison column in the new matrix reflects their scope.
-- **Container formats:** the reproducibility section now characterises Docker / Singularity-Apptainer / Conda / charliecloud support per tool to the extent supported by the cards.
-
-**M7. The MOFA family is under-described and MOFA2 is missing.**
-
-*Comment (excerpt):* "The software landscape contains MOFA2 … that is not discussed."
-
-**Response.** MOFA2 has been added to the General-purpose frameworks section, distinguished from MOFA and MOFA+ as the actively maintained successor with different implementation, different API, and broad Bioconductor adoption. The previously attributed bulk/single-cell claims are now qualified to apply to MOFA2 in principle but to lack independent re-evaluation in the cited literature.
-
-**M8. Reproducibility section conflates container presence with reproducibility.**
-
-*Comment (excerpt):* "EMP itself is only evaluated against this standard by assertion … no re-execution benchmark is cited."
-
-**Response.** The sentence exempting EMP from re-execution scrutiny has been removed. We now apply the same standard uniformly: the manuscript explicitly states that no independent re-execution benchmark exists for EMP on heterogeneous infrastructure in the cited literature, and the comparison matrix records this fact as a limitation that applies to most reviewed tools in equal measure.
-
-### Minor comments (Reviewer 1)
-
-1. **MUUMI miscategorisation (also M4).** Fixed (see M4 above).
-2. **Redundant citation of BioNeuralNet (preprint vs. peer-reviewed).** We now cite the peer-reviewed publication at first mention and note the preprint only where it adds substantive content.
-3. **"Versus" claims unsupported.** The implication that head-to-head data exist has been removed; the new Appendix A1 matrix now grounds each comparison in a specific card or marks it "not in cited card."
-4. **Over-attribution of stage-agnosticism to gNOMO2.** We have moderated the wording to reflect that gNOMO2's "integration module" is benchmarked on four datasets but is not described in the cited literature as a fully validated integrative statistical engine.
-5. **"Conceptually closer to the integrative Human Microbiome Project paradigm."** The HMP linkage has been removed; the remaining sentence states only the MultiAssayExperiment container fact.
-6. **"Several critical caveats apply" numbered list.** Now formatted as a numbered list for consistency.
-7. **PALM "experimentally perturbed edges" validation claim.** The specific phrasing has been replaced with "validation as described in the PALM card," since the cited excerpt does not specify "experimentally perturbed edges."
-8. **"Conclusions are typically bound to a narrow slice of biological application."** This is now explicitly flagged as an author observation rather than a card-supported generalisation.
-9. **"12 multi-omics datasets drawn primarily from TCGA" for MLMF.** The "primarily TCGA" qualifier has been removed; the statement now matches the card exactly.
-10. **"Over twenty interactive visualisation tools"** has been corrected to "more than twenty" to match the single-cell analyst card.
-11. **Spelling "behaviour" vs. "behavior."** Standardised to British English throughout, with the ref. 26 exception rewritten to use the same form.
-12. **Reference for UMINT cited but never introduced.** The reference is now introduced in the Network-based and deep learning approaches section.
-13. **Sentence-level hedging.** The repeated hedges ("is largely unknown," "remains unclear," "has not been independently demonstrated") have been consolidated into a single limitations paragraph in Critical perspectives.
-14. **"Microbiome-aware preprocessing, compositional correction, or phylogeny-aware features as defaults" straw-man.** The claim has been weakened to "few of the surveyed tools offer all three as defaults," with HUMAnN/QIIME 2 cited as partial counter-examples.
-15. **Title-level claim.** The title has been revised to remove the implicit centrality of EMP and to reflect the multi-omics integration landscape more broadly.
-16. **Quantitative ceiling on benchmark coverage.** "Dozens of datasets" has been replaced with the precise counts from each card: "47 datasets [ref. 34] and 12 integration methods across three integration tasks [ref. 35]."
-18. **"Single-cell analyst" vs. "single-cell Multi-omics analyst."** Standardised to the exact name in the cited card.
-19. **Promotional close.** "Most defensible reading" has been replaced by "consistent with the current evidence base."
-20. **Missing software-engineering axes.** The comparison matrix now includes a scalability column populated only with card-supported claims; "scalability" has been retained in the criteria list with the caveat that no independent runtime / memory measurements are provided.
-
-We were unable to verify item 17 (WGCNA's use in recurrent pregnancy loss) directly from the cited review card; we have softened the attribution to "consistent with the discussion in [the WGCNA review]" pending direct verification.
+We thank the three reviewers and the editor for the time they have invested in this manuscript. Their reports identified substantive issues with how EasyMultiProfiler (EMP) was characterised, with citation integrity, with the breadth of the tool census, and with the balance of the prose. All three reviewers recommended major revision. We have undertaken that revision systematically; the changes are described point by point below. The most consequential revisions are (i) the removal or qualification of every specific behavioural claim about EMP that was not supported by the only evidence card [ref. 8] available for it, (ii) the consolidation of three duplicate reference pairs, (iii) the addition of six further integration tools and of a systematic evaluation table that the first version lacked, (iv) the replacement of a misattributed direct quote and of a misnamed top performer (scAI) with text that the cited cards actually support, and (v) the adoption of a single critical standard applied uniformly across EMP and the alternatives. Minor comments are addressed in the grouped paragraphs at the end of each reviewer's section.
 
 ---
 
-## Reviewer 2 — microbiome & host–microbe biology (end user)
+## Response to Reviewer 1 (bioinformatics methods & software engineering)
 
-### Major comments
+**Major comment 1 — the "natural-language-style interface" claim.** The reviewer notes that ref. 8 does not mention any natural-language syntax and that the formulation appears three times in the manuscript. We agree. All three occurrences have been excised. The EMP section now describes user interaction as "R functions dispatching the five modules against a SummarizedExperiment/MultiAssayExperiment substrate," with the natural-language qualifier dropped. Where the original EMP paper (beyond the card excerpt) describes the syntax, we now say so tentatively: "If the original release includes a natural-language-style command parser, this is not described in the excerpt we were able to consult."
 
-**1. Unsupported claim: EMP features a "natural-language-style pipeline syntax".**
+**Major comment 2 — internal contradiction on EMP's longitudinal capability.** Resolved. The §Microbiome-centred tools section no longer lists "time-series modelling" among EMP's modules; longitudinal capability is now described as an external dependency users must compose EMP with, consistent with the §Data structures admission. The two sections no longer contradict each other.
 
-*Comment (excerpt):* "This claim appears in at least four passages … there is no mention of natural-language syntax [in the EMP card]."
+**Major comment 3 — specific EMP algorithmic inclusions.** The sentence that attributed mixOmics-based PLS/DIABLO integration, timeOmics-style longitudinal modelling, netOmics-style network interpretation and metaQuantome-style quantitative analysis to EMP's modules has been rewritten as "EMP exposes interfaces compatible in principle with mixOmics-based integrative routines, with longitudinal routines of the timeOmics family and with network-interpretation methods in the netOmics and metaQuantome lineages; the specific engines bundled in each module are not enumerated in the excerpt we consulted." Wherever the manuscript previously stated these inclusions as facts, the wording has been softened accordingly.
 
-**Response.** All four occurrences have been removed or replaced with neutral, evidence-anchored language ("module-oriented, R-based interface," "five-module decomposition"). A single illustrative code-fragment-style example has been added in the EMP design section to let readers judge the interface claim independently.
+**Major comment 4 — "first-class assays" claim for EMP.** This claim has been moved into a clearly tentat­ative paragraph that opens with "If EMP's input contracts accept these layers, then …". We no longer present the layer-level claim as established fact.
 
-**2. Unsupported claim: EMP "embeds microbiome-specific QC, taxonomic aggregation and pathway mapping".**
+**Major comment 5 — duplicate references.** Consolidated. BioNeuralNet is now cited as [ref. 39] only (the peer-reviewed *Bioinformatics* version), with [an uncited source (card 18)] removed throughout. PathIntegrate is now cited as [ref. 30] only (the *PLoS Computational Biology* version), with [an uncited source (card 29)] removed. The reference list is correspondingly shorter.
 
-*Comment (excerpt):* "The card enumerates five modules but does not in the available excerpt specify that QC, taxonomic aggregation, and pathway mapping are among them."
+**Major comment 6 — misattributed ref. 15 quotation.** The phrase "overall totalVI and scArches outperformed" has been removed and replaced with a paraphrase that the ref. 15 card supports: "Hu et al. identified totalVI, scArches, LS_Lab, Seurat, MOJITOO and UINMF as top performers, with substantial dataset-dependent variability." The misnamed "scAI" has been removed from this sentence and from the rest of the manuscript.
 
-**Response.** The triad has been replaced by "modules for extraction, preparation, support, analysis and visualisation of microbiome data," which is the exact module enumeration in the EMP card. The triad is reinstated only in passages that additionally cite the broader primary publication.
+**Major comment 7 — unfair framing of MOFA+ and SNF as "single integration algorithms."** The dismissive phrasing has been replaced with an explicit acknowledgement that MOFA+ is an unsupervised factor model for single-cell multi-modal data and SNF is a graph-fusion algorithm for bulk assays, whereas EMP operates at the workflow layer. The contrasting sentence now reads as a methodological note rather than as a one-up.
 
-**3. Promotional / editorial tone about EMP.**
+**Major comment 8 — unfair comparison to PALM and timeOmics on "algorithmic coverage."** The "broader algorithmic coverage" claim has been qualified to algorithmic breadth within the modules EMP actually advertises, with an explicit acknowledgement that PALM and timeOmics provide longitudinal capability EMP does not. The comparison is no longer framed as EMP > PALM or EMP > timeOmics.
 
-*Comment (excerpt):* "'excellent microbiome-oriented workflow', 'battle-tested Bioconductor back-end', 'defensible niche', 'well placed', 'indispensable', 'more accessible'."
+**Major comment 9 — promotional language about EMP.** All the quoted formulations have been removed or replaced with neutral descriptions. The closing paragraph has been rephrased so that it no longer editorialises about EMP's "long-term value."
 
-**Response.** Each editorial adjective has been audited and replaced with a neutral, evidence-anchored equivalent. The "EasyMultiProfiler: design" closing has been rewritten as suggested by the reviewer. "Battle-tested" has been deleted. "Indispensable" and "more accessible" have been removed.
+**Major comment 10 — editorial inference attributed to Sharma et al.** The sentence attributing poor alignment with intrinsic subtypes to Sharma et al. has been rewritten as "Sharma et al. did not evaluate alignment with clinically deployed intrinsic subtypes," which the ref. 57 card actually supports.
 
-**4. Unfair comparison to single-cell and spatial tools.**
+**Major comment 11 — missing tools.** The previously absent tools have been added. New paragraphs discuss Seurat (single-cell integration; with the ref. 15 evaluation cited); Anvi'o as a multi-omics platform for microbial communities with explicit 'omics visualisation; MaAsLin2 and ANCOM-BC as microbiome differential-abundance standards now used inside integration pipelines; mixMC as the mixOmics microbiome variant; O2PLS, JIVE, MCIA and RGCCA as canonical multi-block integration methods; and PaintOmics and 3Omics as pathway-level web tools that sit in the same niche as the Analyst suite. Each is given a one-paragraph treatment, with citations to the cards where they exist and explicit acknowledgement when they do not.
 
-*Comment (excerpt):* "EMP is positioned as a microbiome-focused workflow … comparing it on a dimension it was never designed to address is unfair."
+**Major comment 12 — systematic evaluation criteria.** A table has been added under "Evaluation criteria" in which each tool is scored against the same checklist: scalability (sample and feature order), data structure, interoperability (Bioconductor / Python / Snakemake / Nextflow), documentation, maintenance status (last release, repository activity), and reproducibility infrastructure (containers, version pinning, deterministic re-runs). The table is referenced from both the taxonomy section and the recommendations.
 
-**Response.** The passage has been reframed as an explicit scope statement: "EMP is not designed to address single-cell or spatial multi-omics, which several of the cited tools explicitly target; these are out-of-scope for the workflow's documented model rather than a competitive gap."
+**Major comment 13 — MicrobiomeAnalyst "four browser-accessible modules."** Rephrased to "browser-accessible modules" without specifying a number, since ref. 17 does not enumerate them.
 
-**5. Unfair characterisation of mixOmics.**
+**Major comment 14 — PathIntegrate double citation.** Resolved (see Major comment 5). [ref. 30] is now used consistently throughout.
 
-*Comment (excerpt):* "'ergonomics are oriented to statisticians rather than bench scientists' … ref. 36 makes no claim about its target audience."
-
-**Response.** The mixOmics audience-oriented sentence has been deleted. The remaining contrast now states only that EMP is a workflow-layer tool while MOFA-family and mixOmics-family methods are inferential engines, without any audience judgement.
-
-**6. Unfair differentiation of EMP on host-context integration.**
-
-*Comment (excerpt):* "This oversells the differentiation: [the gNOMO card] is explicitly framed as integrating 'meta-omics levels…with host/environmental context, tailored for non-model organisms'."
-
-**Response.** The host-context differentiation has been reframed to the genuine dimensions — Bioconductor ecosystem, MultiAssayExperiment container, human/mouse focus — and the gNOMO non-model-organism scope is now acknowledged explicitly.
-
-**7. Unsupported synergy claim between gNOMO2 and PALM.**
-
-*Comment (excerpt):* "The card does not say PALM consumes tables from gNOMO/gNOMO2; this interdependence is inferred."
-
-**Response.** The interdependence wording has been replaced by "PALM addresses a complementary problem (longitudinal dynamic network inference) rather than a downstream problem in the gNOMO/gNOMO2 workflow," and the figure-level description has been adjusted accordingly.
-
-**8. Unsupported claim about PALM's validation strategy.**
-
-*Comment (excerpt):* "Validation is performed against experimentally perturbed edges rather than against held-out samples."
-
-**Response.** The "experimentally perturbed edges" phrase has been removed and replaced by a neutral description of the validation approach supported by the card.
-
-**9. Unsupported contrast between MOFA and EMP's microbiome behaviour.**
-
-*Comment (excerpt):* "This is an extrapolation beyond what the original MOFA card establishes."
-
-**Response.** The passage has been restructured as an explicit research gap: "Whether MOFA's factor inference generalises to microbiome-style zero-inflated compositional data remains, to our knowledge, untested in the cited literature."
-
-**10. Editorial framing of EMP's overall positioning.**
-
-*Comment (excerpt):* "'Occupies a middle ground between fully featured but generalist platforms and narrowly specialised pipelines.' This is rhetorical positioning."
-
-**Response.** The sentence has been replaced by: "EMP's documented scope places it alongside microbiome-focused pipelines such as gNOMO2 and Bioconductor-style frameworks such as timeOmics and pathwayMultiomics," which is a positional statement grounded in the cards.
-
-**11. Insufficient independent verification of EMP's analytical components.**
-
-*Comment (excerpt):* "The section concedes that … no independent comparison … is provided, yet the same section asserts EMP offers 'a coherent natural-language pipeline' and 'a clear host–microbiome focus'."
-
-**Response.** All EMP-feature statements now use qualifying language such as "based on the EMP publication" or "as illustrated in the EMP card," and a paragraph has been added explicitly flagging what is not independently benchmarked.
-
-**12. Repeated attribution to reviews that are only loosely relevant.**
-
-*Comment (excerpt):* "Several passages cite reviews of EVs, tumour genomics, recurrent pregnancy loss and personalised oncology … as raising issues that EMP allegedly does or does not address."
-
-**Response.** Each such passage has been re-grounded: where the interpretive connection is retained, it is now labelled as the author's interpretation; where a direct empirical source is available, it has been substituted.
-
-**13. Heterogeneity claim overstated.**
-
-*Comment (excerpt):* "Any two tools rarely share data structures, file conventions or evaluation metrics. Immediately afterwards the manuscript describes MultiAssayExperiment as a unifying data structure."
-
-**Response.** Replaced by: "Data structure convergence around MultiAssayExperiment is partial; file conventions and evaluation metrics remain heterogeneous across the tools reviewed here."
-
-### Minor comments (Reviewer 2)
-
-1. **"Head-to-head comparison requires substantial engineering effort that most groups cannot afford."** Softened to "substantial engineering effort is typically required" with no claim about affordability.
-2. **"Maximally modular ambition"** replaced by "broadest analytic span among the surveyed web platforms" with citation.
-3. **"Advanced statistical machinery"** (PCA/PLS/sparse-PLS critique) replaced by neutral phrasing.
-4. **"Battle-tested"** removed.
-5. **MixOmics critique conflates the mixOmics package with DIABLO.** Fixed; the audience claim is removed entirely rather than reattributed.
-6. **"Well placed to incorporate such provenance hooks."** Removed; the conditional/speculative sentence has been deleted.
-7. **"Maximally modular ambition"** applied to the proteomics/transcriptomics/lipidomics platform overstates its scope. Replaced by "broad analytic span across proteomic, transcriptomic, lipidomic and other modalities."
-8. **"Published evidence for EMP is largely benchmarked on human and mouse datasets."** Softened to "the EMP card's illustrated model is human/mouse gut microbiome and host multi-omics," removing the "benchmark" implication.
-9. **"Shared and view-specific" vs. "shared and modality-specific."** Standardised to "shared and modality-specific" throughout, matching the original MOFA/MOFA+ terminology.
-10. **"What a successful integration should demonstrate" / "what 'shared feature space' means"** are phrased as if there were a consensus. Both passages now acknowledge explicitly that no consensus exists.
-11. **Figure-level PALM/gNOMO synergy claim.** Adjusted (see Major 7).
-12. **"Tool marketed under a single 'integration' label"** quotation marks around "integration." The quotes have been dropped.
-13. **PathwayMultiomics compositionality critique generalises from a single truncated abstract.** Softened to "the available excerpt does not address compositionality."
-14. **Global pass to neutralise promotional phrasing.** Completed; all "battle-tested," "indispensable," "well placed," "defensible niche" occurrences have been audited.
-15. **Citation density consistency.** The reviewer is correct that bracket citations are mixed with expository phrasing; we have retained the bracket convention throughout for consistency.
+**Minor comments (grouped).** The grammatical slips noted in minor comments 1, 2, 8 and 9 have been corrected. The unsupported historical claim in minor comment 3 has been softened to "Many widely used microbiome tools predate the explicit multi-omics era." "Marker-gene" has been defined once on first use (minor 4). A one-sentence gloss for Snakemake and Nextflow has been added (minor 5). The conflation in minor comment 6 has been rephrased to specify what is meant by "deeper matrix factorisations" and "graph-learning frameworks" respectively. The "trustworthy" endorsement noted in minor comment 7 has been replaced with "with explicit uncertainty quantification." The CRC benchmark superlative in minor comment 11 has been removed. Minor comments 10 and 13 are addressed by the changes to major comment 1 and to the global tone. Minor comments 12 and 14 have been tightened: the limitations paragraph in §Recommendations now cites specific papers for each limitation claimed, and the metatranscriptomic exception for MicrobiomeAnalyst is now flagged as the manuscript itself notes. Minor comment 15 has been applied throughout ("the microbiome-centred tools reviewed above" / "the general-purpose frameworks discussed above" etc., with the subset specified each time).
 
 ---
 
-## Reviewer 3 — editor, citation integrity & balance
+## Response to Reviewer 2 (microbiome & host–microbe biology)
 
-### Major comments
+**Major comment 1 — "natural-language-style interface" not in ref. 8.** Addressed as for Reviewer 1 (Major comment 1). All three occurrences have been removed.
 
-**1. Promotional language in the EMP section.**
+**Major comment 2 — listing of specific EMP components.** Addressed as for Reviewer 1 (Major comment 3). The sentence now frames the four engines as potential dependencies, not as documented inclusions.
 
-*Comment (excerpt):* "'Excellent microbiome-oriented workflow' … 'battle-tested Bioconductor back-end,' 'lowers the activation energy,' 'coherent natural-language pipeline,' 'accessible, microbiologically literate integration environment rather than a research prototype.'"
+**Major comment 3 — unsupported modality list for EMP.** The five-modality list (metagenomics, metatranscriptomics, metaproteomics, metabolomics, host expression) has been replaced with a softer formulation: "designed for microbiome and host-microbiome multi-omics studies, with documented support for [list sourced to ref. 8]." Where ref. 8 does not enumerate a modality, we say so.
 
-**Response.** All such phrases have been removed. The section now opens with the neutral descriptor: "EMP is an R-based workflow that couples SummarizedExperiment/MultiAssayExperiment containers with a five-module pipeline (extraction, preparation, support, analysis, visualisation), illustrated on human and mouse host–microbiome cohorts."
+**Major comment 4 — longitudinal-support claim unsupported and self-contradictory.** Addressed as for Reviewer 1 (Major comment 2). The listing of "time-series modelling" among EMP's modules has been removed; the §Data structures admission now stands alone.
 
-**2. Unfair characterisation of MOFA/MOFA+ and mixOmics in the EMP section.**
+**Major comment 5 — promotional / asymmetric tone for EMP.** Resolved throughout the EMP section. Every claim about EMP is now matched by either an equivalent audit criterion (what benchmarks are reported, what the architecture does not cover) or by an explicit acknowledgement that the card excerpt does not document that claim. We have removed "the most coherent", "principled, microbiome-aware orchestrator", and "the natural-language-style interface … is its novelty." Where the manuscript previously flagged MOFA+, MOGOLA and BioNeuralNet for specific weaknesses but did not flag EMP for analogous weaknesses, the EMP section now enumerates its own limitations (TCGA-style benchmarks are not reported; longitudinal capability is not built in; compositionality and phylogenetic autocorrelation are inherited from underlying modules).
 
-*Comment (excerpt):* "Neither [the cited MOFA/MOFA+/mixOmics cards] supports these ergonomic or workflow-friction claims."
+**Major comment 6 — unfair / unsupported comparisons.** Each of the three comparisons named by the reviewer has been revised:
+- phyloseq: the line "EMP explicitly targets the host-microbiome interface" has been removed; the comparison is now restricted to what ref. 47 documents (phyloseq as the canonical low-level data layer in the Bioconductor microbiome ecosystem).
+- QIIME 2: the "lighter on raw data processing and heavier on cross-omics synthesis" claim has been removed; EMP is now described as a wrapper around community profilers rather than as a replacement for QIIME 2's raw-data processing.
+- PALM: the "broader algorithmic coverage" half of the comparison has been removed; the comparison now restricts itself to noting that PALM provides causal temporal modelling EMP does not.
 
-**Response.** The ergonomic editorialising has been deleted. The contrast now reads: "MOFA-family and mixOmics-family tools are inferential engines that take pre-aligned matrices as input, whereas EMP is presented as a workflow layer that prepares and integrates them within a MultiAssayExperiment container." This is grounded in the cards without any audience judgement.
+**Major comment 7 — "demonstration cases" claim.** The phrase has been replaced with a neutral statement sourced to the level of detail in ref. 8: "The paper does not report head-to-head benchmarks against mixOmics, timeOmics or netOmics on subtype recovery, integration error or computational cost."
 
-**3. Unsupported negative framing of web-server platforms.**
+**Major comment 8 — incorrect "scAI" attribution.** Removed. The manuscript now lists "UINMF-family methods" only.
 
-*Comment (excerpt):* "'Web-server platforms with weaker reproducibility guarantees' … None of [the cited cards] documents reproducibility weaknesses."
+**Major comment 9 — self-contradictory evaluation framework.** We agree that the previous version asked EMP to clear a bar the review elsewhere argued should not be set. The §Recommendations now uses a different, consistent yardstick — reproducibility metrics, ease of integration into reproducible workflows, and ecological validity in microbiome cohorts — and applies the same yardstick to the alternatives discussed in that section.
 
-**Response.** The clause has been deleted. The web-server section now discusses reproducibility per platform only where the cited card supports a statement.
+**Major comment 10 — MicrobiomeAnalyst consolidation claim.** Rephrased as: "In practice, a 16S / metagenomic analysis has often required combining QIIME 2 for upstream processing, phyloseq for object handling and bespoke R scripts for differential abundance; MicrobiomeAnalyst offers a browser-based consolidation of these steps."
 
-**4. Claims about EMP features not in the EMP card.**
+**Major comment 11 — mischaracterisation of phyloseq's scope.** The clause "does not natively integrate host-omics layers" has been removed; phyloseq is now described strictly in terms of ref. 47's documented role as a low-level data layer on which many downstream analyses are built.
 
-*Comment (excerpt):* "'Microbiome-specific QC, taxonomic aggregation and pathway mapping' … are not in the card."
+**Major comment 12 — EMP treated as both convenience layer and deliberate advance.** We have unified the framing. EMP is now described consistently as a curated wrapper and reproducibility layer built on Bioconductor's MultiAssayExperiment substrate. Its architectural contribution (five-module decomposition, MultiAssayExperiment anchoring, chained pipeline) is described as Liu et al.'s design choice with citation to ref. 8 where ref. 8 supports it; nothing is claimed beyond ref. 8.
 
-**Response.** Replaced by "modules for extraction, preparation, support, analysis and visualisation of microbiome data" (the card's enumeration). The triad is reinstated only where the broader primary publication is cited.
-
-**5. Misattribution to MUUMI as a method "handling incomplete blocks".**
-
-*Comment (excerpt):* "Incomplete-block handling is not [MUUMI's] contribution. MLMF is the appropriate citation."
-
-**Response.** Fixed; MUUMI has been removed from that clause and the incomplete-block matrix-factorisation tool (MLMF) is cited alone.
-
-**6. Overstatement of the single-cell benchmark as spanning "dozens of datasets".**
-
-*Comment (excerpt):* "[The cited card] benchmarks 12 integration methods across three integration tasks … not 'dozens of datasets.'"
-
-**Response.** Replaced by "single-cell multi-omics benchmarks [the 47-dataset benchmark; the 12-method / 3-task benchmark]" with the dataset-count qualifier removed and the two sources kept distinct.
-
-**7. Unsupported claim that DeepMoIC and MOADLN are configurable in either intermediate or late modes.**
-
-*Comment (excerpt):* "Neither describes this configurability; both are described as intermediate (latent-fusion) architectures."
-
-**Response.** The configurability claim has been dropped. The classification of DeepMoIC and MOADLN as intermediate-integration methods is now stated as an author taxonomy, with a note that downstream classification heads have been characterised as decision-level by other authors.
-
-**8. "Feature-level deep architectures" mischaracterises CAEncoder.**
-
-*Comment (excerpt):* "[CAEncoder] describes a contrastive adversarial encoder combining a Vision Transformer and CycleGAN trained end-to-end — not feature-level concatenation."
-
-**Response.** CAEncoder has been reclassified as a contrastive / generative end-to-end deep model and removed from the early-integration example.
-
-**9. Editorial claim about HMP framing of EMP is not in the EMP card.**
-
-*Comment (excerpt):* "The EMP card makes no such comparison."
-
-**Response.** The HMP-paradigm sentence has been removed. The remaining text states only the MultiAssayExperiment container fact.
-
-**10. Critical assessment of EMP omits an explicit fairness check on alternatives.**
-
-*Comment (excerpt):* "The asymmetry in available evidence affects all of these tools, not just EMP."
-
-**Response.** A sentence has been added to the EMP section and to the Critical perspectives paragraph acknowledging that the absence of head-to-head statistical benchmarking is field-wide rather than EMP-specific, and that gNOMO2 and PALM are described in this review by their own internal benchmarks under the same constraint.
-
-### Minor comments (Reviewer 3)
-
-1. **Redundant citation of BioNeuralNet.** Fixed; peer-reviewed publication cited at first mention, preprint noted only where it adds substantive content.
-2. **Long sentences impede readability.** The two flagged long sentences have been split.
-3. **"Vertical-integration methods" terminology.** A one-line gloss has been added at first use.
-4. **Duplicated material across sections.** The Critical perspectives section has been de-duplicated against the Benchmarking section.
-5. **"With notable exceptions."** The exceptions are now named.
-6. **Natural-language pipeline syntax.** All instances removed; a single illustrative code-fragment-style example has been added where the interface is discussed.
-7. **Citation density in EMP paragraph 2.** The six-bracket sentence has been split, with comparative citations moved to a footnote.
-8. **"These assumptions are not simultaneously testable with current benchmarks."** Softened to "and benchmarking studies have not, to date, formally distinguished these assumptions empirically."
-9. **Section heading "EasyMultiProfiler: design, strengths and limitations relative to the alternatives."** Renamed to "Anchoring a microbiome workflow within Bioconductor: EasyMultiProfiler in context."
-10. **Inconsistent tense.** Standardised to present tense throughout.
-11. **"Head-to-head, multi-domain comparison" disconnect.** Acknowledged explicitly in the limitations paragraph; the new Appendix A1 matrix grounds each cell in a specific card.
-12. **PathwayMultiomics compositionality caveat.** Reworded to "the available excerpt does not address compositionality," avoiding misdirected criticism of a tool that did not claim microbiome applicability.
-13. **Quantitative claims without cards.** The "47 datasets" refrain has been consolidated into a single canonical statement with a forward reference.
-14. **Minor typographical issues.** Hyphenation of "Bioconductor-native" and punctuation of "longitudinal microbiome multi-omics" have been standardised throughout.
+**Minor comments (grouped).** The ref. 59 paraphrase consistency issue (minor 1) has been corrected; both occurrences now carry the same wording. The ref. 27 wording inconsistency (minor 2) has been corrected to "simulated data and real data protocols." The ref. 25 "F-score improvements of 7-24 %" is now flagged at each occurrence as measured only on six TCGA cohorts (minor 3). The ref. 57 modality list is now consistent across sections (minor 4). The "end-to-end" gloss for CAEncoder and MCluster-VAEs has been added on first use (minor 5). Snakemake/Nextflow are described as workflow managers (minor 6). The EMP and ref. 4 modality inventories are now consistent with one another (minor 7). All remaining "scAI" occurrences have been removed (minor 8). "FAIR Digital Objects" / "Research Object Crate" is defined on first use (minor 9). MuSA is now described specifically as a breast-cancer / radiogenomic example (minor 10). The SNF subtype classification result is qualified with the dataset-dependence caveat on each occurrence (minor 11). The §Recommendations "as one component of an ecosystem" framing has been made consistent with the §Microbiome-centred tools section (minor 13). The Introduction "require" framing has been softened to "increasingly benefit from" (minor 14). MUUMI is no longer presented as a general-purpose framework; its idiopathic pulmonary fibrosis / THP-1 macrophage validation is acknowledged each time it is cited (minor 15). Minor comment 12 has been addressed by Major comment 4.
 
 ---
 
-We are grateful to all three reviewers for the rigour of their critique. The revised manuscript, in combination with the new comparison matrix and the scope/exclusions paragraph, addresses the substantive issues raised: promotional framing has been removed, claims about EMP and its alternatives have been re-grounded in the cited cards, tool coverage has been expanded, and the previously declarative evaluation criteria have been operationalised. We believe the manuscript is now suitable for publication.
+## Response to Reviewer 3 (editor, citation integrity & balance)
+
+**Major comment 1 — ref. 7 single-omics baseline claim.** Rephrased to "performance was sensitive to the correlation structure imposed on the simulated data, with no method dominating across metrics," which is what ref. 7 actually supports. The unsupported "margin over the best single-omics baseline" clause has been removed.
+
+**Major comment 2 — EMP compositionality and phylogenetic autocorrelation.** Recast as the reviewers' reading: "In our reading of the EMP documentation summarised in [ref. 8], EMP's analytical modules inherit the assumptions of their underlying algorithms; the documentation does not foreground specific handling of compositionality or phylogenetic autocorrelation." This preserves the substance of the critique while marking it as inference rather than as a finding in ref. 8.
+
+**Major comment 3 — EMP's "natural-language-style interface."** Addressed as in Reviewer 1 (Major comment 1).
+
+**Major comment 4 — EMP longitudinal-wrappers gap.** Recast as "the EMP documentation summarised in [ref. 8] does not foreground a dedicated longitudinal module comparable to timeOmics," with explicit reviewer framing rather than as an objective description.
+
+**Major comment 5 — PathIntegrate citation inconsistency.** Resolved. [ref. 30] is now used throughout.
+
+**Major comment 6 — redundant dual citation of BioNeuralNet.** Resolved. [ref. 39] is now used throughout, with [an uncited source (card 18)] removed.
+
+**Major comment 7 — MOFA vs MOFA+ for Sharma 2024.** Corrected. The Benchmarking section now reads "Application of MOFA+ to a 335-patient breast cancer cohort …" wherever it refers to this study.
+
+**Major comment 8 — single-cell analyst modality list not supported by ref. 53.** The manuscript now describes the single-cell analyst as "six single-cell omics modalities (per [ref. 53]) plus spatial transcriptomics," rather than enumerating a specific list. The "scAI" mention introduced alongside UINMF (which is not in the ref. 53 card) has been removed.
+
+**Major comment 9 — citation cluster ref. 4, ref. 5, ref. 6 overreach.** Rephrased to indicate that these reviews collectively illustrate the breadth of multi-omics modalities now in routine use, not that each lists every modality cited.
+
+**Major comment 10 — promotional tone about EMP.** The EMP section opening "addresses the long-standing fragmentation of microbiome multi-omics analysis" has been replaced with "consolidates microbiome multi-omics steps within a unified Bioconductor framework," matching ref. 8's vocabulary. The closing paragraph has been rephrased along the same lines.
+
+**Major comment 11 — asymmetric comparison against MicrobiomeAnalyst.** Rephrased as: "Compared with MicrobiomeAnalyst [ref. 17], EMP shifts the user from a web GUI to a programmatic R workflow, with the trade-off in accessibility that implies." The unsupported claim about MicrobiomeAnalyst's reproducibility has been removed.
+
+**Major comment 12 — broader claims as reviewer opinions.** Marked with "In our view" / "We argue" language. The closing claim about reproducibility and interoperability has been softened from a field-consensus statement to an explicitly attributed review position.
+
+**Minor comments (grouped).** The five-module enumeration that appeared three times has been stated once and referred back to (minor 1). Long compound sentences in the taxonomy section have been broken up (minor 2). "Treat-to-target" (T2T) is now defined on first use (minor 3). The overlap between §Critical perspectives and §Benchmarking has been consolidated (minor 4). The "biological fidelity / methodological generality" framing is now explicitly attributed to the reviewers (minor 5). The "scAI/UINMF-family" wording has been corrected to "UINMF-family methods" (minor 6). The transition from "Microbiome-centred tools" to "Web servers" has been smoothed (minor 7). Citation clusters [ref. 21; ref. 22], where a single reference suffices, have been trimmed (minor 8). Passive voice and nominalisation in the listed sentences have been tightened (minor 9). The §Recommendations section now opens with a sentence specifying that the recommendations are the reviewers' synthesis (minor 10). Minor comments 11 and 12 have been addressed under Major comment 4 above.
+
+---
+
+## Summary of manuscript-wide changes
+
+The revision includes the following additions and corrections. (i) The EMP section has been rewritten so that every empirical claim is traceable to ref. 8 or removed; the "natural-language-style interface", the listing of specific engines EMP wraps, the precise modality list and the longitudinal-support claim have all been qualified or removed, and the EMP-specific limitations have been enumerated with the same rigour as for the other tools. (ii) Six missing tools (Seurat, Anvi'o, MaAsLin2, ANCOM-BC, mixMC, O2PLS / JIVE / MCIA / RGCCA, PaintOmics / 3Omics) have been added to the survey. (iii) A systematic evaluation table (scalability, data structure, interoperability, documentation, maintenance status, reproducibility infrastructure) has been added. (iv) Three duplicate reference pairs (ref. 39/an uncited source (card 18), an uncited source (card 29)/ref. 30; and one MOFA/MOFA+ citation slip noted by Reviewer 3) have been consolidated and corrected. (v) The ref. 15 quote attribution and the top-performer list have been corrected (including removal of "scAI"). (vi) The §Recommendations section now uses an evaluation yardstick consistent with the rest of the manuscript. (vii) Editorial superlatives about EMP and the wider field have been softened or marked as reviewer opinions.
+
+We thank the reviewers again for the precision of their critiques; the manuscript is materially better for them.

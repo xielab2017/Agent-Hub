@@ -19,15 +19,83 @@
    "installed": true,
    "entry": "run.py",
    "origin": "agent-hub-authored"
+  },
+  {
+   "hub": "B",
+   "step": "run",
+   "status": "✓ done"
   }
  ],
  "run": {
   "id": "literature-review-20260925-203820-1550",
-  "status": "running",
+  "status": "done",
   "stage": "citations: {'cited': 64, 'references': 64, 'out_of_range': [], 'uncited': [], 'citations': 309}",
-  "returncode": null,
-  "outputs": [],
-  "summary": null,
+  "returncode": 0,
+  "outputs": [
+   {
+    "name": "citation_audit.json",
+    "bytes": 25483
+   },
+   {
+    "name": "draft_v1.md",
+    "bytes": 63283
+   },
+   {
+    "name": "evidence_cards.json",
+    "bytes": 162231
+   },
+   {
+    "name": "llm_trace.jsonl",
+    "bytes": 188564
+   },
+   {
+    "name": "profile.json",
+    "bytes": 5428
+   },
+   {
+    "name": "response_to_reviewers.md",
+    "bytes": 20415
+   },
+   {
+    "name": "review.docx",
+    "bytes": 71265
+   },
+   {
+    "name": "review_final.md",
+    "bytes": 93610
+   },
+   {
+    "name": "reviewer_reports.md",
+    "bytes": 36524
+   },
+   {
+    "name": "summary.json",
+    "bytes": 595
+   }
+  ],
+  "summary": {
+   "title": "Software for multi-omics data integration and analysis: a systematic and critical comparison of frameworks, packages, workflows and platforms, with EasyMultiProfiler as a featured workflow for microbiome research",
+   "model": "minimax-cn/MiniMax-M3",
+   "llm_calls": 106,
+   "queries": 30,
+   "records": 532,
+   "cards": 66,
+   "sections": 10,
+   "references": 64,
+   "citation_check": {
+    "cited": 64,
+    "references": 64,
+    "out_of_range": [],
+    "uncited": [],
+    "citations": 309
+   },
+   "words": 10091,
+   "featured": {
+    "name": "EasyMultiProfiler (EMP)",
+    "pmid": "40932530",
+    "reference": 8
+   }
+  },
   "error": null
  }
 }

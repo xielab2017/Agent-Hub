@@ -1,23 +1,23 @@
 {
  "title": "Software for multi-omics data integration and analysis: a systematic and critical comparison of frameworks, packages, workflows and platforms, with EasyMultiProfiler as a featured workflow for microbiome research",
  "model": "minimax-cn/MiniMax-M3",
- "llm_calls": 108,
+ "llm_calls": 106,
  "queries": 30,
- "records": 514,
- "cards": 64,
+ "records": 532,
+ "cards": 66,
  "sections": 10,
- "references": 62,
+ "references": 64,
  "citation_check": {
-  "cited": 62,
-  "references": 62,
+  "cited": 64,
+  "references": 64,
   "out_of_range": [],
   "uncited": [],
-  "citations": 330
+  "citations": 309
  },
- "words": 9215,
+ "words": 10091,
  "featured": {
   "name": "EasyMultiProfiler (EMP)",
   "pmid": "40932530",
-  "reference": 3
+  "reference": 8
  }
 }
