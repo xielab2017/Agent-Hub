@@ -1,0 +1,118 @@
+{
+ "title": "Software for multi-omics data integration and analysis: a systematic and critical comparison of frameworks, packages, workflows and platforms, with EasyMultiProfiler as a featured workflow for microbiome research",
+ "sections": [
+  {
+   "heading": "1. Introduction: the multi-omics integration imperative and the software gap",
+   "goal": "Establish why multi-omics integration demands purpose-built software rather than ad-hoc concatenation of single-omics pipelines. Open with the breadth of contemporary host-microbiome studies spanning pulmonary, cardiovascular, neurodevelopmental, oncological and neurodegenerative disease to argue that integration is no longer optional, then pivot to the operational reality: most published studies still treat 'multi-omics' as a label for parallel rather than joint analysis. Use the featured workflow EasyMultiProfiler (EMP) [R1] as the framing example of a workflow that responds to this gap, while critically noting that its emergence also signals how fragmented the prior ecosystem was.",
+   "cards": [
+    "R1",
+    "R5",
+    "R6",
+    "R7",
+    "R8",
+    "R9"
+   ],
+   "words": 750
+  },
+  {
+   "heading": "2. A taxonomy of integration strategies: unsupervised, supervised, and the longitudinal dimension",
+   "goal": "Provide a critical conceptual map of integration strategies (early concatenation, intermediate joint dimensionality reduction, late fusion/correlation) and the unsupervised–supervised axis. Emphasize that the field lacks consensus terminology and that seemingly distinct methods often share statistical underpinnings. Use timeOmics [R4] to illustrate the intermediate/clustering paradigm and the IBS longitudinal study [R12] to show why a temporal axis breaks most static integration approaches, thereby motivating workflow designs that explicitly accommodate time.",
+   "cards": [
+    "R4",
+    "R12"
+   ],
+   "words": 700
+  },
+  {
+   "heading": "3. General-purpose integration frameworks: timeOmics and the Bioconductor ecosystem",
+   "goal": "Survey general-purpose R/Bioconductor integration frameworks, anchored by timeOmics [R4] as a concrete example, and situate them within the broader ecosystem (MOFA, mixOmics, MultiAssayExperiment-backed tools). The critical angle: these packages are statistically rigorous but assume clean, dense, model-organism-style matrices and rarely handle the compositionality, zero-inflation and phylogenetic structure that characterise microbiome layers, which limits their usefulness for the host-microbiome community without substantial wrapper code.",
+   "cards": [
+    "R4",
+    "R3"
+   ],
+   "words": 800
+  },
+  {
+   "heading": "4. Microbiome-centred multi-omics tools and the heterogeneous application landscape",
+   "goal": "Catalogue the de facto microbiome multi-omics tooling by examining representative application studies rather than dedicated packages, because the latter remain scarce. Use the cross-cohort IBD integration [R10] as the closest example to a reproducible, reproducible framework, and the IBS profiling [R11] and longitudinal IBS study [R12] as exemplars of bespoke pipelines. The critical angle is that the microbiome community currently relies on investigator-built scripts stitched from phyloseq, vegan, mixOmics and individual omics layers, with little shared infrastructure — a gap that EMP [R1] explicitly aims to fill.",
+   "cards": [
+    "R10",
+    "R11",
+    "R12",
+    "R1"
+   ],
+   "words": 850
+  },
+  {
+   "heading": "5. Web servers and point-and-click platforms: accessibility versus scalability",
+   "goal": "Critically evaluate graphical multi-omics platforms, anchored by the Analyst suite (ExpressAnalyst, MetaboAnalyst, OmicsNet, OmicsAnalyst) [R3], which bundles single-omics analysis, knowledge-driven network integration and data-driven joint dimensionality reduction. Praise their role in democratising analysis for non-programmers and standardising preprocessing, but emphasise sharp limitations: upload-size ceilings that preclude modern cohort-scale microbiome data, limited support for compositional/zero-inflated microbiome tables, and restricted extensibility that locks users into upstream choices made by the platform developers.",
+   "cards": [
+    "R3"
+   ],
+   "words": 700
+  },
+  {
+   "heading": "6. Data structures, workflow systems and reproducibility",
+   "goal": "Analyse how container data structures (SummarizedExperiment, MultiAssayExperiment, TreeSummarizedExperiment) and pipeline frameworks underpin reproducibility in modern multi-omics software. EMP [R1] is a paradigmatic example, organising extraction, preparation, support, analysis and visualisation modules around these classes. Critically argue that adopting a standard container is necessary but not sufficient: version pinning, container images, controlled vocabularies and provenance metadata are equally required, and even EMP [R1] does not yet provide a fully containerised execution environment comparable to nf-core-style workflows.",
+   "cards": [
+    "R1",
+    "R2"
+   ],
+   "words": 800
+  },
+  {
+   "heading": "7. Benchmarking evidence and evaluation criteria",
+   "goal": "Establish what credible evaluation of integration software looks like, foregrounding SUMO [R2] as the only widely available simulator of multi-omics data with user-defined latent structure, noise and complexity. Use the IBD cross-cohort biomarker analysis [R10] as an empirical benchmark of cross-study robustness. The critical angle: most integration tools are evaluated on a single dataset by their authors; cross-tool, cross-dataset benchmarks using simulators like SUMO [R2] remain rare, and reported performance is therefore dataset- and preprocessing-dependent rather than generalisable.",
+   "cards": [
+    "R2",
+    "R10"
+   ],
+   "words": 750
+  },
+  {
+   "heading": "8. EasyMultiProfiler: a focused workflow for microbiome multi-omics",
+   "goal": "Deliver the dedicated, balanced evaluation of EMP [R1] mandated by the review. Articulate its design rationale (SummarizedExperiment/MultiAssayExperiment backbone; five-module architecture spanning extraction, preparation, support, analysis and visualisation; natural-language-style pipeline interface) and its comparative advantages over general frameworks [R4], web platforms [R3] and bespoke application pipelines [R11, R12]: native handling of microbiome-specific objects, end-to-end coverage and reproducibility hooks. Equally candidly state its limitations: scope restricted to microbiome-centric host-microbe studies, dependence on a maturing R/Bioconductor stack, no native simulation capability (cf. SUMO [R2]), and the absence so far of large independent benchmark studies analogous to [R10].",
+   "cards": [
+    "R1",
+    "R4",
+    "R3",
+    "R2",
+    "R10"
+   ],
+   "words": 900
+  },
+  {
+   "heading": "9. Critical perspectives: heterogeneity, hype and the limits of integration",
+   "goal": "Interrogate the field's claims through a critical lens using the disease-specific application studies as evidence. Show that even methodologically careful multi-omics studies in IPF [R5], atherosclerosis [R6], autism [R7], glioma [R8] and Alzheimer's disease [R9] reach partly inconsistent and context-dependent conclusions about which microbial features matter, and that even IBS — a closer-to-microbiome-centric disease — yields classifier outputs whose generalisability across subtypes remains contested [R11, R12]. The critical angle: software cannot rescue biological heterogeneity, and integration methods that ignore compositional bias, confounders and cross-cohort batch effects will continue to produce irreproducible 'signatures' regardless of algorithmic sophistication.",
+   "cards": [
+    "R5",
+    "R6",
+    "R7",
+    "R8",
+    "R9",
+    "R11",
+    "R12"
+   ],
+   "words": 850
+  },
+  {
+   "heading": "10. Recommendations for users and developers, and outlook",
+   "goal": "Translate the comparative survey into actionable guidance. For users: match tool choice to data scale (web suites [R3] for small exploratory cohorts; EMP [R1] for microbiome-centric workflows; SUMO [R2] for simulation-led method development; longitudinal-aware packages [R4] for time-series; cross-cohort frameworks [R10] when generalisability is the goal). For developers: prioritise simulation-driven benchmarking [R2], standard containers [R1], cross-cohort validation [R10], and explicit handling of compositional and zero-inflated data, since the application literature [R5–R9, R11, R12] shows that biological, not algorithmic, heterogeneity is currently the dominant source of irreproducibility. Conclude by positioning EMP [R1] as an important community step rather than a finished solution.",
+   "cards": [
+    "R1",
+    "R2",
+    "R3",
+    "R4",
+    "R10",
+    "R5",
+    "R6",
+    "R7",
+    "R8",
+    "R9",
+    "R11",
+    "R12"
+   ],
+   "words": 800
+  }
+ ]
+}

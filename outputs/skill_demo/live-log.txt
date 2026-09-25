@@ -9,3 +9,6 @@
 [    38s] screened: 27 (19 relevant)
 [    38s] evidence cards: 12
 [    38s] featured work: EasyMultiProfiler (EMP) → card R1
+[    85s] outline: Software for multi-omics data integration and analysis: a systematic and critical comparison of frameworks, packages, workflows and platforms, with EasyMultiProfiler as a featured workflow for microbiome research — 2 sections
+[   103s]   drafted 2/2 A taxonomy of integration strategies: unsupervised, supervis (725 words, 2 cards)
+[   111s]   drafted 1/2 Introduction: the multi-omics integration imperative and the (769 words, 12 cards)
