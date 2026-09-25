@@ -32,3 +32,6 @@
 [    30s]    25 ← ("reproducibility"[tiab] OR standardization[tiab]) AND "multi-omics"[tiab] AND workflow[ti
 [    31s]    25 ← ("host-microbiome"[tiab] OR "host-microbe"[tiab]) AND ("multi-omics"[tiab] OR integrative[
 [    42s] records with abstracts: 532
+[   242s] screened: 531 (270 relevant)
+[   242s] evidence cards: 60
+[   242s] featured work: EasyMultiProfiler (EMP) → card R1
