@@ -338,18 +338,24 @@ def author_skill(skill_id: str = "literature-review", *, source: str | Path | No
         "'## When to use', '## Inputs' (CLI arguments and profile fields, with examples), '## Steps' (numbered, one "
         "per stage, what each produces), '## Outputs', '## Quality gates' (what is checked and the pass criteria), "
         "'## Recovery' (checkpoints / resume / smoke), '## Transfer' (how to export and install on another Agent Hub "
-        "and what it needs there). Be precise and faithful to the pipeline; do not invent features.\n\n"
+        "and what it needs there). Be precise and faithful to the pipeline; do not invent features. The ONLY "
+        f"command-line options are {', '.join(sorted(cli_flags(src / 'run.py')))}; profile fields are YAML keys "
+        "(`featured:`), never `--options`.\n\n"
         + _pipeline_context(src, Path(run_dir) if run_dir else None)), max_tokens=12000, temperature=0.2)
     real = cli_flags(src / "run.py")
     bad = unknown_flags(reply, real)
-    if bad:  # self-check: the skill may only document options the entry really has
+    for _ in range(3):  # self-check: the skill may only document options the entry really has
+        if not bad:
+            break
         reply = llm(AUTHOR_SYSTEM, (
-            f"Your SKILL.md documents command-line options that run.py does not have: {', '.join(bad)}. The real "
-            f"options are: {', '.join(sorted(real))}. Remove or correct every mention and return the whole SKILL.md "
-            f"again.\n\n{reply}"), max_tokens=12000, temperature=0.1)
+            f"Your SKILL.md documents command-line options that run.py does not have: {', '.join(bad)}. The ONLY "
+            f"command-line options are: {', '.join(sorted(real))}. Profile fields (e.g. featured, coi_statement, "
+            "seed_pmids, focus_terms) are YAML keys inside a profile file, written like `featured:` — never as "
+            "`--featured`. Correct every mention and return the whole SKILL.md again, nothing else."
+            f"\n\n{reply}"), max_tokens=12000, temperature=0.1)
         bad = unknown_flags(reply, real)
-        if bad:
-            raise ValueError(f"authored SKILL.md still documents non-existent options: {', '.join(bad)}")
+    if bad:
+        raise ValueError(f"authored SKILL.md still documents non-existent options: {', '.join(bad)}")
     reply = re.sub(r"^\s*```(?:markdown|md)?\s*\n|\n\s*```\s*$", "", reply.strip())  # a fenced whole reply
     meta, body = _frontmatter(reply)
     body = body.strip()

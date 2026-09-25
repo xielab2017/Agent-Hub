@@ -203,3 +203,20 @@ def test_bundled_literature_review_skill_cli():
     prof = entry.read_profile(entry.find_profile("multiomics-emp"))
     assert prof["featured"]["pmid"] == "40932530" and prof["plan"] is False
     assert len(prof["reviewers"]) == 3 and len(prof["table"]["columns"]) == 3
+
+
+def test_author_skill_gives_up_after_three_corrections():
+    calls = []
+
+    def llm(system, user, **kw):
+        calls.append(user)
+        return "---\nname: literature-review\ndescription: d\n---\n\n# LR\n\nSet `--featured x`.\n"
+
+    with tempfile.TemporaryDirectory() as tmp, hub(Path(tmp)) as (root, _l, _m):
+        src = Path(tmp) / "src" / "literature-review"
+        src.mkdir(parents=True)
+        (src / "run.py").write_text('import argparse\nap = argparse.ArgumentParser()\nap.add_argument("--profile")\n')
+        with pytest.raises(ValueError, match="--featured"):
+            skill_runner.author_skill("literature-review", source=src, llm=llm)
+        assert len(calls) == 4 and "YAML keys" in calls[1]
+        assert not (root / "literature-review").exists()  # nothing half-authored is installed
