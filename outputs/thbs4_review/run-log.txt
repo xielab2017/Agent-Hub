@@ -1,76 +1,28 @@
 backend: minimax-cn https://api.minimaxi.com/v1 MiniMax-M3
 [     0s] model: minimax-cn/MiniMax-M3 via https://api.minimaxi.com/v1
-[     5s] queries: 30
-[     5s]     6 ← THBS4 skeletal muscle
-[     6s]    25 ← thrombospondin-4 muscle
-[     6s]     3 ← thrombospondin-4 ATF6 endoplasmic reticulum stress
-[     7s]     3 ← thrombospondin-4 sarcolemma muscular dystrophy
-[     8s]    15 ← thrombospondin-4 heart hypertrophy
-[     8s]    25 ← thrombospondin-4 aging OR ageing
-[     9s]    25 ← THBS4 obesity OR adipose OR insulin OR diabetes
-[    10s]    25 ← THBS4 liver fibrosis OR NAFLD OR MASLD
-[    11s]    25 ← thrombospondin-4 exercise OR mechanical load
-[    11s]    11 ← thrombospondin-4 tendon extracellular matrix
-[    12s]     2 ← THBS4 fibroblast TGF-beta fibrosis
-[    13s]     2 ← THBS4 proteomics plasma
-[    13s]     8 ← thrombospondin-4 angiogenesis inflammation
-[    14s]    25 ← thrombospondin family matricellular review
-[    15s]    25 ← myokines skeletal muscle endocrine organ review
-[    15s]    18 ← muscle secretome aging sarcopenia
-[    16s]    25 ← "Thrombospondin-4"[Title/Abstract] OR "THBS4"[Title/Abstract]
-[    17s]    17 ← "Thrombospondin-4"[Title/Abstract] AND ("skeletal muscle"[Title/Abstract] OR myotube[Title
-[    17s]    25 ← "Thrombospondin-4"[Title/Abstract] AND (myokine[Title/Abstract] OR secreted[Title/Abstract
-[    18s]    10 ← "Thrombospondin-4"[Title/Abstract] AND (aging[Title/Abstract] OR ageing[Title/Abstract] OR
-[    19s]    25 ← "Thrombospondin-4"[Title/Abstract] AND (insulin[Title/Abstract] OR metabolism[Title/Abstra
-[    19s]     5 ← "Thrombospondin-4"[Title/Abstract] AND (adipose[Title/Abstract] OR adipocyte[Title/Abstrac
-[    20s]    10 ← "Thrombospondin-4"[Title/Abstract] AND (liver[Title/Abstract] OR hepatic[Title/Abstract] O
-[    21s]    25 ← "Thrombospondin-4"[Title/Abstract] AND (cardiac[Title/Abstract] OR heart[Title/Abstract] O
-[    21s]     6 ← "Thrombospondin-4"[Title/Abstract] AND (exercise[Title/Abstract] OR training[Title/Abstrac
-[    22s]    25 ← "Thrombospondin-4"[Title/Abstract] AND (fibrosis[Title/Abstract] OR "extracellular matrix"
-[    23s]    25 ← "Thrombospondin-4"[Title/Abstract] AND (proteomic[Title/Abstract] OR proteomics[Title/Abst
-[    23s]    19 ← "Thrombospondin-4"[Title/Abstract] AND (satellite[Title/Abstract] OR regeneration[Title/Ab
-[    24s]    10 ← "Thrombospondin-4"[Title/Abstract] AND ("review"[Publication Type] OR review[Title/Abstrac
-[    25s]     0 ← "Thrombospondin-4"[MeSH Terms] OR "THBS4 protein, human"[Supplementary Concept]
-[    31s] records with abstracts: 336
-[   149s] screened: 324 (85 relevant)
-[   149s] evidence cards: 60
-[   177s] outline: Thrombospondin-4 as a skeletal muscle-derived secreted factor: regulatory mechanisms in ageing and metabolism — a critical appraisal — 10 sections
-[   200s]   drafted 3/10 3. Expression and secretion by skeletal muscle: is THBS4 a g (738 words, 14 cards)
-[   201s]   drafted 1/10 1. Introduction: framing THBS4 within the myokine landscape (767 words, 15 cards)
-[   211s]   drafted 2/10 2. THBS4 at the protein level: domain architecture, intracel (760 words, 13 cards)
-[   214s]   drafted 4/10 4. Molecular mechanisms: TGF-β/SMAD, hypoxia/HIF-1α, ATF6 an (819 words, 16 cards)
-[   215s]   drafted 5/10 5. THBS4 in ageing, sarcopenia and exercise adaptation (852 words, 8 cards)
-[   222s]   drafted 6/10 6. Systemic metabolism, vascular crosstalk and inter-organ s (753 words, 13 cards)
-[   232s]   drafted 8/10 8. Critical perspectives and controversies (850 words, 15 cards)
-[   234s]   drafted 7/10 7. Lessons from cardiac, fibrotic and musculoskeletal diseas (816 words, 29 cards)
-[   238s]   drafted 9/10 9. Open questions and an experimental roadmap (963 words, 28 cards)
-[   264s]   drafted 10/10 10. Conclusions (725 words, 24 cards)
-[   568s] reviews: reviewer-muscle-biology (1548 words), reviewer-ageing-metabolism (2019 words), reviewer-citation-integrity (1268 words)
-[   586s]   revised 1/10 (969 words, 17 cards)
-[   608s]   revised 2/10 (853 words, 13 cards)
-[   618s]   revised 4/10 (856 words, 16 cards)
-[   632s]   revised 5/10 (918 words, 9 cards)
-[   648s]   revised 7/10 (891 words, 28 cards)
-[   661s]   revised 3/10 (831 words, 14 cards)
-[   684s]   revised 9/10 (1139 words, 27 cards)
-[   718s]   revised 10/10 (906 words, 24 cards)
-[   732s]   revised 8/10 (882 words, 18 cards)
-[   738s]   revised 6/10 (936 words, 13 cards)
-[   799s]   audited 3/10: 3 unsupported citation(s) corrected
-[   812s]   audited 2/10: 1 unsupported citation(s) corrected
-[   895s]   audited 5/10: 5 unsupported citation(s) corrected
-[   901s]   audited 4/10: 5 unsupported citation(s) corrected
-[   926s]   audited 1/10: 3 unsupported citation(s) corrected
-[   957s]   audited 8/10: 2 unsupported citation(s) corrected
-[   969s]   audited 7/10: 2 unsupported citation(s) corrected
-[   980s]   audited 6/10: 2 unsupported citation(s) corrected
-[  1014s]   audited 9/10: 6 unsupported citation(s) corrected
-[  1068s]   audited 10/10: 3 unsupported citation(s) corrected
-[  1109s] citations: {'cited': 59, 'references': 59, 'out_of_range': [], 'uncited': [], 'citations': 257}
+[     0s] queries: resumed from checkpoint
+[     0s] queries: 30
+[     0s] records: resumed from checkpoint
+[     0s] records with abstracts: 336
+[     0s] screened: resumed from checkpoint
+[     0s] screened: 324 (85 relevant)
+[     0s] evidence cards: 60
+[     0s] outline: resumed from checkpoint
+[     0s] outline: Thrombospondin-4 as a skeletal muscle-derived secreted factor: regulatory mechanisms in ageing and metabolism — a critical appraisal — 10 sections
+[     0s] drafts: 10/10 resumed from checkpoint
+[     0s] reviews: resumed from checkpoint
+[     0s] reviews: reviewer-muscle-biology (1548 words), reviewer-ageing-metabolism (2019 words), reviewer-citation-integrity (1268 words)
+[     0s] revised: 10/10 resumed from checkpoint
+[     0s] integrated: resumed from checkpoint
+[     0s] audited: 10/10 resumed from checkpoint
+[     0s] table: resumed from checkpoint
+[     0s] citations: {'cited': 59, 'references': 59, 'out_of_range': [], 'uncited': [], 'citations': 257}
+[     0s] abstract: resumed from checkpoint
+[     0s] response: resumed from checkpoint
 {
  "title": "Thrombospondin-4 as a skeletal muscle-derived secreted factor: regulatory mechanisms in ageing and metabolism — a critical appraisal",
  "model": "minimax-cn/MiniMax-M3",
- "llm_calls": 88,
+ "llm_calls": 0,
  "queries": 30,
  "records": 336,
  "cards": 60,
