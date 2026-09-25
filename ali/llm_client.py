@@ -287,8 +287,8 @@ def stream_chat(
 
     Rate limits (429), provider 5xx and dropped connections are retried with
     backoff while nothing has streamed yet.  ``meta`` receives ``attempts``,
-    ``retries`` (status per retry) and ``truncated`` (stream ended without a
-    finish marker).
+    ``retries`` (status per retry), ``truncated`` (stream ended without a
+    finish marker) and ``finish_reason`` (e.g. ``length`` at the token cap).
     """
     meta = meta if meta is not None else {}
     streamed = {"n": 0}
@@ -434,6 +434,7 @@ def _stream_chat_once(
                         # Some gateways (incl. MiniMax) emit finish_reason without a
                         # trailing data: [DONE] line — end the stream immediately.
                         if choices[0].get("finish_reason"):
+                            meta["finish_reason"] = choices[0]["finish_reason"]
                             finished = True
                     if delta:
                         parts.append(delta)

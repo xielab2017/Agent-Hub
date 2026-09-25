@@ -56,6 +56,21 @@ def test_extract_json_and_clean_section():
     assert out == "Bold claim [R1].\nitem x"
 
 
+def test_card_ids_and_focus_ranking():
+    assert [rw._card_id(x) for x in (12, "12", "R12", "[R12]", "x")] == [12, 12, 12, 12, 0]
+    base = rw.parse_pubmed_xml(XML)[0]
+    recs = [{**base, "pmid": "1", "title": "Omics of the heart", "abstract": "many genes incl. THBS4", "year": "2025"},
+            {**base, "pmid": "2", "title": "Thrombospondin-4 in muscle", "abstract": "THBS4 THBS4", "year": "2010"},
+            {**base, "pmid": "3", "title": "Unrelated", "abstract": "no mention", "year": "2024"},
+            {**base, "pmid": "4", "title": "Myokines review", "abstract": "muscle secretome", "year": "2020",
+             "review": True},
+            {**base, "pmid": "5", "title": "Seed paper", "abstract": "Thbs1 only", "year": "2019"}]
+    screened = {"1": {"relevance": 2}, "2": {"relevance": 2}, "3": {"relevance": 2}, "4": {"relevance": 1},
+                "5": {"relevance": 2}}
+    cards = rw.evidence_cards(recs, screened, limit=10, focus=r"THBS-?4|thrombospondin-4", seeds=["5"])
+    assert [c["pmid"] for c in cards] == ["5", "2", "1", "4"]  # seed, title mention, abstract mention, context
+
+
 class FakeLLM:
     """Answers each pipeline prompt by its shape; cites every card it is shown."""
 
@@ -78,7 +93,7 @@ class FakeLLM:
         if "Design the review" in user:
             half = max(1, len(ids) // 2)
             return json.dumps({"title": "THBS4 review", "sections": [
-                {"heading": "Introduction", "goal": "g", "cards": ids[:half], "words": 300},
+                {"heading": "Introduction", "goal": "g", "cards": [f"R{i}" for i in ids[:half]], "words": 300},
                 {"heading": "Critical perspectives and controversies", "goal": "g", "cards": ids[half:], "words": 300}]})
         if "most important primary studies" in user:
             return json.dumps([{"card": i, "model": "mouse", "finding": "f", "limitation": "l"} for i in ids[:3]])

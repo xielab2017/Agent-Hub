@@ -90,6 +90,7 @@ class HubLLM:
         from .streaming import strip_model_think_tags
 
         last: Exception | None = None
+        budget = max_tokens
         for attempt in range(3):  # a stream cut mid-reply is retried (llm_client only retries before streaming)
             with self._lock:
                 self.calls += 1
@@ -98,7 +99,7 @@ class HubLLM:
                 text = llm_client.stream_chat(
                     self.base_url, self.api_key, model=self.model, timeout=self.timeout, verify_tls=self.verify_tls,
                     messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
-                    temperature=temperature, max_tokens=max_tokens, meta=meta,
+                    temperature=temperature, max_tokens=budget, meta=meta,
                 )
             except Exception as exc:  # noqa: BLE001
                 last = exc
@@ -106,11 +107,14 @@ class HubLLM:
                 continue
             raw = text or ""
             text = strip_model_think_tags(raw).strip()
-            self._log({"system": system[:60], "prompt_chars": len(user), "max_tokens": max_tokens, "raw_chars": len(raw),
-                       "chars": len(text), "truncated": bool(meta.get("truncated")), "head": text[:240],
-                       "raw_head": raw[:240] if not text else ""})
-            if text and not (meta.get("truncated") and attempt < 2):
+            capped = meta.get("finish_reason") == "length"  # reasoning + answer hit the token cap
+            self._log({"system": system[:60], "prompt_chars": len(user), "max_tokens": budget, "raw_chars": len(raw),
+                       "chars": len(text), "truncated": bool(meta.get("truncated")), "finish": meta.get("finish_reason"),
+                       "head": text[:240], "tail": text[-120:], "raw_head": raw[:240] if not text else ""})
+            if text and not ((meta.get("truncated") or capped) and attempt < 2):
                 return text
+            if capped or not text:
+                budget = min(budget * 2, 32000)
             last = RuntimeError("empty or truncated model reply")
         raise RuntimeError(f"model call failed: {last}")
 
@@ -385,12 +389,41 @@ def _rel(row: dict[str, Any] | None) -> int:
         return 0
 
 
+def _card_id(x: Any) -> int:
+    """Card id from 12, "12" or "R12" (0 when it is none of these)."""
+    m = re.fullmatch(r"\s*\[?R?(\d+)\]?\s*", str(x))
+    return int(m.group(1)) if m else 0
+
+
 def evidence_cards(recs: list[dict[str, Any]], screened: dict[str, dict[str, Any]], *, limit: int = 60,
-                   min_relevance: int = 2) -> list[dict[str, Any]]:
-    ranked = sorted((r for r in recs if _rel(screened.get(r["pmid"])) >= min_relevance),
-                    key=lambda r: (-_rel(screened[r["pmid"]]), r.get("review", False), -(int(r["year"] or 0))))
+                   min_relevance: int = 2, focus: str = "", seeds: list[str] | tuple[str, ...] = (),
+                   context_slots: int = 8) -> list[dict[str, Any]]:
+    """Evidence cards, best first.
+
+    Primary cards (relevance ≥ ``min_relevance``) must mention the ``focus`` regex (the topic protein) in the title
+    or abstract; seed papers and title mentions rank first.  Up to ``context_slots`` relevance-1 cards (preferably
+    reviews: field definitions, the protein family) are kept for framing.
+    """
+    focus_re = re.compile(focus, re.I) if focus else None
+    seeds = set(seeds)
+
+    def mentions(r: dict[str, Any]) -> tuple[bool, int]:
+        if not focus_re:
+            return True, 0
+        return bool(focus_re.search(r.get("title") or "")), len(focus_re.findall(r.get("abstract") or ""))
+
+    def key(r: dict[str, Any]) -> tuple:
+        in_title, n = mentions(r)
+        return (-_rel(screened[r["pmid"]]), r["pmid"] not in seeds, not in_title, -min(n, 6), -(int(r["year"] or 0)))
+
+    primary = [r for r in recs if _rel(screened.get(r["pmid"])) >= min_relevance
+               and (r["pmid"] in seeds or not focus_re or any(mentions(r)))]
+    context = [r for r in recs if _rel(screened.get(r["pmid"])) == 1 and r not in primary]
+    context.sort(key=lambda r: (not r.get("review"), not any(mentions(r)), -(int(r["year"] or 0))))
+    chosen = sorted(primary, key=key)[:max(0, limit - min(context_slots, len(context)))]
+    chosen += context[:limit - len(chosen)]
     cards = []
-    for i, r in enumerate(ranked[:limit], start=1):
+    for i, r in enumerate(chosen, start=1):
         s = screened[r["pmid"]]
         cards.append({"id": i, "pmid": r["pmid"], "doi": r.get("doi"), "title": r["title"], "journal": r["journal"],
                       "year": r["year"], "first_author": (r.get("authors") or ["?"])[0], "review": r.get("review"),
@@ -423,7 +456,7 @@ def make_outline(llm: HubLLM, topic: str, cards: list[dict[str, Any]]) -> dict[s
 
 def write_section(llm: HubLLM, topic: str, outline: dict[str, Any], sec: dict[str, Any], cards: list[dict[str, Any]],
                   *, check: Callable[[str, list[dict[str, Any]]], list[str]] | None = None) -> str:
-    use = [c for c in cards if c["id"] in set(int(x) for x in sec.get("cards") or [])] or cards[:12]
+    use = [c for c in cards if c["id"] in {_card_id(x) for x in sec.get("cards") or []}] or cards[:12]
     others = [c for c in cards if c not in use]
     headings = "; ".join(s.get("heading", "") for s in outline["sections"])
     prompt = (
@@ -435,12 +468,12 @@ def write_section(llm: HubLLM, topic: str, outline: dict[str, Any], sec: dict[st
         "Markdown headings, no reference list.\n\n"
         f"Primary evidence cards:\n{card_block(use)}\n\n"
         f"Other cards you may cite if relevant:\n{card_block(others, abstract_chars=0)}")
-    text = clean_section(llm(WRITER_SYSTEM, prompt, max_tokens=8000), sec["heading"])
+    text = clean_section(llm(WRITER_SYSTEM, prompt, max_tokens=12000), sec["heading"])
     problems = check(text, cards) if check else []
     if problems:
         text = clean_section(llm(WRITER_SYSTEM, prompt + "\n\nYour previous draft had these problems — fix them and "
                                  "return the whole section again:\n- " + "\n- ".join(problems) + "\n\nPrevious draft:\n"
-                                 + text, max_tokens=8000), sec["heading"])
+                                 + text, max_tokens=12000), sec["heading"])
     return text
 
 
@@ -473,8 +506,7 @@ def key_studies_table(llm: HubLLM, cards: list[dict[str, Any]], *, rows: int = 1
     except ValueError:
         return []
     ids = {c["id"] for c in cards}
-    return [r for r in got if isinstance(r, dict) and str(r.get("card") or "").lstrip("R").isdigit()
-            and int(str(r["card"]).lstrip("R")) in ids][:rows]
+    return [r for r in got if isinstance(r, dict) and _card_id(r.get("card")) in ids][:rows]
 
 
 def run_reviewers(llm: HubLLM, draft: str, cards: list[dict[str, Any]]) -> list[dict[str, str]]:
@@ -496,7 +528,7 @@ def run_reviewers(llm: HubLLM, draft: str, cards: list[dict[str, Any]]) -> list[
             "manuscript; citations appear as [R<id>].\n\nReturn Markdown with: 'Summary assessment' (3-4 sentences, "
             "recommendation), 'Major comments' (numbered, each with the exact passage or section, the problem, and a "
             "concrete fix), 'Minor comments' (numbered). Be demanding and specific; check claims against the cards.\n\n"
-            f"MANUSCRIPT\n{draft}\n\nEVIDENCE CARDS\n{card_block(cards, abstract_chars=500)}"), max_tokens=8000, temperature=0.4)
+            f"MANUSCRIPT\n{draft}\n\nEVIDENCE CARDS\n{card_block(cards, abstract_chars=500)}"), max_tokens=12000, temperature=0.4)
         return {"id": sub["id"], "label": sub["label"], "report": report}
 
     with ThreadPoolExecutor(max_workers=3) as pool:
@@ -509,7 +541,7 @@ def revise_section(llm: HubLLM, sec_heading: str, text: str, reviews: list[dict[
         f"Revise the section \"{sec_heading}\" to address every reviewer comment that concerns it (and the general ones). "
         "Keep the [R<id>] citation style; only cite evidence cards; keep or sharpen the critical viewpoint. Return only "
         f"the revised section text (no heading, no notes).\n\nREVIEWER COMMENTS\n{comments}\n\nCURRENT SECTION\n{text}\n\n"
-        f"EVIDENCE CARDS\n{card_block(cards, abstract_chars=400)}"), max_tokens=8000)
+        f"EVIDENCE CARDS\n{card_block(cards, abstract_chars=400)}"), max_tokens=12000)
 
 
 def response_letter(llm: HubLLM, reviews: list[dict[str, str]], changes: str) -> str:
@@ -573,7 +605,7 @@ def build_docx(path: Path, *, title: str, abstract: str, keywords: list[str], se
 # ── orchestration ─────────────────────────────────────────────────────
 
 
-def run(topic: str, out_dir: Path, *, seed_queries: list[str], seed_pmids: list[str] | None = None, min_refs: int = 40,
+def run(topic: str, out_dir: Path, *, seed_queries: list[str], seed_pmids: list[str] | None = None, focus: str = "", min_refs: int = 40,
         max_cards: int = 60, log: Callable[[str], None] = print, llm: HubLLM | None = None) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
     llm = llm or HubLLM()
@@ -601,9 +633,10 @@ def run(topic: str, out_dir: Path, *, seed_queries: list[str], seed_pmids: list[
         if row and _rel(row) >= 1:
             row["relevance"] = max(2, _rel(row))
     log(f"screened: {len(screened)} ({sum(1 for r in screened.values() if _rel(r) >= 2)} relevant)")
-    cards = evidence_cards(recs, screened, limit=max_cards)
+    (out_dir / "screening.json").write_text(json.dumps(screened, ensure_ascii=False, indent=1), encoding="utf-8")
+    cards = evidence_cards(recs, screened, limit=max_cards, focus=focus, seeds=seed_pmids or ())
     if len(cards) < min_refs:
-        cards = evidence_cards(recs, screened, limit=max_cards, min_relevance=1)
+        cards = evidence_cards(recs, screened, limit=max_cards, min_relevance=1, focus=focus, seeds=seed_pmids or ())
     log(f"evidence cards: {len(cards)}")
     (out_dir / "evidence_cards.json").write_text(json.dumps(cards, ensure_ascii=False, indent=1), encoding="utf-8")
 
@@ -635,7 +668,7 @@ def run(topic: str, out_dir: Path, *, seed_queries: list[str], seed_pmids: list[
         problems = section_problems(text, cards)
         if problems:
             text = llm(WRITER_SYSTEM, "Fix these problems in the section and return it in full:\n- " + "\n- ".join(problems)
-                       + f"\n\nSECTION\n{text}\n\nEVIDENCE CARDS\n{card_block(cards, abstract_chars=400)}", max_tokens=8000)
+                       + f"\n\nSECTION\n{text}\n\nEVIDENCE CARDS\n{card_block(cards, abstract_chars=400)}", max_tokens=12000)
         revised[i] = clean_section(text, sections[i]["heading"])
         log(f"  revised {i + 1}/{len(sections)}")
 
@@ -655,7 +688,7 @@ def run(topic: str, out_dir: Path, *, seed_queries: list[str], seed_pmids: list[
             revised[i] = clean_section(llm(WRITER_SYSTEM, (
                 "Integrate the additional evidence cards below where they genuinely strengthen or qualify the argument "
                 "(cite as [R<id>]); do not pad. Return the full section.\n\nSECTION\n" + revised[i]
-                + "\n\nADDITIONAL CARDS\n" + card_block(fit[:8], abstract_chars=500)), max_tokens=8000), sec["heading"])
+                + "\n\nADDITIONAL CARDS\n" + card_block(fit[:8], abstract_chars=500)), max_tokens=12000), sec["heading"])
             used = {x for t in revised for x in cited_ids(t) if x in valid}
             unused = [c for c in cards if c["id"] not in used]
             if len(used) >= min_refs or not unused:
@@ -663,7 +696,7 @@ def run(topic: str, out_dir: Path, *, seed_queries: list[str], seed_pmids: list[
 
     table_rows = key_studies_table(llm, cards)
     table_texts = [r.get("finding", "") for r in table_rows]
-    body_texts = revised + [f"[R{int(str(r['card']).lstrip('R'))}]" for r in table_rows]
+    body_texts = revised + [f"[R{_card_id(r['card'])}]" for r in table_rows]
     numbered, order = renumber(body_texts, valid)
     sections_final = [(s["heading"], t) for s, t in zip(sections, numbered[:len(sections)])]
     by_id = {c["id"]: c for c in cards}
