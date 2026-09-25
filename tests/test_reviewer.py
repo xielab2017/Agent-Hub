@@ -171,3 +171,29 @@ def test_review_message_persists_on_session():
             saved = [m for m in store.get_session(s.id).messages if m.get("id") == "a1"][0]
     assert saved["review"] == rv
     assert ("citation_without_sources", "warn") in _kinds(rv)
+
+
+def test_design_parameters_are_not_untraceable_facts():
+    from ali.reviewer import review_reply
+
+    src = [{"title": "Irisin by MS", "url": "https://pubmed.ncbi.nlm.nih.gov/26278051/", "snippet": "irisin 3.6 ng/ml"}]
+    text = ("样本量：统计功效 80%，考虑 20% 脱落率 → 每组需 64 人；干预强度 60–75% 最大心率；报告 95%置信区间。"
+            "另据研究，运动可使鸢尾素升高约 15–30%。")
+    rv = review_reply(text, sources=src)
+    kinds = {(i["kind"], i["text"]) for i in rv["issues"]}
+    assert ("design_parameter", "80%") in kinds and ("design_parameter", "20%") in kinds
+    assert ("design_parameter", "95%") in kinds
+    # a factual effect size with no source is still a warning
+    assert any(i["kind"] == "untraceable_number" and i["severity"] == "warn" and "15" in i["text"] for i in rv["issues"])
+
+
+def test_named_references_must_be_among_the_sources():
+    from ali.reviewer import review_reply
+
+    src = [{"title": "Detection and Quantitation of Circulating Human Irisin", "url": "https://pubmed.ncbi.nlm.nih.gov/26278051/",
+            "snippet": "[2015] · Cell Metab · Jedrychowski MP, Wrann CD, Paulo JA"}]
+    rv = review_reply("Jedrychowski et al. 用质谱测到 irisin [1]；Jensen 等（2015）则认为 ELISA 不可靠。", sources=src)
+    refs = [i["text"] for i in rv["issues"] if i["kind"] == "unverified_reference"]
+    assert refs == ["Jensen et al."] and rv["ok"] is False
+    # without retrieved sources there is nothing to check against
+    assert not any(i["kind"] == "unverified_reference" for i in review_reply("Jensen et al. 2015", sources=[])["issues"])

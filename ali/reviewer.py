@@ -43,7 +43,7 @@ _NUM = r"\d+(?:[.,]\d+)*(?:\.\d+)?"
 _RANGE_SEP = r"\s*(?:-|–|—|~|～|至|到)\s*"
 _NUM_RANGE = _NUM + r"(?:" + _RANGE_SEP + _NUM + r")?"
 _CLAIM_PATTERNS: list[tuple[str, re.Pattern, str]] = [
-    ("percent", re.compile(r"(?<![\w.])(" + _NUM + r")\s*[%％]"), "warn"),
+    ("percent", re.compile(r"(?<![\w.])(" + _NUM_RANGE + r")\s*[%％]"), "warn"),
     ("p_value", re.compile(r"\b[pP]\s*(?:值)?\s*[<=≤>≥]\s*(" + r"\d*\.?\d+(?:\s*[×x*]\s*10\^?-?\d+|[eE]-?\d+)?" + r")"), "warn"),
     ("statistic", re.compile(r"\b(?:IC50|EC50|Kd|Ki|HR|OR|RR|AUC|R2|R²|FDR|log2FC|CI)\s*(?:值)?\s*[=:：为≈~]?\s*(" + _NUM + r")", re.I), "warn"),
     ("sample_size", re.compile(r"\b[nN]\s*=\s*(\d[\d,]*)"), "warn"),
@@ -53,6 +53,15 @@ _YEAR_RE = re.compile(r"^(?:19|20)\d{2}$")
 _EVIDENCE_NUM_RE = re.compile(r"\d+(?:[.,]\d+)*")
 
 _MAX_ISSUES_PER_KIND = 12
+# Words that mark a number as a parameter the author sets, e.g. in an experiment design.
+_DESIGN_CUES = re.compile(
+    r"脱落|失访|统计功效|功效|把握度|检验效能|显著性水平|置信区间|置信水平|最大心率|HRmax|VO2max|最大摄氧|剂量|给药|"
+    r"样本量|每组|总样本|假设为|设定为|设为|预计|预期|阈值|截断值|"
+    r"dropout|attrition|power|alpha|α|β|confidence|\bCI\b|sample size|per group|dose|assum|threshold",
+    re.I,
+)
+# "Jensen et al." / "Jensen 等（2015）" — a named reference that must be among the retrieved sources.
+_NAMED_REF_RE = re.compile(r"\b([A-Z][a-z]{2,}(?:-[A-Z][a-z]+)?)\s*(?:et\s+al\.?|等人?\s*[（(]\s*(?:19|20)\d{2})")
 # Trailing punctuation and Markdown emphasis (`_doi:10.1/x_`, `**…**`) are never part of an id.
 _TRAIL = ".,;:!?)）]】_*~'\""
 
@@ -119,6 +128,19 @@ def _evidence_numbers(evidence: str) -> set[str]:
             if part:
                 out.add(normalize_number(part))
     return out
+
+
+def _sentence_window(text: str, start: int, end: int, *, before: int = 30, after: int = 16) -> str:
+    """Up to ``before``/``after`` characters around a match, never crossing a sentence end."""
+    left = text[max(0, start - before): start]
+    cut = max(left.rfind(c) for c in "。；;！？!?\n|")
+    if cut >= 0:
+        left = left[cut + 1:]
+    right = text[end: end + after]
+    stops = [i for i in (right.find(c) for c in "。；;！？!?\n|") if i >= 0]
+    if stops:
+        right = right[: min(stops)]
+    return left + text[start:end] + right
 
 
 def _states_value(value: str, nums: set[str]) -> bool:
@@ -315,11 +337,29 @@ def review_reply(
                         ))
                 continue
             snippet = number_prose[max(0, m.start() - 24): m.end() + 12].replace("\n", " ").strip()
+            if _DESIGN_CUES.search(_sentence_window(number_prose, m.start(), m.end())):
+                # a value the reply chooses (power, α, dropout, CI level, dose, sample size) — not a sourced fact
+                issues.append(_issue(
+                    "design_parameter", "info", m.group(0).strip(),
+                    f"…{snippet}… — a design / planning parameter chosen in the reply, not a sourced fact.",
+                    f"…{snippet}…——回复自行设定的设计参数（非引用事实），请按实际研究条件确认。",
+                ))
+                continue
             issues.append(_issue(
                 "untraceable_number", severity, m.group(0).strip(),
                 f"…{snippet}… — not found in any retrieved source or provided material.",
                 f"…{snippet}…——在检索来源和提供的材料中都找不到出处。",
             ))
+
+    # 5) named references ("Jensen et al. 2015") that no retrieved source or provided material mentions
+    if n_sources:
+        for name in dict.fromkeys(m.group(1) for m in _NAMED_REF_RE.finditer(_DOI_RE.sub(" ", _URL_RE.sub(" ", prose)))):
+            if name.lower() not in evidence_lower:
+                issues.append(_issue(
+                    "unverified_reference", "warn", f"{name} et al.",
+                    "Named reference not among the retrieved sources or provided material — it may be misattributed.",
+                    "点名引用的文献不在检索来源或提供的材料中——可能张冠李戴或并不存在，请核实。",
+                ))
 
     # cap per kind, keep counts exact
     counts: dict[str, int] = {}

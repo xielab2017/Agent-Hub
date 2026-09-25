@@ -376,7 +376,9 @@ from ali import sessions as store, streaming, websearch, task_runner
 SEARCH = {"ok": True, "query": "q", "sources": [{"title": "Irisin by MS", "url": "https://pubmed.ncbi.nlm.nih.gov/26278051/",
           "snippet": "irisin circulates at 3.6 ng/ml", "source": "pubmed"}], "context_markdown": "## Deep information search results\n- [1] [Irisin by MS](https://pubmed.ncbi.nlm.nih.gov/26278051/) (pubmed) — irisin",
           "engines": ["pubmed"], "errors": [], "quality": {}, "warnings": []}
+QUERIES = []
 def slow_search(q, limit=8, deep=True):
+    QUERIES.append(q)
     time.sleep(1.5)
     return SEARCH
 websearch.search_structured = slow_search
@@ -414,7 +416,7 @@ while time.time() - t0 < 30:
 print(json.dumps({"returned": returned, "has_block": "Irisin by MS" in seen.get("preamble", ""),
                   "marker_left": "agent-hub:search-results" in seen.get("preamble", ""),
                   "notes": notes, "task_block_n2": "- [2] [Irisin by MS]" in seen.get("preamble", ""),
-                  "review": msgs[-1].get("review", {}).get("warn")}, ensure_ascii=False))
+                  "review": msgs[-1].get("review", {}).get("warn"), "queries": QUERIES}, ensure_ascii=False))
 """
 
 
@@ -436,3 +438,5 @@ def test_search_runs_in_the_stream_and_task_steps_share_source_numbers():
     assert any("正在深度联网检索" in n for n in out["notes"]) and any("检索完成" in n for n in out["notes"])
     assert out["task_block_n2"]  # the step's source was numbered after the task's earlier source
     assert out["review"] == 0
+    # the task step searched its topic (goal + step), not the whole prompt with its rules
+    assert out["queries"][1] == "检索文献" or "【" not in out["queries"][1]

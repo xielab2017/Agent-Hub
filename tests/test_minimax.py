@@ -178,3 +178,61 @@ def test_routing_keeps_a_chosen_minimax_endpoint_but_not_foreign_urls():
     cfg["backend"]["base_url"] = "https://integrate.api.nvidia.com/v1"  # stale URL from another vendor
     assert routing.resolve_route("office", "写一段总结", cfg)["base_url"] == "https://api.minimaxi.com/v1"
     assert pick_base_url(get_provider("minimax"), "https://api.minimax.io/anthropic/") == "https://api.minimax.io/anthropic/"
+
+
+def test_tool_call_markup_is_hidden_and_a_tool_call_only_reply_is_retried(monkeypatch):
+    import queue
+
+    from ali import streaming
+
+    calls = []
+
+    def fake_stream(base_url, api_key, *, model, messages, on_token=None, **kw):
+        calls.append(messages)
+        if len(calls) == 1:
+            text = ('<minimax:tool_call> <invoke name="agenthub_open_search"> <parameter name="query">irisin'
+                    '</parameter> </invoke> </minimax:tool_call>')
+        else:
+            text = "血浆鸢尾素约 3.6 ng/ml [1]。"
+        on_token(text)
+        return text
+
+    cfg = {"backend": {"type": "minimax-cn", "base_url": "https://api.minimaxi.com/v1", "model": "MiniMax-M2"}, "models": {}}
+    monkeypatch.setattr("ali.settings.load_campus_config", lambda: cfg)
+    monkeypatch.setattr("ali.secrets.resolve_api_key", lambda *a, **k: {"key": FAKE_KEY, "present": True})
+    monkeypatch.setattr("ali.llm_client.stream_chat", fake_stream)
+    monkeypatch.setattr(streaming.store, "get_session", lambda sid: None)
+    parts: list = []
+    route: dict = {"route_key": "office"}
+    assert streaming._direct_llm_reply(queue.Queue(), "s", "搜索：鸢尾素浓度", "MiniMax-M2", parts, route_info=route)
+    assert len(calls) == 2 and route.get("tool_call_retry")
+    assert any("No tools can be called" in m["content"] for m in calls[0] if m["role"] == "system")
+    final = streaming.strip_model_think_tags("".join(parts))
+    assert final.strip() == "血浆鸢尾素约 3.6 ng/ml [1]。" and "<invoke" not in final
+
+
+def test_pubmed_and_doi_links_are_read_through_europe_pmc(monkeypatch):
+    import json
+
+    from ali import page_fetch, websearch
+
+    asked = []
+
+    def fake_http(url, **k):
+        asked.append(url)
+        if "europepmc" in url:
+            return json.dumps({"resultList": {"result": [{
+                "title": "Detection and Quantitation of Circulating Human Irisin by Tandem Mass Spectrometry.",
+                "abstractText": "<h4>Summary</h4>Human irisin circulates at ∼ 3.6 ng/ml in sedentary individuals.",
+                "journalTitle": "Cell Metab", "pubYear": "2015"}]}})
+        raise OSError("publisher page blocked")
+
+    monkeypatch.setattr(websearch, "_http", fake_http)
+    monkeypatch.setattr(page_fetch, "is_public_url", lambda url, resolve=True: True)
+    row = page_fetch.fetch_page("https://doi.org/10.1016/j.cmet.2015.08.001", "irisin plasma concentration")
+    assert row["ok"] and row["via"] == "europepmc" and "3.6 ng/ml" in " ".join(row["passages"])
+    assert 'DOI%3A%2210.1016/j.cmet.2015.08.001%22' in asked[0]
+    row = page_fetch.fetch_page("https://pubmed.ncbi.nlm.nih.gov/26278051/", "irisin")
+    assert row["ok"] and "EXT_ID%3A26278051" in asked[-1]
+    # anything else is fetched as a normal page
+    assert page_fetch.scholarly_abstract("https://www.example.com/a") is None

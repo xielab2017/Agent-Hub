@@ -1014,7 +1014,19 @@ def start_chat(
     if need_search and not (excel_fill_task and route_info.get("excel_fill", {}).get("ok")):
         # Searching can take tens of seconds on a slow network: it runs in the
         # stream worker (live progress), not before this request returns.
-        route_info["_deferred_search"] = {"query": msg, "deep_search": deep_search}
+        query = msg
+        if task_id:
+            # A step prompt carries the goal, earlier summaries and output rules; search the topic only.
+            try:
+                from . import task_runner as _tr
+
+                _task = _tr.get_task(task_id) or {}
+                _steps = _task.get("steps") or []
+                _st = _steps[int(task_step) - 1] if 0 < int(task_step or 0) <= len(_steps) else {}
+                query = " ".join(x for x in (str(_task.get("goal") or ""), str(_st.get("instruction") or "")) if x)[:300] or msg
+            except Exception:  # noqa: BLE001
+                query = msg
+        route_info["_deferred_search"] = {"query": query, "deep_search": deep_search}
         route_info["web_search"] = True
         route_info["web_search_deep"] = True
         route_info["web_search_mode"] = "deep"
