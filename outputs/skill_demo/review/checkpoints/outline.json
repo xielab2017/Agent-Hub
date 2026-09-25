@@ -1,0 +1,184 @@
+{
+ "title": "Software for multi-omics data integration and analysis: a systematic and critical comparison of frameworks, packages, workflows and platforms, with EasyMultiProfiler as a featured workflow for microbiome research",
+ "sections": [
+  {
+   "heading": "Introduction: why multi-omics integration demands dedicated software",
+   "goal": "Establish that the heterogeneity of multi-omics assays, the proliferation of integration algorithms and the reproducibility crisis in computational biology have together created demand for dedicated software stacks. Frame microbiome research as a particularly demanding subdomain because host, microbial, viral and metabolic layers must be coordinated, and motivate a comparative review that uses common criteria rather than enumerating tools. The critical angle: integration is not merely a statistical problem but an engineering and infrastructure problem, and current reviews often conflate algorithms with workflows.",
+   "cards": [
+    "R1",
+    "R2",
+    "R54",
+    "R57",
+    "R60"
+   ],
+   "words": 700
+  },
+  {
+   "heading": "A taxonomy of integration strategies: stages, supervision and biological target",
+   "goal": "Introduce a working taxonomy that organises the field along three axes: (i) integration stage (early/intermediate/late, corresponding to concatenation, joint embedding and decision-level fusion); (ii) supervision (unsupervised factor analysis, semi-supervised, supervised); and (iii) biological target (subtyping, biomarker selection, longitudinal modelling, dynamic network inference). The critical angle: labels such as 'multi-omics integration' hide very different statistical commitments, and conflating similarity-network fusion with matrix factorisation obscures the assumptions each method imposes on the data.",
+   "cards": [
+    "R2",
+    "R3",
+    "R5",
+    "R9",
+    "R13",
+    "R15",
+    "R17",
+    "R20",
+    "R27",
+    "R31",
+    "R40",
+    "R42",
+    "R52"
+   ],
+   "words": 850
+  },
+  {
+   "heading": "General-purpose statistical and Bioconductor integration frameworks",
+   "goal": "Survey general-purpose frameworks that operate on any multi-omics block regardless of biological domain: PLS-based integrative methods, Bayesian factor analysis, the MultiAssayExperiment data class, pathway-level roll-ups and pipelines that wrap multiple algorithms. The critical angle: PLS-based methods (mixOmics and DIABLO) remain popular but assume linear relationships and correlated blocks, while matrix factorisation (MOFA/MOFA+) brings stronger probabilistic grounding yet still requires careful modelling of missingness and modality-specific noise; generalist packages rarely ship microbiome-aware preprocessing.",
+   "cards": [
+    "R2",
+    "R3",
+    "R4",
+    "R6",
+    "R7",
+    "R11",
+    "R32",
+    "R35",
+    "R36",
+    "R51"
+   ],
+   "words": 900
+  },
+  {
+   "heading": "Microbiome-centred multi-omics tools",
+   "goal": "Compare tools designed specifically for microbiome multi-omics, where 16S, metagenomics, metatranscriptomics, metaproteomics and host-response layers must be aligned. Include both dedicated pipelines (gNOMO, gNOMO2) and dynamic-modelling approaches (PALM), as well as domain-bridging efforts for non-model hosts, livestock and clinical microbiome cohorts. The critical angle: microbiome multi-omics suffers from severe annotation bottlenecks, strain-level ambiguity and limited gold-standard benchmarks; very few tools explicitly couple integration with microbiome-specific QC, taxonomic aggregation and pathway mapping, leaving a gap that EasyMultiProfiler attempts to fill.",
+   "cards": [
+    "R1",
+    "R21",
+    "R31",
+    "R33",
+    "R34",
+    "R50",
+    "R53",
+    "R54",
+    "R55",
+    "R57",
+    "R58",
+    "R59"
+   ],
+   "words": 900
+  },
+  {
+   "heading": "Web servers and point-and-click platforms for multi-omics",
+   "goal": "Catalogue browser-based platforms that lower the programming barrier and discuss the trade-off between accessibility and methodological transparency. The critical angle: web platforms accelerate uptake but frequently lag behind algorithmic state-of-the-art, hide preprocessing choices, and offer limited customisation; 'unified' platforms often simply concatenate single-omics tools rather than performing true integration, so the apparent abundance of platforms should not be mistaken for methodological diversity.",
+   "cards": [
+    "R10",
+    "R14",
+    "R15",
+    "R22",
+    "R26",
+    "R30",
+    "R37",
+    "R38",
+    "R43",
+    "R46",
+    "R49",
+    "R50"
+   ],
+   "words": 900
+  },
+  {
+   "heading": "Network-based and deep learning approaches",
+   "goal": "Map the rapidly expanding family of methods that treat omics features as nodes in graphs or learn joint embeddings with neural architectures. Cover similarity-network fusion, graph neural networks, attention and transformer models, and CNN-based image-style integration. The critical angle: these methods report strong classification metrics but often on a narrow panel of cancer datasets, lack interpretability benchmarks, and rarely expose uncertainty — a defect that 'trustworthy' frameworks such as TMODINET only partially address.",
+   "cards": [
+    "R5",
+    "R8",
+    "R12",
+    "R19",
+    "R20",
+    "R23",
+    "R24",
+    "R29",
+    "R39",
+    "R40",
+    "R41",
+    "R43",
+    "R44",
+    "R47",
+    "R52"
+   ],
+   "words": 900
+  },
+  {
+   "heading": "Data structures, workflow systems and reproducibility",
+   "goal": "Evaluate the scaffolding on which analysis runs: Bioconductor's MultiAssayExperiment and SummarizedExperiment classes, workflow managers (Nextflow, Snakemake), containerisation, FAIR Digital Objects, simulation engines and pipeline-wrapping tools. The critical angle: reproducibility is repeatedly declared solved by the next containerised workflow, yet studies routinely skip metadata standards, version pinning, and provenance for derived layers; reproducibility should be measured by re-execution success on independent infrastructure, not by the mere presence of a Dockerfile.",
+   "cards": [
+    "R1",
+    "R6",
+    "R7",
+    "R11",
+    "R18",
+    "R21",
+    "R32",
+    "R34",
+    "R36"
+   ],
+   "words": 800
+  },
+  {
+   "heading": "Benchmarking evidence and evaluation criteria",
+   "goal": "Distil what the existing benchmarking literature actually establishes and what it does not. Highlight single-cell benchmarks (Hu et al.; Xiao et al.) and pan-cancer method comparisons (Ren et al.; Zhao et al.). The critical angle: most benchmarks use TCGA cancer data, evaluate only a handful of cancer-subtyping tasks, and rarely assess calibration, uncertainty, robustness to missingness, or biological interpretability; transferability of rankings to microbiome, single-cell or longitudinal settings is largely unproven.",
+   "cards": [
+    "R17",
+    "R19",
+    "R23",
+    "R24",
+    "R33",
+    "R39",
+    "R40",
+    "R42",
+    "R44",
+    "R45",
+    "R48",
+    "R52"
+   ],
+   "words": 900
+  },
+  {
+   "heading": "EasyMultiProfiler: design, strengths and limitations relative to the alternatives",
+   "goal": "Dedicated, balanced assessment of EasyMultiProfiler (EMP) using the same criteria applied elsewhere: integration strategy, data structures, benchmarking evidence, scope and reproducibility. The critical angle: EMP's distinguishing choices — SummarizedExperiment/MultiAssayExperiment back-end, a natural-language pipeline syntax spanning extraction to visualisation, and a clear focus on host–microbiome integration — are genuine advantages over generic Bioconductor or web platforms, yet the published evidence base is concentrated on human/mouse gut datasets, statistical benchmarking is limited and documentation of uncertainty quantification, deep-learning options and large-scale cloud execution is modest; EMP should be regarded as an excellent microbiome workflow rather than a universal integration engine.",
+   "cards": [
+    "R1"
+   ],
+   "words": 900
+  },
+  {
+   "heading": "Critical perspectives, controversies, recommendations and roadmap",
+   "goal": "Synthesise the recurring controversies — reproducibility, annotation dependence, interpretability, transferability across organisms — and translate the comparison into actionable guidance for users and developers. The critical angle: the field's centre of gravity has shifted from statistical novelty to infrastructure (workflows, data classes, FAIR packaging), but microbiome-specific tools remain under-benchmarked; recommend layered adoption (data class first, method second, platform last) and call for open benchmarks on shared microbiome multi-omics cohorts with explicit missingness, batch and strain-level stress tests.",
+   "cards": [
+    "R9",
+    "R13",
+    "R16",
+    "R22",
+    "R25",
+    "R26",
+    "R27",
+    "R28",
+    "R37",
+    "R38",
+    "R45",
+    "R46",
+    "R47",
+    "R53",
+    "R54",
+    "R55",
+    "R56",
+    "R57",
+    "R59",
+    "R60"
+   ],
+   "words": 950
+  }
+ ]
+}

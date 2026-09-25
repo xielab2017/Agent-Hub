@@ -29,3 +29,4 @@
 - 2026-09-25 20:18:17 UTC — `029_B_home.png` — Hub B started — fresh state, no literature-review skill
 - 2026-09-25 20:18:20 UTC — `030_B_imported.png` — bundle uploaded in Control Center → Skills and installed
 - 2026-09-25 20:18:24 UTC — `031_B_run-started.png` — typed: /skill literature-review profile=multiomics-emp out=outputs/skill_demo/review
+- 2026-09-25 20:23:25 UTC — `032_B_running.png` — running: ⏳ 运行中 · 5 min · 46 行日志

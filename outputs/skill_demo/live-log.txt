@@ -33,3 +33,17 @@
 [    28s]    25 ← ("host-microbiome"[tiab] OR "host-microbe"[tiab] OR "gut microbiome"[tiab]) AND ("multi-om
 [    29s]    25 ← "multi-omics"[tiab] AND ("multivariate"[tiab] OR "DIABLO"[tiab] OR "mixOmics"[tiab] OR "sP
 [    38s] records with abstracts: 514
+[   235s] screened: 513 (251 relevant)
+[   235s] evidence cards: 60
+[   235s] featured work: EasyMultiProfiler (EMP) → card R1
+[   249s] outline: Software for multi-omics data integration and analysis: a systematic and critical comparison of frameworks, packages, workflows and platforms, with EasyMultiProfiler as a featured workflow for microbiome research — 10 sections
+[   259s]   drafted 2/10 A taxonomy of integration strategies: stages, supervision an (807 words, 18 cards)
+[   261s]   drafted 3/10 General-purpose statistical and Bioconductor integration fra (812 words, 11 cards)
+[   264s]   drafted 1/10 Introduction: why multi-omics integration demands dedicated  (736 words, 28 cards)
+[   279s]   drafted 4/10 Microbiome-centred multi-omics tools (880 words, 10 cards)
+[   286s]   drafted 6/10 Network-based and deep learning approaches (888 words, 17 cards)
+[   287s]   drafted 7/10 Data structures, workflow systems and reproducibility (741 words, 10 cards)
+[   296s]   drafted 9/10 EasyMultiProfiler: design, strengths and limitations relativ (850 words, 40 cards)
+[   302s]   drafted 5/10 Web servers and point-and-click platforms for multi-omics (841 words, 13 cards)
+[   307s]   drafted 10/10 Critical perspectives, controversies, recommendations and ro (801 words, 33 cards)
+[   313s]   drafted 8/10 Benchmarking evidence and evaluation criteria (999 words, 0 cards)
