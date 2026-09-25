@@ -1,6 +1,4 @@
-[20:02:15] hub A: ['backend: minimax-cn https://api.minimaxi.com/v1 MiniMax-M3']
-[20:02:16] hub A up at http://127.0.0.1:8765 (state /tmp/agenthub-A-1e8q44cw)
-[20:02:18] screenshot 018_A_home.png
-[20:02:20] screenshot 019_A_authoring.png
-[20:03:41] screenshot 020_A_authored.png
-authoring failed: ✗ authored SKILL.md still documents non-existent options: --coi, --featured
+[20:12:14] hub A: ['backend: minimax-cn https://api.minimaxi.com/v1 MiniMax-M3']
+[20:12:15] hub A up at http://127.0.0.1:8765 (state /tmp/agenthub-A-ex949gb1)
+[20:12:17] screenshot 021_A_home.png
+[20:12:19] screenshot 022_A_authoring.png
