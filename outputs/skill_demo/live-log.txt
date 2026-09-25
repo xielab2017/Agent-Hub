@@ -58,3 +58,9 @@
 [   396s]   gap search failed (decoupleR ensemble computational methods infer biological ac): HTTP Error 429: Too Many Requests
 [   402s] reviewer gaps: 4 new evidence cards — R61 Lopez R 2018; R62 Xu C 2021; R63 Gayoso A 2021; R64 Beghini F 2021
 [   425s]   revised 2/10 (809 words, 17 cards)
+[   435s]   revised 3/10 (827 words, 12 cards)
+[   446s]   revised 4/10 (916 words, 10 cards)
+[   452s]   revised 5/10 (879 words, 19 cards)
+[   458s]   revised 1/10 (849 words, 36 cards)
+[   494s]   revised 6/10 (960 words, 17 cards)
+[   513s]   revised 9/10 (906 words, 30 cards)
