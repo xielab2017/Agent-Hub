@@ -2059,3 +2059,10 @@ hr.soft {
 .next-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; font-size: 12px; }
 .next-chip { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .task-dock .btn { width: auto; flex: 0 0 auto; min-width: 0; }
+
+/* runnable skills (/skill, /skill-author) */
+.msg.skill-run .skill-run-head { display: flex; gap: .6rem; align-items: baseline; flex-wrap: wrap; }
+.msg.skill-run .skill-run-stage { font-size: .85em; margin: .25rem 0; }
+.msg.skill-run .skill-run-log { max-height: 22rem; overflow: auto; font-size: .78em; line-height: 1.35;
+  background: var(--code-bg, rgba(127,127,127,.08)); padding: .5rem .7rem; border-radius: 6px; white-space: pre-wrap; }
+.msg.skill-run .skill-run-out { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .4rem; }

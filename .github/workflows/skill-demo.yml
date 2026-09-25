@@ -1,0 +1,91 @@
+name: Skill demo (literature-review)
+
+# Agent Hub turns the review pipeline into a skill and proves it is reusable and transferable, driven through
+# its web UI by scripts/skill_demo.py (Playwright): Hub A authors + exports the skill, a fresh Hub B imports it and
+# runs the review.  Screenshots (outputs/skill_demo/screens/) are pushed to the branch about every 90 s while the
+# run is going.  The key comes only from the repository secret MINIMAX_KEY.
+#
+# Tags in the commit SUBJECT line:
+#   [skill-smoke]  small run of every stage          → outputs/skill_demo/smoke
+#   [skill-full]   the full review                   → outputs/skill_demo/review
+#   add [skill-fresh] to ignore checkpoints (otherwise a re-run resumes at the stage that failed)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["**"]
+
+permissions:
+  contents: write
+
+jobs:
+  demo:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[skill-smoke]') || contains(github.event.head_commit.message, '[skill-full]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 170
+    concurrency:
+      group: skill-demo-${{ github.ref }}
+      cancel-in-progress: false
+    steps:
+      - name: Mode
+        env:
+          MSG: ${{ github.event.head_commit.message }}
+        run: |
+          SUBJECT=$(printf '%s\n' "$MSG" | head -n 1)
+          RUN=false; SMOKE=false; FRESH=false
+          case "$SUBJECT" in *"[skill-full]"*) RUN=true;; esac
+          case "$SUBJECT" in *"[skill-smoke]"*) RUN=true; SMOKE=true;; esac
+          case "$SUBJECT" in *"[skill-full]"*) SMOKE=false;; esac
+          case "$SUBJECT" in *"[skill-fresh]"*) FRESH=true;; esac
+          [ "${{ github.event_name }}" = workflow_dispatch ] && RUN=true
+          echo "RUN=$RUN SMOKE=$SMOKE FRESH=$FRESH  ($SUBJECT)"
+          { echo "RUN=$RUN"; echo "SMOKE=$SMOKE"; echo "FRESH=$FRESH"; } >> "$GITHUB_ENV"
+      - uses: actions/checkout@v4
+        if: env.RUN == 'true'
+      - uses: actions/setup-python@v5
+        if: env.RUN == 'true'
+        with:
+          python-version: "3.12"
+      - name: Install
+        if: env.RUN == 'true'
+        run: |
+          python -m pip install --upgrade pip pyyaml python-docx playwright
+          python -m playwright install --with-deps chromium
+      - name: Run the demo (live screenshots pushed every ~90 s)
+        if: env.RUN == 'true'
+        env:
+          MINIMAX_KEY: ${{ secrets.MINIMAX_KEY }}
+        run: |
+          if [ -z "$MINIMAX_KEY" ]; then echo "::error::Repository secret MINIMAX_KEY is not set."; exit 1; fi
+          git config user.name "agent-hub-bot"
+          git config user.email "agent-hub-bot@users.noreply.github.com"
+          mkdir -p outputs/skill_demo
+          scripts/push_loop.sh outputs/skill_demo 90 > /dev/null 2>&1 &
+          echo $! > /tmp/push_loop.pid
+          ARGS="--profile multiomics-emp --out outputs/skill_demo"
+          [ "$SMOKE" = "true" ] && ARGS="$ARGS --smoke"
+          [ "$FRESH" = "true" ] && ARGS="$ARGS --fresh"
+          set -o pipefail
+          python scripts/skill_demo.py $ARGS 2>&1 | tee outputs/skill_demo/demo-log.txt
+      - name: Upload
+        if: always() && env.RUN == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: skill-demo
+          path: outputs/skill_demo/
+          if-no-files-found: ignore
+      - name: Commit outputs
+        if: always() && env.RUN == 'true'
+        run: |
+          kill "$(cat /tmp/push_loop.pid 2>/dev/null)" 2>/dev/null || true
+          sleep 2
+          git rebase --abort 2>/dev/null || true
+          git add outputs/skill_demo
+          git diff --cached --quiet && exit 0
+          git commit -m "Skill demo outputs (run ${{ github.run_id }})"
+          for i in 1 2 3; do
+            git pull --rebase -X theirs origin "${{ github.ref_name }}" && git push origin "HEAD:${{ github.ref_name }}" && exit 0
+            git rebase --abort 2>/dev/null || true
+            sleep 5
+          done
+          echo "::error::could not push the outputs"; exit 1

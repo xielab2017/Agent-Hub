@@ -1,0 +1,54 @@
+# THBS4 as a skeletal-muscle secreted factor in ageing and metabolism (the first review).
+# The remaining fields (rubric, outline, reviewers, table) are the review_writer defaults.
+topic: 'Thrombospondin-4 (THBS4) as a skeletal muscle-derived secreted factor: regulatory mechanisms in ageing and
+  metabolism'
+plan: false
+seed_queries:
+- THBS4 skeletal muscle
+- thrombospondin-4 muscle
+- thrombospondin-4 ATF6 endoplasmic reticulum stress
+- thrombospondin-4 sarcolemma muscular dystrophy
+- thrombospondin-4 heart hypertrophy
+- thrombospondin-4 aging OR ageing
+- THBS4 obesity OR adipose OR insulin OR diabetes
+- THBS4 liver fibrosis OR NAFLD OR MASLD
+- thrombospondin-4 exercise OR mechanical load
+- thrombospondin-4 tendon extracellular matrix
+- THBS4 fibroblast TGF-beta fibrosis
+- THBS4 proteomics plasma
+- thrombospondin-4 angiogenesis inflammation
+- thrombospondin family matricellular review
+- myokines skeletal muscle endocrine organ review
+- muscle secretome aging sarcopenia
+seed_pmids:
+- '27669143'
+- '30622267'
+- '34168130'
+- '29712757'
+- '26459760'
+- '24573206'
+- '23287452'
+- '29138119'
+- '32795101'
+- '37582915'
+- '24589453'
+- '28481870'
+- '39373248'
+- '38876442'
+- '39154161'
+- '41873540'
+focus_terms:
+- THBS4
+- THBS-4
+- TSP-4
+- TSP4
+- thrombospondin-4
+context_terms:
+- myokine
+- secretome
+- skeletal muscle
+- matricellular
+- thrombospondin
+- sarcopenia
+- muscle ageing
+- muscle aging

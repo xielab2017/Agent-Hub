@@ -57,6 +57,134 @@ REVIEWERS = [
 ]
 
 
+# ── review profile (what makes a run topic-specific) ────────────────────
+
+DEFAULT_PROFILE: dict[str, Any] = {
+    "topic": "",
+    "seed_queries": [],
+    "seed_pmids": [],
+    "focus_terms": [],          # primary cards must mention one (title / abstract); ranked by mentions
+    "context_terms": [],        # preferred titles for the few framing reviews
+    "query_guidance": ("core biology, skeletal muscle, secretion / circulation, ageing, metabolism (adipose, liver, "
+                       "insulin, heart), exercise, fibrosis / ECM, human cohorts / proteomics"),
+    "screen_rubric": ("relevance 3 = directly about the topic's protein in muscle/ageing/metabolism, 2 = directly "
+                      "about the protein in another tissue or mechanism, 1 = context only, 0 = irrelevant"),
+    "screen_sections": ["biology", "muscle", "secretion", "ageing", "metabolism", "heart", "fibrosis_ecm", "exercise",
+                        "human", "other"],
+    "outline_guidance": ("Introduction; biology of the protein; expression and secretion by skeletal muscle (is it a "
+                         "genuine myokine?); molecular mechanisms; ageing/sarcopenia; systemic metabolism; a dedicated "
+                         "'Critical perspectives and controversies' section; open questions and an experimental "
+                         "roadmap; conclusions"),
+    "reviewers": REVIEWERS,
+    "table": {"title": "Table 1. Key primary studies", "select": "the most important primary studies",
+              "primary_only": True,
+              "columns": [{"key": "model", "label": "Model / system", "hint": "species / system"},
+                          {"key": "finding", "label": "Main finding", "hint": "main finding (<=25 words)"},
+                          {"key": "limitation", "label": "Limitation", "hint": "main limitation or caveat (<=20 words)"}]},
+    "featured": None,           # {"pmid", "name", "emphasis"}: a work the review gives a dedicated, evidence-based section
+    "coi_statement": "",
+}
+
+
+def terms_regex(terms: list[str]) -> str:
+    """Literal terms → one case-insensitive regex (word-bounded; hyphen / space variants match)."""
+    parts = []
+    for t in terms:
+        t = str(t).strip()
+        if t:
+            parts.append(r"\b" + re.sub(r"\\[- ]", "[- ]?", re.escape(t)) + r"\b")
+    return "|".join(parts)
+
+
+def load_profile(path: str | Path | None = None, **overrides: Any) -> dict[str, Any]:
+    """A profile from YAML / JSON (``None`` → defaults), with non-empty ``overrides`` applied on top."""
+    prof = json.loads(json.dumps(DEFAULT_PROFILE))
+    if path:
+        text = Path(path).read_text(encoding="utf-8")
+        if str(path).endswith((".yaml", ".yml")):
+            import yaml
+
+            data = yaml.safe_load(text) or {}
+        else:
+            data = json.loads(text)
+        prof.update({k: v for k, v in data.items() if v not in (None, "", [])})
+    prof.update({k: v for k, v in overrides.items() if v not in (None, "", [])})
+    return prof
+
+
+def plan_profile(llm: Callable[..., str], topic: str, profile: dict[str, Any]) -> dict[str, Any]:
+    """Let the model fill profile fields that a new topic needs but the caller did not give (keeps given ones)."""
+    if profile.get("plan") is False:  # a complete, hand-written profile
+        return profile
+    missing = [k for k in ("seed_queries", "focus_terms", "context_terms") if not profile.get(k)]
+    generic = {k for k in ("query_guidance", "screen_rubric", "screen_sections", "outline_guidance", "reviewers", "table")
+               if profile.get(k) == DEFAULT_PROFILE[k]}
+    if not missing and not generic:
+        return profile
+    want = sorted(set(missing) | generic)
+    try:
+        got = ask_json(llm, "You design systematic literature reviews for high-impact journals.", (
+            f"Review topic: {topic}\n" + (f"Featured work: {profile['featured']}\n" if profile.get("featured") else "")
+            + "\nReturn one JSON object with exactly these fields: " + ", ".join(want) + ".\n"
+            "- seed_queries: 10-14 PubMed queries (English, no wildcards)\n"
+            "- focus_terms: 4-10 literal terms of which a primary paper must mention at least one\n"
+            "- context_terms: 3-6 literal title terms for framing reviews\n"
+            "- query_guidance: one line listing the literature strands to retrieve\n"
+            "- screen_rubric: 'relevance 3 = …, 2 = …, 1 = context only, 0 = irrelevant' for this topic\n"
+            "- screen_sections: 6-10 short snake_case section tags\n"
+            "- outline_guidance: 8-10 required sections separated by ';' incl. a dedicated 'Critical perspectives and "
+            "controversies' section, open questions / roadmap and conclusions\n"
+            "- reviewers: 3 objects {id (kebab-case, prefix reviewer-), label ('Reviewer N — …'), role: 'research', "
+            "desc (what this expert judges)}; reviewer 3 is the handling editor for methods & citation integrity\n"
+            "- table: {title, select (which cards the table lists), primary_only (bool), columns: 3 objects "
+            "{key (snake_case), label, hint}}\nOutput only the JSON."), expect=dict, max_tokens=8000, temperature=0.2)
+    except ValueError:
+        return profile
+    out = dict(profile)
+    for k in want:
+        v = got.get(k)
+        if k in ("seed_queries", "focus_terms", "context_terms", "screen_sections"):
+            v = [str(x).strip() for x in v if str(x).strip()] if isinstance(v, list) else None
+        elif k == "reviewers":
+            v = [r for r in v if isinstance(r, dict) and r.get("id") and r.get("desc")][:3] if isinstance(v, list) else None
+            if v and len(v) < 3:
+                v = None
+            for r in v or []:
+                r["id"], r["role"] = re.sub(r"[^a-z0-9-]+", "-", str(r["id"]).lower()).strip("-"), "research"
+        elif k == "table":
+            ok = isinstance(v, dict) and isinstance(v.get("columns"), list) and len(v["columns"]) == 3 and all(
+                isinstance(c, dict) and c.get("key") and c.get("label") for c in v["columns"])
+            v = v if ok else None
+        elif not isinstance(v, str) or not v.strip():
+            v = None
+        if v:
+            out[k] = v
+    return out
+
+
+def featured_note(profile: dict[str, Any]) -> str:
+    f = profile.get("featured") or {}
+    if not f:
+        return ""
+    return (f" The review features {f.get('name')} ({f.get('emphasis') or 'a work the authors contributed'}). Give it "
+            "the prominence the evidence supports and argue its advantages from what its own card and the comparison "
+            "with the other cards show — never with unsupported superlatives — and state its limitations as candidly "
+            "as those of the alternatives.")
+
+
+class _WriterNote:
+    """The Hub model with a profile note appended to the writer system prompt (other prompts unchanged)."""
+
+    def __init__(self, llm: Callable[..., str], note: str) -> None:
+        self._llm, self._note = llm, note
+
+    def __call__(self, system: str, user: str, **kw: Any) -> str:
+        return self._llm(system + self._note if system == WRITER_SYSTEM and self._note else system, user, **kw)
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._llm, name)
+
+
 # ── model access (Agent Hub settings) ─────────────────────────────────
 
 
@@ -384,20 +512,21 @@ def scrub_prose(text: str) -> str:
     return "".join(p if p.startswith("[") else re.sub(r"\b(?:the |this )?R(\d+)\b", r"ref. [R\1]", p) for p in parts)
 
 
-def plan_queries(llm: HubLLM, topic: str, seeds: list[str]) -> list[str]:
+def plan_queries(llm: HubLLM, topic: str, seeds: list[str], guidance: str = DEFAULT_PROFILE["query_guidance"]) -> list[str]:
     try:
         got = ask_json(llm, "You design PubMed search strategies.", (
         f"Review topic: {topic}\n\nReturn a JSON array of 10-14 distinct PubMed queries (English, PubMed syntax "
-        "allowed, no wildcards) that together retrieve the primary literature and key reviews on this topic: core "
-        "biology, skeletal muscle, secretion / circulation, ageing, metabolism (adipose, liver, insulin, heart), "
-        "exercise, fibrosis / ECM, human cohorts / proteomics. Output only the JSON array."), expect=list, max_tokens=4000)
+        f"allowed, no wildcards) that together retrieve the primary literature and key reviews on this topic: {guidance}. "
+        "Output only the JSON array."), expect=list, max_tokens=4000)
     except ValueError:
         got = []  # the seed queries alone still cover the topic
     queries = [str(q).strip() for q in got if isinstance(q, str) and str(q).strip()]
     return list(dict.fromkeys(seeds + queries))
 
 
-def screen(llm: HubLLM, topic: str, recs: list[dict[str, Any]], *, batch: int = 12) -> dict[str, dict[str, Any]]:
+def screen(llm: HubLLM, topic: str, recs: list[dict[str, Any]], *, batch: int = 12,
+           rubric: str = DEFAULT_PROFILE["screen_rubric"],
+           sections: list[str] | None = None) -> dict[str, dict[str, Any]]:
     """Relevance 0-3 and a one-sentence key finding per record (from its abstract only)."""
     results: dict[str, dict[str, Any]] = {}
     failures: list[str] = []
@@ -409,11 +538,9 @@ def screen(llm: HubLLM, topic: str, recs: list[dict[str, Any]], *, batch: int = 
             rows = ask_json(llm, "You screen papers for a systematic literature review. Use only the given abstracts.", (
                 f"Review topic: {topic}\n\nFor each paper return an object "
                 '{"pmid": "...", "relevance": 0-3, "finding": "one factual sentence about what the paper shows '
-                'regarding the topic (only from the abstract)", "model": "species / system", "section": "one of: '
-                'biology, muscle, secretion, ageing, metabolism, heart, fibrosis_ecm, exercise, human, other"}. '
-                "relevance 3 = directly about the topic's protein in muscle/ageing/metabolism, 2 = directly about the "
-                "protein in another tissue or mechanism, 1 = context only, 0 = irrelevant. Output one JSON array.\n\n"
-                + cards), expect=list, max_tokens=8000, temperature=0.1)
+                'regarding the topic (only from the abstract)", "model": "species / system / data type", "section": "one of: '
+                + ", ".join(sections or DEFAULT_PROFILE["screen_sections"]) + '"}. '
+                + rubric + ". Output one JSON array.\n\n" + cards), expect=list, max_tokens=8000, temperature=0.1)
             for row in rows:
                 if isinstance(row, dict) and str(row.get("pmid") or "") in {r["pmid"] for r in chunk}:
                     results[str(row["pmid"])] = row
@@ -488,15 +615,18 @@ def card_block(cards: list[dict[str, Any]], *, abstract_chars: int = 900) -> str
         for c in cards)
 
 
-def make_outline(llm: HubLLM, topic: str, cards: list[dict[str, Any]]) -> dict[str, Any]:
+def make_outline(llm: HubLLM, topic: str, cards: list[dict[str, Any]], *,
+                 guidance: str = DEFAULT_PROFILE["outline_guidance"], featured: dict[str, Any] | None = None) -> dict[str, Any]:
+    feat = ""
+    if featured and featured.get("card"):
+        feat = (f" Include a dedicated section on {featured.get('name')} (card [R{featured['card']}]) placed after the "
+                "comparative survey, evaluated with the same criteria as the alternatives.")
     outline = ask_json(llm, WRITER_SYSTEM, (
         f"Topic: {topic}\n\nEvidence cards:\n{card_block(cards, abstract_chars=300)}\n\n"
         "Design the review. Return JSON: {\"title\": \"...\", \"sections\": [{\"heading\": \"...\", \"goal\": \"what the "
         "section must establish, incl. the critical angle\", \"cards\": [ids], \"words\": 600-1000}]}. 8-10 sections: "
-        "Introduction; biology of the protein; expression and secretion by skeletal muscle (is it a genuine myokine?); "
-        "molecular mechanisms; ageing/sarcopenia; systemic metabolism; a dedicated 'Critical perspectives and "
-        "controversies' section; open questions and an experimental roadmap; conclusions. Every card should be used by "
-        "at least one section. Output only JSON."), expect=dict, max_tokens=8000, temperature=0.2)
+        f"{guidance}.{feat} Every card should be used by at least one section. Output only JSON."),
+        expect=dict, max_tokens=8000, temperature=0.2)
     if not isinstance(outline, dict) or not outline.get("sections"):
         raise ValueError("outline has no sections")
     return outline
@@ -544,13 +674,16 @@ def section_problems(text: str, cards: list[dict[str, Any]]) -> list[str]:
     return problems[:10]
 
 
-def key_studies_table(llm: HubLLM, cards: list[dict[str, Any]], *, rows: int = 12) -> list[dict[str, str]]:
-    primary = [c for c in cards if not c.get("review")][:rows + 6]
+def key_studies_table(llm: HubLLM, cards: list[dict[str, Any]], *, rows: int = 12,
+                      spec: dict[str, Any] | None = None) -> list[dict[str, str]]:
+    spec = spec or DEFAULT_PROFILE["table"]
+    pool = [c for c in cards if not c.get("review")] if spec.get("primary_only", True) else list(cards)
+    primary = pool[:rows + 6]
+    fields = ", ".join(f'"{c["key"]}": "{c.get("hint") or c["label"]}"' for c in spec["columns"])
     try:
         got = ask_json(llm, WRITER_SYSTEM, (
-        f"From these evidence cards pick the {rows} most important primary studies and return a JSON array of "
-        '{"card": id, "model": "species / system", "finding": "main finding (<=25 words)", "limitation": "main '
-        'limitation or caveat (<=20 words)"}. Use only the cards.\n\n' + card_block(primary, abstract_chars=500)),
+        f"From these evidence cards pick the {rows} rows for a table of {spec.get('select') or 'the key studies'} and "
+        f'return a JSON array of {{"card": id, {fields}}}. Use only the cards.\n\n' + card_block(primary, abstract_chars=500)),
         expect=list, max_tokens=6000, temperature=0.1)
     except ValueError:
         return []
@@ -558,12 +691,13 @@ def key_studies_table(llm: HubLLM, cards: list[dict[str, Any]], *, rows: int = 1
     return [r for r in got if isinstance(r, dict) and _card_id(r.get("card")) in ids][:rows]
 
 
-def run_reviewers(llm: HubLLM, draft: str, cards: list[dict[str, Any]]) -> list[dict[str, str]]:
+def run_reviewers(llm: HubLLM, draft: str, cards: list[dict[str, Any]],
+                  specs: list[dict[str, Any]] | None = None, extra: str = "") -> list[dict[str, str]]:
     """Three Agent Hub subagents review the draft in parallel."""
     from . import agents
 
     subs = []
-    for spec in REVIEWERS:
+    for spec in specs or REVIEWERS:
         try:
             agents.upsert_subagent(spec)
         except Exception:  # noqa: BLE001 — catalog persistence is optional here
@@ -576,7 +710,7 @@ def run_reviewers(llm: HubLLM, draft: str, cards: list[dict[str, Any]]) -> list[
             "Review this manuscript as its peer reviewer. Evidence cards (the only sources the author used) follow the "
             "manuscript; citations appear as [R<id>].\n\nReturn Markdown with: 'Summary assessment' (3-4 sentences, "
             "recommendation), 'Major comments' (numbered, each with the exact passage or section, the problem, and a "
-            "concrete fix), 'Minor comments' (numbered). Be demanding and specific; check claims against the cards.\n\n"
+            "concrete fix), 'Minor comments' (numbered). Be demanding and specific; check claims against the cards." + extra + "\n\n"
             f"MANUSCRIPT\n{draft}\n\nEVIDENCE CARDS\n{card_block(cards, abstract_chars=500)}"), max_tokens=12000, temperature=0.4)
         return {"id": sub["id"], "label": sub["label"], "report": report}
 
@@ -639,7 +773,8 @@ def write_abstract(llm: HubLLM, title: str, body: str) -> dict[str, Any]:
 
 
 def build_docx(path: Path, *, title: str, abstract: str, keywords: list[str], sections: list[tuple[str, str]],
-               table: list[dict[str, str]], references: list[str], note: str = "") -> None:
+               table: list[dict[str, str]], references: list[str], note: str = "",
+               table_spec: dict[str, Any] | None = None, coi: str = "") -> None:
     from docx import Document
     from docx.enum.text import WD_ALIGN_PARAGRAPH
     from docx.shared import Pt
@@ -663,16 +798,22 @@ def build_docx(path: Path, *, title: str, abstract: str, keywords: list[str], se
         doc.add_heading(f"{i}. {heading}", level=1)
         for para in [p.strip() for p in re.split(r"\n\s*\n", body) if p.strip()]:
             doc.add_paragraph(re.sub(r"\s*\n\s*", " ", para))
+    spec = table_spec or DEFAULT_PROFILE["table"]
     if table:
-        doc.add_heading("Table 1. Key primary studies", level=1)
-        t = doc.add_table(rows=1, cols=4)
+        doc.add_heading(spec.get("title") or "Table 1", level=1)
+        cols = spec["columns"]
+        t = doc.add_table(rows=1, cols=1 + len(cols))
         t.style = "Light Grid Accent 1"
-        for cell, head in zip(t.rows[0].cells, ("Ref.", "Model / system", "Main finding", "Limitation")):
+        for cell, head in zip(t.rows[0].cells, ["Ref."] + [c["label"] for c in cols]):
             cell.text = head
         for row in table:
             cells = t.add_row().cells
-            cells[0].text, cells[1].text = row.get("ref", ""), row.get("model", "")
-            cells[2].text, cells[3].text = row.get("finding", ""), row.get("limitation", "")
+            cells[0].text = row.get("ref", "")
+            for cell, c in zip(cells[1:], cols):
+                cell.text = str(row.get(c["key"], ""))
+    if coi:
+        doc.add_heading("Competing interests", level=1)
+        doc.add_paragraph(coi)
     doc.add_heading("References", level=1)
     for i, ref in enumerate(references, start=1):
         doc.add_paragraph(f"[{i}] {ref}")
@@ -744,20 +885,45 @@ class Checkpoints:
         return items
 
 
-def run(topic: str, out_dir: Path, *, seed_queries: list[str], seed_pmids: list[str] | None = None, focus: str = "",
-        context_focus: str = "", min_refs: int = 40, max_cards: int = 60, retmax: int = 25, max_queries: int = 0, max_sections: int = 0,
+def run(topic: str, out_dir: Path, *, profile: dict[str, Any] | None = None, seed_queries: list[str] | None = None,
+        seed_pmids: list[str] | None = None, focus: str = "", context_focus: str = "", min_refs: int = 40,
+        max_cards: int = 60, retmax: int = 25, max_queries: int = 0, max_sections: int = 0,
         log: Callable[[str], None] = print, llm: HubLLM | None = None) -> dict[str, Any]:
+    """Search → screen → cards → outline → drafts → 3 reviewers → revision → audit → Word.
+
+    ``profile`` (see ``DEFAULT_PROFILE`` / ``load_profile``) makes the run topic-specific; fields it leaves at the
+    defaults are planned by the model for the topic.  Without a profile the defaults (and the explicit keyword
+    arguments) apply unchanged.
+    """
     out_dir.mkdir(parents=True, exist_ok=True)
     llm = llm or HubLLM()
     if isinstance(llm, HubLLM):
         llm.trace = out_dir / "llm_trace.jsonl"
     log(f"model: {llm.provider}/{llm.model} via {llm.base_url}")
-    ck = Checkpoints(out_dir, {"topic": topic, "seed_queries": seed_queries, "seed_pmids": seed_pmids or [],
-                               "focus": focus, "context_focus": context_focus, "min_refs": min_refs, "max_cards": max_cards, "retmax": retmax,
-                               "max_queries": max_queries, "max_sections": max_sections,
-                               "model": f"{llm.provider}/{llm.model}"}, log=log)
+    prof = load_profile(**{**(profile or {}), "topic": topic or (profile or {}).get("topic")})
+    topic = prof["topic"] or topic
+    params = {"topic": topic, "seed_queries": seed_queries or prof["seed_queries"],
+              "seed_pmids": seed_pmids or prof["seed_pmids"], "focus": focus, "context_focus": context_focus,
+              "min_refs": min_refs, "max_cards": max_cards, "retmax": retmax, "max_queries": max_queries,
+              "max_sections": max_sections, "model": f"{llm.provider}/{llm.model}"}
+    if profile:
+        params["profile"] = profile
+    ck = Checkpoints(out_dir, params, log=log)
+    if profile:
+        prof = ck.stage("profile", lambda: plan_profile(llm, topic, prof))
+        log(f"profile: {len(prof['seed_queries'])} seed queries, focus {prof['focus_terms'][:6]}, reviewers "
+            + ", ".join(r.get("id", "?") for r in prof["reviewers"]))
+    (out_dir / "profile.json").write_text(json.dumps(prof, ensure_ascii=False, indent=1), encoding="utf-8")
+    seed_queries = list(seed_queries or prof["seed_queries"])
+    featured = dict(prof.get("featured") or {})
+    seed_pmids = list(dict.fromkeys(list(seed_pmids or prof["seed_pmids"]) + ([str(featured["pmid"])]
+                                                                                if featured.get("pmid") else [])))
+    focus = focus or terms_regex(prof["focus_terms"]) + (("|" + terms_regex([featured["name"]])) if featured.get("name")
+                                                          and prof["focus_terms"] else "")
+    context_focus = context_focus or terms_regex(prof["context_terms"])
+    llm = _WriterNote(llm, featured_note(prof))
 
-    queries = ck.stage("queries", lambda: plan_queries(llm, topic, seed_queries))
+    queries = ck.stage("queries", lambda: plan_queries(llm, topic, seed_queries, prof["query_guidance"]))
     if max_queries:
         queries = queries[:max_queries]
     log(f"queries: {len(queries)}")
@@ -779,11 +945,14 @@ def run(topic: str, out_dir: Path, *, seed_queries: list[str], seed_pmids: list[
     log(f"records with abstracts: {len(recs)}")
 
     def do_screen() -> dict[str, Any]:
-        screened = screen(llm, topic, recs)
+        screened = screen(llm, topic, recs, rubric=prof["screen_rubric"], sections=prof["screen_sections"])
         for pid in seed_pmids or []:  # a key paper the screen found at least context-relevant stays in
             row = screened.get(pid)
             if row and _rel(row) >= 1:
                 row["relevance"] = max(2, _rel(row))
+        fp = str(featured.get("pmid") or "")
+        if fp and any(r["pmid"] == fp for r in recs):  # the featured work is always a primary card
+            screened[fp] = {**(screened.get(fp) or {"finding": "", "model": "", "section": "other"}), "relevance": 3}
         return screened
 
     screened = ck.stage("screened", do_screen)
@@ -796,7 +965,11 @@ def run(topic: str, out_dir: Path, *, seed_queries: list[str], seed_pmids: list[
     log(f"evidence cards: {len(cards)}")
     (out_dir / "evidence_cards.json").write_text(json.dumps(cards, ensure_ascii=False, indent=1), encoding="utf-8")
 
-    outline = ck.stage("outline", lambda: make_outline(llm, topic, cards))
+    fcard = next((c["id"] for c in cards if featured.get("pmid") and c["pmid"] == str(featured["pmid"])), 0)
+    if featured.get("pmid"):
+        log(f"featured work: {featured.get('name')} → " + (f"card R{fcard}" if fcard else "NOT FOUND in PubMed records"))
+    outline = ck.stage("outline", lambda: make_outline(llm, topic, cards, guidance=prof["outline_guidance"],
+                                                       featured={**featured, "card": fcard} if fcard else None))
     title = str(outline.get("title") or topic)
     sections = [{**s, "heading": re.sub(r"^\s*(?:section\s+)?[\dIVX]+[.):]\s*", "", str(s["heading"]), flags=re.I).strip()}
                 for s in outline["sections"] if isinstance(s, dict) and s.get("heading")]  # the document numbers them
@@ -814,7 +987,9 @@ def run(topic: str, out_dir: Path, *, seed_queries: list[str], seed_pmids: list[
     draft_md = "\n\n".join(f"## {s['heading']}\n\n{t}" for s, t in zip(sections, drafts))
     (out_dir / "draft_v1.md").write_text(f"# {title}\n\n{draft_md}", encoding="utf-8")
 
-    reviews = ck.stage("reviews", lambda: run_reviewers(llm, draft_md, cards))
+    bias = (f" The manuscript features {featured.get('name')}: flag every claim about it that its own card does not "
+            "support, any promotional tone, and any comparison that is unfair to the alternatives.") if fcard else ""
+    reviews = ck.stage("reviews", lambda: run_reviewers(llm, draft_md, cards, prof["reviewers"], bias))
     (out_dir / "reviewer_reports.md").write_text(
         "\n\n".join(f"# {r['label']}\n\n{r['report']}" for r in reviews), encoding="utf-8")
     log("reviews: " + ", ".join(f"{r['id']} ({len(r['report'].split())} words)" for r in reviews))
@@ -872,15 +1047,15 @@ def run(topic: str, out_dir: Path, *, seed_queries: list[str], seed_pmids: list[
     if audit_log:
         (out_dir / "citation_audit.json").write_text(json.dumps(audit_log, ensure_ascii=False, indent=1), encoding="utf-8")
     valid = {c["id"] for c in cards}
-    table_rows = ck.stage("table", lambda: key_studies_table(llm, cards))
-    table_texts = [r.get("finding", "") for r in table_rows]
+    table_rows = ck.stage("table", lambda: key_studies_table(llm, cards, spec=prof["table"]))
+    cols = [c["key"] for c in prof["table"]["columns"]]
     body_texts = [scrub_prose(t) for t in revised] + [f"[R{_card_id(r['card'])}]" for r in table_rows]
     numbered, order = renumber(body_texts, valid)
     sections_final = [(s["heading"], t) for s, t in zip(sections, numbered[:len(sections)])]
     by_id = {c["id"]: c for c in cards}
     references = [by_id[i]["reference"] for i in order]
-    table_final = [{"ref": numbered[len(sections) + k], "model": r.get("model", ""), "finding": table_texts[k],
-                    "limitation": r.get("limitation", "")} for k, r in enumerate(table_rows)]
+    table_final = [{"ref": numbered[len(sections) + k], **{c: str(r.get(c, "")) for c in cols}}
+                   for k, r in enumerate(table_rows)]
     check = validate_citations([t for _, t in sections_final] + [r["ref"] for r in table_final], len(references))
     log(f"citations: {check}")
     (out_dir / "reviewer_reports.md").write_text(map_card_ids(
@@ -897,11 +1072,13 @@ def run(topic: str, out_dir: Path, *, seed_queries: list[str], seed_pmids: list[
     (out_dir / "review_final.md").write_text(final_md, encoding="utf-8")
     build_docx(out_dir / "review.docx", title=title, abstract=str(meta.get("abstract") or ""),
                keywords=[str(k) for k in meta.get("keywords") or []], sections=sections_final, table=table_final,
-               references=references,
+               references=references, table_spec=prof["table"], coi=prof.get("coi_statement") or "",
                note=f"Drafted with Agent Hub ({llm.provider}/{llm.model}); references retrieved from PubMed; "
                     "peer-reviewed by three Agent Hub reviewer subagents and revised.")
     summary = {"title": title, "model": f"{llm.provider}/{llm.model}", "llm_calls": llm.calls, "queries": len(queries),
                "records": len(recs), "cards": len(cards), "sections": len(sections), "references": len(references),
-               "citation_check": check, "words": sum(len(t.split()) for _, t in sections_final)}
+               "citation_check": check, "words": sum(len(t.split()) for _, t in sections_final),
+               "featured": {"name": featured.get("name"), "pmid": featured.get("pmid"),
+                            "reference": order.index(fcard) + 1 if fcard in order else None} if featured else None}
     (out_dir / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=1), encoding="utf-8")
     return summary

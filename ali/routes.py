@@ -41,6 +41,7 @@ from . import (
     run_journal,
     science_connectors,
     skill_capture,
+    skill_runner,
     task_runner,
     streaming,
     subagent_planner,
@@ -339,6 +340,30 @@ def handle_get(handler) -> None:
 
     if path == "/api/skills":
         return _json(handler, 200, skills.list_skills())
+
+    # runnable skills: export bundle, runs, run output files
+    if len(parts) == 4 and parts[:2] == ["api", "skills"] and parts[3] == "export":
+        try:
+            data = skill_runner.export_skill_zip(parts[2])
+        except FileNotFoundError as exc:
+            return _json(handler, 404, {"error": str(exc)})
+        audit.log_event("skill_export", {"id": parts[2], "bytes": len(data)})
+        return _send_bytes(handler, data, "application/zip", f"{parts[2]}.zip")
+    if path == "/api/skill-runs":
+        return _json(handler, 200, {"runs": skill_runner.list_runs()})
+    if len(parts) == 3 and parts[:2] == ["api", "skill-runs"]:
+        try:
+            since = int((qs.get("since") or ["0"])[0] or 0)
+            return _json(handler, 200, skill_runner.get_run(parts[2], since=since))
+        except (FileNotFoundError, ValueError) as exc:
+            return _json(handler, 404, {"error": str(exc)})
+    if len(parts) == 4 and parts[:2] == ["api", "skill-runs"] and parts[3] == "file":
+        try:
+            f = skill_runner.run_file(parts[2], (qs.get("name") or [""])[0])
+        except FileNotFoundError as exc:
+            return _json(handler, 404, {"error": str(exc)})
+        ctype = mimetypes.guess_type(f.name)[0] or "application/octet-stream"
+        return _send_bytes(handler, f.read_bytes(), ctype, f.name)
 
     if path == "/api/skills/catalog":
         return _json(handler, 200, skills.skill_catalog())
@@ -1796,6 +1821,36 @@ def handle_post(handler) -> None:
         except FileNotFoundError as exc:
             return _json(handler, 404, {"error": str(exc)})
         return _json(handler, 200, {"ok": True, "review": review})
+
+    if path == "/api/skills/author":
+        body = _read_json(handler)
+        try:
+            result = skill_runner.author_skill(str(body.get("id") or "literature-review"),
+                                               source=body.get("source") or None, run_dir=body.get("run_dir") or None,
+                                               load=body.get("load", True) is not False)
+        except FileNotFoundError as exc:
+            return _json(handler, 404, {"error": str(exc)})
+        except Exception as exc:  # noqa: BLE001 — model / install failures are reported to the UI
+            return _json(handler, 400, {"error": str(exc)})
+        return _json(handler, 200, result)
+
+    if len(parts) == 4 and parts[:2] == ["api", "skills"] and parts[3] == "run":
+        body = _read_json(handler)
+        try:
+            run = skill_runner.start_run(parts[2], body.get("args") or "", session_id=str(body.get("session_id") or ""),
+                                         display=str(body.get("display") or ""))
+        except FileNotFoundError as exc:
+            return _json(handler, 404, {"error": str(exc)})
+        except (ValueError, OSError) as exc:
+            return _json(handler, 400, {"error": str(exc)})
+        audit.log_event("skill_run", {"id": parts[2], "run": run["id"], "args": run["args"]})
+        return _json(handler, 200, run)
+
+    if len(parts) == 4 and parts[:2] == ["api", "skill-runs"] and parts[3] == "stop":
+        try:
+            return _json(handler, 200, skill_runner.stop_run(parts[2]))
+        except FileNotFoundError as exc:
+            return _json(handler, 404, {"error": str(exc)})
 
     if path == "/api/skills/from-session":
         body = _read_json(handler)

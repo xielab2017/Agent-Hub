@@ -252,6 +252,9 @@ const I18N = {
     "slash.next": "继续任务的下一步",
     "slash.stop": "停止当前任务",
     "slash.help": "查看全部命令",
+    "slash.skill": "运行可执行 Skill：/skill <id> [profile=… | 主题]",
+    "slash.skillAuthor": "让 Agent Hub 把流程写成 Skill 并安装：/skill-author <id>",
+    "slash.skillExport": "导出 Skill 压缩包（可在另一台 Agent Hub 导入）：/skill-export <id>",
     "task.title": "任务",
     "task.step": "步骤 {n}/{total}",
     "task.auto": "自动推进",
@@ -539,6 +542,9 @@ const I18N = {
     "slash.next": "Continue the task with the next step",
     "slash.stop": "Stop the current task",
     "slash.help": "Show all commands",
+    "slash.skill": "Run an executable skill: /skill <id> [profile=… | topic]",
+    "slash.skillAuthor": "Have Agent Hub write the workflow up as a skill and install it: /skill-author <id>",
+    "slash.skillExport": "Export a skill bundle (import it on another Agent Hub): /skill-export <id>",
     "task.title": "Task",
     "task.step": "Step {n}/{total}",
     "task.auto": "Auto-advance",
@@ -2352,6 +2358,9 @@ const SLASH_COMMANDS = [
   { cmd: "/verify", arg: false, key: "slash.verify" },
   { cmd: "/next", arg: false, key: "slash.next" },
   { cmd: "/stop", arg: false, key: "slash.stop" },
+  { cmd: "/skill", arg: true, key: "slash.skill" },
+  { cmd: "/skill-author", arg: true, key: "slash.skillAuthor" },
+  { cmd: "/skill-export", arg: true, key: "slash.skillExport" },
   { cmd: "/help", arg: false, key: "slash.help" },
 ];
 
@@ -2450,6 +2459,30 @@ async function runSlashCommand(text, sessionId, fromInput) {
       clear();
       await stopTask(sessionId);
       return true;
+    case "/skill":
+    case "/skill-author":
+    case "/skill-export": {
+      const [sid, ...more] = arg.split(/\s+/);
+      if (!sid) return false;
+      clear();
+      appendMessage({ role: "user", content: text });
+      if (cmd === "/skill-export") {
+        const a = document.createElement("a");
+        a.href = `/api/skills/${encodeURIComponent(sid)}/export`;
+        a.download = `${sid}.zip`;
+        document.body.appendChild(a); a.click(); a.remove();
+        appendMessage({ role: "assistant", content: (zh ? `已导出 Skill \`${sid}\`：` : `Exported skill \`${sid}\`: `)
+          + `[${sid}.zip](/api/skills/${encodeURIComponent(sid)}/export)` });
+        return true;
+      }
+      if (cmd === "/skill-author") {
+        const runDir = (more.find((x) => x.startsWith("run=")) || "").slice(4);
+        await authorSkill(sid, zh, runDir);
+        return true;
+      }
+      await runSkill(sid, more.join(" "), sessionId, text, zh);
+      return true;
+    }
     case "/help":
     case "/":
       $("#input").value = "/";
@@ -2457,6 +2490,81 @@ async function runSlashCommand(text, sessionId, fromInput) {
       return true;
     default:
       return false;
+  }
+}
+
+// ── Runnable skills (/skill, /skill-author) ────────────────────────────
+
+function skillCard(title) {
+  const empty = $("#empty-state");
+  if (empty) empty.remove();
+  const div = document.createElement("div");
+  div.className = "msg assistant skill-run";
+  div.innerHTML = `<div class="meta">Agent Hub · skill</div><div class="skill-run-head"><strong>${escapeHtml(title)}</strong>
+    <span class="skill-run-status muted">…</span></div><div class="skill-run-stage muted"></div>
+    <pre class="skill-run-log"></pre><div class="skill-run-out"></div>`;
+  $("#messages").appendChild(div);
+  div.scrollIntoView({ block: "end" });
+  return div;
+}
+
+async function authorSkill(sid, zh, runDir = "") {
+  const card = skillCard(zh ? `Agent Hub 正在把流程写成 Skill：${sid}` : `Agent Hub is authoring the skill: ${sid}`);
+  const status = card.querySelector(".skill-run-status");
+  status.textContent = zh ? "模型撰写 SKILL.md 中…" : "the model is writing SKILL.md…";
+  try {
+    const res = await api("/api/skills/author", { method: "POST", body: JSON.stringify({ id: sid, run_dir: runDir }), timeoutMs: 900000 });
+    status.textContent = zh ? `✓ 已安装并加载（${res.model}）` : `✓ installed and loaded (${res.model})`;
+    card.querySelector(".skill-run-stage").textContent = res.path || "";
+    card.querySelector(".skill-run-log").textContent = res.markdown || "";
+    card.querySelector(".skill-run-out").innerHTML = `<a class="btn chip" href="/api/skills/${encodeURIComponent(sid)}/export" download>⬇ ${escapeHtml(sid)}.zip</a>`;
+  } catch (err) {
+    status.textContent = `✗ ${err.message || err}`;
+    card.classList.add("error");
+  }
+}
+
+async function runSkill(sid, args, sessionId, display, zh) {
+  const card = skillCard(`${zh ? "运行 Skill" : "Running skill"} ${sid}${args ? " · " + args : ""}`);
+  const status = card.querySelector(".skill-run-status");
+  const stage = card.querySelector(".skill-run-stage");
+  const logEl = card.querySelector(".skill-run-log");
+  let run;
+  try {
+    run = await api(`/api/skills/${encodeURIComponent(sid)}/run`, {
+      method: "POST", body: JSON.stringify({ args, session_id: sessionId, display }),
+    });
+  } catch (err) {
+    status.textContent = `✗ ${err.message || err}`;
+    card.classList.add("error");
+    return;
+  }
+  card.dataset.run = run.id;
+  const lines = [];
+  let since = 0;
+  const t0 = Date.now();
+  while (true) {
+    let r;
+    try { r = await api(`/api/skill-runs/${encodeURIComponent(run.id)}?since=${since}`); } catch (err) { r = null; }
+    if (r) {
+      since = r.next;
+      lines.push(...(r.lines || []));
+      logEl.textContent = lines.slice(-24).join("\n");
+      stage.textContent = r.stage || "";
+      const mins = Math.round((Date.now() - t0) / 60000);
+      status.textContent = r.status === "running" ? `⏳ ${zh ? "运行中" : "running"} · ${mins} min · ${lines.length} ${zh ? "行日志" : "log lines"}`
+        : (r.status === "done" ? "✓ " : "✗ ") + r.status;
+      if (r.status !== "running") {
+        const s = r.summary || {};
+        const chk = s.citation_check || {};
+        card.querySelector(".skill-run-out").innerHTML = (s.title ? `<p><strong>${escapeHtml(s.title)}</strong><br>${escapeHtml(
+          `${s.sections} sections · ${s.words} words · ${chk.cited} references cited · ${s.llm_calls} model calls (${s.model})`)}</p>` : "")
+          + (r.outputs || []).map((o) => `<a class="btn chip" href="/api/skill-runs/${encodeURIComponent(run.id)}/file?name=${encodeURIComponent(o.name)}" download>⬇ ${escapeHtml(o.name)}</a>`).join(" ");
+        if (r.status !== "done") card.classList.add("error");
+        return;
+      }
+    }
+    await new Promise((res) => setTimeout(res, 2000));
   }
 }
 

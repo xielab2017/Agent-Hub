@@ -204,3 +204,71 @@ def test_per_item_keeps_finished_items_when_one_fails(tmp_path):
         ck.per_item("drafts", 3, fn)
     assert ck.get("drafts") == ["text 0", "", "text 2"]
     assert ck.per_item("drafts", 3, lambda i: f"again {i}") == ["text 0", "again 1", "text 2"]
+
+
+class ProfileLLM(FakeLLM):
+    """FakeLLM that also answers the profile-planning prompt."""
+
+    def __call__(self, system, user, **kw):
+        if "design systematic literature reviews" in system:
+            self.calls += 1
+            self.systems.append(system)
+            return json.dumps({
+                "focus_terms": ["multi-omics", "integration"], "context_terms": ["software review"],
+                "query_guidance": "tools, benchmarks", "screen_rubric": "relevance 3 = a multi-omics tool, 1 = context only",
+                "screen_sections": ["tools", "benchmarks", "other"],
+                "outline_guidance": "Introduction; Survey of tools; Critical perspectives and controversies; Conclusions",
+                "reviewers": [{"id": "Reviewer Bioinformatics", "label": "Reviewer 1 — bioinformatics", "desc": "tools"},
+                              {"id": "reviewer-biology", "label": "Reviewer 2 — biology", "desc": "biology"},
+                              {"id": "reviewer-editor", "label": "Reviewer 3 — editor", "desc": "citations"}],
+                "table": {"title": "Table 1. Tools", "select": "tools", "primary_only": False,
+                          "columns": [{"key": "tool", "label": "Tool", "hint": "name"},
+                                      {"key": "strengths", "label": "Strengths", "hint": "pros"},
+                                      {"key": "limitations", "label": "Limitations", "hint": "cons"}]}})
+        if "most important primary studies" in user or "rows for a table" in user:
+            ids = sorted({int(x) for x in re.findall(r"\[R(\d+)\]", user)})
+            return json.dumps([{"card": i, "tool": f"T{i}", "strengths": "s", "limitations": "l"} for i in ids[:3]])
+        return super().__call__(system, user, **kw)
+
+
+def test_profile_run_plans_fields_features_work_and_states_coi(tmp_path, monkeypatch):
+    pytest.importorskip("docx")
+    recs = []
+    for k in range(1, 46):
+        [r] = rw.parse_pubmed_xml(XML)
+        recs.append({**r, "pmid": str(1000 + k), "title": f"A multi-omics integration tool {k}"})
+    recs.append({**recs[0], "pmid": "40932530", "title": "EasyMultiProfiler: a multi-omics workflow", "year": "2025"})
+    monkeypatch.setattr(rw, "pubmed_search", lambda q, retmax=25: [r["pmid"] for r in recs][:40])
+    monkeypatch.setattr(rw, "pubmed_fetch", lambda pmids: [r for r in recs if r["pmid"] in pmids])
+    from ali import agents
+
+    registered = []
+    monkeypatch.setattr(agents, "upsert_subagent", lambda spec: registered.append(spec["id"]) or {})
+    llm = ProfileLLM()
+    profile = {"topic": "Multi-omics analysis software", "seed_queries": ["multi-omics software"],
+               "featured": {"pmid": "40932530", "name": "EasyMultiProfiler", "emphasis": "the authors' workflow"},
+               "coi_statement": "The authors developed EasyMultiProfiler."}
+    summary = rw.run("", tmp_path, profile=profile, min_refs=40, max_cards=45, log=lambda m: None, llm=llm)
+    prof = json.loads((tmp_path / "profile.json").read_text())
+    assert prof["focus_terms"] == ["multi-omics", "integration"] and prof["seed_queries"] == ["multi-omics software"]
+    assert registered == ["reviewer-bioinformatics", "reviewer-biology", "reviewer-editor"]
+    cards = json.loads((tmp_path / "evidence_cards.json").read_text())
+    assert cards[0]["pmid"] == "40932530"  # the featured work leads the evidence
+    assert summary["featured"]["reference"] is not None
+    assert any("features EasyMultiProfiler" in s for s in llm.systems)  # writer note
+    from docx import Document
+
+    doc = Document(str(tmp_path / "review.docx"))
+    text = "\n".join(p.text for p in doc.paragraphs)
+    assert "Competing interests" in text and "The authors developed EasyMultiProfiler." in text
+    assert [c.text for c in doc.tables[0].rows[0].cells] == ["Ref.", "Tool", "Strengths", "Limitations"]
+    assert doc.tables[0].rows[1].cells[1].text.startswith("T")
+
+
+def test_load_profile_and_terms_regex(tmp_path):
+    f = tmp_path / "p.yaml"
+    f.write_text("topic: X\nfocus_terms: [multi-omics, MOFA]\nseed_pmids: ['1']\n")
+    prof = rw.load_profile(f, seed_pmids=["2"])
+    assert prof["topic"] == "X" and prof["seed_pmids"] == ["2"] and prof["reviewers"] == rw.REVIEWERS
+    rx = re.compile(rw.terms_regex(prof["focus_terms"]), re.I)
+    assert rx.search("a multiomics tool") and rx.search("Multi-omics") and rx.search("MOFA+") and not rx.search("omics")
