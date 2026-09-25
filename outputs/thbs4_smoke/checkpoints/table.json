@@ -1,0 +1,68 @@
+[
+ {
+  "card": "R2",
+  "model": "mouse (Thbs4-/-)",
+  "finding": "Thbs4-/- mice show larger tendon collagen fibrils, smaller soleus, decreased grip strength and LPL activity.",
+  "limitation": "Global knockout; developmental vs acute roles not separable"
+ },
+ {
+  "card": "R3",
+  "model": "mouse and Drosophila (muscular dystrophy)",
+  "finding": "Thbs4 stabilizes sarcolemma via dystrophin-glycoprotein and integrin complex trafficking; loss worsens dystrophy.",
+  "limitation": "Mostly overexpression and aging models"
+ },
+ {
+  "card": "R4",
+  "model": "mouse (DMD models)",
+  "finding": "Spatial transcriptomics shows Thbs4 upregulated specifically in fibrotic regions of dystrophic mouse muscle.",
+  "limitation": "Correlation in two DMD models; no functional test"
+ },
+ {
+  "card": "R5",
+  "model": "human (skeletal muscle, eccentric exercise)",
+  "finding": "THBS4 identified as myokine hub upregulated after untrained eccentric running in human muscle.",
+  "limitation": "Acute untrained state; small human cohort"
+ },
+ {
+  "card": "R6",
+  "model": "rat and human (pulmonary hypertension)",
+  "finding": "THBS4 upregulated in pulmonary arteries of PH models and patients, driving PASMC remodeling via TGF-β1/SMAD2/HIF-1α.",
+  "limitation": "Primarily rat PH models; human correlative only"
+ },
+ {
+  "card": "R7",
+  "model": "rat (MCT-AV) and human PASMCs",
+  "finding": "THBS4 upregulated in irreversible PAH-CHD and promotes PASMC proliferation, migration and phenotype switching.",
+  "limitation": "Single rat model; limited human samples"
+ },
+ {
+  "card": "R8",
+  "model": "mouse and Drosophila (mdx cardiomyopathy)",
+  "finding": "Thbs4 requires secretory pathway transit to stabilize cardiomyocyte sarcolemma; deletion worsens mdx cardiomyopathy.",
+  "limitation": "Engineered secretion-defective model; in vitro overexpression"
+ },
+ {
+  "card": "R9",
+  "model": "mouse (endothelial cells)",
+  "finding": "TGF-β1 induces endothelial THBS4 via SMAD3, mediating pro-angiogenic effects in vitro and in vivo.",
+  "limitation": "Endothelial-focused; angiogenesis readouts only"
+ },
+ {
+  "card": "R10",
+  "model": "mouse (cardiomyocytes)",
+  "finding": "Thbs4 T3R and TSP-C domains bind BiP and Atf6α, activating adaptive ER stress response in cardiomyocytes.",
+  "limitation": "In vitro domain mapping only"
+ },
+ {
+  "card": "R11",
+  "model": "human (muscle-derived cells)",
+  "finding": "THBS4 mRNA upregulated ~62-fold during tenogenic differentiation of human muscle-derived cells in vitro.",
+  "limitation": "In vitro induction; no loss-of-function testing"
+ },
+ {
+  "card": "R12",
+  "model": "mouse and human (genomic)",
+  "finding": "Murine Thbs4 mapped to chromosome 13; human THBS4 to 5q13, with muscle/bone-related promoter features.",
+  "limitation": "Genomic mapping only; predates functional work"
+ }
+]

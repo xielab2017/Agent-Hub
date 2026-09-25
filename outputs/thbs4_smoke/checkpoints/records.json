@@ -1,0 +1,624 @@
+[
+ {
+  "pmid": "27669143",
+  "title": "Thrombospondin expression in myofibers stabilizes muscle membranes.",
+  "abstract": "Skeletal muscle is highly sensitive to mutations in genes that participate in membrane stability and cellular attachment, which often leads to muscular dystrophy. Here we show that Thrombospondin-4 (Thbs4) regulates skeletal muscle integrity and its susceptibility to muscular dystrophy through organization of membrane attachment complexes. Loss of the Thbs4 gene causes spontaneous dystrophic changes with aging and accelerates disease in 2 mouse models of muscular dystrophy, while overexpression of mouse Thbs4 is protective and mitigates dystrophic disease. In the myofiber, Thbs4 selectively enhances vesicular trafficking of dystrophin-glycoprotein and integrin attachment complexes to stabilize the sarcolemma. In agreement, muscle-specific overexpression of Drosophila Tsp or mouse Thbs4 rescues a Drosophila model of muscular dystrophy with augmented membrane residence of βPS integrin. This functional conservation emphasizes the fundamental importance of Thbs' as regulators of cellular attachment and membrane stability and identifies Thbs4 as a potential therapeutic target for muscular dystrophy.",
+  "journal": "Elife",
+  "year": "2016",
+  "volume": "5",
+  "issue": "",
+  "pages": "e17589",
+  "doi": "10.7554/eLife.17589",
+  "authors": [
+   "Vanhoutte D",
+   "Schips TG",
+   "Kwong JQ",
+   "Davis J",
+   "Tjondrokoesoemo A",
+   "Brody MJ",
+   "Sargent MA",
+   "Kanisicak O",
+   "Yi H",
+   "Gao QQ",
+   "Rabinowitz JE",
+   "Volk T",
+   "McNally EM",
+   "Molkentin JD"
+  ],
+  "types": [
+   "Journal Article",
+   "Research Support, Non-U.S. Gov't",
+   "Research Support, N.I.H., Extramural"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "30622267",
+  "title": "Thrombospondin-3 augments injury-induced cardiomyopathy by intracellular integrin inhibition and sarcolemmal instability.",
+  "abstract": "Thrombospondins (Thbs) are a family of five secreted matricellular glycoproteins in vertebrates that broadly affect cell-matrix interaction. While Thbs4 is known to protect striated muscle from disease by enhancing sarcolemmal stability through increased integrin and dystroglycan attachment complexes, here we show that Thbs3 antithetically promotes sarcolemmal destabilization by reducing integrin function, augmenting disease-induced decompensation. Deletion of Thbs3 in mice enhances integrin membrane expression and membrane stability, protecting the heart from disease stimuli. Transgene-mediated overexpression of α7β1D integrin in the heart ameliorates the disease predisposing effects of Thbs3 by augmenting sarcolemmal stability. Mechanistically, we show that mutating Thbs3 to contain the conserved RGD integrin binding domain normally found in Thbs4 and Thbs5 now rescues the defective expression of integrins on the sarcolemma. Thus, Thbs proteins mediate the intracellular processing of integrin plasma membrane attachment complexes to regulate the dynamics of cellular remodeling and membrane stability.",
+  "journal": "Nat Commun",
+  "year": "2019",
+  "volume": "10",
+  "issue": "1",
+  "pages": "76",
+  "doi": "10.1038/s41467-018-08026-8",
+  "authors": [
+   "Schips TG",
+   "Vanhoutte D",
+   "Vo A",
+   "Correll RN",
+   "Brody MJ",
+   "Khalil H",
+   "Karch J",
+   "Tjondrokoesoemo A",
+   "Sargent MA",
+   "Maillet M",
+   "Ross RS",
+   "Molkentin JD"
+  ],
+  "types": [
+   "Journal Article",
+   "Research Support, N.I.H., Extramural",
+   "Research Support, Non-U.S. Gov't"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "34168130",
+  "title": "Thbs1 induces lethal cardiac atrophy through PERK-ATF4 regulated autophagy.",
+  "abstract": "The thrombospondin (Thbs) family of secreted matricellular proteins are stress- and injury-induced mediators of cellular attachment dynamics and extracellular matrix protein production. Here we show that Thbs1, but not Thbs2, Thbs3 or Thbs4, induces lethal cardiac atrophy when overexpressed. Mechanistically, Thbs1 binds and activates the endoplasmic reticulum stress effector PERK, inducing its downstream transcription factor ATF4 and causing lethal autophagy-mediated cardiac atrophy. Antithetically, Thbs1-/- mice develop greater cardiac hypertrophy with pressure overload stimulation and show reduced fasting-induced atrophy. Deletion of Thbs1 effectors/receptors, including ATF6α, CD36 or CD47 does not diminish Thbs1-dependent cardiac atrophy. However, deletion of the gene encoding PERK in Thbs1 transgenic mice blunts the induction of ATF4 and autophagy, and largely corrects the lethal cardiac atrophy. Finally, overexpression of PERK or ATF4 using AAV9 gene-transfer similarly promotes cardiac atrophy and lethality. Hence, we identified Thbs1-mediated PERK-eIF2α-ATF4-induced autophagy as a critical regulator of cardiomyocyte size in the stressed heart.",
+  "journal": "Nat Commun",
+  "year": "2021",
+  "volume": "12",
+  "issue": "1",
+  "pages": "3928",
+  "doi": "10.1038/s41467-021-24215-4",
+  "authors": [
+   "Vanhoutte D",
+   "Schips TG",
+   "Vo A",
+   "Grimes KM",
+   "Baldwin TA",
+   "Brody MJ",
+   "Accornero F",
+   "Sargent MA",
+   "Molkentin JD"
+  ],
+  "types": [
+   "Journal Article",
+   "Research Support, N.I.H., Extramural",
+   "Research Support, Non-U.S. Gov't"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "29712757",
+  "title": "Defective Flux of Thrombospondin-4 through the Secretory Pathway Impairs Cardiomyocyte Membrane Stability and Causes Cardiomyopathy.",
+  "abstract": "Thrombospondins are stress-inducible secreted glycoproteins with critical functions in tissue injury and healing. Thrombospondin-4 (Thbs4) is protective in cardiac and skeletal muscle, where it activates an adaptive endoplasmic reticulum (ER) stress response, induces expansion of the ER, and enhances sarcolemmal stability. However, it is unclear if Thbs4 has these protective functions from within the cell, from the extracellular matrix, or from the secretion process itself. In this study, we generated transgenic mice with cardiac cell-specific overexpression of a secretion-defective mutant of Thbs4 to evaluate its exclusive intracellular and secretion-dependent functions. Like wild-type Thbs4, the secretion-defective mutant upregulates the adaptive ER stress response and expands the ER and intracellular vesicles in cardiomyocytes. However, only the secretion-defective Thbs4 mutant produces cardiomyopathy with sarcolemmal weakness and rupture that is associated with reduced adhesion-forming glycoproteins in the membrane. Similarly, deletion of Thbs4 in the mdx mouse model of Duchenne muscular dystrophy enhances cardiomyocyte membrane instability and cardiomyopathy. Finally, overexpression of the secretion-defective Thbs4 mutant in Drosophila, but not wild-type Thbs4, impaired muscle function and sarcomere alignment. These results suggest that transit through the secretory pathway is required for Thbs4 to augment sarcolemmal stability, while ER stress induction and vesicular expansion mediated by Thbs4 are exclusively intracellular processes.",
+  "journal": "Mol Cell Biol",
+  "year": "2018",
+  "volume": "38",
+  "issue": "14",
+  "pages": "e00114-18",
+  "doi": "10.1128/MCB.00114-18",
+  "authors": [
+   "Brody MJ",
+   "Vanhoutte D",
+   "Schips TG",
+   "Boyer JG",
+   "Bakshi CV",
+   "Sargent MA",
+   "York AJ",
+   "Molkentin JD"
+  ],
+  "types": [
+   "Journal Article",
+   "Research Support, N.I.H., Extramural"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "26459760",
+  "title": "Dissection of Thrombospondin-4 Domains Involved in Intracellular Adaptive Endoplasmic Reticulum Stress-Responsive Signaling.",
+  "abstract": "Thrombospondins are a family of stress-inducible secreted glycoproteins that underlie tissue remodeling. We recently reported that thrombospondin-4 (Thbs4) has a critical intracellular function, regulating the adaptive endoplasmic reticulum (ER) stress pathway through activating transcription factor 6α (Atf6α). In the present study, we dissected the domains of Thbs4 that mediate interactions with ER proteins, such as BiP (Grp78) and Atf6α, and the domains mediating activation of the ER stress response. Functionally, Thbs4 localized to the ER and post-ER vesicles and was actively secreted from cardiomyocytes, as were the type III repeat (T3R) and TSP-C domains, while the LamG domain localized to the Golgi apparatus. We also mutated the major calcium-binding motifs within the T3R domain of full-length Thbs4, causing ER retention and secretion blockade. The T3R and TSP-C domains as well as wild-type Thbs4 and the calcium-binding mutant interacted with Atf6α, induced an adaptive ER stress response, and caused expansion of intracellular vesicles. In contrast, overexpression of a related secreted oligomeric glycoprotein, Nell2, which lacks only the T3R and TSP-C domains, did not cause these effects. Finally, deletion of Atf6α abrogated Thbs4-induced vesicular expansion. Taken together, these data identify the critical intracellular functional domains of Thbs4, which was formerly thought to have only extracellular functions.",
+  "journal": "Mol Cell Biol",
+  "year": "2016",
+  "volume": "36",
+  "issue": "1",
+  "pages": "2-12",
+  "doi": "10.1128/MCB.00607-15",
+  "authors": [
+   "Brody MJ",
+   "Schips TG",
+   "Vanhoutte D",
+   "Kanisicak O",
+   "Karch J",
+   "Maliken BD",
+   "Blair NS",
+   "Sargent MA",
+   "Prasad V",
+   "Molkentin JD"
+  ],
+  "types": [
+   "Journal Article",
+   "Research Support, N.I.H., Extramural",
+   "Research Support, Non-U.S. Gov't"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "24573206",
+  "title": "Cardiomyocyte-specific transforming growth factor β suppression blocks neutrophil infiltration, augments multiple cytoprotective cascades, and reduces early mortality after myocardial infarction.",
+  "abstract": "RATIONALE: Wound healing after myocardial infarction involves a highly regulated inflammatory response that is initiated by the appearance of neutrophils to clear out dead cells and matrix debris. Neutrophil infiltration is controlled by multiple secreted factors, including the master regulator transforming growth factor β (TGFβ). Broad inhibition of TGFβ early postinfarction has worsened post-myocardial infarction remodeling; however, this signaling displays potent cell specificity, and targeted suppression particularly in the myocyte could be beneficial. OBJECTIVE: Our aims were to test the hypothesis that targeted suppression of myocyte TGFβ signaling ameliorates postinfarct remodeling and inflammatory modulation and to identify mechanisms by which this may be achieved. METHODS AND RESULTS: Mice with TGFβ receptor-coupled signaling genetically suppressed only in cardiac myocytes (conditional TGFβ receptor 1 or 2 knockout) displayed marked declines in neutrophil recruitment and accompanying metalloproteinase 9 activation after infarction and were protected against early-onset mortality due to wall rupture. This is a cell-specific effect, because broader inhibition of TGFβ signaling led to 100% early mortality due to rupture. Rather than by altering fibrosis or reducing the generation of proinflammatory cytokines/chemokines, myocyte-selective TGFβ inhibition augmented the synthesis of a constellation of highly protective cardiokines. These included thrombospondin 4 with associated endoplasmic reticulum stress responses, interleukin-33, follistatin-like 1, and growth and differentiation factor 15, which is an inhibitor of neutrophil integrin activation and tissue migration. CONCLUSIONS: These data reveal a novel role of myocyte TGFβ signaling as a potent regulator of protective cardiokine and neutrophil-mediated infarct remodeling.",
+  "journal": "Circ Res",
+  "year": "2014",
+  "volume": "114",
+  "issue": "8",
+  "pages": "1246-57",
+  "doi": "10.1161/CIRCRESAHA.114.302653",
+  "authors": [
+   "Rainer PP",
+   "Hao S",
+   "Vanhoutte D",
+   "Lee DI",
+   "Koitabashi N",
+   "Molkentin JD",
+   "Kass DA"
+  ],
+  "types": [
+   "Journal Article",
+   "Research Support, N.I.H., Extramural",
+   "Research Support, Non-U.S. Gov't"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "23287452",
+  "title": "ATF6 [corrected] and thrombospondin 4: the dynamic duo of the adaptive endoplasmic reticulum stress response.",
+  "abstract": "Thrombospondins are secreted, extracellular matrix (ECM) proteins that are upregulated in the heart and other tissues in response to ischemic injury and myocardial stress. Roles for thrombospondins after they are secreted have been examined in a variety of disease models, including myocardial pathology. However, a recent study published in the journal Cell by Lynch et al shifts this paradigm by focusing on roles for intracellular thrombospondins; these authors showed that thrombospondin-4 (Thbs4) can function from within cells to protect the heart by enhancing adaptive aspects of the endoplasmic reticulum (ER) stress response that are mediated by activating transcription factor 6, ATF6. Although this study was carried out in the cardiac context, the results add to our understanding of protein folding and quality control in all tissues. Moreover, the findings underscore the potential widespread therapeutic benefit of enhancing adaptive responses that are regulated by ATF6.",
+  "journal": "Circ Res",
+  "year": "2013",
+  "volume": "112",
+  "issue": "1",
+  "pages": "9-12",
+  "doi": "10.1161/CIRCRESAHA.112.280560",
+  "authors": [
+   "Doroudgar S",
+   "Glembotski CC"
+  ],
+  "types": [
+   "Comment",
+   "Journal Article",
+   "Research Support, N.I.H., Extramural",
+   "Research Support, Non-U.S. Gov't"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "29138119",
+  "title": "Thrombospondin-4 in tissue remodeling.",
+  "abstract": "Thrombospondin-4 (TSP-4) belongs to the thrombospondin protein family that consists of five highly homologous members. A number of novel functions have been recently assigned to TSP-4 in cardiovascular and nervous systems, inflammation, cancer, and the motor unit, which have attracted attention to this extracellular matrix (ECM) protein. These newly discovered functions set TSP-4 apart from other thrombospondins. For example, TSP-4 promotes angiogenesis while other TSPs either prevent it or have no effect on new blood vessel growth; TSP-4 reduces fibrosis and collagen production while TSP-1 and TSP-2 promote fibrosis in several organs; unlike other TSPs, TSP-4 appears to have some structural functions in ECM. The current information about TSP-4 functions in different organs and physiological systems suggests that this evolutionary conserved protein is a major regulator of the extracellular matrix (ECM) organization and production and tissue remodeling during the embryonic development and response to injury. In this review article, we summarize the properties and functions of TSP-4 and discuss its role in tissue remodeling.",
+  "journal": "Matrix Biol",
+  "year": "2019",
+  "volume": "75-76",
+  "issue": "",
+  "pages": "300-313",
+  "doi": "10.1016/j.matbio.2017.11.006",
+  "authors": [
+   "Stenina-Adognravi O",
+   "Plow EF"
+  ],
+  "types": [
+   "Journal Article",
+   "Research Support, N.I.H., Extramural",
+   "Review"
+  ],
+  "review": true
+ },
+ {
+  "pmid": "32795101",
+  "title": "High-Resolution Transcriptomic Profiling of the Heart During Chronic Stress Reveals Cellular Drivers of Cardiac Fibrosis and Hypertrophy.",
+  "abstract": "BACKGROUND: Cardiac fibrosis is a key antecedent to many types of cardiac dysfunction including heart failure. Physiological factors leading to cardiac fibrosis have been recognized for decades. However, the specific cellular and molecular mediators that drive cardiac fibrosis, and the relative effect of disparate cell populations on cardiac fibrosis, remain unclear. METHODS: We developed a novel cardiac single-cell transcriptomic strategy to characterize the cardiac cellulome, the network of cells that forms the heart. This method was used to profile the cardiac cellular ecosystem in response to 2 weeks of continuous administration of angiotensin II, a profibrotic stimulus that drives pathological cardiac remodeling. RESULTS: Our analysis provides a comprehensive map of the cardiac cellular landscape uncovering multiple cell populations that contribute to pathological remodeling of the extracellular matrix of the heart. Two phenotypically distinct fibroblast populations, Fibroblast-Cilp and Fibroblast-Thbs4, emerged after induction of tissue stress to promote fibrosis in the absence of smooth muscle actin-expressing myofibroblasts, a key profibrotic cell population. After angiotensin II treatment, Fibroblast-Cilp develops as the most abundant fibroblast subpopulation and the predominant fibrogenic cell type. Mapping intercellular communication networks within the heart, we identified key intercellular trophic relationships and shifts in cellular communication after angiotensin II treatment that promote the development of a profibrotic cellular microenvironment. Furthermore, the cellular responses to angiotensin II and the relative abundance of fibrogenic cells were sexually dimorphic. CONCLUSIONS: These results offer a valuable resource for exploring the cardiac cellular landscape in health and after chronic cardiovascular stress. These data provide insights into the cellular and molecular mechanisms that promote pathological remodeling of the mammalian heart, highlighting early transcriptional changes that precede chronic cardiac fibrosis.",
+  "journal": "Circulation",
+  "year": "2020",
+  "volume": "142",
+  "issue": "15",
+  "pages": "1448-1463",
+  "doi": "10.1161/CIRCULATIONAHA.119.045115",
+  "authors": [
+   "McLellan MA",
+   "Skelly DA",
+   "Dona MSI",
+   "Squiers GT",
+   "Farrugia GE",
+   "Gaynor TL",
+   "Cohen CD",
+   "Pandey R",
+   "Diep H",
+   "Vinh A",
+   "Rosenthal NA",
+   "Pinto AR"
+  ],
+  "types": [
+   "Journal Article",
+   "Research Support, N.I.H., Extramural",
+   "Research Support, Non-U.S. Gov't"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "37582915",
+  "title": "Spatial transcriptomics reveal markers of histopathological changes in Duchenne muscular dystrophy mouse models.",
+  "abstract": "Duchenne muscular dystrophy is caused by mutations in the DMD gene, leading to lack of dystrophin. Chronic muscle damage eventually leads to histological alterations in skeletal muscles. The identification of genes and cell types driving tissue remodeling is a key step to developing effective therapies. Here we use spatial transcriptomics in two Duchenne muscular dystrophy mouse models differing in disease severity to identify gene expression signatures underlying skeletal muscle pathology and to directly link gene expression to muscle histology. We perform deconvolution analysis to identify cell types contributing to histological alterations. We show increased expression of specific genes in areas of muscle regeneration (Myl4, Sparc, Hspg2), fibrosis (Vim, Fn1, Thbs4) and calcification (Bgn, Ctsk, Spp1). These findings are confirmed by smFISH. Finally, we use differentiation dynamic analysis in the D2-mdx muscle to identify muscle fibers in the present state that are predicted to become affected in the future state.",
+  "journal": "Nat Commun",
+  "year": "2023",
+  "volume": "14",
+  "issue": "1",
+  "pages": "4909",
+  "doi": "10.1038/s41467-023-40555-9",
+  "authors": [
+   "Heezen LGM",
+   "Abdelaal T",
+   "van Putten M",
+   "Aartsma-Rus A",
+   "Mahfouz A",
+   "Spitali P"
+  ],
+  "types": [
+   "Journal Article",
+   "Research Support, Non-U.S. Gov't"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "24589453",
+  "title": "Control of organization and function of muscle and tendon by thrombospondin-4.",
+  "abstract": "Thrombospondins (TSPs) are multifunctional proteins that are deposited in the extracellular matrix where they directly affect the function of vascular and other cell types. TSP-4, one of the 5 TSP family members, is expressed abundantly in tendon and muscle. We have examined the effect of TSP-4 deficiency on tendon collagen and skeletal muscle morphology and function. In Thbs4(-/-) mice, tendon collagen fibrils are significantly larger than in wild-type mice, and there is no compensatory over-expression of TSP-3 and TSP-5, the two TSPs most highly homologous to TSP-4, in the deficient mice. TSP-4 is expressed in skeletal muscle, and higher levels of TSP-4 protein are associated with the microvasculature of red skeletal muscle with high oxidative metabolism. Lack of TSP-4 in medial soleus, red skeletal muscle with predominant oxidative metabolism, is associated with decreased levels of several specific glycosaminoglycan modifications, decreased expression of a TGFβ receptor beta-glycan, decreased activity of lipoprotein lipase, which associates with vascular cell surfaces by binding to glycosaminoglycans, and decreased uptake of VLDL. The soleus muscle is smaller and hind- and fore-limb grip strength is reduced in Thbs4(-/-) mice compared to wild-type mice. These observations suggest that TSP-4 regulates the composition of the ECM at major sites of its deposition, tendon and muscle, and the absence of TSP-4 alters the organization, composition and physiological functions of these tissues.",
+  "journal": "Matrix Biol",
+  "year": "2014",
+  "volume": "37",
+  "issue": "",
+  "pages": "35-48",
+  "doi": "10.1016/j.matbio.2014.02.003",
+  "authors": [
+   "Frolova EG",
+   "Drazba J",
+   "Krukovets I",
+   "Kostenko V",
+   "Blech L",
+   "Harry C",
+   "Vasanji A",
+   "Drumm C",
+   "Sul P",
+   "Jenniskens GJ",
+   "Plow EF",
+   "Stenina-Adognravi O"
+  ],
+  "types": [
+   "Journal Article",
+   "Research Support, N.I.H., Extramural"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "28481870",
+  "title": "Thrombospondin-4 mediates TGF-β-induced angiogenesis.",
+  "abstract": "TGF-β is a multifunctional cytokine affecting many cell types and implicated in tissue remodeling processes. Due to its many functions and cell-specific effects, the consequences of TGF-β signaling are process-and stage-dependent, and it is not uncommon that TGF-β exerts distinct and sometimes opposing effects on a disease progression depending on the stage and on the pathological changes associated with the stage. The mechanisms underlying cell- and process-specific effects of TGF-β are poorly understood. We are describing a novel pathway that mediates induction of angiogenesis in response to TGF-β1. We found that in endothelial cells (EC) thrombospondin-4 (TSP-4), a secreted extracellular matrix (ECM) protein, is upregulated in response to TGF-β1 and mediates the effects of TGF-β1 on angiogenesis. Upregulation of TSP-4 does not require the synthesis of new protein, is not caused by decreased secretion of TSP-4, and is mediated by activation of SMAD3. Using Thbs4-/- mice and TSP-4 shRNA, we found that TSP-4 mediated pro-angiogenic functions in cultured EC and angiogenesis in vivo in response to TGF-β1. We observed~3-fold increases in tumor mass and levels of angiogenesis markers in animals injected with TGF-β1, and these effects did not occur in Thbs4-/- animals. Injections of an inhibitor of TGF-β1 signaling SB-431542 also decreased the weights of tumors and cancer angiogenesis. Our results from in vivo angiogenesis models and cultured EC document that TSP-4 mediates upregulation of angiogenesis by TGF-β1. Upregulation of pro-angiogenic TSP-4 and selective effects of TSP-4 on EC may contribute to stimulation of tumor growth by TGF-β despite the inhibition of cancer cell proliferation.",
+  "journal": "Oncogene",
+  "year": "2017",
+  "volume": "36",
+  "issue": "36",
+  "pages": "5189-5198",
+  "doi": "10.1038/onc.2017.140",
+  "authors": [
+   "Muppala S",
+   "Xiao R",
+   "Krukovets I",
+   "Verbovetsky D",
+   "Yendamuri R",
+   "Habib N",
+   "Raman P",
+   "Plow E",
+   "Stenina-Adognravi O"
+  ],
+  "types": [
+   "Journal Article",
+   "Research Support, N.I.H., Extramural"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "39373248",
+  "title": "Fibroblast-specific TGF-β signaling mediates cardiac dysfunction, fibrosis, and hypertrophy in obese diabetic mice.",
+  "abstract": "AIMS: Transforming growth factor (TGF)-β is up-regulated in the diabetic myocardium and may mediate fibroblast activation. We aimed at examining the role of TGF-β-induced fibroblast activation in the pathogenesis of diabetic cardiomyopathy. METHODS AND RESULTS: We generated lean and obese db/db mice with fibroblast-specific loss of TbR2, the Type 2 receptor-mediating signaling through all three TGF-β isoforms, and mice with fibroblast-specific Smad3 disruption. Systolic and diastolic function, myocardial fibrosis, and hypertrophy were assessed. Transcriptomic studies and in vitro experiments were used to dissect mechanisms of fibroblast activation. Fibroblast-specific TbR2 loss attenuated systolic and diastolic dysfunction in db/db mice. The protective effects of fibroblast TbR2 loss in db/db mice were associated with attenuated fibrosis and reduced cardiomyocyte hypertrophy, suggesting that in addition to their role in fibrous tissue deposition, TGF-β-stimulated fibroblasts may also exert paracrine actions on cardiomyocytes. Fibroblast-specific Smad3 loss phenocopied the protective effects of fibroblast TbR2 loss in db/db mice. Db/db fibroblasts had increased expression of genes associated with oxidative response (such as Fmo2, encoding flavin-containing monooxygenase 2), matricellular genes (such as Thbs4 and Fbln2), and Lox (encoding lysyl oxidase). Ingenuity pathway analysis (IPA) predicted that neurohumoral mediators, cytokines, and growth factors (such as AGT, TGFB1, and TNF) may serve as important upstream regulators of the transcriptomic profile of diabetic mouse fibroblasts. IPA of scRNA-seq data identified TGFB1, p53, MYC, PDGF-BB, EGFR, and WNT3A/CTNNB1 as important upstream regulators underlying fibroblast activation in db/db hearts. Comparison of the transcriptome of fibroblasts from db/db mice with fibroblast-specific Smad3 loss and db/db Smad3 fl/fl controls identified Thbs4 [encoding thrombospondin-4 (TSP-4), a marker of activated fibroblasts] as a candidate diabetes-induced fibrogenic mediator. However, in vitro experiments showed no significant activating effects of matricellular or intracellular TSP-4 on cardiac fibroblasts. CONCLUSION: Fibroblast-specific TGF-β/Smad3 signaling mediates ventricular fibrosis, hypertrophy, and dysfunction in Type 2 diabetes.",
+  "journal": "Cardiovasc Res",
+  "year": "2024",
+  "volume": "120",
+  "issue": "16",
+  "pages": "2047-2063",
+  "doi": "10.1093/cvr/cvae210",
+  "authors": [
+   "Tuleta I",
+   "Hanna A",
+   "Humeres C",
+   "Aguilan JT",
+   "Sidoli S",
+   "Zhu F",
+   "Frangogiannis NG"
+  ],
+  "types": [
+   "Journal Article",
+   "Research Support, Non-U.S. Gov't",
+   "Research Support, U.S. Gov't, Non-P.H.S.",
+   "Research Support, N.I.H., Extramural"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "38876442",
+  "title": "Histone methyltransferase MLL4 protects against pressure overload-induced heart failure via a THBS4-mediated protection in ER stress.",
+  "abstract": "Pressure overload-induced pathological cardiac hypertrophy eventually leads to heart failure (HF). Unfortunately, lack of effective targeted therapies for HF remains a challenge in clinical management. Mixed-lineage leukemia 4 (MLL4) is a member of the SET family of histone methyltransferase enzymes, which possesses histone H3 lysine 4 (H3K4)-specific methyltransferase activity. However, whether and how MLL4 regulates cardiac function is not reported in adult HF. Here we report that MLL4 is required for endoplasmic reticulum (ER) stress homeostasis of cardiomyocytes and protective against pressure overload-induced cardiac hypertrophy and HF. We observed that MLL4 is increased in the heart tissue of HF mouse model and HF patients. The cardiomyocyte-specific deletion of Mll4 (Mll4-cKO) in mice leads to aggravated ER stress and cardiac dysfunction following pressure overloading. MLL4 knockdown neonatal rat cardiomyocytes (NRCMs) also display accelerated decompensated ER stress and hypertrophy induced by phenylephrine (PE). The combined analysis of Cleavage Under Targets and Tagmentation sequencing (CUT&Tag-seq) and RNA sequencing (RNA-seq) data reveals that, silencing of Mll4 alters the chromatin landscape for H3K4me1 modification and gene expression patterns in NRCMs. Interestingly, the deficiency of MLL4 results in a marked reduction of H3K4me1 and H3K27ac occupations on Thrombospondin-4 (Thbs4) gene loci, as well as Thbs4 gene expression. Mechanistically, MLL4 acts as a transcriptional activator of Thbs4 through mono-methylation of H3K4 and further regulates THBS4-dependent ER stress response, ultimately plays a role in HF. Our study indicates that pharmacologically targeting MLL4 and ER stress might be a valid therapeutic approach to protect against cardiac hypertrophy and HF.",
+  "journal": "Pharmacol Res",
+  "year": "2024",
+  "volume": "205",
+  "issue": "",
+  "pages": "107263",
+  "doi": "10.1016/j.phrs.2024.107263",
+  "authors": [
+   "Meng XM",
+   "Pang QY",
+   "Zhou ZF",
+   "Yuan JH",
+   "You L",
+   "Feng QP",
+   "Zhu BM"
+  ],
+  "types": [
+   "Journal Article",
+   "Research Support, Non-U.S. Gov't"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "39154161",
+  "title": "The role and mechanism of thrombospondin-4 in pulmonary arterial hypertension associated with congenital heart disease.",
+  "abstract": "BACKGROUND: Due to a special hemodynamic feature, pulmonary vascular disease in pulmonary arterial hypertension associated with congenital heart disease (PAH-CHD) has two stages: reversible and irreversible. So far, the mechanism involved in the transition from reversible to irreversible stage is elusive. Moreover, no recognized and reliable assessments to distinguish these two stages are available. Furthermore, we found that compared with control and reversible PAH, thrombospondin-4 (THBS4) was significantly upregulated in irreversible group by bioinformatic analysis. Hence, we further verify and investigate the expression and role of THBS4 in PAH-CHD. METHODS: We established the monocrotaline plus aorto-cava shunt-induced (MCT-AV) rat model. We measured the expression of THBS4 in lung tissues from MCT-AV rats. Double immunofluorescence staining of lung tissue for THBS4 and α-SMA (biomarker of smooth muscle cells) or vWF (biomarker of endothelial cells) to identify the location of THBS4 in the pulmonary artery. Primary pulmonary artery smooth muscle cells (PASMCs) were cultivated, identified, and used in this study. THBS4 was inhibited and overexpressed by siRNA and plasmid, respectively, to explore the effect of THBS4 on phenotype transformation, proliferation, apoptosis, and migration of PASMCs. The effect of THBS4 on pulmonary vascular remodeling was evaluated in vivo by adeno-associated virus which suppressed THBS4 expression. Circulating level of THBS4 in patients with PAH-CHD was measured by ELISA. RESULTS: THBS4 was upregulated in the lung tissues of MCT-AV rats, and was further upregulated in severe pulmonary vascular lesions. And THBS4 was expressed mainly in PASMCs. When THBS4 was inhibited, contractile markers α-SMA and MYH11 were upregulated, while the proliferative marker PCNA was decreased, the endothelial-mensenchymal transition marker N-cad was downregulated, proapototic marker BAX was increased. Additionally, proliferation and migration of PASMCs was inhibited and apoptosis was increased. Conversely, THBS4 overexpression resulted in opposite effects. And the impact of THBS4 on PASMCs was probably achieved through the regulation of the PI3K/AKT pathway. THBS4 suppression attenuated pulmonary vascular remodeling. Furthermore, compared with patients with simple congenital heart disease and mild PAH-CHD, the circulating level of THBS4 was higher in patients with severe PAH-CHD. CONCLUSIONS: THBS4 is a promising biomarker to distinguish reversible from irreversible PAH-CHD before repairing the shunt. THBS4 is a potential treatment target in PAH-CHD, especially in irreversible stage.",
+  "journal": "Respir Res",
+  "year": "2024",
+  "volume": "25",
+  "issue": "1",
+  "pages": "313",
+  "doi": "10.1186/s12931-024-02932-w",
+  "authors": [
+   "Zeng H",
+   "Lan B",
+   "Li B",
+   "Xie H",
+   "Zhao E",
+   "Liu X",
+   "Xue X",
+   "Sun J",
+   "Su L",
+   "Zhang Y"
+  ],
+  "types": [
+   "Journal Article"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "41873540",
+  "title": "THBS4 Regulates Pulmonary Hypertension via TGF-β/SMAD2 Signaling.",
+  "abstract": "BACKGROUND: Pulmonary hypertension (PH) is a progressive disease marked by pulmonary arterial remodeling and right ventricular dysfunction. The molecular mechanisms driving this remodeling, particularly ECM (extracellular matrix)-mediated processes, remain poorly understood. This study investigates THBS4 (thrombospondin-4), an ECM glycoprotein, as a key regulator of pulmonary vascular remodeling in pulmonary hypertension. METHODS: Whole-transcriptomic analysis was conducted on pulmonary arteries from rat models of pulmonary hypertension induced by hypoxia, hypoxia-SUGEN, and monocrotaline. THBS4 expression was measured in these models and in serum and lung tissue from patients with pulmonary arterial hypertension. The role of HIF-1α (hypoxia-inducible factor 1-alpha), SMAD2 (mothers against decapentaplegic homolog 2), and p38 MAPK (mitogen-activated protein kinase) signaling pathways in regulating THBS4 was explored. Functional assays assessed THBS4's impact on pulmonary artery smooth muscle cells. In vivo, THBS4 silencing was performed to evaluate its effect on vascular remodeling and right ventricular hypertrophy. RESULTS: THBS4 was upregulated in pulmonary arteries across all pulmonary hypertension models, with expression correlating with disease severity. Elevated THBS4 levels were observed in pulmonary arterial hypertension patient serum and lung tissue. Hypoxia-induced THBS4 expression was mediated by HIF-1α, while TGF (transforming growth factor)-β1 stimulation enhanced THBS4 via SMAD2 and p38 MAPK pathways. THBS4 promoted pulmonary artery smooth muscle cell proliferation, phenotypic modulation, and ECM remodeling. In vivo silencing of THBS4 attenuated pulmonary vascular remodeling and right ventricular hypertrophy. CONCLUSIONS: Our findings identify THBS4 as a central regulator in a self-reinforcing THBS4-TGF-β/SMAD2 signaling axis driving pulmonary vascular remodeling. Targeting THBS4 represents a promising therapeutic strategy to mitigate pathological vascular remodeling in pulmonary hypertension.",
+  "journal": "Hypertension",
+  "year": "2026",
+  "volume": "83",
+  "issue": "6",
+  "pages": "e25968",
+  "doi": "10.1161/HYPERTENSIONAHA.125.25968",
+  "authors": [
+   "Zeng J",
+   "Li D",
+   "Wang J",
+   "Wang R",
+   "Huang Z",
+   "Bai D",
+   "Liu X",
+   "Sun D",
+   "Fu G",
+   "Kang K",
+   "Liu X",
+   "Yang L",
+   "Zhao F",
+   "Luo L",
+   "Li R",
+   "Zhang Y",
+   "Gou D"
+  ],
+  "types": [
+   "Journal Article"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "34907264",
+  "title": "Transcriptomic adaptation during skeletal muscle habituation to eccentric or concentric exercise training.",
+  "abstract": "Eccentric (ECC) and concentric (CON) contractions induce distinct muscle remodelling patterns that manifest early during exercise training, the causes of which remain unclear. We examined molecular signatures of early contraction mode-specific muscle adaptation via transcriptome-wide network and secretome analyses during 2 weeks of ECC- versus CON-specific (downhill versus uphill running) exercise training (exercise 'habituation'). Despite habituation attenuating total numbers of exercise-induced genes, functional gene-level profiles of untrained ECC or CON were largely unaltered post-habituation. Network analysis revealed 11 ECC-specific modules, including upregulated extracellular matrix and immune profiles plus downregulated mitochondrial pathways following untrained ECC. Of 3 CON-unique modules, 2 were ribosome-related and downregulated post-habituation. Across training, 376 ECC-specific and 110 CON-specific hub genes were identified, plus 45 predicted transcription factors. Secreted factors were enriched in 3 ECC- and/or CON-responsive modules, with all 3 also being under the predicted transcriptional control of SP1 and KLF4. Of 34 candidate myokine hubs, 1 was also predicted to have elevated expression in skeletal muscle versus other tissues: THBS4, of a secretome-enriched module upregulated after untrained ECC. In conclusion, distinct untrained ECC and CON transcriptional responses are dampened after habituation without substantially shifting molecular functional profiles, providing new mechanistic candidates into contraction-mode specific muscle regulation.",
+  "journal": "Sci Rep",
+  "year": "2021",
+  "volume": "11",
+  "issue": "1",
+  "pages": "23930",
+  "doi": "10.1038/s41598-021-03393-7",
+  "authors": [
+   "Willis CRG",
+   "Deane CS",
+   "Ames RM",
+   "Bass JJ",
+   "Wilkinson DJ",
+   "Smith K",
+   "Phillips BE",
+   "Szewczyk NJ",
+   "Atherton PJ",
+   "Etheridge T"
+  ],
+  "types": [
+   "Clinical Trial",
+   "Journal Article",
+   "Research Support, Non-U.S. Gov't"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "36734484",
+  "title": "Human Muscle-Derived Cells Are Capable of Tenogenic Differentiation and Contribution to Tendon Repair.",
+  "abstract": "BACKGROUND: It has been reported that the harvested hamstring tendon for autograft could be regenerated with well-oriented fibers and uniformly distributed spindle-shaped cells after removal. However, which cell type might participate in the repair process remains unknown. PURPOSE: To investigate the tenogenic differentiation potential of human muscle-derived cells (MDCs) both in vitro and in vivo. STUDY DESIGN: Controlled laboratory study. METHODS: Primary human MDCs and tenocytes were isolated from discarded materials during a peroneus longus tendon-harvesting procedure. Expression of tenogenic genes were evaluated and compared among MDCs, MDCs with tenogenic induction, and tenocytes. RNA sequencing was performed to evaluate the expression profile of differentiated MDCs. Human MDCs were implanted in a tendon injury model to investigate the in vivo tenogenic differentiation potential. Histologic and functional analyses were performed to evaluate the function of MDCs for tendon repair. RESULTS: The relative expression levels (in fold change) of tenogenic genes Col I, MKX, SCX, THBS4, and TNC in MDCs were significantly upregulated 11.5 ± 1.3, 957.1 ± 63.7, 19.1 ± 2.8, 61.9 ± 4.8, and 10.2 ± 2.8 after tenogenic induction, respectively. The expression profile of tenogenically differentiated MDCs was much closer to primary tenocytes. Activation of TGF-β/Smad3 signaling significantly promoted the tenogenic differentiation ability of MDCs. Transplanted human MDCs were identified in regenerated tendon and expressed tenogenic genes. As for biomechanical properties, the failure loads in the Matrigel, transplantation, and uninjured groups were 7.2 ± 0.5, 11.6 ± 0.3, and 13.9 ± 0.7 N, while the stiffness values were 4.4 ± 1.3 × 103, 7.6 ± 0.8 × 103, and 10.9 ± 1.1 × 103 N/m. Plantarflexion force, histologic morphology, and motor function were also significantly improved after MDC transplantation in a tendon injury model. CONCLUSION: There exist cells with tenogenic differentiation potential in human skeletal muscles. Activation of TGF-β/Smad3 signaling plays an important role in tenogenic differentiation for human MDCs. Human MDCs contribute to structural and functional repair for the injured tendon. MDCs are a potential cell source to participate in the repair process after tendon injury. CLINICAL RELEVANCE: The MDCs could be a promising cell source to repair tendon injury.",
+  "journal": "Am J Sports Med",
+  "year": "2023",
+  "volume": "51",
+  "issue": "3",
+  "pages": "786-797",
+  "doi": "10.1177/03635465221147486",
+  "authors": [
+   "Shao X",
+   "Lin X",
+   "Zhu S",
+   "Zhou H",
+   "Lu Z",
+   "Zhang Y",
+   "Wang J"
+  ],
+  "types": [
+   "Journal Article",
+   "Research Support, Non-U.S. Gov't"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "41361340",
+  "title": "Thrombospondin-4 regulates apoptosis of vascular smooth muscle cells after artery transplanted into vein.",
+  "abstract": "The molecular mechanism of vascular atrophy and remodeling after arterial transplantation into a venous environment remains unclear. This study grafted the common carotid artery of New Zealand white rabbits into the external jugular vein to establish an animal model of arterial mechanical unloading. Its efficacy was verified by ultrasound. Immunohistochemical methodologies, transmission electron microscopy, and TUNEL staining showed vascular morphology changes. Genomic analysis, proteomic profiling, iPathway guide (IPG) analysis, gene overexpression/silenced, flow cytometry, and stretch testing were applied to elucidate the molecular mechanisms. Comparative analysis between the arterial graft and the control group revealed the successful preparation of the animal model in vitro. Morphological examination indicated that atrophy under venous flow mechanics is predominantly attributed to the apoptosis of vascular smooth muscle cells (VSMCs). Bioinformatics results proved that thrombospondin-4 (THBS4) plays a pivotal role in vascular remodeling via the focal adhesion pathway. Experiments demonstrated THBS4's regulation of VSMCs apoptosis and its relation with low stretch tension. This study was the first to introduce gene transcriptomics and proteomics into the arterial mechanical unloading animal model and the first to demonstrate the role of THBS4 in promoting VSMCs apoptosis. Consequently, THBS4 emerges as a promising therapeutic target for the prevention of intimal hyperplasia post-vascular transplantation in vascular surgery.",
+  "journal": "Sci Rep",
+  "year": "2025",
+  "volume": "16",
+  "issue": "1",
+  "pages": "150",
+  "doi": "10.1038/s41598-025-29180-2",
+  "authors": [
+   "Xu F",
+   "Jia X",
+   "Chai S",
+   "Fan Y"
+  ],
+  "types": [
+   "Journal Article"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "10501972",
+  "title": "The thrombospondin-4 gene.",
+  "abstract": "Thrombospondins are a family of extracellular, adhesive proteins that are widely expressed in vertebrates. Five distinct gene products, designated thrombospondin-1 through -4 and cartilage oligomeric matrix protein (COMP), have been identified. With the exception of thrombospondin-4, the structure and location of thrombospondin genes have been determined in the human and/or mouse genomes. In this study, the structure and location of the murine thrombospondin-4 gene and the location of the human thrombospondin-4 gene are reported. The murine thrombospondin-4 gene is approximately 4.5 kb in length and includes 22 exons. Interspecific backcross analysis of progeny derived from matings of (C57BL/6J x Mus spretus)F(1) x C57BL/6J mice indicates that the thrombospondin-4 gene is tightly linked to the Dhfr locus on murine Chromosome (Chr) 13. The human gene maps to Chr 5 in band q13 by in situ hybridization to human metaphase chromosomes. The thrombospondin-4 promoter is similar to promoters of some housekeeping, growth control, and other thrombospondin genes in that it contains multiple GC box sequences and lacks a CAAT box. The presence of multiple E-box sequence motifs is consistent with thrombospondin-4 expression in muscle and bone tissue.",
+  "journal": "Mamm Genome",
+  "year": "1999",
+  "volume": "10",
+  "issue": "10",
+  "pages": "1010-6",
+  "doi": "10.1007/s003359901149",
+  "authors": [
+   "Newton G",
+   "Weremowicz S",
+   "Morton CC",
+   "Jenkins NA",
+   "Gilbert DJ",
+   "Copeland NG",
+   "Lawler J"
+  ],
+  "types": [
+   "Journal Article",
+   "Research Support, Non-U.S. Gov't",
+   "Research Support, U.S. Gov't, P.H.S."
+  ],
+  "review": false
+ },
+ {
+  "pmid": "38926599",
+  "title": "Thrombospondin-4 deletion does not exacerbate muscular dystrophy in β-sarcoglycan-deficient and laminin α2 chain-deficient mice.",
+  "abstract": "Muscular dystrophy is a group of genetic disorders that lead to muscle wasting and loss of muscle function. Identifying genetic modifiers that alleviate symptoms or enhance the severity of a primary disease helps to understand mechanisms behind disease pathology and facilitates discovery of molecular targets for therapy. Several muscular dystrophies are caused by genetic defects in the components of the dystrophin-glycoprotein adhesion complex (DGC). Thrombospondin-4 overexpression has been shown to mitigate dystrophic disease in mouse models for Duchenne muscular dystrophy (dystrophin deficiency) and limb-girdle muscular dystrophy type 2F (LGMD2F, δ-sarcoglycan deficiency), while deletion of the thrombospondin-4 gene exacerbated the diseases. Hence, thrombospondin-4 has been considered a candidate molecule for therapy of muscular dystrophies involving the DGC. We have investigated whether thrombospondin-4 could act as a genetic modifier for other DGC-associated diseases: limb-girdle muscular dystrophy type 2E (LGMD2E, β-sarcoglycan deficiency) and laminin α2 chain-deficient muscular dystrophy (LAMA2-RD). Deletion of the thrombospondin-4 gene in mouse models for LGMD2E and LAMA2-RD, respectively, did not result in worsening of the dystrophic phenotype. Loss of thrombospondin-4 did not enhance sarcolemma damage and did not impair trafficking of transmembrane receptors integrin α7β1 and dystroglycan in double knockout muscles. Our results suggest that thrombospondin-4 might not be a relevant therapeutic target for all muscular dystrophies involving the DGC. This data also demonstrates that molecular pathology between very similar diseases like LGMD2E and 2F can differ significantly.",
+  "journal": "Sci Rep",
+  "year": "2024",
+  "volume": "14",
+  "issue": "1",
+  "pages": "14757",
+  "doi": "10.1038/s41598-024-65473-8",
+  "authors": [
+   "Zarén P",
+   "Gawlik KI"
+  ],
+  "types": [
+   "Journal Article"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "27581066",
+  "title": "Assessing the contribution of thrombospondin-4 induction and ATF6α activation to endoplasmic reticulum expansion and phenotypic modulation in bladder outlet obstruction.",
+  "abstract": "Phenotypic modulation of smooth muscle cells is a hallmark of disease. The associated expansion of endoplasmic reticulum (ER) volume remains unexplained. Thrombospondin-4 was recently found to promote ATF6α activation leading to ER expansion. Using bladder outlet obstruction as a paradigm for phenotypic modulation, we tested if thrombospondin-4 is induced in association with ATF6α activation and ER expansion. Thrombospondin-4 was induced and ATF6α was activated after outlet obstruction in rodents. Increased abundance of spliced of Xbp1, another ER-stress sensor, and induction of Atf4 and Creb3l2 was also seen. Downstream of ATF6α, Calr, Manf, Sdf2l1 and Pdi increased as did ER size, whereas contractile markers were reduced. Overexpression of ATF6α, but not of thrombospondin-4, increased Calr, Manf, Sdf2l1 and Pdi and caused ER expansion, but the contractile markers were inert. Knockout of thrombospondin-4 neither affected bladder growth nor expression of ATF6α target genes, and repression of contractile markers was the same, even if ATF6α activation was curtailed. Increases of Xbp1s, Atf4 and Creb3l2 were similar. Our findings demonstrate reciprocal regulation of the unfolded protein response, including ATF6α activation and ER expansion, and reduced contractile differentiation in bladder outlet obstruction occurring independently of thrombospondin-4, which however is a sensitive indicator of obstruction.",
+  "journal": "Sci Rep",
+  "year": "2016",
+  "volume": "6",
+  "issue": "",
+  "pages": "32449",
+  "doi": "10.1038/srep32449",
+  "authors": [
+   "Krawczyk KK",
+   "Ekman M",
+   "Rippe C",
+   "Grossi M",
+   "Nilsson BO",
+   "Albinsson S",
+   "Uvelius B",
+   "Swärd K"
+  ],
+  "types": [
+   "Journal Article",
+   "Research Support, Non-U.S. Gov't"
+  ],
+  "review": false
+ },
+ {
+  "pmid": "22682248",
+  "title": "A thrombospondin-dependent pathway for a protective ER stress response.",
+  "abstract": "Thrombospondin (Thbs) proteins are induced in sites of tissue damage or active remodeling. The endoplasmic reticulum (ER) stress response is also prominently induced with disease where it regulates protein production and resolution of misfolded proteins. Here we describe a function for Thbs as ER-resident effectors of an adaptive ER stress response. Thbs4 cardiac-specific transgenic mice were protected from myocardial injury, whereas Thbs4(-/-) mice were sensitized to cardiac maladaptation. Thbs induction produced a unique profile of adaptive ER stress response factors and expansion of the ER and downstream vesicles. Thbs bind the ER lumenal domain of activating transcription factor 6α (Atf6α) to promote its nuclear shuttling. Thbs4(-/-) mice showed blunted activation of Atf6α and other ER stress-response factors with injury, and Thbs4-mediated protection was lost upon Atf6α deletion. Hence, Thbs can function inside the cell during disease remodeling to augment ER function and protect through a mechanism involving regulation of Atf6α.",
+  "journal": "Cell",
+  "year": "2012",
+  "volume": "149",
+  "issue": "6",
+  "pages": "1257-68",
+  "doi": "10.1016/j.cell.2012.03.050",
+  "authors": [
+   "Lynch JM",
+   "Maillet M",
+   "Vanhoutte D",
+   "Schloemer A",
+   "Sargent MA",
+   "Blair NS",
+   "Lynch KA",
+   "Okada T",
+   "Aronow BJ",
+   "Osinska H",
+   "Prywes R",
+   "Lorenz JN",
+   "Mori K",
+   "Lawler J",
+   "Robbins J",
+   "Molkentin JD"
+  ],
+  "types": [
+   "Journal Article",
+   "Research Support, N.I.H., Extramural",
+   "Research Support, Non-U.S. Gov't"
+  ],
+  "review": false
+ }
+]

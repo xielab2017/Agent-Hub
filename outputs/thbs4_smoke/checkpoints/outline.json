@@ -1,0 +1,112 @@
+{
+ "title": "Thrombospondin-4 in skeletal muscle: from extracellular matrix scaffold to candidate myokine — mechanisms, ageing and metabolic dimensions",
+ "sections": [
+  {
+   "heading": "Introduction: why revisit THBS4 in the context of muscle biology?",
+   "goal": "Frame thrombospondin-4 (THBS4) as an emerging muscle-derived regulatory candidate, contrast it with classical myokines, and justify a focused review. Establish that although THBS4 is best known as a matricellular glycoprotein in cardiovascular and nervous tissue, its abundant expression in oxidative skeletal muscle and its upregulation by contractile activity have only recently been considered in the context of systemic signalling. Critically introduce the unresolved question of whether THBS4 should be classified as a bona fide myokine or whether its principal actions remain locally cell- and matrix-autonomous. Use the recent review landscape, the foundational mouse knockout phenotype, the exercise transcriptomic identification and the gene-mapping background to set the scene.",
+   "cards": [
+    "R1",
+    "R2",
+    "R5",
+    "R12"
+   ],
+   "words": 750
+  },
+  {
+   "heading": "Molecular and genomic organisation of THBS4",
+   "goal": "Describe the structure, domain architecture and chromosomal localisation of THBS4 and explicitly contrast it with the other thrombospondin family members. Build the conceptual foundation for later functional discussion: the trimeric, calcium-binding, multimodular nature of the protein; the conserved T3R and TSP-C domains relevant to its interactions with BiP/Atf6α; and the gene's location (mouse chromosome 13 near Dhfr; human chromosome 5q13) with promoter features consistent with muscle and bone expression. Critical angle: emphasise the recurring theme that THBS4 is a 'structurally interesting outlier' among thrombospondins, with proposed chaperone-like and intracellular functions that go beyond conventional ECM deposition.",
+   "cards": [
+    "R1",
+    "R10",
+    "R12"
+   ],
+   "words": 700
+  },
+  {
+   "heading": "Expression and secretion by skeletal muscle — is THBS4 a genuine myokine?",
+   "goal": "Critically evaluate the evidence that skeletal muscle is a meaningful source of secreted THBS4 and that THBS4 acts as an authentic exercise- or stress-induced myokine. On the supporting side, THBS4 is abundantly expressed in oxidative/red muscle, is enriched in a secretome-oriented transcriptomic module upregulated by untrained eccentric exercise in humans, and is sharply induced when human muscle-derived cells are pushed toward tenogenic differentiation. Counter-evidence: in Duchenne models, the strongest THBS4 signal arises from fibrotic foci rather than from myofibres themselves, blurring the distinction between a myocyte-derived signal and a stromal response. Synthesise these observations to argue that THBS4 is best understood as a 'context-dependent myokine' — neither a classical circulating factor nor a strict structural ECM protein.",
+   "cards": [
+    "R5",
+    "R11",
+    "R4",
+    "R1"
+   ],
+   "words": 850
+  },
+  {
+   "heading": "Molecular mechanisms: ECM organisation, sarcolemmal stabilisation and the ER-stress axis",
+   "goal": "Integrate the seemingly disparate mechanisms by which THBS4 influences muscle cells into a coherent mechanistic framework. First, its ECM-modifying role: tendon collagen fibril assembly, lipoprotein lipase activity and VLDL uptake, and sarcolemmal stabilisation through enhanced vesicular trafficking of dystrophin-glycoprotein and integrin complexes. Second, its intracellular activity: localisation to the ER and post-ER vesicles, engagement of BiP and Atf6α via T3R and TSP-C domains to drive an adaptive ER stress response and vesicular expansion, with secretion being necessary for full sarcolemmal rescue. Third, its role in TGF-β-driven angiogenesis through endothelial SMAD3 signalling. Critical angle: highlight the unresolved dichotomy — does the protective activity require secretion, intracellular chaperoning, or both — and warn against inferring mechanism from gain- vs loss-of-function in different tissues.",
+   "cards": [
+    "R9",
+    "R10",
+    "R8",
+    "R2"
+   ],
+   "words": 950
+  },
+  {
+   "heading": "THBS4 in muscle homeostasis, repair and muscular dystrophy",
+   "goal": "Synthesise the genetic, transcriptomic and pharmacological evidence that THBS4 supports muscle membrane integrity, regeneration and tendon-muscle cross-talk, and contrast protective and pathogenic readings. Thbs4 knockout produces smaller soleus, reduced grip strength and spontaneous age-dependent dystrophic changes, while overexpression or adeno-associated delivery is protective in mouse and Drosophila dystrophy models; deletion in mdx mice worsens cardiomyopathy; and spatial transcriptomics places THBS4 specifically within fibrotic remodelling zones in Duchenne models. Human muscle-derived cells upregulate THBS4 in tenogenic contexts. Critical angle: the spatial co-localisation of THBS4 with fibrosis in dystrophic muscle complicates any simple 'protective myokine' narrative; THBS4 may mark — or causally contribute to — both regeneration and pathological remodelling depending on timing, dose and ECM context.",
+   "cards": [
+    "R3",
+    "R4",
+    "R8",
+    "R2",
+    "R11"
+   ],
+   "words": 900
+  },
+  {
+   "heading": "Ageing, sarcopenia and the 'ageing-as-chronic-injury' problem",
+   "goal": "Address how THBS4 should be interpreted in ageing skeletal muscle, distinguishing genuine ageing biology from chronic-injury phenotypes. The strongest mechanistic claims linking THBS4 to ageing come from observations that Thbs4-deficient animals develop spontaneous dystrophic changes with age and that dystrophic progression in mdx hearts is exacerbated by loss of THBS4; tendon and muscle structure are also altered in young adult knockouts. Critical angle: explicit acknowledgement that the field currently lacks longitudinal muscle proteomic, secretomic and functional data from aged wild-type mice and from human sarcopenic cohorts; that existing 'ageing' findings are largely proxy phenotypes of chronic membrane instability rather than canonical hallmarks of sarcopenia (motor-unit loss, fibre-type shifting, anabolic resistance); and that the contribution of THBS4 to authentic age-related functional decline remains an open question requiring direct testing.",
+   "cards": [
+    "R3",
+    "R2",
+    "R1"
+   ],
+   "words": 800
+  },
+  {
+   "heading": "Systemic metabolic dimensions: lipoprotein handling, oxidative capacity and energy homeostasis",
+   "goal": "Highlight an under-appreciated dimension of THBS4 biology — its impact on systemic lipid handling — and evaluate the strength of the metabolic evidence. The original mouse knockout study reported decreased lipoprotein lipase activity and reduced VLDL uptake alongside the structural muscle phenotype, suggesting that THBS4-bearing ECM in oxidative muscle may set the local capacity for fatty acid provision. Critical angle: this remains the principal and essentially singular metabolic dataset; no confirmatory studies, no metabolic phenotyping in diet-induced obesity or exercise training, no human lipid/metabolite correlations, and no tissue-specific rescue experiments have been published. The metabolic role of THBS4 should therefore be presented as a hypothesis-generating observation rather than an established mechanism.",
+   "cards": [
+    "R2"
+   ],
+   "words": 700
+  },
+  {
+   "heading": "Beyond muscle: lessons from cardiovascular, pulmonary and angiogenic biology",
+   "goal": "Use insights from extra-skeletal tissues to inform — but not over-extrapolate — mechanisms in ageing and metabolism. In the cardiovascular system, THBS4 stabilises cardiomyocyte sarcolemma via secretory pathway-dependent action; in pulmonary hypertension (across hypoxic, MCT and congenital heart disease-associated models and in patient samples), THBS4 is upregulated and feeds forward to promote pulmonary arterial smooth muscle cell proliferation, migration and phenotypic switching, downstream of HIF-1α and TGF-β1/SMAD2/p38 MAPK signalling; in endothelial cells, TGF-β1 induces THBS4 via SMAD3, mediating pro-angiogenic effects. Critical angle: every extra-skeletal context in which THBS4 is upregulated involves both protective ECM-remodelling effects and pathogenic proliferation/fibrosis effects — a tension that the skeletal muscle field should anticipate and test for rather than assume protective causality.",
+   "cards": [
+    "R9",
+    "R6",
+    "R7",
+    "R1"
+   ],
+   "words": 850
+  },
+  {
+   "heading": "Critical perspectives and controversies",
+   "goal": "Provide a critical, integrative view of the central controversies surrounding THBS4 as a muscle-derived factor. (i) The intracellular-versus-secreted paradox: T3R/TSP-C-driven BiP/Atf6α activation is strictly intracellular, yet full sarcolemmal rescue requires transit through the secretory pathway; a secretion-defective model is protective in cardiomyocytes, challenging the simple narrative that muscle benefit derives from circulating THBS4. (ii) Beneficial-versus-pathogenic duality: THBS4 is protective in dystrophic muscle and supports cardiac membrane stability, yet it is upregulated within fibrotic remodelling in Duchenne muscle and in proliferative vascular pathology; the same signal may be either homeostatic or maladaptive depending on context. (iii) Expression-versus-secretion: tissue-level upregulation is not equivalent to circulating hormone-like action; proteomic evidence that THBS4 is genuinely released into circulation during exercise or ageing is still lacking. (iv) Translation: most mechanistic data are from mouse (and some Drosophila) genetic extremes; human evidence is largely transcriptomic. The critical angle throughout is that claims of THBS4 being a 'myokine' with systemic metabolic or anti-ageing actions are presently ahead of the mechanistic evidence.",
+   "cards": [
+    "R8",
+    "R10",
+    "R3",
+    "R2"
+   ],
+   "words": 900
+  },
+  {
+   "heading": "Open questions, experimental roadmap and conclusions",
+   "goal": "Outline a concrete research agenda and synthesise conclusions. Priority questions include: (1) Is THBS4 secreted by contracting myofibres in quantitatively meaningful amounts, and does circulating THBS4 change with ageing, exercise training or metabolic disease in humans? (2) Can tissue-specific knockouts (myofibre versus stromal versus vascular) and secretion-defective alleles resolve the intracellular-versus-extracellular contributions to muscle and metabolic phenotypes? (3) What are the upstream regulators of THBS4 in muscle — HIF-1α, TGF-β/SMAD and contractile signalling have been established in vascular contexts but not in adult myocytes — and how do these intersect with exercise-mode-specific responses such as the eccentric myokine response? (4) Does tenogenic differentiation of muscle-derived cells recapitulate a physiological path by which muscle supports tendon repair, and is THBS4 the operative signal? (5) Can THBS4 be safely targeted — either augmented or sequestered — to modify sarcopenia, dystrophy or metabolic disease? Conclusions: THBS4 is a unique, multifunctional matricellular and intracellular protein whose abundant expression in oxidative muscle, induction by contractile activity, role in sarcolemmal stabilisation and contribution to fibrotic remodelling position it as a high-value — but conceptually unsettled — candidate for understanding muscle ageing and metabolic regulation.",
+   "cards": [
+    "R5",
+    "R6",
+    "R7",
+    "R12",
+    "R11"
+   ],
+   "words": 950
+  }
+ ]
+}

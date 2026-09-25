@@ -1,0 +1,163 @@
+{
+ "39373248": {
+  "pmid": "39373248",
+  "relevance": 2,
+  "finding": "Cardiac fibroblasts from obese diabetic db/db mice show increased expression of Thbs4 along with other matricellular genes (Fbln2) and Lox.",
+  "model": "mouse (db/db diabetic cardiomyopathy)",
+  "section": "fibrosis_ecm"
+ },
+ "38876442": {
+  "pmid": "38876442",
+  "relevance": 2,
+  "finding": "MLL4 transcriptionally activates Thbs4 via H3K4 mono-methylation, and THBS4 mediates MLL4's protective effects against ER stress and pressure overload-induced heart failure.",
+  "model": "mouse and rat (cardiomyocytes)",
+  "section": "heart"
+ },
+ "39154161": {
+  "pmid": "39154161",
+  "relevance": 2,
+  "finding": "THBS4 is significantly upregulated in irreversible PAH-CHD and promotes proliferation, migration, and phenotype transformation of pulmonary artery smooth muscle cells.",
+  "model": "rat (MCT-AV model) and human PASMCs",
+  "section": "other"
+ },
+ "41873540": {
+  "pmid": "41873540",
+  "relevance": 2,
+  "finding": "THBS4 is upregulated in pulmonary arteries across pulmonary hypertension models and patient samples, where it promotes PASMC remodeling and is regulated by HIF-1α and TGF-β1/SMAD2/p38 MAPK signaling.",
+  "model": "rat and human (pulmonary hypertension)",
+  "section": "other"
+ },
+ "34907264": {
+  "pmid": "34907264",
+  "relevance": 3,
+  "finding": "THBS4 was identified as a secreted myokine hub in a secretome-enriched transcriptomic module upregulated after untrained eccentric (downhill running) exercise in human skeletal muscle.",
+  "model": "human (skeletal muscle, eccentric vs concentric exercise)",
+  "section": "exercise"
+ },
+ "36734484": {
+  "pmid": "36734484",
+  "relevance": 1,
+  "finding": "THBS4 expression is significantly upregulated (61.9-fold) in human muscle-derived cells following tenogenic induction in vitro.",
+  "model": "human (muscle-derived cells)",
+  "section": "muscle"
+ },
+ "41361340": {
+  "pmid": "41361340",
+  "relevance": 2,
+  "finding": "THBS4 promotes apoptosis of vascular smooth muscle cells via the focal adhesion pathway after arterial transplantation into a venous environment.",
+  "model": "rabbit (arteriovenous graft model)",
+  "section": "other"
+ },
+ "10501972": {
+  "pmid": "10501972",
+  "relevance": 1,
+  "finding": "The murine thrombospondin-4 gene maps to chromosome 13 near Dhfr, and the human gene to chromosome 5q13, with promoter features consistent with expression in muscle and bone tissue.",
+  "model": "mouse and human (genomic)",
+  "section": "biology"
+ },
+ "38926599": {
+  "pmid": "38926599",
+  "relevance": 2,
+  "finding": "Deletion of the THBS4 gene in mouse models of LGMD2E (β-sarcoglycan deficiency) and LAMA2-RD did not exacerbate the dystrophic phenotype, unlike in Duchenne or LGMD2F models.",
+  "model": "mouse (β-sarcoglycan and laminin α2 muscular dystrophy models)",
+  "section": "muscle"
+ },
+ "27581066": {
+  "pmid": "27581066",
+  "relevance": 2,
+  "finding": "THBS4 is induced in bladder outlet obstruction as a sensitive indicator of obstruction but is not required for ATF6α-mediated ER expansion or repression of contractile markers.",
+  "model": "rodent (bladder outlet obstruction)",
+  "section": "other"
+ },
+ "22682248": {
+  "pmid": "22682248",
+  "relevance": 2,
+  "finding": "THBS4 functions as an ER-resident effector of an adaptive ER stress response by binding ATF6α to promote its nuclear shuttling, with cardiac-specific Thbs4 overexpression protecting against myocardial injury.",
+  "model": "mouse (cardiac transgenic and knockout)",
+  "section": "heart"
+ },
+ "27669143": {
+  "pmid": "27669143",
+  "relevance": 3,
+  "finding": "Thbs4 regulates skeletal muscle integrity and stabilizes the sarcolemma through enhanced vesicular trafficking of dystrophin-glycoprotein and integrin attachment complexes, with Thbs4 loss causing spontaneous dystrophic changes with aging and overexpression being protective in mouse and Drosophila muscular dystrophy models.",
+  "model": "mouse and Drosophila",
+  "section": "muscle"
+ },
+ "30622267": {
+  "pmid": "30622267",
+  "relevance": 2,
+  "finding": "While Thbs4 is known to protect striated muscle from disease by enhancing sarcolemmal stability, Thbs3 antithetically promotes sarcolemmal destabilization by reducing integrin function and augmenting disease-induced decompensation.",
+  "model": "mouse",
+  "section": "heart"
+ },
+ "34168130": {
+  "pmid": "34168130",
+  "relevance": 2,
+  "finding": "Thbs1, but not Thbs2, Thbs3 or Thbs4, induces lethal cardiac atrophy when overexpressed by binding and activating the ER stress effector PERK, leading to ATF4-induced autophagy.",
+  "model": "mouse",
+  "section": "heart"
+ },
+ "29712757": {
+  "pmid": "29712757",
+  "relevance": 2,
+  "finding": "Transit through the secretory pathway is required for Thbs4 to augment sarcolemmal stability in cardiomyocytes, whereas ER stress induction and vesicular expansion mediated by Thbs4 are exclusively intracellular processes, and deletion of Thbs4 worsens cardiomyopathy in mdx mice.",
+  "model": "mouse and Drosophila",
+  "section": "secretion"
+ },
+ "26459760": {
+  "pmid": "26459760",
+  "relevance": 2,
+  "finding": "Thbs4 localizes to the ER and post-ER vesicles in cardiomyocytes, with its T3R and TSP-C domains mediating interactions with BiP and Atf6α to activate the adaptive ER stress response and induce vesicular expansion.",
+  "model": "mouse",
+  "section": "biology"
+ },
+ "24573206": {
+  "pmid": "24573206",
+  "relevance": 2,
+  "finding": "Myocyte-selective TGFβ inhibition after myocardial infarction augmented synthesis of a constellation of protective cardiokines including thrombospondin 4 with associated endoplasmic reticulum stress responses.",
+  "model": "mouse",
+  "section": "heart"
+ },
+ "23287452": {
+  "pmid": "23287452",
+  "relevance": 2,
+  "finding": "Thbs4 can function from within cells to protect the heart by enhancing adaptive endoplasmic reticulum stress responses mediated by ATF6, shifting the paradigm away from purely extracellular roles of thrombospondins.",
+  "model": "mouse",
+  "section": "biology"
+ },
+ "29138119": {
+  "pmid": "29138119",
+  "relevance": 3,
+  "finding": "TSP-4 is a major regulator of ECM organization and tissue remodeling in cardiovascular and nervous systems, inflammation, cancer, and the motor unit, with distinct functions including promotion of angiogenesis, reduction of fibrosis, and structural roles in tendon and skeletal muscle.",
+  "model": "review (multiple species)",
+  "section": "biology"
+ },
+ "32795101": {
+  "pmid": "32795101",
+  "relevance": 2,
+  "finding": "Single-cell transcriptomics identified a Fibroblast-Thbs4 population that emerged after angiotensin II-induced cardiac stress to promote fibrosis in the absence of smooth muscle actin-expressing myofibroblasts.",
+  "model": "mouse",
+  "section": "fibrosis_ecm"
+ },
+ "37582915": {
+  "pmid": "37582915",
+  "relevance": 3,
+  "finding": "Spatial transcriptomics of Duchenne muscular dystrophy mouse models identified increased Thbs4 expression specifically in fibrotic areas of skeletal muscle undergoing pathological remodeling.",
+  "model": "mouse (DMD models)",
+  "section": "fibrosis_ecm"
+ },
+ "24589453": {
+  "pmid": "24589453",
+  "relevance": 3,
+  "finding": "TSP-4 is expressed abundantly in tendon and oxidative red skeletal muscle, and Thbs4-/- mice show larger tendon collagen fibrils, decreased lipoprotein lipase activity and VLDL uptake, smaller soleus muscle, and reduced grip strength.",
+  "model": "mouse",
+  "section": "muscle"
+ },
+ "28481870": {
+  "pmid": "28481870",
+  "relevance": 2,
+  "finding": "Thrombospondin-4 is upregulated in endothelial cells in response to TGF-β1 via SMAD3 and mediates pro-angiogenic effects of TGF-β1 both in cultured endothelial cells and in vivo.",
+  "model": "mouse",
+  "section": "other"
+ }
+}

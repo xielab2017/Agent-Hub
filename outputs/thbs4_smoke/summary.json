@@ -1,0 +1,18 @@
+{
+ "title": "Thrombospondin-4 in skeletal muscle: from extracellular matrix scaffold to candidate myokine — mechanisms, ageing and metabolic dimensions",
+ "model": "minimax-cn/MiniMax-M3",
+ "llm_calls": 18,
+ "queries": 4,
+ "records": 23,
+ "cards": 12,
+ "sections": 2,
+ "references": 12,
+ "citation_check": {
+  "cited": 12,
+  "references": 12,
+  "out_of_range": [],
+  "uncited": [],
+  "citations": 46
+ },
+ "words": 1595
+}

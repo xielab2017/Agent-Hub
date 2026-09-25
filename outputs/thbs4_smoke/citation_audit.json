@@ -1,0 +1,53 @@
+[
+ {
+  "section": "Introduction: why revisit THBS4 in the context of muscle biology?",
+  "issues": []
+ },
+ {
+  "section": "Molecular and genomic organisation of THBS4",
+  "issues": [
+   {
+    "sentence": "The thrombospondins constitute a small but functionally diverse family of secreted glycoproteins whose five vertebrate members — TSP-1, TSP-2, TSP-3, TSP-4 and the cartilage oligomeric matrix protein (COMP/TSP-5) — share a multimodular, calcium-binding architecture yet are partitioned by clear oligomeric and organisational differences [R1, R12].",
+    "cards": [
+     "R1",
+     "R12"
+    ],
+    "issue": "Neither R1 nor R12 abstract mentions 'calcium-binding architecture' or 'oligomeric and organisational differences'. R1 only describes TSP-4 as belonging to a family of five highly homologous members with distinct functions; R12 describes gene structure and chromosomal localisation. The specific structural/oligomeric claims are not supported.",
+    "fix": "Cite a card that explicitly discusses the family's calcium-binding and oligomeric architecture (e.g., R10, which mentions calcium-binding motifs), or remove the specific structural descriptors and cite R1/R12 only for the five-member composition."
+   },
+   {
+    "sentence": "Within this family THBS4 is a subgroup B member: like COMP but unlike the subgroup A trimeric TSPs (TSP-1, TSP-2), it assembles into pentameric complexes through its N-terminal coiled-coil, a feature that immediately distinguishes its avidity, cross-linking behaviour and putative receptor engagement from those of its closest paralogues [R1].",
+    "cards": [
+     "R1"
+    ],
+    "issue": "The R1 abstract does not mention subgroup A/B classification, pentameric assembly, the N-terminal coiled-coil, or the trimeric nature of TSP-1/TSP-2. It focuses on TSP-4 functions in tissue remodelling.",
+    "fix": "Cite a structural reference (not provided in the card set) that describes THBS4's pentameric assembly via N-terminal coiled-coil and its subgroup B classification."
+   },
+   {
+    "sentence": "The polypeptide is organised as an N-terminal heparin-binding domain, a coiled-coil oligomerisation region, a proline-rich region containing the von Willebrand factor type C (VWFC) module, three type 2 EGF-like repeats, the characteristic central type 3 repeat cluster (T3R) and the C-terminal TSP-C lectin-like domain — the latter being the most conserved region across the entire family [R1].",
+    "cards": [
+     "R1"
+    ],
+    "issue": "The R1 abstract contains no description of THBS4 domain architecture — no mention of heparin-binding domain, coiled-coil, VWFC, type 2 EGF-like repeats, T3R, or TSP-C lectin-like domain.",
+    "fix": "Cite a reference that explicitly delineates THBS4's domain structure. R10 partially supports this (mentions T3R and TSP-C domains), but a dedicated structural review would be more appropriate."
+   },
+   {
+    "sentence": "The same work mapped THBS4 to ER and post-ER vesicles but did not perform site-directed mutagenesis of the calcium-coordinating residues themselves; the inference that Ca²⁺ coordination is a prerequisite for biosynthetic exit therefore rests on the known Ca²⁺-binding properties of the T3R cluster rather than on direct mutational evidence in the cited study [R10].",
+    "cards": [
+     "R10"
+    ],
+    "issue": "This directly contradicts R10. The R10 abstract explicitly states: 'We also mutated the major calcium-binding motifs within the T3R domain of full-length Thbs4, causing ER retention and secretion blockade.' The cited study DID perform site-directed mutagenesis of the calcium-coordinating residues and DID provide direct mutational evidence that Ca²⁺ coordination is required for biosynthetic exit.",
+    "fix": "Revise to: 'The same work mapped THBS4 to ER and post-ER vesicles AND performed site-directed mutagenesis of the major calcium-binding motifs within the T3R domain, demonstrating that Ca²⁺ coordination by the T3R cluster is a prerequisite for biosynthetic exit, as mutation of these residues caused ER retention and secretion blockade [R10].'"
+   },
+   {
+    "sentence": "Beyond musculoskeletal contexts, THBS4 is induced by TGF-β1 via SMAD3 in endothelial cells, identifying one upstream regulatory axis relevant to its angiogenic and remodelling functions [R1, R9].",
+    "cards": [
+     "R1",
+     "R9"
+    ],
+    "issue": "R1 does not mention TGF-β1, SMAD3, or endothelial cell-specific induction. Only R9 supports the specific claim that THBS4 is upregulated by TGF-β1 via SMAD3 in endothelial cells. R1's abstract addresses general angiogenic and remodelling functions but not this specific regulatory axis.",
+    "fix": "Cite only [R9] for the TGF-β1/SMAD3 induction claim. R1 may be cited separately elsewhere for general angiogenic/remodelling function if desired."
+   }
+  ]
+ }
+]

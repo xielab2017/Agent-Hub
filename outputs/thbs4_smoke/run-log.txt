@@ -1,0 +1,38 @@
+backend: minimax-cn https://api.minimaxi.com/v1 MiniMax-M3
+[     0s] model: minimax-cn/MiniMax-M3 via https://api.minimaxi.com/v1
+[     8s] queries: 4
+[     8s]     6 ← THBS4 skeletal muscle
+[     8s]     8 ← thrombospondin-4 muscle
+[     9s]     3 ← thrombospondin-4 ATF6 endoplasmic reticulum stress
+[    10s]     3 ← thrombospondin-4 sarcolemma muscular dystrophy
+[    11s] records with abstracts: 23
+[    40s] screened: 23 (21 relevant)
+[    40s] evidence cards: 12
+[    68s] outline: Thrombospondin-4 in skeletal muscle: from extracellular matrix scaffold to candidate myokine — mechanisms, ageing and metabolic dimensions — 2 sections
+[    76s]   drafted 2/2 Molecular and genomic organisation of THBS4 (694 words, 6 cards)
+[   101s]   drafted 1/2 Introduction: why revisit THBS4 in the context of muscle bio (692 words, 7 cards)
+[   145s] reviews: reviewer-muscle-biology (1573 words), reviewer-ageing-metabolism (1725 words), reviewer-citation-integrity (1204 words)
+[   169s]   revised 1/2 (880 words, 12 cards)
+[   171s]   revised 2/2 (776 words, 10 cards)
+[   204s]   audited 1/2: 0 unsupported citation(s) corrected
+[   214s]   audited 2/2: 5 unsupported citation(s) corrected
+[   226s] citations: {'cited': 12, 'references': 12, 'out_of_range': [], 'uncited': [], 'citations': 46}
+{
+ "title": "Thrombospondin-4 in skeletal muscle: from extracellular matrix scaffold to candidate myokine — mechanisms, ageing and metabolic dimensions",
+ "model": "minimax-cn/MiniMax-M3",
+ "llm_calls": 18,
+ "queries": 4,
+ "records": 23,
+ "cards": 12,
+ "sections": 2,
+ "references": 12,
+ "citation_check": {
+  "cited": 12,
+  "references": 12,
+  "out_of_range": [],
+  "uncited": [],
+  "citations": 46
+ },
+ "words": 1595
+}
+RESULT: PASS — 12 distinct references cited
