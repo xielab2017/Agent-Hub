@@ -69,6 +69,10 @@ def test_card_ids_and_focus_ranking():
                 "5": {"relevance": 2}}
     cards = rw.evidence_cards(recs, screened, limit=10, focus=r"THBS-?4|thrombospondin-4", seeds=["5"])
     assert [c["pmid"] for c in cards] == ["5", "2", "1", "4"]  # seed, title mention, abstract mention, context
+    screened["6"] = {"relevance": 3}
+    recs.append({**base, "pmid": "6", "title": "Thrombospondin-4 again", "abstract": "THBS4", "year": "2026"})
+    top = rw.evidence_cards(recs, screened, limit=2, focus=r"THBS-?4|thrombospondin-4", seeds=["5"], context_slots=0)
+    assert [c["pmid"] for c in top] == ["5", "6"]  # a relevance-2 seed still outranks a relevance-3 paper
 
 
 def test_map_card_ids_to_final_numbers():
@@ -292,3 +296,19 @@ def test_reviewer_gaps_add_cards_for_missing_literature(monkeypatch):
     reviews = [{"label": "R1", "report": "MOFA is missing."}]
     new = rw.reviewer_gaps(llm, "topic", reviews, cards, rubric="r", log=lambda m: None)
     assert [(c["id"], c["pmid"]) for c in new] == [(8, "900")]  # ids continue; irrelevant and known papers skipped
+
+
+def test_uncited_draft_gets_a_citation_pass():
+    cards = [{"id": i, "first_author": "A", "journal": "J", "year": "2020", "title": f"t{i}", "abstract": "a",
+              "finding": "f", "model": "m"} for i in (1, 2, 3)]
+    calls = []
+
+    def llm(system, user, **kw):
+        calls.append(user)
+        if "cites no evidence cards" in user:
+            return "Hu and colleagues benchmarked tools [R1]. Seurat ranked high [R2, R3]."
+        return "Hu and colleagues benchmarked tools. Seurat ranked high."
+
+    sec = {"heading": "Benchmarks", "cards": [1, 2, 3]}
+    text = rw.write_section(llm, "t", {"sections": [sec]}, sec, cards, check=lambda t, c: ["too few citations"])
+    assert rw.cited_ids(text) == [1, 2, 3] and len(calls) == 3

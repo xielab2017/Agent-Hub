@@ -299,7 +299,14 @@ def _http(url: str, timeout: float = 20.0) -> str:
 def pubmed_search(query: str, *, retmax: int = 25, http: Callable[[str], str] | None = None) -> list[str]:
     url = f"{EUTILS}/esearch.fcgi?" + urlencode({"db": "pubmed", "term": query, "retmax": retmax,
                                                   "retmode": "json", "sort": "relevance"})
-    data = json.loads((http or _http)(url) or "{}")
+    for attempt in range(3):  # E-utilities answer 429 above 3 requests/s: back off and retry
+        try:
+            data = json.loads((http or _http)(url) or "{}")
+            break
+        except Exception as exc:  # noqa: BLE001
+            if "429" not in str(exc) or attempt == 2:
+                raise
+            time.sleep(1.5 * (attempt + 1))
     return list((data.get("esearchresult") or {}).get("idlist") or [])
 
 
@@ -587,7 +594,8 @@ def evidence_cards(recs: list[dict[str, Any]], screened: dict[str, dict[str, Any
 
     def key(r: dict[str, Any]) -> tuple:
         in_title, n = mentions(r)
-        return (-_rel(screened[r["pmid"]]), r["pmid"] not in seeds, not in_title, -min(n, 6), -(int(r["year"] or 0)))
+        # the caller's seed papers always make the cut, then relevance, title mentions, abstract mentions, recency
+        return (r["pmid"] not in seeds, -_rel(screened[r["pmid"]]), not in_title, -min(n, 6), -(int(r["year"] or 0)))
 
     primary = [r for r in recs if _rel(screened.get(r["pmid"])) >= min_relevance
                and (r["pmid"] in seeds or not focus_re or any(mentions(r)))]
@@ -635,6 +643,7 @@ def reviewer_gaps(llm: Callable[..., str], topic: str, reviews: list[dict[str, s
             continue
         log(f"  gap: {str(w.get('item'))[:70]} → {len(got)} papers")
         pmids += got
+        time.sleep(0.4)  # stay under the E-utilities rate limit
     if not pmids:
         return []
     recs = [r for r in pubmed_fetch(pmids) if r.get("abstract")]
@@ -689,7 +698,19 @@ def write_section(llm: HubLLM, topic: str, outline: dict[str, Any], sec: dict[st
         text = clean_section(llm(WRITER_SYSTEM, prompt + "\n\nYour previous draft had these problems — fix them and "
                                  "return the whole section again:\n- " + "\n- ".join(problems) + "\n\nPrevious draft:\n"
                                  + text, max_tokens=12000), sec["heading"])
+    if len(set(cited_ids(text))) < 3:
+        text = add_citations(llm, sec["heading"], text, use + others)
     return text
+
+
+def add_citations(llm: Callable[..., str], heading: str, text: str, cards: list[dict[str, Any]]) -> str:
+    """A section that names studies without citing them: insert [R<id>] after each supported statement."""
+    fixed = clean_section(llm(WRITER_SYSTEM, (
+        f"The section \"{heading}\" below states findings and names studies but cites no evidence cards. Insert the "
+        "matching card citations as [R<id>] after every statement a card supports, and delete or soften statements "
+        "no card supports. Change nothing else. Return the full section.\n\nSECTION\n" + text
+        + "\n\nEVIDENCE CARDS\n" + card_block(cards, abstract_chars=400)), max_tokens=12000), heading)
+    return fixed if len(set(cited_ids(fixed))) > len(set(cited_ids(text))) else text
 
 
 def section_problems(text: str, cards: list[dict[str, Any]]) -> list[str]:
@@ -977,7 +998,14 @@ def run(topic: str, out_dir: Path, *, profile: dict[str, Any] | None = None, see
             pmids.extend(p for p in got if p not in pmids)
             log(f"  {len(got):3d} ← {q[:90]}")
             time.sleep(0.4)
-        return [r for r in pubmed_fetch(pmids) if r.get("abstract")]
+        seeds = set(seed_pmids or [])
+        recs = []
+        for r in pubmed_fetch(pmids):
+            if not r.get("abstract") and r["pmid"] in seeds:  # e.g. a perspective article: judge it by its title
+                r = {**r, "abstract": f"(PubMed lists no abstract) {r['title']}"}
+            if r.get("abstract"):
+                recs.append(r)
+        return recs
 
     recs = ck.stage("records", search)
     log(f"records with abstracts: {len(recs)}")
