@@ -1,0 +1,294 @@
+[
+ {
+  "section": "A taxonomy of integration strategies: stages, supervision and biological target",
+  "issues": []
+ },
+ {
+  "section": "General-purpose statistical and Bioconductor integration frameworks",
+  "issues": [
+   {
+    "sentence": "MOFA was introduced as an unsupervised probabilistic factor model for bulk multi-omics, providing sample subtyping, imputation and outlier detection via variational inference [R2].",
+    "cards": [
+     "R2"
+    ],
+    "issue": "The R2 abstract excerpt describes MOFA as a 'computational method' for factor analysis and lists sample subtyping, imputation and outlier detection, but does not explicitly mention 'variational inference' as the inference engine; variational inference is only stated in the R4 (MOFA+) abstract excerpt.",
+    "fix": "Drop 'via variational inference' or rephrase to 'via latent-factor inference supported by R2' (i.e., rely only on what the R2 abstract actually states), or cite R4 for the variational-inference aspect."
+   },
+   {
+    "sentence": "These models offer probabilistic grounding and factor-level interpretability, but the documented case studies are limited to specific cancer settings [R2, R4].",
+    "cards": [
+     "R2",
+     "R4"
+    ],
+    "issue": "R2 explicitly applies MOFA to a chronic lymphocytic leukaemia (cancer) cohort, supporting 'cancer settings', but the R4 abstract excerpt is a general methods description and does not document or mention any cancer (or other disease-specific) case studies; the cancer-setting claim is therefore not supported for R4 from the given abstract.",
+    "fix": "Cite only R2 for the cancer case studies (e.g., 'limited to specific cancer settings [R2]'), or remove the R4 citation from that clause."
+   }
+  ]
+ },
+ {
+  "section": "Web servers and point-and-click platforms for multi-omics",
+  "issues": [
+   {
+    "sentence": "The Analyst suite [R15] is more transparent in this regard, formally distinguishing knowledge-driven network integration from data-driven dimensionality-reduction integration, yet even its data-driven arm depends on algorithms (PCA-, PLS- and sparse-PLS-based embeddings) that pre-date the current generation of variational factorisations [R4], matrix factorisation with transfer learning [R42], and contrastive deep methods [R40].",
+    "cards": [
+     "R15"
+    ],
+    "issue": "The R15 abstract describes OmicsAnalyst as performing 'data-driven integration through joint dimensionality reduction' but does not explicitly state that the underlying dimensionality reduction relies on PCA-, PLS- and sparse-PLS-based embeddings.",
+    "fix": "Replace the parenthetical '(PCA-, PLS- and sparse-PLS-based embeddings)' with a more general formulation such as 'classical joint dimensionality-reduction algorithms', since the specific algorithms are not mentioned in the cited abstract."
+   },
+   {
+    "sentence": "in contrast to containerised workflow frameworks such as the FAIR Digital Object pipeline for childhood externalising behaviour multi-omics [R18], which exposes its dependencies via Nextflow with version-pinned containers.",
+    "cards": [
+     "R18"
+    ],
+    "issue": "The R18 abstract mentions 'containers with software dependencies' and adherence to 'version control', but does not explicitly state that the containers are 'version-pinned'.",
+    "fix": "Rephrase to 'which exposes its dependencies via Nextflow with containerised software dependencies', which is directly supported by the abstract."
+   }
+  ]
+ },
+ {
+  "section": "Microbiome-centred multi-omics tools",
+  "issues": [
+   {
+    "sentence": "A 16S or metagenomic layer delivers a sparse, hierarchical count matrix whose units are operational taxonomic units, amplicon sequence variants or metagenome-assembled genomes, while metatranscriptomic, metaproteomic and host-response layers enter at incompatible resolutions, with markedly different missingness patterns and dynamic ranges [R54].",
+    "cards": [
+     "R54"
+    ],
+    "issue": "R54's abstract discusses general complexity of microbiome multi-omics and the need for standardised workflows, but does not support the specific technical claims about hierarchical count matrices, OTUs/ASVs/MAGs as units, incompatible resolutions across layers, or markedly different missingness patterns and dynamic ranges.",
+    "fix": "Remove the technical specifics or rephrase as author interpretation: 'A 16S or metagenomic layer delivers a sparse count matrix whose units are operational taxonomic units, amplicon sequence variants or metagenome-assembled genomes, while downstream layers enter at incompatible resolutions—constraints that generic frameworks are not designed to handle [R54].'"
+   },
+   {
+    "sentence": "gNOMO2, the modular Nextflow successor, generalises this approach to canonical model microbiomes, handles two to four omics combinations including 16S rRNA, metagenomics, metatranscriptomics and metaproteomics, and adds differential-abundance, integration and visualisation modules benchmarked on four datasets [R21].",
+    "cards": [
+     "R21"
+    ],
+    "issue": "R21's abstract describes gNOMO2 as 'a comprehensive and modular pipeline' but does not explicitly state that it is Nextflow-based; the specific implementation framework is not mentioned in the available excerpt.",
+    "fix": "Replace 'the modular Nextflow successor' with 'the modular successor' or verify and cite the source that documents the Nextflow implementation."
+   },
+   {
+    "sentence": "In exosomal cardiovascular biomarker discovery, reproducibility and validation gaps dominate despite an abundance of AI/ML integration methods, with ensemble classifiers varying widely in reported AUC and external validation remaining limited [R55];",
+    "cards": [
+     "R55"
+    ],
+    "issue": "R55 states that ensemble methods 'demonstrate the most consistent performance for EV biomarker classification (AUC 0.80–0.92)', which contradicts the claim that ensemble classifiers are 'varying widely in reported AUC'.",
+    "fix": "Replace 'varying widely in reported AUC' with 'reporting AUC in the 0.80–0.92 range, though external validation remains limited [R55]'."
+   },
+   {
+    "sentence": "Its documented focus on the Bioconductor ecosystem and on model-organism host–microbiome pairs differentiates it from gNOMO/gNOMO2's emphasis on non-model hosts [R21, R34], though this specialisation constrains rather than broadens its applicability.",
+    "cards": [
+     "R21",
+     "R34"
+    ],
+    "issue": "R34 documents gNOMO's emphasis on non-model hosts (Blattella germanica), but R21 describes gNOMO2 as a general modular pipeline for microbiome multi-omics without explicitly stating an emphasis on non-model hosts; the sentence also contradicts the section's own earlier description of gNOMO2 as generalising to 'canonical model microbiomes'.",
+    "fix": "Cite only R34 for the non-model emphasis: 'differentiates it from gNOMO's emphasis on non-model hosts [R34], since gNOMO2 [R21] generalises the approach to canonical model microbiomes.'"
+   }
+  ]
+ },
+ {
+  "section": "Data structures, workflow systems and reproducibility",
+  "issues": [
+   {
+    "sentence": "`timeOmics` provides a generic framework for longitudinal multi-omics integration using these classes [R27]",
+    "cards": [
+     "R27"
+    ],
+    "issue": "R27 does not state that timeOmics uses the SummarizedExperiment/MultiAssayExperiment classes ('these classes'). The abstract only describes it as 'a generic analytical framework for the integration of longitudinal multi-omics data' and notes Bioconductor availability, without mentioning these specific container classes.",
+    "fix": "Rephrase as: '`timeOmics` provides a generic framework for longitudinal multi-omics integration, distributed as a Bioconductor package [R27]'."
+   },
+   {
+    "sentence": "`pathwayMultiomics` exploits the `MultiAssayExperiment` container to operate on matched or un-matched samples [R32]",
+    "cards": [
+     "R32"
+    ],
+    "issue": "R32 does not mention the MultiAssayExperiment container. The abstract describes pathwayMultiomics as a pathway-based approach that integrates pathway p-values across omics types via a novel MiniMax statistic; nothing in the card supports a reliance on the MultiAssayExperiment container.",
+    "fix": "Rephrase as: '`pathwayMultiomics` provides a pathway-based integrative analysis of multi-omics data that does not require matched samples, integrating per-pathway p-values via a novel MiniMax statistic [R32]'."
+   },
+   {
+    "sentence": "MUUMI in particular unifies statistical meta-analysis with network-based integration on top of standard R/Bioconductor data structures, yet its reproducibility properties rest on the user's discipline rather than on enforced workflow contracts [R6].",
+    "cards": [
+     "R6"
+    ],
+    "issue": "Two unsupported claims: (1) 'on top of standard R/Bioconductor data structures' is not stated in R6, which describes MUUMI only as 'an R package' and does not mention Bioconductor data containers. (2) The reproducibility characterisation ('reproducibility properties rest on the user's discipline rather than on enforced workflow contracts') is an interpretive judgement not supported by R6.",
+    "fix": "Rephrase the first clause to: 'MUUMI unifies statistical meta-analysis with network-based integration within a single R package framework [R6].' Move the reproducibility assessment to a clearly framed author interpretation or remove it."
+   },
+   {
+    "sentence": "This standard applies equally across the surveyed pipelines: the published evidence for EMP, gNOMO2, moiraine and MUUMI does not document independent re-execution on heterogeneous hardware, and in each case reproducibility properties rest on the user's discipline rather than on enforced workflow contracts [R1, R6, R7, R21].",
+    "cards": [
+     "R1",
+     "R6",
+     "R7",
+     "R21"
+    ],
+    "issue": "The general absence of independent re-execution documentation is consistent with the cards (none mention it), but the positive characterisation 'reproducibility properties rest on the user's discipline rather than on enforced workflow contracts' is an interpretive judgement not supported by any of R1, R6, R7 or R21. None of these cards make this specific negative claim about workflow contracts.",
+    "fix": "Rephrase as an explicit author interpretation, e.g., 'In our assessment, the published evidence for EMP, gNOMO2, moiraine and MUUMI does not document independent re-execution on heterogeneous hardware', or remove the unsupported workflow-contract characterisation."
+   }
+  ]
+ },
+ {
+  "section": "Introduction: why multi-omics integration demands dedicated software",
+  "issues": [
+   {
+    "sentence": "A single study now routinely combines genomic, transcriptomic, epigenomic, proteomic and metabolomic assays, often at single-cell or spatial resolution, and with metagenomic, metatranscriptomic and metaproteomic layers when the system of interest is a microbial community [R1, R54, R60].",
+    "cards": [
+     "R1",
+     "R54",
+     "R60"
+    ],
+    "issue": "The cited cards do not support the explicit inclusion of \"epigenomic.\" R54 lists only \"genomic, transcriptomic, proteomic, and metabolomic\"; R60 lists \"genomics, transcriptomics, proteomics, and metabolomics\"; R1 does not enumerate assay types in the excerpt.",
+    "fix": "Cite R54 and R60 as supporting the four explicit layers they mention; drop \"epigenomic\" or attribute it to a separate source that enumerates epigenomic assays."
+   },
+   {
+    "sentence": "A meaningful study must coordinate at least four interacting layers — the microbial community, its viruses, its host and the metabolic exchange between them — each profilable by multiple assays with non-overlapping sample sets [R1, R54].",
+    "cards": [
+     "R1",
+     "R54"
+    ],
+    "issue": "Neither R1 nor R54 enumerates these specific \"four interacting layers.\" R54 discusses microbial communities and multi-omics data layers but does not explicitly name viruses or metabolic exchange as a distinct layer; R1 frames host–microbiome interactions more generally.",
+    "fix": "Phrased as author's own interpretation of the layered microbiome problem, or cite a source that explicitly describes the four-layer (community, viruses, host, metabolites) framing."
+   },
+   {
+    "sentence": "A parallel deep-learning literature frames integration as representation learning rather than decomposition [R8, R9, R19, R23, R39, R44]",
+    "cards": [
+     "R8",
+     "R9",
+     "R19",
+     "R23",
+     "R39",
+     "R44"
+    ],
+    "issue": "R9 (SSD-MO) is a \"Semi-Supervised Deep Non-Negative Matrix Factorization\" method — its core model is decomposition-based, so it does not fit the characterisation of framing integration as representation learning rather than decomposition.",
+    "fix": "Remove R9 from this list or rephrase as a deep-learning / hybrid literature that includes both representation-learning and factorization variants."
+   },
+   {
+    "sentence": "and pathway-aware tools offer functional priors as a route to factor interpretation [R32, R20].",
+    "cards": [
+     "R32",
+     "R20"
+    ],
+    "issue": "Neither card supports \"factor interpretation.\" R32 (pathwayMultiomics) prioritises dysregulated pathways via a MiniMax statistic for integrative analysis with matched or unmatched samples; R20 (NetMIM) uses pathway information for interpretability of biomarker selection and disease outcome prediction, not for interpreting latent factors from a decomposition model.",
+    "fix": "Rephrase as \"pathway-aware tools offer functional annotations or biological priors to improve interpretability\" and/or cite cards whose focus is factor interpretation; alternatively cite R32 and R20 only for the pathway-prior aspect, not factor interpretation."
+   },
+   {
+    "sentence": "Existing reviews of multi-omics software tend to conflate three quite different objects — algorithms, packages and end-to-end workflows — within a single list, and to evaluate them by features rather than by behaviour on common data [R60].",
+    "cards": [
+     "R60"
+    ],
+    "issue": "R60 is a review of \"multi-omics strategies for biomarker discovery and application in personalized oncology\"; nothing in the excerpt characterises how reviews are evaluated (by features vs. behaviour on common data). The \"conflation\" claim is partially supported (R60 does encompass workflows, analytical techniques, and computational tools) but the methodological-evaluation half of the sentence is not.",
+    "fix": "Restrict the citation to the conflation-of-objects claim, or cite a review that explicitly contrasts feature-based vs. benchmark-based evaluation."
+   }
+  ]
+ },
+ {
+  "section": "Network-based and deep learning approaches",
+  "issues": [
+   {
+    "sentence": "LAGProg augments biological networks with a conditional variational autoencoder to overcome the limited connectivity of curated pathways in prognosis prediction [R24]",
+    "cards": [
+     "R24"
+    ],
+    "issue": "The cited card refers to 'biological networks' and the problem of 'limited number of neighboring genes in biological networks,' but never uses the term 'curated pathways,' which is more specific than what the abstract supports.",
+    "fix": "Rephrase to '…to overcome the limited connectivity of biological networks (i.e., the limited number of neighboring genes) in prognosis prediction [R24]'."
+   },
+   {
+    "sentence": "BioNeuralNet, a modular Python framework, exposes a unified API for network construction, GNN-based representation learning and downstream scikit-learn- and PyTorch-compatible tasks on gene, protein and metabolite graphs [R8]",
+    "cards": [
+     "R8"
+    ],
+    "issue": "The card describes BioNeuralNet as a 'flexible and modular Python framework' with 'extensive utilities' and 'compatibility with established Python packages,' but never characterizes it as exposing a 'unified API.' That specific design claim is not supported by the abstract.",
+    "fix": "Rephrase to 'BioNeuralNet, a modular Python framework with extensive utilities and compatibility with scikit-learn, PyTorch and NetworkX, supports network construction, GNN-based representation learning and downstream tasks on gene, protein and metabolite graphs [R8]'."
+   }
+  ]
+ },
+ {
+  "section": "Benchmarking evidence and evaluation criteria",
+  "issues": [
+   {
+    "sentence": "Microbiome reviews explicitly note the absence of head-to-head benchmarking and call for standardized, FAIR-compliant workflows rather than competitive rankings [R54, R58].",
+    "cards": [
+     "R54",
+     "R58"
+    ],
+    "issue": "R58's abstract does not explicitly note the absence of head-to-head benchmarking nor call for FAIR-compliant workflows; it discusses analytical standards for translating research into practical strategies. Only R54 explicitly states 'without benchmarking specific tools' and proposes a 'FAIR-compliant' roadmap.",
+    "fix": "Cite only R54 (e.g., '[R54]'), since R58's abstract does not support both specific claims."
+   },
+   {
+    "sentence": "Even within bulk cancer, simulation packages such as SUMO enable controlled testing of latent-structure recovery under user-defined noise and missingness [R11], yet these have not been absorbed into dominant benchmarking pipelines.",
+    "cards": [
+     "R11"
+    ],
+    "issue": "R11's key finding and abstract specify user-defined 'latent structures, shared/distinct factors, noise and complexity' but do not mention 'missingness' as a configurable dimension of the simulator.",
+    "fix": "Remove 'and missingness' (e.g., 'user-defined noise and complexity') to align with what R11 actually supports."
+   },
+   {
+    "sentence": "SUMO [R11] | simulator | controlled | NS | R package | synthetic",
+    "cards": [
+     "R11"
+    ],
+    "issue": "In the Missingness column, SUMO is marked 'controlled', implying the user can control missingness; R11 does not state that missingness is a supported/controlled feature (it mentions latent structures, shared/distinct factors, noise and complexity).",
+    "fix": "Change the Missingness cell for SUMO to 'NS', consistent with the convention stated in the section legend."
+   },
+   {
+    "sentence": "gNOMO2 [R21] | intermediate (modular) | NS | NS | Nextflow, container | microbiome multi-omics",
+    "cards": [
+     "R21"
+    ],
+    "issue": "R21's key finding and abstract describe gNOMO2 as a 'modular Nextflow pipeline' but do not mention containerisation. The 'container' entry is not supported by the card.",
+    "fix": "Change 'Nextflow, container' to 'Nextflow' (or 'NS' for the container aspect) to match what R21 states."
+   },
+   {
+    "sentence": "Longitudinal multi-omics, exemplified by timeOmics [R27], netOmics [R28] and PALM [R31], has its own evaluation conventions — cluster stability across time, network reproducibility — that are disjoint from the TCGA cancer benchmark.",
+    "cards": [
+     "R27",
+     "R28",
+     "R31"
+    ],
+    "issue": "The specific evaluation conventions 'cluster stability across time' and 'network reproducibility' are not stated in any of the three cited cards. R27 mentions clustering associated with time but not 'cluster stability'; R28 and R31 discuss building/exploring networks but not 'network reproducibility' as an evaluation criterion.",
+    "fix": "Soften to wording supported by the cards, e.g., 'clustering across time points and network-based reconstruction' rather than 'cluster stability across time, network reproducibility'."
+   }
+  ]
+ },
+ {
+  "section": "EasyMultiProfiler: design, strengths and limitations relative to the alternatives",
+  "issues": [
+   {
+    "sentence": "Whether the module decomposition corresponds to a natural-language or biology-oriented workflow syntax, or specifically embeds microbiome-targeted quality control, taxonomic aggregation and pathway mapping, is not characterised in the available description [R1]; the discussion is therefore restricted to what the source documents.",
+    "cards": [
+     "R1"
+    ],
+    "issue": "R1 explicitly states that EMP is 'integrated into a user-friendly and natural language-style workflow,' so the claim that natural-language workflow syntax is not characterised in [R1] directly contradicts the card.",
+    "fix": "Rephrase to acknowledge that R1 does describe the workflow as 'natural language-style,' while restricting the 'not characterised' claim to specific microbiome-targeted QC, taxonomic aggregation and pathway mapping details."
+   },
+   {
+    "sentence": "EMP's documented scope is to couple microbiome profiling with host-side omics within a single MultiAssayExperiment container, which gNOMO and gNOMO2 also pursue, but from workflow managers tailored for non-model organisms [R1, R34, R21].",
+    "cards": [
+     "R21"
+    ],
+    "issue": "The non-model-organism tailoring is supported by R34 (gNOMO), but R21's abstract/key finding for gNOMO2 does not explicitly state that gNOMO2's workflow manager is tailored for non-model organisms.",
+    "fix": "Cite only R34 for the non-model-organism claim, e.g. 'which gNOMO pursues (and gNOMO2 extends) from workflow managers tailored for non-model organisms [R1, R34, R21]' or limit the non-model claim to gNOMO."
+   },
+   {
+    "sentence": "The published evidence base for EMP is concentrated on human and mouse gut microbiome cohorts, and its documented advantages are demonstrated primarily through illustrative applications rather than head-to-head statistical benchmarking against MOFA, mixOmics-DIABLO, SNF, MLMF or graph-neural-network alternatives [R1, R13, R19, R39].",
+    "cards": [
+     "R13"
+    ],
+    "issue": "MLMF (R13) is a multi-layer matrix factorization method, not a graph-neural-network method; grouping it with 'graph-neural-network alternatives' mischaracterises it.",
+    "fix": "Re-cast MLMF separately from the graph-neural-network alternatives, e.g. 'MOFA, mixOmics-DIABLO, SNF, MLMF, or graph-neural-network alternatives such as DeepMoIC [R19] and MO-GCAN [R39].'"
+   }
+  ]
+ },
+ {
+  "section": "Critical perspectives, controversies, recommendations and roadmap",
+  "issues": [
+   {
+    "sentence": "Methods such as deep semi-supervised matrix factorization [R9], multi-layer factorization for cancer subtyping with partial-cohort support [R13] and self-attentional dynamic learners [R16] continue to push classification and clustering accuracy on benchmark TCGA cohorts",
+    "cards": [
+     "R9",
+     "R13",
+     "R16"
+    ],
+    "issue": "Only R9 explicitly reports validation on TCGA datasets ('six multi-omics datasets from The Cancer Genome Atlas'). R13's abstract describes '12 multi-omics cancer datasets' without specifying TCGA, and R16's abstract reports 'four real-world multimodal medical' datasets with no mention of TCGA. The claim that all three methods push accuracy on 'benchmark TCGA cohorts' overstates what the cited cards support.",
+    "fix": "Replace 'benchmark TCGA cohorts' with 'benchmark cancer cohorts' (or 'benchmark cancer/medical cohorts'), since only R9 is explicitly tied to TCGA in its abstract."
+   }
+  ]
+ }
+]

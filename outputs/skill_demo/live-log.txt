@@ -75,3 +75,6 @@
 [   819s]   audited 1/10: 5 unsupported citation(s) corrected
 [   828s]   audited 6/10: 2 unsupported citation(s) corrected
 [   862s]   audited 8/10: 5 unsupported citation(s) corrected
+[   919s]   audited 9/10: 3 unsupported citation(s) corrected
+[   951s]   audited 10/10: 1 unsupported citation(s) corrected
+[   966s] citations: {'cited': 62, 'references': 62, 'out_of_range': [], 'uncited': [], 'citations': 330}

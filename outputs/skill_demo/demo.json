@@ -24,7 +24,7 @@
  "run": {
   "id": "literature-review-20260925-201820-85f0",
   "status": "running",
-  "stage": "audited 8/10: 5 unsupported citation(s) corrected",
+  "stage": "citations: {'cited': 62, 'references': 62, 'out_of_range': [], 'uncited': [], 'citations': 330}",
   "returncode": null,
   "outputs": [],
   "summary": null,
