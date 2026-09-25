@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """Live check of Agent Hub against a real MiniMax account (one command).
 
-    MINIMAX_KEY=sk-... python scripts/minimax_live_check.py [--region auto|minimax-cn|minimax] [--quick]
+    MINIMAX_KEY='sk-...' python scripts/minimax_live_check.py [--region auto|minimax-cn|minimax] [--quick]
+
+(The Claude Code style ANTHROPIC_BASE_URL=https://api.minimax.cn/anthropic +
+ANTHROPIC_API_KEY='sk-...' is picked up too.)
 
 What it does, in a throw-away state directory (your real Agent Hub settings are
 never touched, the key is never printed — every line of output is masked):
@@ -31,7 +34,9 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-KEY = (os.environ.get("MINIMAX_KEY") or os.environ.get("MINIMAX_CN_API_KEY") or os.environ.get("MINIMAX_API_KEY") or "").strip()
+_ANTHROPIC_BASE = (os.environ.get("ANTHROPIC_BASE_URL") or "").strip()
+KEY = (os.environ.get("MINIMAX_KEY") or os.environ.get("MINIMAX_CN_API_KEY") or os.environ.get("MINIMAX_API_KEY")
+       or (os.environ.get("ANTHROPIC_API_KEY") if "minimax" in _ANTHROPIC_BASE.lower() else "") or "").strip()
 
 
 def mask(text: object) -> str:
@@ -54,6 +59,9 @@ def main() -> int:
     if not KEY:
         say("Set MINIMAX_KEY (or MINIMAX_CN_API_KEY / MINIMAX_API_KEY) first.")
         return 2
+    if KEY.startswith("cp-"):
+        say("⚠ The key starts with 'cp-': a ${sk-cp-…} shell expansion drops 'sk-'. "
+            "Use quotes instead: export MINIMAX_KEY='sk-cp-…'")
 
     tmp = Path(tempfile.mkdtemp(prefix="agenthub-minimax-"))
     for var, sub in (("HERMES_ALI_STATE_DIR", "state"), ("AGENT_CLI_HOME", "cli"), ("HERMES_HOME", "hermes"),
@@ -72,21 +80,33 @@ def main() -> int:
 
     # 1. region ---------------------------------------------------------
     say("== 1. region / models")
+    from ali import providers as providers_mod
+
+    if _ANTHROPIC_BASE and "minimax" in _ANTHROPIC_BASE.lower():
+        # try the endpoint the user already uses (e.g. Claude Code) first
+        for pid in providers_mod.MINIMAX_REGIONS:
+            urls = providers_mod.PROVIDERS[pid].setdefault("base_urls", [providers_mod.PROVIDERS[pid]["base_url"]])
+            if ("minimax.io" in _ANTHROPIC_BASE) == (pid == "minimax"):
+                urls[:] = [_ANTHROPIC_BASE.rstrip("/")] + [u for u in urls if u.rstrip("/") != _ANTHROPIC_BASE.rstrip("/")]
     probe = probe_minimax_region(KEY, timeout=15.0)
     for pid, r in probe["results"].items():
-        say(f"   {pid:11s} ok={r['ok']} via={r.get('via')} models={r['count']} {r['models'][:8]} {('error: ' + r['error'][:160]) if r['error'] else ''}")
+        for e in r.get("endpoints") or []:
+            say(f"   {pid:11s} {e['base_url']:38s} ok={e['ok']} via={e['via']} {('error: ' + e['error'][:140]) if e['error'] else ''}")
+        say(f"   {pid:11s} models={r['count']} {r['models'][:8]}")
     region = probe["region"] if args.region == "auto" else args.region
     if not region:
         say("   ✗ neither region accepted the key — check the key, or network access to api.minimaxi.com / api.minimax.io")
         return 1
     models = probe["results"].get(region, {}).get("models") or []
     model = args.model or ("MiniMax-M2" if not models or "MiniMax-M2" in models else models[0])
-    say(f"   ✓ region={region} ({get_provider(region)['base_url']}) model={model}")
+    base_url = (probe["results"].get(region) or {}).get("base_url") or get_provider(region)["base_url"]
+    say(f"   ✓ region={region} endpoint={base_url} model={model}")
     results["region"] = region
+    results["endpoint"] = base_url
 
     cfg = load_campus_config()
     prov = get_provider(region)
-    cfg["backend"] = {**(cfg.get("backend") or {}), "type": region, "base_url": prov["base_url"], "model": model,
+    cfg["backend"] = {**(cfg.get("backend") or {}), "type": region, "base_url": base_url, "model": model,
                       "api_key_env": prov["api_key_env"], "verify_tls": True}
     cfg["models"] = {**(cfg.get("models") or {}), "fast": model, "main": model, "reasoning": model}
     cfg.setdefault("ali", {})["hub_chat_mode"] = "direct"

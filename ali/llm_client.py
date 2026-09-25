@@ -101,6 +101,10 @@ def list_models(
     timeout: float = 30,
     verify_tls: bool = True,
 ) -> dict[str, Any]:
+    from . import anthropic_client
+
+    if anthropic_client.is_anthropic_base(base_url):
+        return anthropic_client.list_models(base_url, api_key, timeout=timeout, verify_tls=verify_tls)
     base = _normalize_base(base_url)
     if not base:
         return {"ok": False, "error": "base_url empty", "models": []}
@@ -298,7 +302,10 @@ def stream_chat(
     for attempt in range(len(retry_delays) + 1):
         meta["attempts"] = attempt + 1
         try:
-            return _stream_chat_once(
+            from . import anthropic_client
+
+            once = anthropic_client.stream if anthropic_client.is_anthropic_base(base_url) else _stream_chat_once
+            return once(
                 base_url, api_key, model=model, messages=messages, timeout=timeout, verify_tls=verify_tls,
                 on_token=_tok, temperature=temperature, max_tokens=max_tokens, meta=meta,
             )
@@ -521,6 +528,12 @@ def _chat_once(
     temperature: float | None = None,
     max_tokens: int | None = None,
 ) -> str:
+    from . import anthropic_client
+
+    if anthropic_client.is_anthropic_base(base_url):
+        return anthropic_client.chat_once(base_url, api_key, model=model, messages=messages, timeout=timeout,
+                                          verify_tls=verify_tls, on_token=on_token, temperature=temperature,
+                                          max_tokens=max_tokens)
     url = chat_completions_url(base_url)
     effective_temperature = (
         1.0 if "api.kimi.com/coding" in str(base_url or "").lower()

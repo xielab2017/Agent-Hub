@@ -362,7 +362,9 @@ def resolve_route(
         # an older provider preset instead of allowing cross-vendor requests.
         prov = get_provider(provider_id)
         if prov:
-            base_url = prov.get("base_url") or base_url
+            from .providers import pick_base_url
+
+            base_url = pick_base_url(prov, base_url)
             api_key_env = prov.get("api_key_env") or api_key_env
 
     # Optional per-tier binding added by the Control Center model picker.
@@ -390,7 +392,9 @@ def resolve_route(
             provider_id = selected_provider
             prov = get_provider(provider_id)
             if prov:
-                base_url = prov.get("base_url") or base_url
+                from .providers import pick_base_url
+
+                base_url = pick_base_url(prov, backend.get("base_url") or "" if provider_id == backend_type else "")
                 api_key_env = prov.get("api_key_env") or api_key_env
             from .providers import coerce_model_for_provider
 

@@ -2488,9 +2488,12 @@ def _direct_llm_reply(
     prov = get_provider(provider) if provider else None
     base_url = str(route_info.get("base_url") or backend.get("base_url") or "").strip()
     if prov and provider not in ("", "hybrid", "campus-openai-compatible", "local-ollama"):
-        catalog_url = str(prov.get("base_url") or "").strip()
-        if catalog_url:
-            base_url = catalog_url
+        from .providers import pick_base_url
+
+        # A vendor's alternative endpoint (e.g. MiniMax …/anthropic) is kept when chosen.
+        configured = str(backend.get("base_url") or "").strip() if provider == str(backend.get("type") or "") else ""
+        chosen = pick_base_url(prov, configured)
+        base_url = chosen if configured and chosen == configured else pick_base_url(prov, base_url)
 
     key_info = resolve_api_key(cfg, provider=provider if provider != "hybrid" else "")
     api_key = key_info.get("key") or ""

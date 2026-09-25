@@ -290,9 +290,11 @@ PROVIDERS: dict[str, dict[str, Any]] = {
         "label": "MiniMax（国际区）",
         "label_en": "MiniMax (global)",
         "base_url": "https://api.minimax.io/v1",
+        # Endpoints that take the same key; the Anthropic-compatible one serves Coding Plan clients.
+        "base_urls": ["https://api.minimax.io/v1", "https://api.minimax.io/anthropic"],
         "api_key_env": "MINIMAX_API_KEY",
         "openai_compatible": True,
-        "hint": "MiniMax 国际区 api.minimax.io（OpenAI 兼容）。中国大陆账号 / Key 请选「MiniMax（中国大陆区）」。",
+        "hint": "MiniMax 国际区 api.minimax.io（OpenAI 兼容，亦支持 /anthropic）。中国大陆账号 / Key 请选「MiniMax（中国大陆区）」。",
         "models": _m(
             fast="MiniMax-M2",
             main="MiniMax-M2",
@@ -321,9 +323,11 @@ PROVIDERS: dict[str, dict[str, Any]] = {
         "label": "MiniMax（中国大陆区）",
         "label_en": "MiniMax (China)",
         "base_url": "https://api.minimaxi.com/v1",
+        "base_urls": ["https://api.minimaxi.com/v1", "https://api.minimax.cn/anthropic", "https://api.minimaxi.com/anthropic"],
         "api_key_env": "MINIMAX_CN_API_KEY",
         "openai_compatible": True,
-        "hint": "MiniMax 中国大陆区 api.minimaxi.com（OpenAI 兼容），含 Coding / Token Plan（sk-cp-…）。国际账号请选「MiniMax（国际区）」。",
+        "hint": ("MiniMax 中国大陆区 api.minimaxi.com（OpenAI 兼容），含 Coding / Token Plan（sk-cp-…）；"
+                 "Anthropic 兼容地址 https://api.minimax.cn/anthropic 也可直接填入。国际账号请选「MiniMax（国际区）」。"),
         "models": _m(
             fast="MiniMax-M2",
             main="MiniMax-M2",
@@ -1130,6 +1134,18 @@ def catalog_payload() -> dict[str, Any]:
     }
 
 
+def pick_base_url(prov: dict[str, Any] | None, configured: str = "") -> str:
+    """The catalog URL, unless the configured one is among the vendor's own endpoints
+    (``base_urls``, e.g. MiniMax …/anthropic) — stale or foreign URLs never survive."""
+    if not prov:
+        return configured
+    catalog = str(prov.get("base_url") or "").strip()
+    alternates = {str(u).rstrip("/") for u in prov.get("base_urls") or []}
+    if configured and configured.strip().rstrip("/") in alternates:
+        return configured.strip()
+    return catalog or configured
+
+
 from .secrets import mask_key  # noqa: E402
 
 MINIMAX_REGIONS = ("minimax-cn", "minimax")
@@ -1164,17 +1180,22 @@ def probe_minimax_region(api_key: str, *, timeout: float = 6.0, verify_tls: bool
     results: dict[str, Any] = {}
     region = None
     for pid in MINIMAX_REGIONS:
-        base = PROVIDERS[pid]["base_url"]
-        r = list_fn(base, api_key, timeout=timeout, verify_tls=verify_tls)
-        if not r.get("ok") and not re.search(r"HTTP 40[13]\b|MiniMax error (1004|2049)\b", str(r.get("error") or "")):
-            r = {**chat_fn(base, api_key, timeout=max(timeout, 15.0), verify_tls=verify_tls),
-                 "models_error": str(r.get("error") or "")[:200]}
-        err = str(r.get("error") or "")
-        if api_key and api_key in err:
-            err = err.replace(api_key, mask_key(api_key))
-        results[pid] = {"ok": bool(r.get("ok")), "count": int(r.get("count") or 0),
-                        "models": list(r.get("models") or [])[:30], "error": err[:300],
-                        "via": r.get("via") or "models"}
-        if r.get("ok") and region is None:
+        tried: list[dict[str, Any]] = []
+        for base in PROVIDERS[pid].get("base_urls") or [PROVIDERS[pid]["base_url"]]:
+            r = list_fn(base, api_key, timeout=timeout, verify_tls=verify_tls)
+            if not r.get("ok") and not re.search(r"HTTP 40[13]\b|MiniMax error (1004|2049)\b", str(r.get("error") or "")):
+                r = {**chat_fn(base, api_key, timeout=max(timeout, 15.0), verify_tls=verify_tls),
+                     "models_error": str(r.get("error") or "")[:200]}
+            err = str(r.get("error") or "")
+            if api_key and api_key in err:
+                err = err.replace(api_key, mask_key(api_key))
+            tried.append({"base_url": base, "ok": bool(r.get("ok")), "count": int(r.get("count") or 0),
+                          "models": list(r.get("models") or [])[:30], "error": err[:300],
+                          "via": r.get("via") or "models"})
+            if r.get("ok"):
+                break
+        best = next((t for t in tried if t["ok"]), tried[-1])
+        results[pid] = {**best, "endpoints": [{k: t[k] for k in ("base_url", "ok", "via", "error")} for t in tried]}
+        if best["ok"] and region is None:
             region = pid
-    return {"region": region, "results": results}
+    return {"region": region, "base_url": results[region]["base_url"] if region else "", "results": results}

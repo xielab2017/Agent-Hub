@@ -1,5 +1,21 @@
 # Changelog
 
+## v5.3.5 — 2026-09-25
+
+- **Anthropic-compatible endpoints.** A base URL ending in `/anthropic`
+  (MiniMax `https://api.minimax.cn/anthropic` — the address Coding Plan /
+  Claude Code setups use — `api.minimaxi.com/anthropic`,
+  `api.minimax.io/anthropic`) is spoken to with the Messages API: system
+  prompt and history mapped to it, streamed text only (thinking blocks are not
+  shown), truncation, retries and errors handled like the OpenAI path.
+- MiniMax presets list their alternative endpoints; a chosen one is kept by
+  routing and the direct path (stale or foreign URLs still snap back to the
+  catalog). The region probe tries every endpoint of a region and reports the
+  one that works; "refresh models" suggests it.
+- `scripts/minimax_live_check.py` also reads `ANTHROPIC_BASE_URL` /
+  `ANTHROPIC_API_KEY`, tries that endpoint first, and warns when a
+  `${sk-cp-…}` shell expansion has dropped the `sk-` prefix.
+
 ## v5.3.4 — 2026-09-25
 
 - `scripts/minimax_live_check.py`: one command checks a real MiniMax account

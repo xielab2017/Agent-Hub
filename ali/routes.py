@@ -881,7 +881,13 @@ def handle_post(handler) -> None:
                 probe = probe_minimax_region(key_info.get("key") or "",
                                              verify_tls=resolve_backend_verify_tls(cfg, {"provider": provider}))
                 other = probe.get("region")
-                if other and other != provider:
+                if other and other == provider and probe.get("base_url"):
+                    extra = {
+                        "suggest_base_url": probe["base_url"],
+                        "hint_zh": f"这个 Key 在 {probe['base_url']} 可用，请把接口地址改为它。",
+                        "hint_en": f"This key works on {probe['base_url']} — use that endpoint.",
+                    }
+                elif other and other != provider:
                     extra = {
                         "suggest_provider": other,
                         "hint_zh": f"这个 Key 属于「{'中国大陆区' if other == 'minimax-cn' else '国际区'}」，请把后端切换为 {other} 后再拉取。",

@@ -87,8 +87,9 @@ def test_probe_minimax_region_picks_the_region_that_accepts_the_key():
         return {"ok": False, "error": f"HTTP 401: invalid api key {key}", "models": []}
 
     res = probe_minimax_region(FAKE_KEY, list_fn=fake_list)
-    assert res["region"] == "minimax-cn"
-    assert calls == ["https://api.minimaxi.com/v1", "https://api.minimax.io/v1"]
+    assert res["region"] == "minimax-cn" and res["base_url"] == "https://api.minimaxi.com/v1"
+    # the China region stops at its first working endpoint; the global one tries each endpoint
+    assert calls == ["https://api.minimaxi.com/v1", "https://api.minimax.io/v1", "https://api.minimax.io/anthropic"]
     assert res["results"]["minimax-cn"]["models"] == ["MiniMax-M2", "MiniMax-M2.5"]
     assert FAKE_KEY not in res["results"]["minimax"]["error"]  # never echo the key back
 
@@ -112,7 +113,7 @@ def test_probe_falls_back_to_a_chat_when_the_model_list_is_unavailable():
 
     res = probe_minimax_region(FAKE_KEY, list_fn=no_models, chat_fn=chat)
     assert res["region"] == "minimax-cn" and res["results"]["minimax-cn"]["via"] == "chat"
-    assert len(pings) == 2
+    assert pings == ["https://api.minimaxi.com/v1", "https://api.minimax.io/v1", "https://api.minimax.io/anthropic"]
     # an auth failure on the model list is final for that region: no extra chat request
     pings.clear()
     probe_minimax_region(FAKE_KEY, list_fn=lambda *a, **k: {"ok": False, "error": "HTTP 401: bad key", "models": []}, chat_fn=chat)
@@ -126,3 +127,54 @@ def test_minimax_error_envelope_in_a_200_reply_is_an_error():
     msg = provider_error({"base_resp": {"status_code": 1004, "status_msg": "login fail"}})
     assert "1004" in msg and "api.minimaxi.com" in msg
     assert provider_error({"base_resp": {"status_code": 2013, "status_msg": "invalid params"}}).startswith("MiniMax error 2013")
+
+
+def test_coding_plan_key_that_only_works_on_the_anthropic_endpoint():
+    from ali.providers import probe_minimax_region
+
+    def lister(base, key, timeout=6.0, verify_tls=True):
+        if base == "https://api.minimax.cn/anthropic":
+            return {"ok": True, "models": ["MiniMax-M2"], "count": 1}
+        return {"ok": False, "error": "HTTP 401: invalid api key", "models": []}
+
+    res = probe_minimax_region(FAKE_KEY, list_fn=lister, chat_fn=lambda *a, **k: {"ok": False, "error": "x"})
+    assert res["region"] == "minimax-cn" and res["base_url"] == "https://api.minimax.cn/anthropic"
+    assert [e["base_url"] for e in res["results"]["minimax-cn"]["endpoints"]] == [
+        "https://api.minimaxi.com/v1", "https://api.minimax.cn/anthropic"]
+
+
+def test_chosen_alternative_endpoint_is_not_overridden_by_the_catalog(monkeypatch):
+    from ali import streaming
+
+    seen = {}
+
+    def fake_stream(base_url, api_key, **kw):
+        seen["base"] = base_url
+        return "ok"
+
+    cfg = {"backend": {"type": "minimax-cn", "base_url": "https://api.minimax.cn/anthropic", "model": "MiniMax-M2"},
+           "models": {}}
+    monkeypatch.setattr("ali.settings.load_campus_config", lambda: cfg)
+    monkeypatch.setattr("ali.secrets.resolve_api_key", lambda *a, **k: {"key": FAKE_KEY, "present": True})
+    monkeypatch.setattr("ali.llm_client.stream_chat", fake_stream)
+    monkeypatch.setattr(streaming.store, "get_session", lambda sid: None)
+    import queue
+
+    parts = []
+    assert streaming._direct_llm_reply(queue.Queue(), "s", "hi", "MiniMax-M2", parts, route_info={"route_key": "office"})
+    assert seen["base"] == "https://api.minimax.cn/anthropic"
+    cfg["backend"]["base_url"] = "https://evil.example.com/v1"  # anything else still snaps to the catalog URL
+    streaming._direct_llm_reply(queue.Queue(), "s", "hi", "MiniMax-M2", [], route_info={"route_key": "office"})
+    assert seen["base"] == "https://api.minimaxi.com/v1"
+
+
+def test_routing_keeps_a_chosen_minimax_endpoint_but_not_foreign_urls():
+    from ali import routing
+    from ali.providers import pick_base_url, get_provider
+
+    cfg = {"backend": {"type": "minimax-cn", "base_url": "https://api.minimax.cn/anthropic", "model": "MiniMax-M2"},
+           "models": {"main": "MiniMax-M2"}, "data_policy": "open"}
+    assert routing.resolve_route("office", "写一段总结", cfg)["base_url"] == "https://api.minimax.cn/anthropic"
+    cfg["backend"]["base_url"] = "https://integrate.api.nvidia.com/v1"  # stale URL from another vendor
+    assert routing.resolve_route("office", "写一段总结", cfg)["base_url"] == "https://api.minimaxi.com/v1"
+    assert pick_base_url(get_provider("minimax"), "https://api.minimax.io/anthropic/") == "https://api.minimax.io/anthropic/"
