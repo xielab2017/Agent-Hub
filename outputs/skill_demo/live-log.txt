@@ -1,68 +1,35 @@
 [     0s] model: minimax-cn/MiniMax-M3 via https://api.minimaxi.com/v1
-[     0s] profile: 16 seed queries, focus ['multi-omics', 'multiomics', 'omics integration', 'integrative analysis', 'data integration', 'software'], reviewers reviewer-bioinformatics-methods, reviewer-microbiome-user, reviewer-editor-integrity
-[     7s] queries: 30
-[     7s]    25 ← multi-omics integration software
-[     8s]    25 ← multi-omics data integration R package
-[     9s]    25 ← microbiome multi-omics integration analysis
-[    10s]     5 ← MultiAssayExperiment Bioconductor
-[    11s]    12 ← mixOmics DIABLO integration
-[    11s]    25 ← MOFA multi-omics factor analysis
-[    12s]    25 ← MicrobiomeAnalyst
-[    13s]    25 ← MetaboAnalyst multi-omics
-[    13s]    25 ← multi-omics integration methods benchmark
-[    14s]    25 ← multi-omics workflow reproducibility
-[    15s]    25 ← host microbiome metabolome integration
+[     1s] checkpoints: parameters changed — starting fresh
+[     1s] profile: 16 seed queries, focus ['multi-omics', 'multiomics', 'omics integration', 'integrative analysis', 'data integration', 'software'], reviewers reviewer-bioinformatics-methods, reviewer-microbiome-user, reviewer-editor-integrity
+[     8s] queries: 30
+[     9s]    25 ← multi-omics integration software
+[     9s]    25 ← multi-omics data integration R package
+[    10s]    25 ← microbiome multi-omics integration analysis
+[    11s]     5 ← MultiAssayExperiment Bioconductor
+[    12s]    12 ← mixOmics DIABLO integration
+[    12s]    25 ← MOFA multi-omics factor analysis
+[    13s]    25 ← MicrobiomeAnalyst
+[    14s]    25 ← MetaboAnalyst multi-omics
+[    14s]    25 ← multi-omics integration methods benchmark
+[    15s]    25 ← multi-omics workflow reproducibility
+[    16s]    25 ← host microbiome metabolome integration
 [    16s]     9 ← QIIME 2 reproducible microbiome data science
-[    16s]    25 ← deep learning multi-omics integration
-[    17s]    25 ← multi-omics network analysis tool
+[    17s]    25 ← deep learning multi-omics integration
+[    18s]    25 ← multi-omics network analysis tool
 [    18s]     0 ← SummarizedExperiment omics data structure
-[    18s]     1 ← tidy microbiome analysis R package
-[    19s]    25 ← ("Multiomics"[Mesh] OR "multi-omics"[tiab] OR "multiomics"[tiab]) AND ("Software"[Mesh] OR
-[    20s]    25 ← ("Multiomics"[Mesh] OR "multi-omics"[tiab] OR "multiomics"[tiab]) AND ("matrix factorizati
-[    21s]    25 ← ("Multiomics"[Mesh] OR "multi-omics"[tiab]) AND ("network-based"[tiab] OR "graph-based"[ti
-[    21s]    25 ← ("Multiomics"[Mesh] OR "multi-omics"[tiab]) AND ("Bayesian"[tiab] OR "Bayes Theorem"[Mesh]
-[    22s]    25 ← ("Multiomics"[Mesh] OR "multi-omics"[tiab]) AND ("deep learning"[tiab] OR "neural network"
-[    23s]    25 ← ("Multiomics"[Mesh] OR "multi-omics"[tiab]) AND ("R package"[tiab] OR "Bioconductor"[tiab]
-[    23s]    25 ← ("Microbiota"[Mesh] OR "microbiome"[tiab] OR "microbiomes"[tiab]) AND ("multi-omics"[tiab]
-[    24s]    25 ← ("Multiomics"[Mesh] OR "multi-omics"[tiab]) AND ("web server"[tiab] OR "web platform"[tiab
-[    25s]    25 ← ("Multiomics"[Mesh] OR "multi-omics"[tiab]) AND ("benchmark"[tiab] OR "benchmarking"[tiab]
-[    26s]    25 ← ("Multiomics"[Mesh] OR "multi-omics"[tiab]) AND ("Reproducibility of Results"[Mesh] OR "re
-[    27s]    25 ← ("Multiomics"[Mesh] OR "multi-omics"[tiab]) AND ("Data Visualization"[Mesh] OR "visualizat
-[    28s]    25 ← ("Microbiota"[Mesh] OR "Gastrointestinal Microbiome"[Mesh] OR "microbiome"[tiab]) AND ("ho
-[    29s]     5 ← "EasyMultiProfiler"[tiab] OR ("multi-omics"[tiab] AND "microbiome"[tiab] AND ("workflow"[t
-[    29s]    25 ← ("Multiomics"[Mesh] OR "multi-omics"[tiab] OR "integrative omics"[tiab]) AND ("Computation
-[    45s] records with abstracts: 500
-[   184s] screened: 500 (239 relevant)
-[   184s] evidence cards: 60
-[   184s] featured work: EasyMultiProfiler (EMP) → card R1
-[   225s] outline: Software for multi-omics data integration and analysis: a systematic and critical comparison of frameworks, packages, workflows and platforms, with EasyMultiProfiler as a featured workflow for microbiome research — 10 sections
-[   234s]   drafted 2/10 A taxonomy of integration strategies: early, intermediate an (1119 words, 19 cards)
-[   237s]   drafted 1/10 Introduction: why multi-omics integration demands dedicated  (720 words, 32 cards)
-[   245s]   drafted 4/10 Microbiome-centred multi-omics tools: the case for host–micr (648 words, 5 cards)
-[   250s]   drafted 3/10 General-purpose integration frameworks in R and Python (779 words, 15 cards)
-[   263s]   drafted 6/10 Data structures, containerised workflows and reproducibility (762 words, 11 cards)
-[   279s]   drafted 5/10 Web servers, GUI tools and point-and-click platforms (905 words, 15 cards)
-[   285s]   drafted 7/10 Benchmarking evidence and evaluation criteria (742 words, 12 cards)
-[   289s]   drafted 8/10 EasyMultiProfiler (EMP): design, strengths and limitations r (828 words, 13 cards)
-[   299s]   drafted 10/10 Recommendations, roadmap and conclusions (615 words, 14 cards)
-[   333s]   drafted 9/10 Critical perspectives, controversies and emerging frontiers (972 words, 23 cards)
-[   398s] reviews: reviewer-bioinformatics-methods (1983 words), reviewer-microbiome-user (1931 words), reviewer-editor-integrity (1669 words)
-[   421s]   revised 2/10 (1160 words, 19 cards)
-[   422s]   revised 1/10 (777 words, 32 cards)
-[   423s]   revised 3/10 (770 words, 15 cards)
-[   443s]   revised 5/10 (1047 words, 17 cards)
-[   443s]   revised 6/10 (791 words, 13 cards)
-[   462s]   revised 4/10 (724 words, 5 cards)
-[   475s]   revised 7/10 (861 words, 12 cards)
-[   504s]   revised 9/10 (1032 words, 22 cards)
-[   505s]   revised 8/10 (925 words, 19 cards)
-[   510s]   revised 10/10 (726 words, 18 cards)
-[   529s]   audited 3/10: 0 unsupported citation(s) corrected
-[   566s]   audited 1/10: 4 unsupported citation(s) corrected
-[   608s]   audited 4/10: 1 unsupported citation(s) corrected
-[   617s]   audited 2/10: 2 unsupported citation(s) corrected
-[   634s]   audited 6/10: 0 unsupported citation(s) corrected
-[   662s]   audited 7/10: 3 unsupported citation(s) corrected
-[   691s]   audited 8/10: 1 unsupported citation(s) corrected
-[   717s]   audited 9/10: 4 unsupported citation(s) corrected
-[   793s]   audited 10/10: 1 unsupported citation(s) corrected
+[    19s]     1 ← tidy microbiome analysis R package
+[    20s]    25 ← ("multi-omics"[tiab] OR "multiomics"[tiab]) AND ("data integration"[tiab] OR "integrative 
+[    21s]    25 ← "multi-omics"[tiab] AND ("matrix factorization"[tiab] OR "MOFA"[tiab] OR "MOFA+"[tiab])
+[    21s]    25 ← ("multi-omics"[tiab] OR "multi-omics integration"[tiab]) AND "Bayesian"[tiab]
+[    22s]    25 ← ("multi-omics"[tiab] OR "multiomics"[tiab]) AND ("deep learning"[tiab] OR "neural network"
+[    23s]    25 ← ("multi-omics"[tiab] OR "multiomics"[tiab]) AND ("network-based"[tiab] OR "graph-based"[ti
+[    24s]    25 ← ("multi-omics"[tiab] OR "integrative omics"[tiab]) AND ("Bioconductor"[tiab] OR "R package
+[    24s]    25 ← ("microbiome"[tiab] OR "microbiota"[tiab]) AND ("multi-omics"[tiab] OR "integrative omics"
+[    25s]     1 ← "EasyMultiProfiler"[tiab]
+[    25s]    25 ← ("multi-omics"[tiab] OR "integrative omics"[tiab]) AND ("web server"[tiab] OR "web platfor
+[    26s]    25 ← ("multi-omics"[tiab] OR "integrative omics"[tiab]) AND ("benchmark"[tiab] OR "benchmarking
+[    27s]    25 ← ("multi-omics"[tiab] OR "omics integration"[tiab]) AND ("reproducibility"[tiab] OR "workfl
+[    28s]    25 ← "multi-omics"[tiab] AND ("visualization"[tiab] OR "visualisation"[tiab] OR "visual analyti
+[    28s]    25 ← ("host-microbiome"[tiab] OR "host-microbe"[tiab] OR "gut microbiome"[tiab]) AND ("multi-om
+[    29s]    25 ← "multi-omics"[tiab] AND ("multivariate"[tiab] OR "DIABLO"[tiab] OR "mixOmics"[tiab] OR "sP
+[    38s] records with abstracts: 514

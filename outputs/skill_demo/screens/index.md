@@ -22,3 +22,10 @@
 - 2026-09-25 20:12:19 UTC — `022_A_authoring.png` — typed: /skill-author literature-review run=outputs/thbs4_review
 - 2026-09-25 20:13:50 UTC — `023_A_authoring.png` — authoring: 模型撰写 SKILL.md 中…
 - 2026-09-25 20:15:08 UTC — `024_A_authored.png` — skill authored: ✗ authored SKILL.md still documents non-existent options: --featured
+- 2026-09-25 20:17:52 UTC — `025_A_home.png` — Hub A started (fresh state, model configured)
+- 2026-09-25 20:17:54 UTC — `026_A_authoring.png` — typed: /skill-author literature-review run=outputs/thbs4_review
+- 2026-09-25 20:18:12 UTC — `027_A_authored.png` — skill authored: ✓ 已安装并加载（minimax-cn/MiniMax-M3）
+- 2026-09-25 20:18:13 UTC — `028_A_exported.png` — skill exported: literature-review.zip (8465 bytes)
+- 2026-09-25 20:18:17 UTC — `029_B_home.png` — Hub B started — fresh state, no literature-review skill
+- 2026-09-25 20:18:20 UTC — `030_B_imported.png` — bundle uploaded in Control Center → Skills and installed
+- 2026-09-25 20:18:24 UTC — `031_B_run-started.png` — typed: /skill literature-review profile=multiomics-emp out=outputs/skill_demo/review
