@@ -770,6 +770,7 @@ def start_chat(
     route_info = dict(route_info)
     route_info["workspace"] = ws
     route_info["_user_message"] = msg
+    route_info["_workflow_id"] = workflow_id or None
     route_info["runtime_active"] = rt_info.get("active")
     route_info["runtime_auto"] = rt_info.get("auto_runtime")
     route_info["runtime_resolved"] = runtime_resolved
@@ -891,7 +892,14 @@ def start_chat(
             from . import websearch as websearch_mod
 
             route_info.setdefault("_thinking_notes", []).append("正在深度联网检索…")
-            search_block = websearch_mod.search_context_for_prompt(msg, limit=8, deep=True)
+            search_res = websearch_mod.search_structured(msg, limit=8, deep=True)
+            search_block = str(search_res.get("context_markdown") or "")
+            try:
+                from . import provenance as provenance_mod
+
+                route_info["_search"] = provenance_mod.compact_search(search_res)
+            except Exception:  # noqa: BLE001
+                pass
             extra_system = (extra_system + "\n\n" + search_block).strip() if extra_system else search_block
             route_info["web_search"] = True
             route_info["web_search_deep"] = True
@@ -1082,6 +1090,41 @@ def start_chat(
     }
 
 
+def _attach_provenance(
+    assistant_msg: dict[str, Any],
+    *,
+    session_id: str,
+    stream_id: str,
+    msg_text: str,
+    preamble: str,
+    final_text: str,
+    route_info: dict[str, Any],
+    tools: list[dict[str, Any]],
+) -> None:
+    """Record an auditable provenance entry for this reply (never raises)."""
+    try:
+        from . import provenance
+
+        session = store.get_session(session_id)
+        assistant_msg["provenance"] = provenance.record_reply(
+            session_id=session_id,
+            message_id=str(assistant_msg.get("id") or ""),
+            stream_id=stream_id,
+            user_message=msg_text,
+            preamble=preamble,
+            final_text=final_text,
+            route_info=route_info,
+            tools=tools,
+            grounding_check=assistant_msg.get("grounding_check"),
+            elapsed_ms=assistant_msg.get("elapsed_ms"),
+            started_at=assistant_msg.get("started_at"),
+            healed=bool(assistant_msg.get("healed") or route_info.get("_heal_attempted")),
+            history_messages=len(session.messages) if session else None,
+        )
+    except Exception:  # noqa: BLE001
+        pass
+
+
 def _run_agent_streaming(
     session_id: str,
     msg_text: str,
@@ -1233,6 +1276,7 @@ def _run_agent_streaming(
         from . import skills as skills_mod
 
         def _run_once(active_preamble: str) -> None:
+            route_info["_effective_preamble"] = active_preamble
             # Keep excel-fill deliverable if already streamed; only clear model tokens
             kept = "".join(assistant_parts)
             assistant_parts.clear()
@@ -1617,6 +1661,16 @@ def _run_agent_streaming(
             except Exception:  # noqa: BLE001
                 assistant_msg["grounding_check"] = {"ok": True, "soft": True}
 
+        _attach_provenance(
+            assistant_msg,
+            session_id=session_id,
+            stream_id=stream_id,
+            msg_text=msg_text,
+            preamble=str(route_info.get("_effective_preamble") or preamble or ""),
+            final_text=final_text,
+            route_info=route_info,
+            tools=tools_seen,
+        )
         store.append_messages(session_id, assistant_msg)
 
         # Keep finalize non-blocking: cheap estimates only (usage tracker side-effects
@@ -1643,6 +1697,8 @@ def _run_agent_streaming(
             "healed": bool(route_info.get("_heal_attempted")),
             "usage": usage_data,
         }
+        if assistant_msg.get("provenance"):
+            done_payload["provenance"] = assistant_msg["provenance"]
         if assistant_msg.get("elapsed_ms") is not None:
             done_payload["elapsed_ms"] = assistant_msg["elapsed_ms"]
             done_payload["started_at"] = assistant_msg.get("started_at")
@@ -1808,6 +1864,16 @@ def _run_agent_streaming(
                                 max(0, (time.time() - float(job["started_at"])) * 1000)
                             )
                             assistant_msg["started_at"] = job.get("started_at")
+                    _attach_provenance(
+                        assistant_msg,
+                        session_id=session_id,
+                        stream_id=stream_id,
+                        msg_text=msg_text,
+                        preamble=retry_preamble,
+                        final_text=final_text,
+                        route_info=route_info,
+                        tools=tools_seen,
+                    )
                     store.append_messages(session_id, assistant_msg)
                     _progress(q, 3, 100, "summarize")
                     _think(q, "Heal 重试完成，汇总交付", kind="heal")
@@ -1829,6 +1895,8 @@ def _run_agent_streaming(
                     if assistant_msg.get("elapsed_ms") is not None:
                         done_payload["elapsed_ms"] = assistant_msg["elapsed_ms"]
                         done_payload["started_at"] = assistant_msg.get("started_at")
+                    if assistant_msg.get("provenance"):
+                        done_payload["provenance"] = assistant_msg["provenance"]
                     _put(q, "done", done_payload)
                     return
         except Exception:  # noqa: BLE001

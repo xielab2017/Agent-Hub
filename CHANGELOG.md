@@ -1,5 +1,38 @@
 # Changelog
 
+## v5.1.0 — 2026-09-25
+
+Auditable provenance for every reply, modelled on Claude Science's
+standard that "every output carries an auditable history of how it was made".
+
+- `ali/provenance.py` (new) — per-reply provenance record
+  (`agent-hub.provenance/1`): request hash, provider/model/tier/route,
+  engine/runtime/soul/subagent, skills, workspace grounding, system-prompt
+  hash + text, numbered web sources (title/url/domain/engine), tool calls,
+  output hash, path-check result, timing, environment (app version, Python,
+  platform, git commit), run-journal path, and a deterministic zh/en
+  "how this was made" sentence.  A SHA-256 over the canonical record makes
+  edits detectable.  Secrets are never stored (secret keys dropped,
+  key-like strings masked, `base_url` reduced to host).
+- `ali/streaming.py` — web search now keeps the structured source list
+  (prompt context unchanged); both the normal and the self-heal finalize
+  paths write a record, store a compact `provenance` summary on the
+  message, include it in the SSE `done` payload, and log
+  `provenance_recorded` to the audit trail.  Best-effort: never breaks chat.
+- API: `GET /api/provenance/<session>/<message>` (record + `verified`),
+  `GET /api/provenance/<session>/<message>/report` (Markdown),
+  `GET /api/sessions/<id>/provenance` (list),
+  `GET /api/sessions/<id>/reproducibility-bundle` (zip: session, records,
+  run journals, `REPORT.md`, `MANIFEST.json` with per-file SHA-256).
+  `/api/health` reports the provenance schema.
+- UI: 「溯源 / Provenance」 button on assistant replies opens a dialog
+  (how it was made, model & route, context, sources, tools, output checks,
+  environment, integrity badge, JSON / report download); 🧾 in the session
+  list exports the reproducibility bundle; the workspace path warning now
+  also shows on reloaded messages.
+- `tests/test_provenance.py` (new) — 8 tests, including an isolated
+  end-to-end `start_chat` run.
+
 ## v4.0.0 — 2026-07-19
 
 Agent Hub experience and autonomy upgrade: structured Markdown delivery, silent main-window orchestration, session folders with isolated cross-session context, and safe nightly maintenance proposals.

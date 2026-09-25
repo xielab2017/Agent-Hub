@@ -36,6 +36,7 @@ from . import (
     skills_hub,
     soul,
     pending_intent,
+    provenance,
     run_journal,
     streaming,
     subagent_planner,
@@ -169,6 +170,7 @@ def handle_get(handler) -> None:
                 "ok": True,
                 "version": VERSION,
                 "gateway": "online",
+                "provenance": {"schema": provenance.SCHEMA},
                 "agent": {
                     "available": bool(st.get("available") or st.get("agent_mode") or st.get("direct_llm")),
                     "chat_engine": st.get("chat_engine") or "",
@@ -465,6 +467,43 @@ def handle_get(handler) -> None:
 
     if len(parts) == 4 and parts[0] == "api" and parts[1] == "sessions" and parts[3] == "pending":
         return _json(handler, 200, {"ok": True, "session_id": parts[2], **pending_intent.get(parts[2])})
+
+    if len(parts) in (4, 5) and parts[0] == "api" and parts[1] == "provenance":
+        record = provenance.load_record(parts[2], parts[3])
+        if record is None:
+            return _json(handler, 404, {"error": "provenance record not found"})
+        if len(parts) == 5 and parts[4] == "report":
+            body = provenance.render_markdown(record).encode("utf-8")
+            name = f"provenance_{parts[3][:8]}.md"
+            return _send_bytes(handler, body, "text/markdown; charset=utf-8", name)
+        if len(parts) == 5:
+            return _json(handler, 404, {"error": "not found"})
+        return _json(handler, 200, {"ok": True, "verified": provenance.verify_record(record), "record": record})
+
+    if len(parts) == 4 and parts[0] == "api" and parts[1] == "sessions" and parts[3] == "provenance":
+        if store.get_session(parts[2]) is None:
+            return _json(handler, 404, {"error": "session not found"})
+        records = provenance.list_records(parts[2])
+        return _json(
+            handler,
+            200,
+            {
+                "ok": True,
+                "session_id": parts[2],
+                "schema": provenance.SCHEMA,
+                "items": [
+                    {**provenance.summary(r), "message_id": r.get("message_id"), "verified": provenance.verify_record(r)}
+                    for r in records
+                ],
+            },
+        )
+
+    if len(parts) == 4 and parts[0] == "api" and parts[1] == "sessions" and parts[3] == "reproducibility-bundle":
+        try:
+            data, name = provenance.export_session_bundle(parts[2])
+        except FileNotFoundError as exc:
+            return _json(handler, 404, {"error": str(exc)})
+        return _send_bytes(handler, data, "application/zip", name)
 
     if len(parts) == 4 and parts[0] == "api" and parts[1] == "sessions" and parts[3] == "journal":
         # ?stream_id= optional; else active job stream
@@ -1725,6 +1764,17 @@ def handle_delete(handler) -> None:
             return _json(handler, 400, {"error": str(exc)})
 
     _json(handler, 404, {"error": "not found"})
+
+
+def _send_bytes(handler, data: bytes, ctype: str, filename: str) -> None:
+    safe = "".join(c for c in filename if c.isalnum() or c in "-_.") or "download"
+    handler.send_response(200)
+    handler.send_header("Content-Type", ctype)
+    handler.send_header("Content-Length", str(len(data)))
+    handler.send_header("Content-Disposition", f'attachment; filename="{safe}"')
+    handler.send_header("Cache-Control", "no-store")
+    handler.end_headers()
+    handler.wfile.write(data)
 
 
 def _serve_file(handler, filepath: Path, root: Path | None = None) -> None:

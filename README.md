@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/xielab2017/Agent-Hub/releases"><img alt="version" src="https://img.shields.io/badge/version-4.0.0-rose.svg" /></a>
+  <a href="https://github.com/xielab2017/Agent-Hub/releases"><img alt="version" src="https://img.shields.io/badge/version-5.1.0-rose.svg" /></a>
   <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-MIT-blue.svg" /></a>
   <a href="https://www.python.org/"><img alt="python" src="https://img.shields.io/badge/python-%3E%3D3.9-brightgreen.svg" /></a>
   <a href="https://github.com/xielab2017/Agent-Hub"><img alt="platform" src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg" /></a>
@@ -34,6 +34,7 @@
 | **并行子代理** | 自然语言或自动规划多车道，看板并行 + 合成 |
 | **Soul / Skills / MCP** | 多身份、技能库、MCP Hub |
 | **控制中心** | 模型、路由、生态、外观 Logo、定时任务、自我进化等 |
+| **可审计溯源** | 对标 Claude Science：每条回复都有可校验的溯源记录，可导出报告与复现包 |
 | **跨设备** | 默认监听 `0.0.0.0:8765`，同局域网可用 IP 访问 |
 
 <p align="center">
@@ -93,7 +94,7 @@ chmod +x ctl.sh "Start Agent Hub.command" start.sh
 curl -s http://127.0.0.1:8765/api/health
 ```
 
-确认健康检查里显示 `"version": "5.0.0"`。如果仍然不对，可临时换端口验证当前源码：
+确认健康检查里显示 `"version": "5.1.0"`。如果仍然不对，可临时换端口验证当前源码：
 
 ```bash
 python3 server.py --host 127.0.0.1 --port 9876 --open
@@ -179,6 +180,21 @@ python3 server.py --host 0.0.0.0 --port 8765
 
 自然语言如「分成三个子代理」，或 Agents 里多选 Slot；看板分车道运行，完成后合成。
 
+### 可审计溯源（对标 Claude Science）
+
+每条助手回复都会自动生成一份**溯源记录**：模型 / 路由 / 引擎、Soul 与子代理、技能、工作区上下文、系统提示词哈希、联网来源（编号、域名、检索引擎）、工具调用、输出哈希、耗时，以及运行环境（版本、Python、平台、Git commit）。记录带 SHA-256 完整性校验，任何改动都会显示「哈希不一致」。**不记录任何 API Key**。
+
+- 回复下方点 **溯源**：查看“生成方式”说明与明细，下载 JSON 或 Markdown 报告
+- 会话列表点 **🧾**：导出**复现包**（zip：会话、全部溯源记录、运行日志、`REPORT.md`、带文件哈希的 `MANIFEST.json`）
+- 存储位置：Hub 状态目录下 `provenance/<会话>/<消息>.json`
+
+| API | 说明 |
+|-----|------|
+| `GET /api/provenance/<session>/<message>` | 完整记录 + `verified` |
+| `GET /api/provenance/<session>/<message>/report` | Markdown 报告 |
+| `GET /api/sessions/<id>/provenance` | 会话内记录列表 |
+| `GET /api/sessions/<id>/reproducibility-bundle` | 复现包 zip |
+
 ### 外观
 
 中英、浅/深色、主题色；Logo 可上传或选内置品牌（SUAT 彩标 / 白板）。
@@ -206,7 +222,7 @@ Agent-Hub/
 
 ## 开发与版本
 
-当前版本：**v5.0.0**（分支 `main`）
+当前版本：**v5.1.0**（分支 `main`）
 
 ```bash
 # 健康检查
@@ -220,6 +236,7 @@ git pull
 
 简要更新：
 
+- **v5.1.0** — 对标 Claude Science 的可审计溯源：每条回复的溯源记录、完整性校验、报告与复现包导出
 - **v5.0.0** — 强化 Agent Hub 本地网关、启动器与跨平台使用体验；新增 macOS 首次启动排查说明
 - **v4.0.0** — 发布 Agent Hub v4 系列能力与文档刷新
 - **v3.0.0** — 并行子代理自动规划、共享 `HERMES_HOME`、C0–C3 路由；深度会话 iframe 已退役（能力内化到 Hub）

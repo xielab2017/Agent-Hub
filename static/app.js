@@ -15,7 +15,7 @@ const FONT_SIZE_LABELS = {
   zh: { 13: "小 13", 14: "中 14", 15: "中大 15", 16: "大 16", 18: "特大 18" },
   en: { 13: "S 13", 14: "M 14", 15: "M+ 15", 16: "L 16", 18: "XL 18" },
 };
-const LOGO_VER = "5.0.0";
+const LOGO_VER = "5.1.0";
 const DEFAULT_LOGO = `/brand/suat-logo-color.png?v=${LOGO_VER}`;
 const LOGO_PRESETS = [
   { id: "suat-color", src: `/brand/suat-logo-color.png?v=${LOGO_VER}`, labelKey: "appearance.logoPresetColor" },
@@ -242,6 +242,26 @@ const I18N = {
     "msg.submit": "提交到对话",
     "msg.good": "有用",
     "msg.bad": "待改进",
+    "msg.provenance": "溯源",
+    "prov.title": "溯源记录",
+    "prov.close": "关闭",
+    "prov.downloadJson": "下载 JSON",
+    "prov.downloadReport": "下载报告 (.md)",
+    "prov.loading": "加载溯源记录…",
+    "prov.notFound": "未找到该回复的溯源记录",
+    "prov.verified": "✓ 完整性已校验",
+    "prov.mismatch": "✗ 哈希不一致（记录可能被修改）",
+    "prov.how": "生成方式",
+    "prov.model": "模型与路由",
+    "prov.context": "上下文",
+    "prov.sources": "来源",
+    "prov.tools": "工具调用",
+    "prov.output": "输出与校验",
+    "prov.env": "环境",
+    "prov.none": "无",
+    "prov.noSources": "本次回复未使用联网来源",
+    "prov.bundle": "导出复现包",
+    "prov.bundleDone": "复现包已下载",
     "msg.copied": "已复制",
     "msg.elapsed": "耗时",
     "code.copy": "复制",
@@ -443,6 +463,26 @@ const I18N = {
     "msg.submit": "Submit to chat",
     "msg.good": "Good",
     "msg.bad": "Needs work",
+    "msg.provenance": "Provenance",
+    "prov.title": "Provenance record",
+    "prov.close": "Close",
+    "prov.downloadJson": "Download JSON",
+    "prov.downloadReport": "Download report (.md)",
+    "prov.loading": "Loading provenance…",
+    "prov.notFound": "No provenance record for this reply",
+    "prov.verified": "✓ Integrity verified",
+    "prov.mismatch": "✗ Hash mismatch (record may have been edited)",
+    "prov.how": "How this was made",
+    "prov.model": "Model & route",
+    "prov.context": "Context",
+    "prov.sources": "Sources",
+    "prov.tools": "Tool calls",
+    "prov.output": "Output & checks",
+    "prov.env": "Environment",
+    "prov.none": "None",
+    "prov.noSources": "No web sources were used for this reply",
+    "prov.bundle": "Export reproducibility bundle",
+    "prov.bundleDone": "Reproducibility bundle downloaded",
     "msg.copied": "Copied",
     "msg.elapsed": "took",
     "code.copy": "Copy",
@@ -2016,6 +2056,170 @@ function scheduleWorkspaceGrounding() {
   _wsSnapTimer = setTimeout(() => refreshWorkspaceGrounding().catch(() => {}), 400);
 }
 
+// ── Provenance (auditable history per reply, modelled on Claude Science) ──
+
+function provenanceButtonHtml() {
+  return `<button type="button" class="btn ghost chip msg-act prov-act" data-act="provenance" data-i18n="msg.provenance">${escapeHtml(t("msg.provenance"))}</button>`;
+}
+
+function ensureProvenanceButton(msgEl) {
+  const bar = msgEl && msgEl.querySelector(".msg-actions");
+  if (!bar || bar.querySelector('[data-act="provenance"]')) return;
+  bar.insertAdjacentHTML("beforeend", provenanceButtonHtml());
+  const btn = bar.querySelector('[data-act="provenance"]');
+  btn.addEventListener("click", () => openProvenance(state.currentId, msgEl.dataset.mid));
+}
+
+async function downloadAuthed(path, fallbackName) {
+  const headers = {};
+  if (state.token) headers.Authorization = `Bearer ${state.token}`;
+  const res = await fetch(path, { headers });
+  if (res.status === 401) {
+    showLogin(true);
+    throw new Error("unauthorized");
+  }
+  if (!res.ok) throw new Error(res.statusText || "download failed");
+  const cd = res.headers.get("content-disposition") || "";
+  const match = cd.match(/filename="([^"]+)"/);
+  const blob = await res.blob();
+  saveBlob(blob, (match && match[1]) || fallbackName);
+}
+
+function saveBlob(blob, name) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+async function exportReproBundle(sessionId) {
+  const status = $("#settings-status");
+  try {
+    await downloadAuthed(`/api/sessions/${encodeURIComponent(sessionId)}/reproducibility-bundle`, `agent-hub-repro_${sessionId.slice(0, 8)}.zip`);
+    if (status) status.textContent = t("prov.bundleDone");
+  } catch (err) {
+    if (status) status.textContent = String(err.message || err);
+  }
+}
+
+function provKv(rows) {
+  const items = rows
+    .filter(([, v]) => v !== undefined && v !== null && v !== "" && !(Array.isArray(v) && !v.length))
+    .map(([k, v]) => `<dt>${escapeHtml(k)}</dt><dd>${escapeHtml(Array.isArray(v) ? v.join(", ") : String(v))}</dd>`);
+  return items.length ? `<dl class="prov-kv">${items.join("")}</dl>` : `<p class="muted">${escapeHtml(t("prov.none"))}</p>`;
+}
+
+function renderProvenance(rec, verified) {
+  const langZh = state.prefs.language !== "en";
+  const m = rec.model || {};
+  const a = rec.agent || {};
+  const c = rec.context || {};
+  const g = c.grounding || {};
+  const sp = c.system_prompt || {};
+  const out = rec.output || {};
+  const gc = out.grounding_check || {};
+  const tm = rec.timing || {};
+  const env = rec.environment || {};
+  const git = env.git || {};
+  const search = rec.search || {};
+  const desc = (rec.description || {})[langZh ? "zh" : "en"] || "";
+  const sources = search.sources || [];
+  const tools = rec.tools || [];
+  const badge = verified
+    ? `<span class="prov-badge ok">${escapeHtml(t("prov.verified"))}</span>`
+    : `<span class="prov-badge bad">${escapeHtml(t("prov.mismatch"))}</span>`;
+  const sec = (title, inner) => `<section class="prov-sec"><h3>${escapeHtml(title)}</h3>${inner}</section>`;
+  const srcHtml = sources.length
+    ? `<ol class="prov-sources">${sources.map((s) => {
+        const url = /^https?:\/\//i.test(s.url || "") ? s.url : "";
+        const title = escapeHtml(s.title || s.url || "");
+        return `<li value="${Number(s.n) || ""}">${url ? `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${title}</a>` : title}
+          <span class="muted"> · ${escapeHtml(s.domain || "")}${s.engine ? " · " + escapeHtml(s.engine) : ""}</span></li>`;
+      }).join("")}</ol>${(search.warnings || []).length ? `<p class="prov-warn">${escapeHtml(search.warnings.join("；"))}</p>` : ""}`
+    : `<p class="muted">${escapeHtml(t("prov.noSources"))}</p>`;
+  const toolHtml = tools.length
+    ? `<ol class="prov-tools">${tools.map((x) => `<li><code>${escapeHtml(x.name || "")}</code> ${escapeHtml(x.preview || "")}</li>`).join("")}</ol>`
+    : `<p class="muted">${escapeHtml(t("prov.none"))}</p>`;
+  return `
+    <div class="prov-how"><div class="prov-how-head"><strong>${escapeHtml(t("prov.how"))}</strong>${badge}</div><p>${escapeHtml(desc)}</p></div>
+    ${sec(t("prov.model"), provKv([
+      ["Provider", m.provider], ["Model", m.model], ["Model slot", m.model_slot], ["Endpoint", m.base_url_host],
+      ["Tier / route", [m.tier, m.route_key].filter(Boolean).join(" · ")],
+      ["Thinking", m.thinking_depth], ["Temperature", m.temperature],
+      ["Engine", a.chat_engine], ["Runtime", a.runtime_resolved], ["Soul", a.soul_role], ["Subagent", a.subagent_id],
+      ["Fallback", m.provider_fallback ? `${m.provider_fallback.from} → ${m.provider_fallback.to}` : ""],
+    ]))}
+    ${sec(t("prov.context"), provKv([
+      ["Skills", c.skills], ["Skills source", c.skills_source],
+      ["Workspace", g.workspace], ["Workspace entries", g.entry_count], ["Excerpts", g.excerpts],
+      ["Excel output", c.excel_fill_output],
+      ["System prompt", sp.chars != null ? `${sp.chars} chars · sha256 ${String(sp.sha256 || "").slice(0, 16)}…` : ""],
+    ]))}
+    ${sec(`${t("prov.sources")} (${sources.length})`, srcHtml)}
+    ${sec(`${t("prov.tools")} (${tools.length})`, toolHtml)}
+    ${sec(t("prov.output"), provKv([
+      ["Output", `${out.chars || 0} chars · sha256 ${String(out.sha256 || "").slice(0, 16)}…`],
+      ["Unverified paths", gc.unverified || []],
+      ["Record sha256", (rec.integrity || {}).record_sha256],
+      ["Time", [tm.started_at, tm.finished_at].filter(Boolean).join(" → ")],
+      ["Elapsed", tm.elapsed_ms != null ? formatElapsed(tm.elapsed_ms) : ""],
+      ["Healed", rec.healed ? "yes" : ""],
+    ]))}
+    ${sec(t("prov.env"), provKv([
+      ["App", `${env.app || "Agent Hub"} v${env.app_version || ""}`],
+      ["Python", [env.python, env.implementation].filter(Boolean).join(" ")],
+      ["Platform", env.platform],
+      ["Git", git.commit ? `${String(git.commit).slice(0, 12)} (${git.branch || "detached"})` : ""],
+      ["Journal", rec.journal],
+    ]))}`;
+}
+
+async function openProvenance(sessionId, messageId) {
+  const overlay = $("#prov-overlay");
+  const body = $("#prov-body");
+  const status = $("#prov-status");
+  if (!overlay || !body || !sessionId || !messageId) return;
+  overlay.classList.remove("hidden");
+  body.innerHTML = `<p class="muted">${escapeHtml(t("prov.loading"))}</p>`;
+  status.textContent = "";
+  const base = `/api/provenance/${encodeURIComponent(sessionId)}/${encodeURIComponent(messageId)}`;
+  let data = null;
+  try {
+    data = await api(base);
+  } catch (err) {
+    body.innerHTML = `<p class="muted">${escapeHtml(t("prov.notFound"))}</p>`;
+    status.textContent = String(err.message || err);
+    return;
+  }
+  const rec = (data && data.record) || {};
+  body.innerHTML = renderProvenance(rec, !!(data && data.verified));
+  $("#btn-prov-json").onclick = () => {
+    saveBlob(new Blob([JSON.stringify(rec, null, 2)], { type: "application/json" }), `provenance_${String(messageId).slice(0, 8)}.json`);
+  };
+  $("#btn-prov-report").onclick = () => {
+    downloadAuthed(`${base}/report`, `provenance_${String(messageId).slice(0, 8)}.md`).catch((err) => {
+      status.textContent = String(err.message || err);
+    });
+  };
+}
+
+function closeProvenance() {
+  $("#prov-overlay")?.classList.add("hidden");
+}
+
+function bindProvenanceOverlay() {
+  const overlay = $("#prov-overlay");
+  if (!overlay) return;
+  $("#btn-prov-close")?.addEventListener("click", closeProvenance);
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) closeProvenance(); });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !overlay.classList.contains("hidden")) closeProvenance();
+  });
+}
+
 function showGroundingWarn(check, hostEl) {
   // Soft footer only — never rewrite streamed assistant body.
   if (!check || check.ok || !(check.unverified || []).length) return;
@@ -2598,6 +2802,7 @@ function makeStreamHandlers(sessionId, assistantEl, bodyEl, startRoute, stateBag
       if (viewAlive()) {
         if (a && payload && payload.message_id) a.dataset.mid = payload.message_id;
         if (payload && payload.grounding_check) showGroundingWarn(payload.grounding_check, a);
+        if (a && payload && payload.provenance) ensureProvenanceButton(a);
         if (b) {
           b.innerHTML = renderMd(bag.full || "(完成)");
           bindCodeBoxActions(b);
@@ -2822,6 +3027,7 @@ function bindSessionListDelegation() {
     if (actions) {
       const rename = e.target.closest("[data-rename]");
       const backup = e.target.closest("[data-backup]");
+      const repro = e.target.closest("[data-repro]");
       const pin = e.target.closest("[data-pin]");
       const archive = e.target.closest("[data-archive]");
       const del = e.target.closest("[data-del]");
@@ -2831,6 +3037,10 @@ function bindSessionListDelegation() {
         const sid = rename.dataset.rename;
         const s = state.sessions.find((x) => x.id === sid);
         renameSession(sid, s && s.title);
+      } else if (repro) {
+        e.preventDefault();
+        e.stopPropagation();
+        exportReproBundle(repro.dataset.repro);
       } else if (backup) {
         e.preventDefault();
         e.stopPropagation();
@@ -2974,6 +3184,7 @@ function renderSessionList() {
       <span class="session-actions">
         <button type="button" class="act" data-rename="${escapeHtml(s.id)}" title="${escapeHtml(langZh ? "更改名称" : "Rename")}">✎</button>
        <button type="button" class="act" data-backup="${escapeHtml(s.id)}" title="${escapeHtml(langZh ? "备份" : "Backup")}">⬇</button>
+        <button type="button" class="act" data-repro="${escapeHtml(s.id)}" title="${escapeHtml(t("prov.bundle"))}">🧾</button>
         <button type="button" class="act ${s.pinned ? "selected" : ""}" data-pin="${escapeHtml(s.id)}" title="${escapeHtml(s.pinned ? (langZh ? "取消置顶" : "Unpin") : (langZh ? "置顶" : "Pin"))}">${s.pinned ? "★" : "☆"}</button>
         <button type="button" class="act" data-archive="${escapeHtml(s.id)}" title="${escapeHtml(s.archived ? (langZh ? "取消归档" : "Restore") : (langZh ? "归档" : "Archive"))}">${s.archived ? "↩" : "▣"}</button>
        <button type="button" class="act danger" data-del="${escapeHtml(s.id)}" title="${escapeHtml(langZh ? "删除" : "Delete")}">×</button>
@@ -3966,6 +4177,7 @@ function appendMessage(m, scroll = true) {
       <button type="button" class="btn ghost chip msg-act" data-act="revise" data-i18n="msg.revise">${escapeHtml(t("msg.revise"))}</button>
       <button type="button" class="btn ghost chip msg-act ${fb === 1 || fb >= 4 ? "active" : ""}" data-act="up" data-i18n-title="msg.good" title="${escapeHtml(t("msg.good"))}">👍</button>
       <button type="button" class="btn ghost chip msg-act ${fb === -1 || fb === 2 ? "active" : ""}" data-act="down" data-i18n-title="msg.bad" title="${escapeHtml(t("msg.bad"))}">👎</button>
+      ${m.provenance ? provenanceButtonHtml() : ""}
     ` : ""}
   </div>`;
   div.innerHTML = `<div class="meta">${role}${escapeHtml(route)}</div>${handoff}<div class="body">${
@@ -3977,6 +4189,7 @@ function appendMessage(m, scroll = true) {
     btn.addEventListener("click", () => handleMsgAction(div, m, btn.dataset.act));
   });
   if (m.role !== "user") bindCodeBoxActions(div);
+  if (m.role === "assistant" && m.grounding_check) showGroundingWarn(m.grounding_check, div);
   $("#messages").appendChild(div);
   if (m.role === "assistant" && m.route && m.route.multi_subagents) {
     restoreOrchFromRoute(div, m.route, m.content || "");
@@ -3986,6 +4199,10 @@ function appendMessage(m, scroll = true) {
 }
 
 async function handleMsgAction(el, m, act) {
+  if (act === "provenance") {
+    openProvenance(state.currentId, (el && el.dataset.mid) || m.id);
+    return;
+  }
   if (act === "cancel-edit") {
     const edit = el.querySelector(".msg-prose-edit");
     if (edit) edit.classList.add("hidden");
@@ -8380,6 +8597,7 @@ window.addEventListener("focus", () => {
   checkScheduleTips().catch(() => {});
 });
 
+bindProvenanceOverlay();
 boot().then(() => {
   startGatewayHealthPoll();
   setTimeout(() => { checkScheduleTips({ force: true }).catch(() => {}); }, 700);
