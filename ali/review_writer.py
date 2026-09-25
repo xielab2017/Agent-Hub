@@ -769,7 +769,8 @@ def run_reviewers(llm: HubLLM, draft: str, cards: list[dict[str, Any]],
             "manuscript; citations appear as [R<id>].\n\nReturn Markdown with: 'Summary assessment' (3-4 sentences, "
             "recommendation), 'Major comments' (numbered, each with the exact passage or section, the problem, and a "
             "concrete fix), 'Minor comments' (numbered). Be demanding and specific; check claims against the cards." + extra + "\n\n"
-            f"MANUSCRIPT\n{draft}\n\nEVIDENCE CARDS\n{card_block(cards, abstract_chars=500)}"), max_tokens=12000, temperature=0.4)
+            f"MANUSCRIPT\n{draft}\n\nEVIDENCE CARDS\n{card_block(cards, abstract_chars=1400)}"), max_tokens=12000,
+            temperature=0.4)  # whole abstracts: a claim from late in an abstract must not look unsupported
         return {"id": sub["id"], "label": sub["label"], "report": report}
 
     with ThreadPoolExecutor(max_workers=3) as pool:
