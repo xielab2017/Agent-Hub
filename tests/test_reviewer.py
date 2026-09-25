@@ -212,3 +212,13 @@ def test_design_parameter_in_a_table_row_and_pubmed_relevance_sort(monkeypatch):
     monkeypatch.setattr(se, "_fetch", lambda url, **k: urls.append(url) or '{"esearchresult": {"idlist": []}}')
     se.search_pubmed("irisin exercise")
     assert "sort=relevance" in urls[0]
+
+
+def test_computed_sample_sizes_are_design_parameters():
+    from ali.reviewer import review_reply
+
+    rv = review_reply("- 查表/计算：约 n = 24\n- 所需样本：约 n = 64 / 组\n- 已有研究纳入 n = 102 名受试者",
+                      sources=[{"title": "t", "url": "https://pubmed.ncbi.nlm.nih.gov/1/", "snippet": "irisin"}])
+    kinds = {(i["kind"], i["text"]) for i in rv["issues"]}
+    assert ("design_parameter", "n = 24") in kinds and ("design_parameter", "n = 64") in kinds
+    assert ("untraceable_number", "n = 102") in kinds  # a reported cohort size still needs a source
