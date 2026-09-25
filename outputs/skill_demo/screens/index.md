@@ -20,3 +20,5 @@
 - 2026-09-25 20:03:41 UTC — `020_A_authored.png` — skill authored: ✗ authored SKILL.md still documents non-existent options: --coi, --featured
 - 2026-09-25 20:12:17 UTC — `021_A_home.png` — Hub A started (fresh state, model configured)
 - 2026-09-25 20:12:19 UTC — `022_A_authoring.png` — typed: /skill-author literature-review run=outputs/thbs4_review
+- 2026-09-25 20:13:50 UTC — `023_A_authoring.png` — authoring: 模型撰写 SKILL.md 中…
+- 2026-09-25 20:15:08 UTC — `024_A_authored.png` — skill authored: ✗ authored SKILL.md still documents non-existent options: --featured
