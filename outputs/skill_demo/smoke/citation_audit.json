@@ -1,0 +1,29 @@
+[
+ {
+  "section": "Introduction: the multi-omics integration imperative and the software gap",
+  "issues": []
+ },
+ {
+  "section": "A taxonomy of integration strategies: unsupervised, supervised, and the longitudinal dimension",
+  "issues": [
+   {
+    "sentence": "Supervised pipelines — exemplified by random-forest or elastic-net models that consume a concatenated or block-penalised feature matrix — optimise prediction but inherit the instabilities of feature selection on high-dimensional multi-omics data, including unstable variable importance and limited biological interpretability [R11].",
+    "cards": [
+     "R11"
+    ],
+    "issue": "R11 (Jacobs et al. 2023) uses random-forest classifiers for IBS subtypes but does not mention elastic-net and does not discuss 'unstable variable importance' or 'limited biological interpretability' as instabilities. The card only substantiates that random forests have been applied to multi-omics IBS data, not the general instability claim.",
+    "fix": "Cite a review/source that explicitly discusses these instabilities of supervised feature selection on high-dimensional multi-omics (e.g., a methodological review), or narrow the claim to what R11 actually shows, e.g., 'random-forest classifiers built on differential multi-omics features distinguished IBS subtypes [R11]'."
+   },
+   {
+    "sentence": "Authors frequently advertise methods as 'data-driven' or 'knowledge-based' without specifying whether the operation performed is concatenation, factorisation, graph fusion or post-hoc meta-analysis, and the gap between marketing and mechanism has real consequences for reproducibility [R1, R4, R12].",
+    "cards": [
+     "R1",
+     "R4",
+     "R12"
+    ],
+    "issue": "None of R1, R4 or R12 explicitly use or critique the 'data-driven' vs. 'knowledge-based' terminology. R3 (Ewald et al. 2024) is the card that actually partitions its integration modes as 'knowledge-driven integration using biological networks' and 'data-driven integration through joint dimensionality reduction,' making it the natural evidence for the terminology claim. R4 and R12 are application/method papers that do not substantiate the marketing-vs-mechanism gap.",
+    "fix": "Replace (or add) R3 in place of R4 and R12, e.g., '[R1, R3]'. R3 directly demonstrates the 'data-driven'/'knowledge-based' labelling convention whose underlying algebraic operation is not always disclosed."
+   }
+  ]
+ }
+]

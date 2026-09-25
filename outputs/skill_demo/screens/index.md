@@ -5,3 +5,4 @@
 - 2026-09-25 19:29:34 UTC — `005_B_home.png` — Hub B started — fresh state, no literature-review skill
 - 2026-09-25 19:29:38 UTC — `006_B_imported.png` — bundle uploaded in Control Center → Skills and installed
 - 2026-09-25 19:29:41 UTC — `007_B_run-started.png` — typed: /skill literature-review profile=multiomics-emp out=outputs/skill_demo/smoke smoke
+- 2026-09-25 19:34:31 UTC — `008_B_finished.png` — skill run finished: ✓ done

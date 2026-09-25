@@ -16,3 +16,6 @@
 [   189s]   revised 2/2 (701 words, 5 cards)
 [   204s]   revised 1/2 (855 words, 12 cards)
 [   216s]   audited 1/2: 0 unsupported citation(s) corrected
+[   255s]   audited 2/2: 2 unsupported citation(s) corrected
+[   268s] citations: {'cited': 12, 'references': 12, 'out_of_range': [], 'uncited': [], 'citations': 30}
+RESULT: PASS {"title": "Software for multi-omics data integration and analysis: a systematic and critical comparison of frameworks, packages, workflows and platforms, with EasyMultiProfiler as a featured workflow for microbiome research", "model": "minimax-cn/MiniMax-M3", "llm_calls": 19, "queries": 4, "records": 28, "cards": 12, "sections": 2, "references": 12, "citation_check": {"cited": 12, "references": 12, "out_of_range": [], "uncited": [], "citations": 30}, "words": 1580, "featured": {"name": "EasyMultiProfiler (EMP)", "pmid": "40932530", "reference": 9}}

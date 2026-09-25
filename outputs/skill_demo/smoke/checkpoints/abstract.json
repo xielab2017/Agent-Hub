@@ -1,0 +1,11 @@
+{
+ "abstract": "The proliferation of host-microbiome multi-omics studies across nearly every major disease area has made integration a defining methodological challenge of contemporary systems biology, yet the operational reality beneath this descriptive success is sobering: many so-called integrative studies analyse each layer independently and tabulate results side by side rather than modelling them jointly, while reproducibility remains fragile because analytical choices are buried in bespoke scripts. This review systematically and critically compares four purpose-built frameworks — the Analyst suite, timeOmics, SUMO and EasyMultiProfiler (EMP) — that occupy distinct, non-overlapping niches, from web-based knowledge- and data-driven integration of host omics layers, through generic longitudinal multi-modal pipelines, to multi-omics simulation, and finally to the only microbiome-specific workflow in the set. We organise the comparison along three orthogonal axes: fusion level (early, intermediate and late integration), supervision (treated as a continuum rather than a dichotomy), and the temporal dimension. We argue that EMP's principled embedding in SummarizedExperiment and MultiAssayExperiment, its five-module structure spanning extraction, preparation, support, analysis and visualisation, and its explicit microbiome focus address a real gap left by the other three tools. We state candidly that EMP is a microbiome workflow rather than a general-purpose solution and that its outputs remain conditional on curated defaults that have not been independently benchmarked. We close by proposing operational definitions anchored to the algebraic operation performed, as a prerequisite for meaningful future benchmarking.",
+ "keywords": [
+  "Multi-omics integration",
+  "Microbiome research",
+  "EasyMultiProfiler",
+  "Software benchmarking",
+  "Reproducibility",
+  "Longitudinal analysis"
+ ]
+}

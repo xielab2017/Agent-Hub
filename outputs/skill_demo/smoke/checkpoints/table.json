@@ -1,0 +1,26 @@
+[
+ {
+  "card": "R1",
+  "tool": "EasyMultiProfiler (EMP) — R workflow",
+  "strengths": "Standardised microbiome multi-omics pipeline built on SummarizedExperiment/MultiAssayExperiment with five end-to-end modules.",
+  "limitations": "Microbiome-centric; inherits Bioconductor learning curve and limited support for non-microbiome modalities."
+ },
+ {
+  "card": "R2",
+  "tool": "SUMO — R package",
+  "strengths": "Generates factor-analysis-based simulated multi-omics datasets with controllable latent structure, noise and complexity.",
+  "limitations": "Simulation-only utility; provides no integration methods or downstream analysis or visualisation modules."
+ },
+ {
+  "card": "R3",
+  "tool": "Analyst software suite (ExpressAnalyst/MetaboAnalyst/OmicsNet/OmicsAnalyst) — web platform",
+  "strengths": "Web-based pipeline covering single-omics analysis, knowledge-driven network and data-driven joint DR integration.",
+  "limitations": "GUI-dependent; constrained scalability, customisation and reproducibility for very large or locally controlled studies."
+ },
+ {
+  "card": "R4",
+  "tool": "timeOmics — R/Bioconductor package",
+  "strengths": "Generic framework for pre-processing, modelling and clustering of longitudinal multi-omics data to identify time-associated features.",
+  "limitations": "Restricted to longitudinal designs with aligned time points; limited guidance on missingness and non-microbiome modalities."
+ }
+]
