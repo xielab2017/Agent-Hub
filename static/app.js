@@ -2102,7 +2102,7 @@ function renderModeBanner(status) {
     const engLabel = engine === "openclaw" ? t("engine.openclaw") : t("engine.hermes");
     el.innerHTML = `<strong>${escapeHtml(t("mode.agent"))}</strong> · ${escapeHtml(engLabel)}${hubBit}${clawBit || " · claw=<code>Hermes Agent</code>"}${autoBit}${soulBit}`;
   } else if (engine === "direct-llm" || agent.direct_llm) {
-    el.innerHTML = `<strong>${escapeHtml(t("mode.ai"))}</strong>${hubBit} — ${escapeHtml(agent.api_key_masked || "API")}${clawBit}${autoBit}${soulBit}`;
+    el.innerHTML = `<strong>${escapeHtml(t("mode.ai"))}</strong>${hubBit} — <span class="key-masked">${escapeHtml(agent.api_key_masked || "API")}</span>${clawBit}${autoBit}${soulBit}`;
   } else if (rt && rt !== "direct" && rt !== "auto") {
     const linkedBit = linked && linked !== rt
       ? ` · linked=<code>${escapeHtml(linkedName)}</code>`

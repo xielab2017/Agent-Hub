@@ -97,7 +97,7 @@ class Shots:
 
     def take(self, page, hub: str, step: str, *, keep: bool = True, note: str = "") -> Path:
         self.banner(page, hub, note or step)
-        mask = [page.locator("input[type=password]")]
+        mask = [page.locator("input[type=password]"), page.locator(".key-masked")]  # no key fragments in shots
         live = self.dir / "live.png"
         page.screenshot(path=str(live), mask=mask)
         if not keep:
