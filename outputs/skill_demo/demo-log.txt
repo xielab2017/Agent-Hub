@@ -9,3 +9,4 @@
 [20:38:16] screenshot 040_B_home.png
 [20:38:20] screenshot 041_B_imported.png
 [20:38:23] screenshot 042_B_run-started.png
+[20:43:24] screenshot 043_B_running.png
