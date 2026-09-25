@@ -6,7 +6,7 @@ name: Review pipeline (THBS4)
 # repository secret MINIMAX_KEY.  Outputs are uploaded as an artifact and
 # committed back to the branch under outputs/thbs4_review/.
 #
-# Triggers (commit message tags):
+# Triggers (tags in the commit SUBJECT line):
 #   [review-smoke]  fast check of every stage (few papers, 2 sections) → outputs/thbs4_smoke/
 #   [review-thbs4]  the full review                                    → outputs/thbs4_review/
 #   add [review-fresh] to ignore saved checkpoints; otherwise a re-run resumes at the stage that failed
@@ -25,17 +25,36 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[review-thbs4]') || contains(github.event.head_commit.message, '[review-smoke]')
     runs-on: ubuntu-latest
     timeout-minutes: 150
-    env:
-      SMOKE: ${{ contains(github.event.head_commit.message, '[review-smoke]') && !contains(github.event.head_commit.message, '[review-thbs4]') }}
-      FRESH: ${{ contains(github.event.head_commit.message, '[review-fresh]') }}
+    # one run at a time per branch: parallel runs would race when committing their outputs back
+    concurrency:
+      group: review-pipeline-${{ github.ref }}
+      cancel-in-progress: false
     steps:
+      - name: Mode
+        # tags count only in the commit subject (a body may mention them in passing)
+        env:
+          MSG: ${{ github.event.head_commit.message }}
+        run: |
+          SUBJECT=$(printf '%s\n' "$MSG" | head -n 1)
+          RUN=false; SMOKE=false; FRESH=false
+          case "$SUBJECT" in *"[review-thbs4]"*) RUN=true;; esac
+          case "$SUBJECT" in *"[review-smoke]"*) RUN=true; SMOKE=true;; esac
+          case "$SUBJECT" in *"[review-thbs4]"*) SMOKE=false;; esac
+          case "$SUBJECT" in *"[review-fresh]"*) FRESH=true;; esac
+          [ "${{ github.event_name }}" = workflow_dispatch ] && RUN=true
+          echo "RUN=$RUN SMOKE=$SMOKE FRESH=$FRESH  ($SUBJECT)"
+          { echo "RUN=$RUN"; echo "SMOKE=$SMOKE"; echo "FRESH=$FRESH"; } >> "$GITHUB_ENV"
       - uses: actions/checkout@v4
+        if: env.RUN == 'true'
       - uses: actions/setup-python@v5
+        if: env.RUN == 'true'
         with:
           python-version: "3.12"
       - name: Install
+        if: env.RUN == 'true'
         run: python -m pip install --upgrade pip pyyaml python-docx
       - name: Write the review
+        if: env.RUN == 'true'
         env:
           MINIMAX_KEY: ${{ secrets.MINIMAX_KEY }}
         run: |
@@ -46,7 +65,7 @@ jobs:
           echo "OUT=$OUT" >> "$GITHUB_ENV"
           python scripts/review_pipeline.py --out "$OUT" $ARGS 2>&1 | tee review-log.txt
       - name: Upload
-        if: always()
+        if: always() && env.RUN == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: thbs4-review
@@ -55,7 +74,7 @@ jobs:
             review-log.txt
           if-no-files-found: ignore
       - name: Commit outputs
-        if: always()
+        if: always() && env.RUN == 'true'
         run: |
           OUT=${OUT:-outputs/thbs4_review}
           [ -d "$OUT" ] || exit 0
@@ -65,4 +84,10 @@ jobs:
           git add "$OUT"
           git diff --cached --quiet && exit 0
           git commit -m "Review outputs: $OUT (run ${{ github.run_id }})"
-          for i in 1 2 3; do git pull --rebase origin "${{ github.ref_name }}" && git push origin "HEAD:${{ github.ref_name }}" && break; sleep 5; done
+          # on a conflict in the output files this run's version wins (-X theirs = the commit being replayed)
+          for i in 1 2 3; do
+            git pull --rebase -X theirs origin "${{ github.ref_name }}" && git push origin "HEAD:${{ github.ref_name }}" && exit 0
+            git rebase --abort 2>/dev/null || true
+            sleep 5
+          done
+          echo "::error::could not push the outputs"; exit 1
