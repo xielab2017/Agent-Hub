@@ -46,3 +46,13 @@
 [   340s]   drafted 7/10 Benchmarking evidence and evaluation criteria (754 words, 5 cards)
 [   361s]   drafted 10/10 Recommendations for users and developers, roadmap and conclu (746 words, 21 cards)
 [   381s]   drafted 9/10 Critical perspectives and controversies (916 words, 28 cards)
+[   465s] reviews: reviewer-bioinformatics-methods (1920 words), reviewer-microbiome-user (1824 words), reviewer-editor-integrity (1178 words)
+[   489s]   gap: Seurat as the dominant single-cell multi-omics integration platform (n → 2 papers
+[   490s]   gap: Anvi'o as the leading multi-omics visualization and integration platfo → 0 papers
+[   491s]   gap: MaAsLin2 multivariable association method for microbiome differential  → 1 papers
+[   492s]   gap: ANCOM-BC differential abundance method correcting for compositional bi → 3 papers
+[   493s]   gap: mixMC, the microbiomes-specific variant of mixOmics, used for 16S mult → 2 papers
+[   493s]   gap: RGCCA, the canonical regularized multi-block integration method (Tenen → 1 papers
+[   494s]   gap: PaintOmics web-based pathway-level multi-omics integration tool (Garci → 0 papers
+[   495s]   gap: 3Omics web-based multi-omics visualization and integration tool for tr → 1 papers
+[   518s] reviewer gaps: 6 new evidence cards — R61 Stuart T 2019; R62 Mallick H 2021; R63 Lin H 2020; R64 Lê Cao KA 2016; R65 Garali I 2018; R66 Kuo TC 2013
