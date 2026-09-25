@@ -1059,11 +1059,13 @@ def search_structured(query: str, *, limit: int = 8, deep: bool = True) -> dict[
         data.get("summary") or "",
         f"Source quality: relevance={quality['relevance']} · authoritative={authoritative} · verified={quality['verified']}",
         "Use these sources. Prefer primary sources. Mark uncertain claims.",
+        "Cite inline as [n] using the numbers below; every number, percentage or statistic "
+        "you state must come from a cited source or be marked as an estimate.",
     ]
     if warnings:
         lines.append("Warnings: " + "；".join(warnings))
-    for r in sources:
-        lines.append(f"- [{r.get('title')}]({r.get('url')}) ({r.get('source')}) — {r.get('snippet')}")
+    for i, r in enumerate(sources, start=1):
+        lines.append(f"- [{i}] [{r.get('title')}]({r.get('url')}) ({r.get('source')}) — {r.get('snippet')}")
     lines.append(
         "If filling a form/table: Markdown field → value → source URL. "
         "Results above are authoritative for this turn."

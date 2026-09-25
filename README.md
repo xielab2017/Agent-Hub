@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/xielab2017/Agent-Hub/releases"><img alt="version" src="https://img.shields.io/badge/version-5.1.0-rose.svg" /></a>
+  <a href="https://github.com/xielab2017/Agent-Hub/releases"><img alt="version" src="https://img.shields.io/badge/version-5.2.0-rose.svg" /></a>
   <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-MIT-blue.svg" /></a>
   <a href="https://www.python.org/"><img alt="python" src="https://img.shields.io/badge/python-%3E%3D3.9-brightgreen.svg" /></a>
   <a href="https://github.com/xielab2017/Agent-Hub"><img alt="platform" src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg" /></a>
@@ -35,6 +35,9 @@
 | **Soul / Skills / MCP** | 多身份、技能库、MCP Hub |
 | **控制中心** | 模型、路由、生态、外观 Logo、定时任务、自我进化等 |
 | **可审计溯源** | 对标 Claude Science：每条回复都有可校验的溯源记录，可导出报告与复现包 |
+| **审查代理** | 自动核查引用编号、链接、DOI/PMID 与无出处的数字，可联网核验 |
+| **科学数据库** | UniProt · PDB · Ensembl · ChEMBL · ClinicalTrials · GEO · ClinVar · Reactome · Europe PMC · Crossref |
+| **流程存为技能** | 一键把会话保存为 SKILL.md，后续相似请求自动套用 |
 | **跨设备** | 默认监听 `0.0.0.0:8765`，同局域网可用 IP 访问 |
 
 <p align="center">
@@ -94,7 +97,7 @@ chmod +x ctl.sh "Start Agent Hub.command" start.sh
 curl -s http://127.0.0.1:8765/api/health
 ```
 
-确认健康检查里显示 `"version": "5.1.0"`。如果仍然不对，可临时换端口验证当前源码：
+确认健康检查里显示 `"version": "5.2.0"`。如果仍然不对，可临时换端口验证当前源码：
 
 ```bash
 python3 server.py --host 127.0.0.1 --port 9876 --open
@@ -195,6 +198,37 @@ python3 server.py --host 0.0.0.0 --port 8765
 | `GET /api/sessions/<id>/provenance` | 会话内记录列表 |
 | `GET /api/sessions/<id>/reproducibility-bundle` | 复现包 zip |
 
+### 审查代理（对标 Claude Science）
+
+每条回复完成后自动审查（离线、毫秒级、只提示不改写正文），结果显示在回复下方并写入溯源记录：
+
+- **引用**：`[n]` 编号超出检索来源数量、或无来源却引用
+- **链接**：回复里的 URL 不在检索来源或你提供的材料中
+- **标识符**：DOI / PMID 格式错误；点 **联网核验引用** 可经 Crossref / NCBI 实际解析
+- **数字**：百分比、p 值、HR/OR/IC50 等统计量、n=、带单位的数量——在来源、你的问题、工作区摘录和工具输出中都找不到出处时标记为「数字无出处」
+
+联网检索的来源在提示词中按 `[1]…[n]` 编号（与溯源记录一致），模型被要求按编号引用。
+
+### 科学数据库连接器
+
+问题中出现基因符号（TP53、PD-L1）、UniProt / PDB / Ensembl / ChEMBL / NCT / rsID / GEO 编号、DOI，或“蛋白结构、化合物、临床试验、变异、通路”等主题时，自动并行查询对应的公开数据库，结果作为编号来源进入回复与溯源记录。
+
+- 控制中心 → **科学数据库**：逐库开关、测试检索；`data_policy=restricted` 时全部禁用
+- 所有库均为公开只读、免密钥；每次查询写入审计日志
+- 若校园网 / 代理拦截了这些域名，检索会快速失败并给出原因，不影响其他来源
+
+### 流程存为技能
+
+回复下方点 **存为技能**：根据会话与溯源记录生成 SKILL.md 草稿（适用场景、输入、步骤、输出格式、质量检查、溯源哈希），可编辑后保存。保存后自动加载到 Hub；以后遇到相似请求（按 `triggers:` 匹配）会自动套用这些步骤。同名技能不会被覆盖。
+
+| API | 说明 |
+|-----|------|
+| `POST /api/review/<session>/<message>` | 重新审查；`{"online": true}` 联网核验 DOI/PMID |
+| `GET /api/science/connectors` · `POST` 同路径 | 连接器列表 / 开关 |
+| `GET /api/science/search?q=` | 科学数据库检索 |
+| `POST /api/skills/from-session` | 生成技能草稿 |
+| `POST /api/skills/from-session/save` | 保存并加载技能 |
+
 ### 外观
 
 中英、浅/深色、主题色；Logo 可上传或选内置品牌（SUAT 彩标 / 白板）。
@@ -213,6 +247,7 @@ Agent-Hub/
 ├── start.sh / start.ps1
 ├── ali/                   # 业务逻辑（路由、流式、Agent、Soul…）
 ├── static/                # Web UI（HTML/CSS/JS）+ brand 资源
+├── tests/                 # pytest（CI：.github/workflows/tests.yml）
 ├── assets/                # 示例配置
 ├── docs/images/           # README 配图
 └── pyproject.toml
@@ -222,7 +257,7 @@ Agent-Hub/
 
 ## 开发与版本
 
-当前版本：**v5.1.0**（分支 `main`）
+当前版本：**v5.2.0**（分支 `main`）
 
 ```bash
 # 健康检查
@@ -236,6 +271,7 @@ git pull
 
 简要更新：
 
+- **v5.2.0** — 审查代理、科学数据库连接器、流程存为技能；CI 自动测试
 - **v5.1.0** — 对标 Claude Science 的可审计溯源：每条回复的溯源记录、完整性校验、报告与复现包导出
 - **v5.0.0** — 强化 Agent Hub 本地网关、启动器与跨平台使用体验；新增 macOS 首次启动排查说明
 - **v4.0.0** — 发布 Agent Hub v4 系列能力与文档刷新

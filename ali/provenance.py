@@ -221,6 +221,14 @@ def describe(record: dict[str, Any]) -> dict[str, str]:
     if ws_entries:
         zh.append(f"参考工作区 {ws_entries} 个条目")
         en.append(f"{ws_entries} workspace entries in context")
+    rv = record.get("review") or {}
+    if rv and not rv.get("skipped"):
+        if rv.get("warn"):
+            zh.append(f"审查发现 {rv.get('warn')} 项待核实")
+            en.append(f"reviewer flagged {rv.get('warn')} item(s) to verify")
+        else:
+            zh.append("审查未发现问题")
+            en.append("reviewer found no issues")
     if record.get("healed"):
         zh.append("经自愈重试")
         en.append("after a self-heal retry")
@@ -242,6 +250,7 @@ def build_record(
     started_at: float | None = None,
     healed: bool = False,
     history_messages: int | None = None,
+    review: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     ri = route_info or {}
     finished = time.time()
@@ -315,6 +324,7 @@ def build_record(
             "elapsed_ms": elapsed_ms,
         },
         "healed": bool(healed),
+        "review": _redact(review) if isinstance(review, dict) else {},
         "environment": environment(),
         "journal": journal,
     }
@@ -336,6 +346,11 @@ def summary(record: dict[str, Any]) -> dict[str, Any]:
         "sources": len((record.get("search") or {}).get("sources") or []),
         "tools": len(record.get("tools") or []),
         "skills": list((record.get("context") or {}).get("skills") or []),
+        "review": {
+            k: (record.get("review") or {}).get(k)
+            for k in ("ok", "skipped", "warn", "info")
+            if k in (record.get("review") or {})
+        },
         "output_sha256": (record.get("output") or {}).get("sha256") or "",
         "record_sha256": (record.get("integrity") or {}).get("record_sha256") or "",
         "finished_at": (record.get("timing") or {}).get("finished_at") or "",
@@ -497,6 +512,20 @@ def render_markdown(record: dict[str, Any]) -> str:
     else:
         lines.append("- Workspace path check: OK")
     lines.append(f"- Record sha256: `{(record.get('integrity') or {}).get('record_sha256') or ''}` · {'✓ verified' if verified else '✗ MISMATCH'}")
+
+    rv = record.get("review") or {}
+    lines += ["", "## 审查 · Review", ""]
+    if not rv or rv.get("skipped"):
+        lines.append("Skipped (chit-chat) · 已跳过（闲聊）" if rv.get("skipped") else "Not reviewed · 未审查")
+    else:
+        st = rv.get("stats") or {}
+        lines.append(
+            f"- {'✓ No issues' if rv.get('ok') else '⚠ ' + str(rv.get('warn')) + ' warning(s)'} · "
+            f"{rv.get('info') or 0} note(s) · citations {st.get('citations', 0)} · "
+            f"numbers traced {st.get('traced_numbers', 0)}/{st.get('numbers', 0)}"
+        )
+        for it in rv.get("issues") or []:
+            lines.append(f"- [{it.get('severity')}] `{it.get('kind')}` {_md_cell(it.get('text'))} — {_md_cell(it.get('detail'))}")
 
     lines += ["", "## 环境 · Environment", ""]
     lines.append(

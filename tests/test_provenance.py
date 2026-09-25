@@ -212,6 +212,21 @@ while time.time() < deadline:
     time.sleep(0.2)
 msg = [m for m in store.get_session(sid).messages if m.get("role") == "assistant"][-1]
 rec = provenance.load_record(sid, msg["id"])
+
+# Save this run as a skill, then a similar request in a NEW session inherits it.
+from ali import skill_capture
+draft = skill_capture.draft_from_session(sid, name="CRISPR off-target review")
+saved = skill_capture.save_skill(draft["slug"], draft["markdown"])
+s2 = store.create_session(title="e2e-2")
+res2 = streaming.start_chat(s2.id, "再检索一次 CRISPR 脱靶效应的最新文献并总结", web_search=False)
+print(json.dumps({
+    "review": msg.get("review"),
+    "record_review": (rec or {}).get("review"),
+    "saved_skill": saved["id"],
+    "second_route_skills": res2["route"].get("skills"),
+    "second_skills_source": res2["route"].get("skills_source"),
+    "second_captured": res2["route"].get("skills_captured"),
+}))
 print(json.dumps({
     "summary": msg.get("provenance"),
     "verified": provenance.verify_record(rec) if rec else False,
@@ -243,7 +258,18 @@ def test_start_chat_records_verified_provenance_end_to_end():
             timeout=120,
         )
     assert proc.returncode == 0, proc.stderr[-2000:]
-    out = json.loads(proc.stdout.strip().splitlines()[-1])
+    lines = proc.stdout.strip().splitlines()
+    out = json.loads(lines[-1])
+    extra = json.loads(lines[-2])
+    # reviewer ran on the reply and its result is sealed into the provenance record
+    assert extra["review"] and extra["review"]["skipped"] is False
+    assert extra["record_review"] == extra["review"]
+    assert "review" in out["summary"]
+    # a skill saved from this run is inherited by a similar request in a new session
+    assert extra["saved_skill"] == "crispr-off-target-review"
+    assert extra["second_captured"] == ["crispr-off-target-review"]
+    assert "crispr-off-target-review" in extra["second_route_skills"]
+    assert extra["second_skills_source"] == "captured"
     assert out["summary"] and out["summary"]["schema"] == "agent-hub.provenance/1"
     assert out["verified"] is True
     assert out["sources"] == [s["url"] for s in SEARCH["sources"]]

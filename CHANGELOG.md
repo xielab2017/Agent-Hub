@@ -1,5 +1,49 @@
 # Changelog
 
+## v5.2.0 — 2026-09-25
+
+The rest of the Claude Science standard: a background reviewer, scientific
+database connectors, and "save any pipeline as a reusable skill".
+
+- **Reviewer** — `ali/reviewer.py` (new). Deterministic, offline, runs on every
+  reply: numbered citations that point at no retrieved source, URLs not among
+  the sources or evidence, malformed DOIs / PMIDs, identifiers not in the
+  sources, and **untraceable numbers** (percentages, p-values, statistics,
+  n=, quantities with units) that appear in none of the evidence (sources,
+  user message, workspace excerpts, tool output). Results go on the message,
+  into SSE `done`, and are sealed into the provenance record.
+  `POST /api/review/<session>/<message>` re-runs it; `{"online": true}` also
+  resolves DOIs (Crossref) and PMIDs (NCBI) — unreachable services count as
+  unknown, never as wrong. Web-search sources are now numbered `[1]…[n]` in the
+  prompt (same order as the provenance record) and the model is asked to cite
+  by number.
+- **Science database connectors** — `ali/science_connectors.py` (new):
+  UniProt, RCSB PDB, Ensembl, ChEMBL, ClinicalTrials.gov, NCBI GEO, ClinVar,
+  Reactome, Europe PMC, Crossref (public, read-only, key-free). Routed from
+  identifiers (UniProt / PDB / ENSG / CHEMBL / NCT / rsID / GSE / DOI / PMID),
+  gene symbols and topic keywords, fanned out in parallel, merged in stable
+  order; a failing database never blocks the others and never yields
+  placeholder hits. Registered first in the academic search intent (no network
+  when nothing science-like is detected). Per-database switches in Control
+  Center → **科学数据库** (with a test box); `data_policy=restricted` disables
+  all; every query is audited. APIs: `GET/POST /api/science/connectors`,
+  `GET /api/science/search?q=`.
+- **Save as skill** — `ali/skill_capture.py` (new). 「存为技能」 on a reply
+  drafts a SKILL.md from the session and its provenance (when to use, inputs,
+  steps incl. route/skills/sources/tools, output format from the reply's
+  headings, quality checks, provenance hash); editable before saving; never
+  overwrites an existing skill (auto `-2`, `-3`…); loads into the Hub. Captured
+  skills carry `triggers:` and re-activate automatically on matching requests
+  in future sessions, with their steps injected into the prompt. APIs:
+  `POST /api/skills/from-session`, `POST /api/skills/from-session/save`.
+- **Fix** — `subagent_planner.plan_lanes`: short sport/event questions were
+  answered directly by the "short message" shortcut instead of being planned
+  into lanes (4 tests had been failing since v5.0.0).
+- **CI** — `.github/workflows/tests.yml` runs the suite on Python 3.9 and 3.12
+  for every push and pull request.
+- Tests: `test_reviewer.py`, `test_science_connectors.py`,
+  `test_skill_capture.py` (new) and a longer end-to-end run — 119 passing on Python 3.9 / 3.11 / 3.12.
+
 ## v5.1.0 — 2026-09-25
 
 Auditable provenance for every reply, modelled on Claude Science's

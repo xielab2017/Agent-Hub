@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0f1419" />
   <title>Agent Hub</title>
-  <link rel="stylesheet" href="/style.css?v=5.1.0" />
+  <link rel="stylesheet" href="/style.css?v=5.2.0" />
 </head>
 <body>
   <div id="login-overlay" class="overlay hidden">
@@ -22,10 +22,10 @@
     <aside id="sidebar" class="sidebar">
       <div class="sidebar-head">
         <div class="brand">
-          <img class="brand-logo" src="/brand/suat-logo-color.png?v=5.1.0" alt="SUAT" />
+          <img class="brand-logo" src="/brand/suat-logo-color.png?v=5.2.0" alt="SUAT" />
           <div>
             <div class="brand-name">Agent Hub</div>
-          <div class="brand-sub" id="version-label">v5.1.0</div>
+          <div class="brand-sub" id="version-label">v5.2.0</div>
           </div>
         </div>
         <div class="quick-prefs">
@@ -85,7 +85,7 @@
       <div id="chat-panes" class="chat-panes">
         <div id="messages" class="messages">
           <div class="empty-state" id="empty-state">
-          <img class="empty-logo-img" src="/brand/suat-logo-color.png?v=5.1.0" alt="深圳理工大学" />
+          <img class="empty-logo-img" src="/brand/suat-logo-color.png?v=5.2.0" alt="深圳理工大学" />
             <h3 data-i18n="empty.title">校园 Agent Hub</h3>
             <p data-i18n-html="empty.body">描述任务并运行 · Agent Hub 调度 Skill / Agent · 进度条跟踪执行</p>
           </div>
@@ -238,6 +238,7 @@
         <button class="ctab" data-ctab="runtimes" data-i18n="control.runtimes">Claws</button>
         <button class="ctab" data-ctab="ecosystem" data-i18n="control.ecosystem">生态</button>
         <button class="ctab" data-ctab="mcp" data-i18n="control.mcp">MCP</button>
+        <button class="ctab" data-ctab="science" data-i18n="control.science">科学数据库</button>
         <button class="ctab" data-ctab="skills" data-i18n="control.skills">Skills</button>
         <button class="ctab" data-ctab="recommend" data-i18n="control.recommend">每日推荐</button>
         <button class="ctab" data-ctab="soul" data-i18n="control.soul">Soul</button>
@@ -256,6 +257,7 @@
         <section id="ctab-runtimes" class="ctab-panel hidden"></section>
         <section id="ctab-ecosystem" class="ctab-panel hidden"></section>
         <section id="ctab-mcp" class="ctab-panel hidden"></section>
+        <section id="ctab-science" class="ctab-panel hidden"></section>
         <section id="ctab-skills" class="ctab-panel hidden"></section>
         <section id="ctab-recommend" class="ctab-panel hidden"></section>
         <section id="ctab-soul" class="ctab-panel hidden"></section>
@@ -289,6 +291,26 @@
     </div>
   </div>
 
+  <div id="skillcap-overlay" class="overlay hidden">
+    <div class="control-card skillcap-card" role="dialog" aria-modal="true" aria-labelledby="skillcap-title">
+      <div class="control-head">
+        <h2 id="skillcap-title" data-i18n="skillcap.title">存为技能</h2>
+        <button type="button" id="btn-skillcap-close" class="btn ghost" data-i18n="prov.close">关闭</button>
+      </div>
+      <div class="skillcap-body">
+        <p class="muted" data-i18n="skillcap.hint">把这次的流程保存为可复用技能；之后遇到相似请求会自动套用。</p>
+        <label class="skillcap-field"><span data-i18n="skillcap.name">技能名称</span><input id="skillcap-name" type="text" /></label>
+        <label class="skillcap-field"><span data-i18n="skillcap.slug">技能 ID</span><input id="skillcap-slug" type="text" spellcheck="false" /></label>
+        <label class="skillcap-field"><span>SKILL.md</span><textarea id="skillcap-md" rows="16" spellcheck="false"></textarea></label>
+        <label class="check"><input type="checkbox" id="skillcap-load" checked /> <span data-i18n="skillcap.load">保存后加载到 Hub（后续会话自动继承）</span></label>
+      </div>
+      <div class="control-foot prov-foot">
+        <span id="skillcap-status" class="muted"></span>
+        <button type="button" id="btn-skillcap-save" class="btn primary" data-i18n="skillcap.save">保存技能</button>
+      </div>
+    </div>
+  </div>
+
   <div id="wf-overlay" class="overlay hidden">
     <div class="login-card wf-card">
       <h2 id="wf-title">工作流</h2>
@@ -305,6 +327,6 @@
   </div>
 
   <div id="sidebar-backdrop" class="backdrop hidden"></div>
-  <script src="/app.js?v=5.1.0"></script>
+  <script src="/app.js?v=5.2.0"></script>
 </body>
 </html>

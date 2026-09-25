@@ -37,7 +37,10 @@ from . import (
     soul,
     pending_intent,
     provenance,
+    reviewer,
     run_journal,
+    science_connectors,
+    skill_capture,
     streaming,
     subagent_planner,
     uploads,
@@ -467,6 +470,24 @@ def handle_get(handler) -> None:
 
     if len(parts) == 4 and parts[0] == "api" and parts[1] == "sessions" and parts[3] == "pending":
         return _json(handler, 200, {"ok": True, "session_id": parts[2], **pending_intent.get(parts[2])})
+
+    if path == "/api/science/connectors":
+        return _json(handler, 200, science_connectors.list_connectors())
+
+    if path == "/api/science/search":
+        q = (qs.get("q") or [""])[0].strip()
+        if not q:
+            return _json(handler, 400, {"error": "missing q"})
+        raw = (qs.get("connectors") or [""])[0].strip()
+        chosen = [c.strip() for c in raw.split(",") if c.strip()] or None
+        try:
+            limit = max(1, min(30, int((qs.get("limit") or ["10"])[0])))
+        except ValueError:
+            limit = 10
+        return _json(handler, 200, {
+            "routed": science_connectors.route(q),
+            **science_connectors.search_science(q, limit=limit, connectors=chosen),
+        })
 
     if len(parts) in (4, 5) and parts[0] == "api" and parts[1] == "provenance":
         record = provenance.load_record(parts[2], parts[3])
@@ -1669,6 +1690,46 @@ def handle_post(handler) -> None:
         snap = grounding.snapshot_workspace(ws, session_id=str(body.get("session_id") or ""))
         result = grounding.verify_response_paths(str(body.get("text") or ""), snap)
         return _json(handler, 200, {**result, "snapshot_count": snap.get("entry_count")})
+
+    if path == "/api/science/connectors":
+        body = _read_json(handler)
+        switches = body.get("connectors") if isinstance(body.get("connectors"), dict) else {}
+        return _json(handler, 200, science_connectors.set_enabled(switches))
+
+    if len(parts) == 4 and parts[0] == "api" and parts[1] == "review":
+        body = _read_json(handler)
+        try:
+            review = reviewer.review_message(parts[2], parts[3], online=bool(body.get("online")))
+        except FileNotFoundError as exc:
+            return _json(handler, 404, {"error": str(exc)})
+        return _json(handler, 200, {"ok": True, "review": review})
+
+    if path == "/api/skills/from-session":
+        body = _read_json(handler)
+        try:
+            draft = skill_capture.draft_from_session(
+                str(body.get("session_id") or ""),
+                str(body.get("message_id") or ""),
+                name=str(body.get("name") or ""),
+                description=str(body.get("description") or ""),
+            )
+        except FileNotFoundError as exc:
+            return _json(handler, 404, {"error": str(exc)})
+        except ValueError as exc:
+            return _json(handler, 400, {"error": str(exc)})
+        return _json(handler, 200, draft)
+
+    if path == "/api/skills/from-session/save":
+        body = _read_json(handler)
+        try:
+            result = skill_capture.save_skill(
+                str(body.get("slug") or ""),
+                str(body.get("markdown") or ""),
+                load=body.get("load", True) is not False,
+            )
+        except (OSError, ValueError) as exc:
+            return _json(handler, 400, {"error": str(exc)})
+        return _json(handler, 200, result)
 
     _json(handler, 404, {"error": "not found"})
 

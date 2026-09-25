@@ -52,6 +52,10 @@ _INTENT_RULES: list[tuple[str, frozenset[str]]] = [
         "research", "研究综述", "meta-analysis", "meta分析", "荟萃分析",
         "preprint", "预印本", "期刊", "影响因子", "h-index", "h指数",
         "期刊分区", "JCR", "中科院分区",
+        # Biomedical database topics → routed to science connectors first
+        "蛋白", "基因", "化合物", "临床试验", "信号通路", "突变位点", "单细胞",
+        "uniprot", "ensembl", "chembl", "clinvar", "reactome", "europepmc", "crossref",
+        "clinical trial", "protein structure",
     })),
     ("news", frozenset({
         "新闻", "最新", "今日", "昨天", "本周", "刚刚", "突发", "报道",
@@ -78,6 +82,15 @@ def classify_intent(query: str) -> str:
     for name, kws in _INTENT_RULES:
         if any(k.lower() in q for k in kws):
             return name
+    # Database identifiers / biomedical topics (TP53, NCT…, CHEMBL…, PDB 4HHB…) are research queries.
+    try:
+        from .science_connectors import detect_entities
+
+        ent = detect_entities(query)
+        if ent["ids"] or ent["topics"] or ent["genes"]:
+            return "academic"
+    except Exception:  # noqa: BLE001
+        pass
     # Heuristic: English research-style queries (≥2 lowercase words, ≥2 English tokens).
     en_tokens = re.findall(r"[a-z][a-z\-]{2,}", q)
     if len(en_tokens) >= 2 and not re.search(r"[\u4e00-\u9fff]", q):
@@ -671,6 +684,36 @@ def search_minimax_parity(
 
 
 # ---------------------------------------------------------------------------
+# 4b. Scientific database connectors (see ali/science_connectors.py)
+# ---------------------------------------------------------------------------
+# Thin lazy wrappers: science_connectors imports this module for _fetch/_result.
+
+
+def search_science_databases(query: str, *, limit: int = 8, timeout: float = 4.0) -> dict[str, Any]:
+    """UniProt / PDB / Ensembl / ChEMBL / ClinicalTrials / GEO / ClinVar / Reactome,
+    routed by detected identifiers and topics. No network when nothing matches."""
+    from .science_connectors import search_science
+
+    return search_science(query, limit=limit)
+
+
+def search_europepmc(query: str, *, limit: int = 8, timeout: float = 4.0) -> dict[str, Any]:
+    from .science_connectors import enabled_map, search_europepmc as _fn
+
+    if not enabled_map().get("europepmc"):
+        return {"ok": False, "results": [], "engine": "europepmc", "errors": ["disabled"]}
+    return _fn(query, limit=limit, timeout=timeout)
+
+
+def search_crossref(query: str, *, limit: int = 8, timeout: float = 4.0) -> dict[str, Any]:
+    from .science_connectors import enabled_map, search_crossref as _fn
+
+    if not enabled_map().get("crossref"):
+        return {"ok": False, "results": [], "engine": "crossref", "errors": ["disabled"]}
+    return _fn(query, limit=limit, timeout=timeout)
+
+
+# ---------------------------------------------------------------------------
 # 5. Engine registry by intent
 # ---------------------------------------------------------------------------
 
@@ -687,7 +730,12 @@ INTENT_ENGINES: dict[str, list] = {
     # not exclusive.
     "event": [search_sina_sports, search_wikipedia_event, search_minimax_parity],
     "news": [search_sina_news, search_sina_sports, search_minimax_parity],
-    "academic": [search_openalex, search_arxiv, search_pubmed, search_minimax_parity],
+    # Science databases first (instant no-op unless an entity/topic is detected),
+    # then literature: OpenAlex, arXiv, PubMed, Europe PMC, Crossref.
+    "academic": [
+        search_science_databases, search_openalex, search_arxiv, search_pubmed,
+        search_europepmc, search_crossref, search_minimax_parity,
+    ],
     "code": [search_minimax_parity],   # operators like `site:github.com` shine here
     "general": [search_wikipedia_event, search_minimax_parity],
 }
@@ -790,6 +838,9 @@ __all__ = [
     "search_openalex",
     "search_arxiv",
     "search_pubmed",
+    "search_science_databases",
+    "search_europepmc",
+    "search_crossref",
     "relevance_score",
     "fallback_message",
     "apply_grounding_gate",

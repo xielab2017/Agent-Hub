@@ -15,7 +15,7 @@ const FONT_SIZE_LABELS = {
   zh: { 13: "小 13", 14: "中 14", 15: "中大 15", 16: "大 16", 18: "特大 18" },
   en: { 13: "S 13", 14: "M 14", 15: "M+ 15", 16: "L 16", 18: "XL 18" },
 };
-const LOGO_VER = "5.1.0";
+const LOGO_VER = "5.2.0";
 const DEFAULT_LOGO = `/brand/suat-logo-color.png?v=${LOGO_VER}`;
 const LOGO_PRESETS = [
   { id: "suat-color", src: `/brand/suat-logo-color.png?v=${LOGO_VER}`, labelKey: "appearance.logoPresetColor" },
@@ -243,6 +243,32 @@ const I18N = {
     "msg.good": "有用",
     "msg.bad": "待改进",
     "msg.provenance": "溯源",
+    "msg.saveSkill": "存为技能",
+    "control.science": "科学数据库",
+    "review.ok": "审查通过",
+    "rv.citation_out_of_range": "引用编号越界",
+    "rv.citation_without_sources": "引用无来源",
+    "rv.unlisted_url": "未检索的链接",
+    "rv.malformed_doi": "DOI 格式错误",
+    "rv.malformed_pmid": "PMID 格式错误",
+    "rv.unverified_identifier": "标识符待核验",
+    "rv.unresolved_identifier": "标识符无法解析",
+    "rv.untraceable_number": "数字无出处",
+    "review.issues": "审查：{n} 项待核实",
+    "review.notes": "{n} 条提示",
+    "review.online": "联网核验引用",
+    "review.onlineRunning": "正在核验 DOI / PMID…",
+    "review.title": "审查",
+    "review.skipped": "已跳过（闲聊）",
+    "review.stats": "引用 {c} · 数字可追溯 {t}/{n} · 来源 {s}",
+    "skillcap.title": "存为技能",
+    "skillcap.hint": "把这次的流程保存为可复用技能；之后遇到相似请求会自动套用。",
+    "skillcap.name": "技能名称",
+    "skillcap.slug": "技能 ID",
+    "skillcap.load": "保存后加载到 Hub（后续会话自动继承）",
+    "skillcap.save": "保存技能",
+    "skillcap.loading": "正在生成草稿…",
+    "skillcap.saved": "已保存为技能 {id}",
     "prov.title": "溯源记录",
     "prov.close": "关闭",
     "prov.downloadJson": "下载 JSON",
@@ -464,6 +490,32 @@ const I18N = {
     "msg.good": "Good",
     "msg.bad": "Needs work",
     "msg.provenance": "Provenance",
+    "msg.saveSkill": "Save as skill",
+    "control.science": "Science DBs",
+    "review.ok": "Review passed",
+    "rv.citation_out_of_range": "Citation out of range",
+    "rv.citation_without_sources": "Citation without sources",
+    "rv.unlisted_url": "Unretrieved link",
+    "rv.malformed_doi": "Malformed DOI",
+    "rv.malformed_pmid": "Malformed PMID",
+    "rv.unverified_identifier": "Identifier to verify",
+    "rv.unresolved_identifier": "Unresolvable identifier",
+    "rv.untraceable_number": "Untraceable number",
+    "review.issues": "Review: {n} to verify",
+    "review.notes": "{n} note(s)",
+    "review.online": "Verify citations online",
+    "review.onlineRunning": "Resolving DOIs / PMIDs…",
+    "review.title": "Review",
+    "review.skipped": "Skipped (chit-chat)",
+    "review.stats": "citations {c} · numbers traced {t}/{n} · sources {s}",
+    "skillcap.title": "Save as skill",
+    "skillcap.hint": "Save this workflow as a reusable skill; similar requests will pick it up automatically.",
+    "skillcap.name": "Skill name",
+    "skillcap.slug": "Skill ID",
+    "skillcap.load": "Load into the Hub after saving (future sessions inherit it)",
+    "skillcap.save": "Save skill",
+    "skillcap.loading": "Drafting…",
+    "skillcap.saved": "Saved as skill {id}",
     "prov.title": "Provenance record",
     "prov.close": "Close",
     "prov.downloadJson": "Download JSON",
@@ -2168,6 +2220,7 @@ function renderProvenance(rec, verified) {
       ["Elapsed", tm.elapsed_ms != null ? formatElapsed(tm.elapsed_ms) : ""],
       ["Healed", rec.healed ? "yes" : ""],
     ]))}
+    ${sec(t("review.title"), reviewDetailHtml(rec.review))}
     ${sec(t("prov.env"), provKv([
       ["App", `${env.app || "Agent Hub"} v${env.app_version || ""}`],
       ["Python", [env.python, env.implementation].filter(Boolean).join(" ")],
@@ -2204,6 +2257,207 @@ async function openProvenance(sessionId, messageId) {
       status.textContent = String(err.message || err);
     });
   };
+}
+
+function tpl(key, vars) {
+  return t(key).replace(/\{(\w+)\}/g, (_, k) => (vars && vars[k] != null ? String(vars[k]) : ""));
+}
+
+// ── Reviewer badge (citations / untraceable numbers) ──────────────────
+
+function reviewDetailHtml(rv) {
+  if (!rv || !Object.keys(rv).length) return `<p class="muted">${escapeHtml(t("prov.none"))}</p>`;
+  if (rv.skipped) return `<p class="muted">${escapeHtml(t("review.skipped"))}</p>`;
+  const st = rv.stats || {};
+  const stats = tpl("review.stats", { c: st.citations || 0, t: st.traced_numbers || 0, n: st.numbers || 0, s: st.sources || 0 });
+  const langZh = state.prefs.language !== "en";
+  const kindLabel = (k) => { const key = `rv.${k}`; const v = t(key); return v === key ? k : v; };
+  const items = (rv.issues || []).map((it) => `<li class="rv-${escapeHtml(it.severity || "info")}">
+      <span class="rv-kind">${escapeHtml(kindLabel(it.kind || ""))}</span> <code>${escapeHtml(it.text || "")}</code>
+      <div class="muted">${escapeHtml((langZh && it.detail_zh) || it.detail || "")}</div></li>`).join("");
+  const online = ((rv.online || {}).results || []).map((r) => `<li class="${r.resolved === false ? "rv-warn" : r.resolved ? "rv-ok" : "rv-info"}">
+      <code>${escapeHtml(r.kind)}:${escapeHtml(r.id)}</code> ${r.resolved === false ? "✗" : r.resolved ? "✓" : "?"} ${escapeHtml(r.title || r.error || "")}</li>`).join("");
+  return `<p class="muted">${escapeHtml(stats)}</p>${items ? `<ul class="rv-list">${items}</ul>` : ""}${online ? `<ul class="rv-list">${online}</ul>` : ""}`;
+}
+
+function renderReviewBox(msgEl, rv) {
+  if (!msgEl || !rv || rv.skipped) {
+    msgEl?.querySelector(".review-box")?.remove();
+    return;
+  }
+  let box = msgEl.querySelector(".review-box");
+  if (!box) {
+    box = document.createElement("details");
+    box.className = "review-box";
+    const actions = msgEl.querySelector(".msg-actions");
+    if (actions) actions.insertAdjacentElement("beforebegin", box);
+    else msgEl.appendChild(box);
+  }
+  const warn = rv.warn || 0;
+  const info = rv.info || 0;
+  box.classList.toggle("warn", warn > 0);
+  box.classList.toggle("ok", warn === 0);
+  const head = warn ? tpl("review.issues", { n: warn }) : t("review.ok");
+  const hasIds = ((rv.identifiers || {}).doi || []).length + ((rv.identifiers || {}).pmid || []).length > 0;
+  box.innerHTML = `<summary><span class="rv-badge">${warn ? "⚠" : "✓"} ${escapeHtml(head)}</span>${info ? `<span class="muted"> · ${escapeHtml(tpl("review.notes", { n: info }))}</span>` : ""}</summary>
+    <div class="rv-body">${reviewDetailHtml(rv)}
+      ${hasIds ? `<button type="button" class="btn ghost chip rv-online">${escapeHtml(t("review.online"))}</button> <span class="muted rv-status"></span>` : ""}
+    </div>`;
+  const btn = box.querySelector(".rv-online");
+  if (btn) {
+    btn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      const mid = msgEl.dataset.mid;
+      const status = box.querySelector(".rv-status");
+      if (!mid || !state.currentId) return;
+      btn.disabled = true;
+      if (status) status.textContent = t("review.onlineRunning");
+      try {
+        const res = await api(`/api/review/${encodeURIComponent(state.currentId)}/${encodeURIComponent(mid)}`, {
+          method: "POST", body: JSON.stringify({ online: true }),
+        });
+        renderReviewBox(msgEl, res.review);
+        msgEl.querySelector(".review-box")?.setAttribute("open", "");
+      } catch (err) {
+        btn.disabled = false;
+        if (status) status.textContent = String(err.message || err);
+      }
+    });
+  }
+}
+
+// ── Save workflow as skill ─────────────────────────────────────────────
+
+function saveSkillButtonHtml() {
+  return `<button type="button" class="btn ghost chip msg-act" data-act="save-skill" data-i18n="msg.saveSkill">${escapeHtml(t("msg.saveSkill"))}</button>`;
+}
+
+function slugifyClient(s) {
+  return String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 48);
+}
+
+async function openSkillCapture(sessionId, messageId) {
+  const overlay = $("#skillcap-overlay");
+  if (!overlay || !sessionId) return;
+  const status = $("#skillcap-status");
+  overlay.classList.remove("hidden");
+  $("#skillcap-md").value = "";
+  status.textContent = t("skillcap.loading");
+  try {
+    const d = await api("/api/skills/from-session", {
+      method: "POST", body: JSON.stringify({ session_id: sessionId, message_id: messageId || "" }),
+    });
+    $("#skillcap-name").value = d.name || "";
+    $("#skillcap-slug").value = d.slug || "";
+    $("#skillcap-md").value = d.markdown || "";
+    status.textContent = "";
+  } catch (err) {
+    status.textContent = String(err.message || err);
+  }
+}
+
+function bindSkillCaptureOverlay() {
+  const overlay = $("#skillcap-overlay");
+  if (!overlay) return;
+  const close = () => overlay.classList.add("hidden");
+  $("#btn-skillcap-close")?.addEventListener("click", close);
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !overlay.classList.contains("hidden")) close();
+  });
+  $("#skillcap-name")?.addEventListener("input", (e) => {
+    const md = $("#skillcap-md");
+    const name = e.target.value.trim();
+    if (md && name) md.value = md.value.replace(/^name: .*$/m, `name: ${name}`).replace(/^# .*$/m, `# ${name}`);
+    const slug = slugifyClient(name);
+    if (slug) $("#skillcap-slug").value = slug;
+  });
+  $("#btn-skillcap-save")?.addEventListener("click", async () => {
+    const status = $("#skillcap-status");
+    const btn = $("#btn-skillcap-save");
+    btn.disabled = true;
+    try {
+      const res = await api("/api/skills/from-session/save", {
+        method: "POST",
+        body: JSON.stringify({
+          slug: $("#skillcap-slug").value.trim(),
+          markdown: $("#skillcap-md").value,
+          load: $("#skillcap-load").checked,
+        }),
+      });
+      status.textContent = tpl("skillcap.saved", { id: res.id });
+    } catch (err) {
+      status.textContent = String(err.message || err);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+}
+
+// ── Control Center: science database connectors ────────────────────────
+
+async function renderSciencePanel(langZh) {
+  const panel = $("#ctab-science");
+  if (!panel) return;
+  let data = { items: [], restricted: false };
+  try { data = await api("/api/science/connectors"); } catch (_) {}
+  panel.innerHTML = `
+    <h4>${langZh ? "科学数据库连接器" : "Science database connectors"}</h4>
+    <p class="muted">${langZh
+      ? "公开、只读、免密钥。按问题中的基因 / 蛋白 / 化合物 / 试验编号等自动路由；每次调用都记入审计日志与溯源记录。关闭的库不会被访问。"
+      : "Public, read-only, key-free. Routed automatically from genes / proteins / compounds / trial IDs in the question; every call is audited and recorded in provenance. Disabled databases are never contacted."}</p>
+    ${data.restricted ? `<p class="prov-warn">${langZh ? "当前 data_policy=restricted：所有外部数据库已禁用。" : "data_policy=restricted: all external databases are disabled."}</p>` : ""}
+    <div class="skill-list" id="sci-list"></div>
+    <h4>${langZh ? "测试检索" : "Test a query"}</h4>
+    <div class="row sci-test">
+      <input id="sci-q" type="text" placeholder="${langZh ? "例如：TP53 蛋白功能 / PDB 4HHB / NCT04280705" : "e.g. TP53 protein / PDB 4HHB / NCT04280705"}" />
+      <button type="button" class="btn primary" id="btn-sci-search">${langZh ? "检索" : "Search"}</button>
+    </div>
+    <div id="sci-results" class="sci-results"></div>`;
+  const list = $("#sci-list");
+  (data.items || []).forEach((c) => {
+    const row = document.createElement("div");
+    row.className = "skill-row";
+    row.innerHTML = `<div style="flex:1"><strong>${escapeHtml(langZh ? (c.label_zh || c.label) : c.label)}</strong>
+        <div class="muted">${escapeHtml(langZh ? (c.desc_zh || c.desc) : c.desc)} · <code>${escapeHtml(c.host || "")}</code></div></div>
+      <label class="check"><input type="checkbox" data-sci="${escapeHtml(c.id)}" ${c.enabled ? "checked" : ""} ${data.restricted ? "disabled" : ""} />
+        ${langZh ? "启用" : "Enabled"}</label>`;
+    list.appendChild(row);
+  });
+  list.querySelectorAll("[data-sci]").forEach((box) => {
+    box.addEventListener("change", async () => {
+      try {
+        await api("/api/science/connectors", {
+          method: "POST", body: JSON.stringify({ connectors: { [box.dataset.sci]: box.checked } }),
+        });
+        $("#settings-status").textContent = langZh ? "已保存连接器设置" : "Connector settings saved";
+      } catch (err) {
+        box.checked = !box.checked;
+        $("#settings-status").textContent = String(err.message || err);
+      }
+    });
+  });
+  const run = async () => {
+    const q = $("#sci-q").value.trim();
+    const out = $("#sci-results");
+    if (!q) return;
+    out.innerHTML = `<p class="muted">${langZh ? "检索中…" : "Searching…"}</p>`;
+    try {
+      const r = await api(`/api/science/search?q=${encodeURIComponent(q)}`);
+      const routed = (r.routed || []).join(", ") || (langZh ? "无匹配数据库" : "no matching database");
+      const rows = (r.results || []).map((x) => {
+        const url = /^https?:\/\//i.test(x.url || "") ? x.url : "";
+        return `<li>${url ? `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(x.title || url)}</a>` : escapeHtml(x.title || "")}
+          <span class="muted"> · ${escapeHtml(x.source || "")}</span><div class="muted">${escapeHtml(x.snippet || "")}</div></li>`;
+      }).join("");
+      const errs = (r.errors || []).length ? `<p class="prov-warn">${escapeHtml(r.errors.join(" | "))}</p>` : "";
+      out.innerHTML = `<p class="muted">${langZh ? "路由" : "Routed"}: ${escapeHtml(routed)}</p>${rows ? `<ol class="prov-sources">${rows}</ol>` : `<p class="muted">${langZh ? "无结果" : "No results"}</p>`}${errs}`;
+    } catch (err) {
+      out.innerHTML = `<p class="prov-warn">${escapeHtml(String(err.message || err))}</p>`;
+    }
+  };
+  $("#btn-sci-search").onclick = run;
+  $("#sci-q").addEventListener("keydown", (e) => { if (e.key === "Enter") run(); });
 }
 
 function closeProvenance() {
@@ -2803,6 +3057,7 @@ function makeStreamHandlers(sessionId, assistantEl, bodyEl, startRoute, stateBag
         if (a && payload && payload.message_id) a.dataset.mid = payload.message_id;
         if (payload && payload.grounding_check) showGroundingWarn(payload.grounding_check, a);
         if (a && payload && payload.provenance) ensureProvenanceButton(a);
+        if (a && payload && payload.review) renderReviewBox(a, payload.review);
         if (b) {
           b.innerHTML = renderMd(bag.full || "(完成)");
           bindCodeBoxActions(b);
@@ -4178,6 +4433,7 @@ function appendMessage(m, scroll = true) {
       <button type="button" class="btn ghost chip msg-act ${fb === 1 || fb >= 4 ? "active" : ""}" data-act="up" data-i18n-title="msg.good" title="${escapeHtml(t("msg.good"))}">👍</button>
       <button type="button" class="btn ghost chip msg-act ${fb === -1 || fb === 2 ? "active" : ""}" data-act="down" data-i18n-title="msg.bad" title="${escapeHtml(t("msg.bad"))}">👎</button>
       ${m.provenance ? provenanceButtonHtml() : ""}
+      ${m.error ? "" : saveSkillButtonHtml()}
     ` : ""}
   </div>`;
   div.innerHTML = `<div class="meta">${role}${escapeHtml(route)}</div>${handoff}<div class="body">${
@@ -4190,6 +4446,7 @@ function appendMessage(m, scroll = true) {
   });
   if (m.role !== "user") bindCodeBoxActions(div);
   if (m.role === "assistant" && m.grounding_check) showGroundingWarn(m.grounding_check, div);
+  if (m.role === "assistant" && m.review) renderReviewBox(div, m.review);
   $("#messages").appendChild(div);
   if (m.role === "assistant" && m.route && m.route.multi_subagents) {
     restoreOrchFromRoute(div, m.route, m.content || "");
@@ -4201,6 +4458,10 @@ function appendMessage(m, scroll = true) {
 async function handleMsgAction(el, m, act) {
   if (act === "provenance") {
     openProvenance(state.currentId, (el && el.dataset.mid) || m.id);
+    return;
+  }
+  if (act === "save-skill") {
+    openSkillCapture(state.currentId, (el && el.dataset.mid) || m.id);
     return;
   }
   if (act === "cancel-edit") {
@@ -6774,6 +7035,7 @@ async function renderControl() {
   await renderRuntimesPanel(langZh);
   await renderEcosystemRecommend(langZh);
   await renderMcpPanel(langZh);
+  await renderSciencePanel(langZh);
   await renderSkillsSoulAgents(langZh);
   await renderSearchPanel(langZh);
 
@@ -8598,6 +8860,7 @@ window.addEventListener("focus", () => {
 });
 
 bindProvenanceOverlay();
+bindSkillCaptureOverlay();
 boot().then(() => {
   startGatewayHealthPoll();
   setTimeout(() => { checkScheduleTips({ force: true }).catch(() => {}); }, 700);

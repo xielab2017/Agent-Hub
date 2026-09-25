@@ -811,6 +811,21 @@ def start_chat(
         skill_ids = []
         route_info["skills_skipped"] = True
         route_info["skills_source"] = "skipped"
+    # Workflows the user saved as skills re-activate on matching requests.
+    captured_ids: list[str] = []
+    if not simple_chat and route_info.get("skills_source") != "user":
+        try:
+            from . import skill_capture
+
+            captured_ids = [c for c in skill_capture.match_captured(msg) if c not in skill_ids]
+        except Exception:  # noqa: BLE001
+            captured_ids = []
+        if captured_ids:
+            skill_ids = skill_ids + captured_ids
+            route_info["skills_skipped"] = False
+            route_info["skills_captured"] = captured_ids
+            if route_info.get("skills_source") in ("skipped", "none"):
+                route_info["skills_source"] = "captured"
     route_info["skills"] = skill_ids
     route_info["hub_loaded_skills"] = skills_mod.get_hub_loaded()
     skill_block = "" if simple_chat else skills_mod.skill_context_block(skill_ids)
@@ -820,6 +835,15 @@ def start_chat(
         extra_system = (extra_system + "\n\n" + sub_prompt).strip() if extra_system else sub_prompt
     if skill_block:
         extra_system = (extra_system + "\n\n" + skill_block).strip() if extra_system else skill_block
+    if captured_ids:
+        try:
+            from . import skill_capture
+
+            cap_block = skill_capture.context_block(captured_ids)
+            if cap_block:
+                extra_system = (extra_system + "\n\n" + cap_block).strip() if extra_system else cap_block
+        except Exception:  # noqa: BLE001
+            pass
 
     # Activated ecosystem packages (OpenSquilla / OpenScience / Obsidian …)
     if not simple_chat:
@@ -1101,7 +1125,19 @@ def _attach_provenance(
     route_info: dict[str, Any],
     tools: list[dict[str, Any]],
 ) -> None:
-    """Record an auditable provenance entry for this reply (never raises)."""
+    """Review the reply, then record an auditable provenance entry (never raises)."""
+    try:
+        from . import reviewer
+
+        search = route_info.get("_search") if isinstance(route_info.get("_search"), dict) else {}
+        assistant_msg["review"] = reviewer.review_reply(
+            final_text,
+            sources=list(search.get("sources") or []),
+            evidence_texts=[msg_text, preamble, " ".join(str(t.get("preview") or "") for t in tools or [])],
+            simple_chat=bool(route_info.get("simple_chat")),
+        )
+    except Exception:  # noqa: BLE001
+        pass
     try:
         from . import provenance
 
@@ -1120,6 +1156,7 @@ def _attach_provenance(
             started_at=assistant_msg.get("started_at"),
             healed=bool(assistant_msg.get("healed") or route_info.get("_heal_attempted")),
             history_messages=len(session.messages) if session else None,
+            review=assistant_msg.get("review"),
         )
     except Exception:  # noqa: BLE001
         pass
@@ -1699,6 +1736,8 @@ def _run_agent_streaming(
         }
         if assistant_msg.get("provenance"):
             done_payload["provenance"] = assistant_msg["provenance"]
+        if assistant_msg.get("review"):
+            done_payload["review"] = assistant_msg["review"]
         if assistant_msg.get("elapsed_ms") is not None:
             done_payload["elapsed_ms"] = assistant_msg["elapsed_ms"]
             done_payload["started_at"] = assistant_msg.get("started_at")
@@ -1897,6 +1936,8 @@ def _run_agent_streaming(
                         done_payload["started_at"] = assistant_msg.get("started_at")
                     if assistant_msg.get("provenance"):
                         done_payload["provenance"] = assistant_msg["provenance"]
+                    if assistant_msg.get("review"):
+                        done_payload["review"] = assistant_msg["review"]
                     _put(q, "done", done_payload)
                     return
         except Exception:  # noqa: BLE001
