@@ -1,33 +1,12 @@
 {
- "run_url": "https://github.com/xielab2017/Agent-Hub/actions/runs/36181007207",
+ "run_url": "https://github.com/xielab2017/Agent-Hub/actions/runs/36183235916",
  "profile": "multiomics-emp",
  "smoke": false,
  "steps": [
   {
    "hub": "A",
    "step": "author",
-   "status": "✓ 已安装并加载（minimax-cn/MiniMax-M3）"
-  },
-  {
-   "hub": "A",
-   "step": "export",
-   "bytes": 8377
-  },
-  {
-   "hub": "B",
-   "step": "import",
-   "installed": true,
-   "entry": "run.py",
-   "origin": "agent-hub-authored"
+   "status": "✗ authored SKILL.md still documents non-existent options: --coi, --featured"
   }
- ],
- "run": {
-  "id": "literature-review-20260925-194035-5cbc",
-  "status": "running",
-  "stage": "audited 10/10: 1 unsupported citation(s) corrected",
-  "returncode": null,
-  "outputs": [],
-  "summary": null,
-  "error": null
- }
+ ]
 }

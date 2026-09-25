@@ -15,3 +15,6 @@
 - 2026-09-25 19:40:38 UTC — `015_B_run-started.png` — typed: /skill literature-review profile=multiomics-emp out=outputs/skill_demo/review
 - 2026-09-25 19:45:39 UTC — `016_B_running.png` — running: ⏳ 运行中 · 5 min · 47 行日志
 - 2026-09-25 19:50:40 UTC — `017_B_running.png` — running: ⏳ 运行中 · 10 min · 61 行日志
+- 2026-09-25 20:02:18 UTC — `018_A_home.png` — Hub A started (fresh state, model configured)
+- 2026-09-25 20:02:20 UTC — `019_A_authoring.png` — typed: /skill-author literature-review run=outputs/thbs4_review
+- 2026-09-25 20:03:41 UTC — `020_A_authored.png` — skill authored: ✗ authored SKILL.md still documents non-existent options: --coi, --featured

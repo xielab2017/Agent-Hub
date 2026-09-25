@@ -1,13 +1,6 @@
-[19:40:00] hub A: ['backend: minimax-cn https://api.minimaxi.com/v1 MiniMax-M3']
-[19:40:01] hub A up at http://127.0.0.1:8765 (state /tmp/agenthub-A-xs_vnj_f)
-[19:40:03] screenshot 009_A_home.png
-[19:40:05] screenshot 010_A_authoring.png
-[19:40:26] screenshot 011_A_authored.png
-[19:40:28] screenshot 012_A_exported.png
-[19:40:29] hub B: ['backend: minimax-cn https://api.minimaxi.com/v1 MiniMax-M3']
-[19:40:29] hub B up at http://127.0.0.1:8766 (state /tmp/agenthub-B-1_oxftos)
-[19:40:31] screenshot 013_B_home.png
-[19:40:35] screenshot 014_B_imported.png
-[19:40:38] screenshot 015_B_run-started.png
-[19:45:39] screenshot 016_B_running.png
-[19:50:40] screenshot 017_B_running.png
+[20:02:15] hub A: ['backend: minimax-cn https://api.minimaxi.com/v1 MiniMax-M3']
+[20:02:16] hub A up at http://127.0.0.1:8765 (state /tmp/agenthub-A-1e8q44cw)
+[20:02:18] screenshot 018_A_home.png
+[20:02:20] screenshot 019_A_authoring.png
+[20:03:41] screenshot 020_A_authored.png
+authoring failed: ✗ authored SKILL.md still documents non-existent options: --coi, --featured
