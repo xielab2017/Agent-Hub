@@ -56,3 +56,8 @@
 [   494s]   gap: PaintOmics web-based pathway-level multi-omics integration tool (Garci → 0 papers
 [   495s]   gap: 3Omics web-based multi-omics visualization and integration tool for tr → 1 papers
 [   518s] reviewer gaps: 6 new evidence cards — R61 Stuart T 2019; R62 Mallick H 2021; R63 Lin H 2020; R64 Lê Cao KA 2016; R65 Garali I 2018; R66 Kuo TC 2013
+[   531s]   revised 1/10 (766 words, 25 cards)
+[   544s]   revised 3/10 (1266 words, 34 cards)
+[   553s]   revised 4/10 (917 words, 17 cards)
+[   607s]   revised 5/10 (1337 words, 25 cards)
+[   613s]   revised 2/10 (1017 words, 20 cards)
