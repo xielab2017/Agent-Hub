@@ -175,7 +175,7 @@ def main() -> int:
             m = o["msg"]
             say(f"   step {nxt['step']}/{nxt['total']} {nxt['title']}: {o['secs']}s error={bool(m.get('error'))} "
                 f"warn={(m.get('review') or {}).get('warn')}")
-            for n in [x for x in o["notes"] if "英文检索词" in x or "检索完成" in x or "检索失败" in x][:3]:
+            for n in [x for x in o["notes"] if "英文检索词" in x or "检索完成" in x or "检索失败" in x][:4]:
                 say("     ·", n)
             for src in ((m.get("evidence") or {}).get("sources") or [])[:5]:
                 say(f"     [{src.get('n')}] read={src.get('page_read')} {str(src.get('title') or '')[:90]}")

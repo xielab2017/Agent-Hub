@@ -1391,14 +1391,20 @@ def english_search_terms(query: str, route_info: dict[str, Any] | None = None, *
         key = (resolve_api_key(cfg, provider=provider).get("key") or "") if provider else ""
         if not base or not model or (not key and provider != "local-ollama"):
             return ""
+        # reasoning models (MiniMax-M2 …) think before answering: leave room for both
         text = llm_client._chat_once(
-            base, key, model=model, timeout=timeout, max_tokens=400, temperature=0.0,
+            base, key, model=model, timeout=timeout, max_tokens=1500, temperature=0.0,
             verify_tls=resolve_backend_verify_tls(cfg, route_info or {}),
             messages=[{"role": "system", "content": _EN_TERMS_PROMPT}, {"role": "user", "content": q[:500]}],
         )
-    except Exception:  # noqa: BLE001 — search still runs with the original words
+    except Exception as exc:  # noqa: BLE001 — search still runs with the original words
+        if route_info is not None:
+            route_info["search_terms_en_error"] = str(exc)[:200]
         return ""
-    line = strip_model_think_tags(text or "").strip().splitlines()
+    visible = strip_model_think_tags(text or "").strip()
+    if not visible and "</think>" not in (text or "") and route_info is not None:
+        route_info["search_terms_en_error"] = "model reply ended inside its reasoning"
+    line = visible.splitlines()
     terms = re.sub(r"[^A-Za-z0-9 ,\-()/+.]", " ", line[0] if line else "")
     terms = re.sub(r"\s+", " ", terms).strip(" ,.")
     return terms[:120] if len(re.findall(r"[A-Za-z]{3,}", terms)) >= 1 else ""
@@ -1430,6 +1436,8 @@ def _run_deferred_search(q: queue.Queue, route_info: dict[str, Any], *, quiet: b
         if english:
             note(f"英文检索词：{english}")
             route_info["search_terms_en"] = english
+        elif route_info.get("search_terms_en_error"):
+            note(f"英文检索词生成失败（{route_info['search_terms_en_error'][:80]}），按原文检索")
         search_res = websearch_mod.search_structured(f"{msg} {english}".strip() if english else msg,
                                                      limit=search_limit, deep=True)
         search_block = str(search_res.get("context_markdown") or "")

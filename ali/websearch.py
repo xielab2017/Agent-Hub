@@ -737,6 +737,11 @@ def deep_search(query: str, *, limit: int = 10) -> dict[str, Any]:
                 relevant = host_hits + [r for r in relevant if r not in host_hits]
         if relevant:
             uniq = relevant
+        elif not sportish and any(t.isascii() for t in q_tokens) and _is_research(query):
+            # A research query with English terms that no result mentions: these are
+            # unrelated papers (e.g. reporting guidelines) — report "no relevant results".
+            errors.append("no result matched the query terms")
+            uniq = []
     uniq = uniq[:limit]
     # Final grounding check on the ranked top-N: if relevance is still low, swap in a fallback.
     if not uniq:
@@ -799,6 +804,15 @@ def deep_search(query: str, *, limit: int = 10) -> dict[str, Any]:
         },
         "warnings": (["未发现明确权威域名，关键结论需人工核验"] if uniq and not authoritative_count else []),
     }
+
+
+def _is_research(query: str) -> bool:
+    try:
+        from .search_extensions import classify_intent
+
+        return classify_intent(query) == "academic"
+    except Exception:  # noqa: BLE001
+        return False
 
 
 def search_status() -> dict[str, Any]:

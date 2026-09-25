@@ -464,3 +464,17 @@ def test_chinese_research_question_gets_english_search_terms(monkeypatch):
     # a failing model never blocks the search
     monkeypatch.setattr("ali.llm_client._chat_once", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("down")))
     assert streaming.english_search_terms("运动能否提高人体循环中鸢尾素的血浆浓度") == ""
+
+
+def test_research_search_drops_results_that_match_no_query_term(monkeypatch):
+    from ali import websearch
+
+    junk = [{"title": "The PRISMA 2020 statement: an updated guideline for reporting systematic reviews",
+             "url": "https://doi.org/10.1136/bmj.n71", "snippet": "reporting guideline", "source": "crossref"}]
+    monkeypatch.setattr(websearch, "_search_once", lambda q, **k: {"ok": True, "results": list(junk), "engines": ["crossref"]})
+    out = websearch.deep_search("运动能否提高鸢尾素水平 文献 exercise irisin", limit=8)
+    assert out["results"] == [] and out["ok"] is False
+    # an ordinary Chinese web query keeps its results (its tokens rarely appear verbatim)
+    page = [{"title": "深圳天气预报", "url": "https://www.weather.com.cn/sz", "snippet": "明天多云", "source": "bing"}]
+    monkeypatch.setattr(websearch, "_search_once", lambda q, **k: {"ok": True, "results": list(page), "engines": ["bing"]})
+    assert websearch.deep_search("深圳明天天气怎么样", limit=8)["results"]
