@@ -334,8 +334,41 @@ WRITER_SYSTEM = (
     "Write in precise academic English. Ground every factual statement in the evidence cards you are given and "
     "cite them inline with their ids exactly as [R12] or [R3, R7]; never invent references, authors, years or "
     "numbers that are not in the cards. Where the evidence is weak, correlative, species-specific or conflicting, "
-    "say so explicitly and give your own reasoned critical view."
+    "say so explicitly and give your own reasoned critical view. The text is the manuscript itself: never mention "
+    "evidence cards, card ids in prose (write 'a secretion-defective model [R9]', not 'the R9 model'), reviewers, "
+    "revisions or these instructions."
 )
+
+# manuscript prose must not talk about its own production
+_META_RE = re.compile(
+    r"evidence cards?|\bthe cards?\b|\bcard \[|\breviewers?\b|\bthis revision\b|\brevised (?:text|section|version)\b|"
+    r"\bas requested\b|\bwe (?:have )?(?:revised|added|removed|clarified)\b|\bcitation is\b|\bis (?:fully |now )?supported by\b"
+    r"|\bprevious draft\b|\bthe manuscript\b", re.I)
+
+
+def prose_problems(text: str) -> list[str]:
+    """Deterministic checks: card ids used as words, and text about the writing / review process."""
+    problems = []
+    plain = CITE_RE.sub("", normalize_cites(text))
+    bare = sorted(set(re.findall(r"\bR\d+\b", plain)))
+    if bare:
+        problems.append(f"card ids used as words in the prose ({', '.join(bare[:6])}): name the study or model instead "
+                        "and cite it in brackets")
+    seen: set[str] = set()
+    for m in _META_RE.finditer(plain):
+        if m.group(0).lower() in seen or len(seen) >= 4:
+            continue
+        seen.add(m.group(0).lower())
+        start = max(0, m.start() - 60)
+        problems.append(f"meta text about sources / review process: \"…{plain[start:m.end() + 40].strip()}…\" — "
+                        "rewrite as plain scientific prose")
+    return problems
+
+
+def scrub_prose(text: str) -> str:
+    """Last-resort cleanup after renumbering: a remaining bare card id reads as a plain reference."""
+    parts = re.split(r"(\[[^\[\]]*\])", normalize_cites(text))  # only text outside citation brackets
+    return "".join(p if p.startswith("[") else re.sub(r"\b(?:the |this )?R(\d+)\b", r"ref. [R\1]", p) for p in parts)
 
 
 def plan_queries(llm: HubLLM, topic: str, seeds: list[str]) -> list[str]:
@@ -483,6 +516,7 @@ def section_problems(text: str, cards: list[dict[str, Any]]) -> list[str]:
 
     ids = {c["id"] for c in cards}
     problems = [f"[R{i}] is not an evidence card id" for i in sorted(set(cited_ids(text)) - ids)]
+    problems += prose_problems(text)
     if len(cited_ids(text)) < 3:
         problems.append("too few citations: ground the claims in the evidence cards")
     plain = CITE_RE.sub("", text)
@@ -539,9 +573,37 @@ def revise_section(llm: HubLLM, sec_heading: str, text: str, reviews: list[dict[
     comments = "\n\n".join(f"### {r['label']}\n{r['report']}" for r in reviews)
     return llm(WRITER_SYSTEM, (
         f"Revise the section \"{sec_heading}\" to address every reviewer comment that concerns it (and the general ones). "
-        "Keep the [R<id>] citation style; only cite evidence cards; keep or sharpen the critical viewpoint. Return only "
-        f"the revised section text (no heading, no notes).\n\nREVIEWER COMMENTS\n{comments}\n\nCURRENT SECTION\n{text}\n\n"
+        "Keep the [R<id>] citation style; only cite evidence cards; keep or sharpen the critical viewpoint. Keep the "
+        "length within about 20% of the current section — tighten elsewhere when adding material. Return only the "
+        "revised section text: no heading, no notes, and no mention of reviewers, comments, cards or the revision."
+        f"\n\nREVIEWER COMMENTS\n{comments}\n\nCURRENT SECTION\n{text}\n\n"
         f"EVIDENCE CARDS\n{card_block(cards, abstract_chars=400)}"), max_tokens=12000)
+
+
+def audit_section(llm: HubLLM, heading: str, text: str, cards: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Citation audit: sentences whose cited cards do not support them (checked against the cards' abstracts)."""
+    by_id = {c["id"]: c for c in cards}
+    used = [by_id[i] for i in dict.fromkeys(cited_ids(text)) if i in by_id]
+    if not used:
+        return []
+    got = ask_json(llm, "You are a meticulous fact-checker for a scientific journal. Use only the given abstracts.", (
+        f"Section \"{heading}\" of a review cites evidence cards as [R<id>]. For every sentence with a citation, check "
+        "whether the cited card(s) actually support the specific claim (finding, species, direction of effect, "
+        "tissue, numbers). Return a JSON array of the problems only: {\"sentence\": \"exact sentence\", \"cards\": [ids], "
+        "\"issue\": \"what is not supported or is misattributed\", \"fix\": \"corrected wording or the card that does "
+        "support it\"}. Ignore sentences that are the author's own interpretation and are phrased as such. Return [] if "
+        f"all citations are supported.\n\nSECTION\n{text}\n\nCITED CARDS\n{card_block(used, abstract_chars=1400)}"),
+        expect=list, max_tokens=12000, temperature=0.1)
+    return [g for g in got if isinstance(g, dict) and g.get("sentence")]
+
+
+def apply_audit(llm: HubLLM, heading: str, text: str, issues: list[dict[str, Any]], cards: list[dict[str, Any]]) -> str:
+    listing = "\n".join(f"- \"{i.get('sentence')}\" — {i.get('issue')} Fix: {i.get('fix')}" for i in issues)
+    return clean_section(llm(WRITER_SYSTEM, (
+        f"A fact-check of the section \"{heading}\" found citations that do not support their sentences. Correct each "
+        "one (reword the claim to what the card shows, cite the right card, or drop the claim); change nothing else. "
+        f"Return the full section.\n\nPROBLEMS\n{listing}\n\nSECTION\n{text}\n\nEVIDENCE CARDS\n"
+        f"{card_block(cards, abstract_chars=400)}"), max_tokens=12000), heading)
 
 
 def response_letter(llm: HubLLM, reviews: list[dict[str, str]], changes: str) -> str:
@@ -774,10 +836,27 @@ def run(topic: str, out_dir: Path, *, seed_queries: list[str], seed_pmids: list[
         return out
 
     revised = ck.stage("integrated", integrate)
+    audit_log: list[dict[str, Any]] = []
+
+    def audit(i: int) -> str:
+        heading = sections[i]["heading"]
+        issues = audit_section(llm, heading, revised[i], cards)
+        text = apply_audit(llm, heading, revised[i], issues, cards) if issues else revised[i]
+        if prose_problems(text):
+            text = clean_section(llm(WRITER_SYSTEM, "Fix these problems in the section and return it in full:\n- "
+                                     + "\n- ".join(prose_problems(text)) + f"\n\nSECTION\n{text}", max_tokens=12000),
+                                 heading)
+        audit_log.append({"section": heading, "issues": issues})
+        log(f"  audited {i + 1}/{len(sections)}: {len(issues)} unsupported citation(s) corrected")
+        return text
+
+    revised = ck.per_item("audited", len(sections), audit)
+    if audit_log:
+        (out_dir / "citation_audit.json").write_text(json.dumps(audit_log, ensure_ascii=False, indent=1), encoding="utf-8")
     valid = {c["id"] for c in cards}
     table_rows = ck.stage("table", lambda: key_studies_table(llm, cards))
     table_texts = [r.get("finding", "") for r in table_rows]
-    body_texts = revised + [f"[R{_card_id(r['card'])}]" for r in table_rows]
+    body_texts = [scrub_prose(t) for t in revised] + [f"[R{_card_id(r['card'])}]" for r in table_rows]
     numbered, order = renumber(body_texts, valid)
     sections_final = [(s["heading"], t) for s, t in zip(sections, numbered[:len(sections)])]
     by_id = {c["id"]: c for c in cards}

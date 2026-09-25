@@ -71,6 +71,15 @@ def test_card_ids_and_focus_ranking():
     assert [c["pmid"] for c in cards] == ["5", "2", "1", "4"]  # seed, title mention, abstract mention, context
 
 
+def test_prose_checks_and_scrub():
+    text = "The R9 model [R9] shows (R3, R4) effects. This claim is supported by evidence card [R2]."
+    problems = rw.prose_problems(text)
+    assert any("card ids used as words (R9)" in p or "(R9)" in p for p in problems)
+    assert any("meta text" in p for p in problems)
+    assert rw.prose_problems("THBS4 stabilises the sarcolemma [R2] in mice [R3, R4].") == []
+    assert rw.scrub_prose("derives from R44 rather than R35 [R1–R2].") == "derives from ref. [R44] rather than ref. [R35] [R1, R2]."
+
+
 class FakeLLM:
     """Answers each pipeline prompt by its shape; cites every card it is shown."""
 
@@ -99,6 +108,8 @@ class FakeLLM:
             return json.dumps([{"card": i, "model": "mouse", "finding": "f", "limitation": "l"} for i in ids[:3]])
         if "peer reviewer" in user or "Review this manuscript" in user:
             return "Summary assessment\n\nMajor comments\n1. Over-claims myokine status.\n\nMinor comments\n1. Typo."
+        if "fact-checker" in system:
+            return '[{"sentence": "THBS4 is expressed in muscle.", "cards": [1], "issue": "overstated", "fix": "reword"}]'
         if "abstract (200-250 words" in user:
             return '{"abstract": "An abstract.", "keywords": ["THBS4", "myokine"]}'
         if "Response to reviewers" in user:
@@ -127,6 +138,9 @@ def test_run_end_to_end_offline(tmp_path, monkeypatch):
     assert "[R" not in final and "[1" in final and "[45] " in final
     # the three reviewers are the Hub subagents
     assert sum('Agent Hub subagent "Reviewer' in s for s in llm.systems) == 3
+    assert sum("fact-checker" in s for s in llm.systems) == 2  # one citation audit per section
+    audit = json.loads((tmp_path / "citation_audit.json").read_text())
+    assert len(audit) == 2 and audit[0]["issues"][0]["issue"] == "overstated"
     for name in ("review.docx", "draft_v1.md", "reviewer_reports.md", "response_to_reviewers.md", "evidence_cards.json"):
         assert (tmp_path / name).exists(), name
     from docx import Document
