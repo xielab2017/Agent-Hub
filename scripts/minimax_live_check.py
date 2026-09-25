@@ -53,7 +53,7 @@ def say(*parts: object) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--region", default="auto", choices=("auto", "minimax-cn", "minimax"))
-    ap.add_argument("--model", default="", help="model id (default: MiniMax-M2, or the first listed)")
+    ap.add_argument("--model", default="", help="model id (default: MiniMax-M3, then MiniMax-M2, else the first listed)")
     ap.add_argument("--quick", action="store_true", help="skip the multi-step task")
     ap.add_argument("--hermes", action="store_true", help="also run chat / tool call / memory through Hermes Agent "
                                                           "(pip install hermes-agent)")
@@ -100,7 +100,8 @@ def main() -> int:
         say("   ✗ neither region accepted the key — check the key, or network access to api.minimaxi.com / api.minimax.io")
         return 1
     models = probe["results"].get(region, {}).get("models") or []
-    model = args.model or ("MiniMax-M2" if not models or "MiniMax-M2" in models else models[0])
+    preferred = [m for m in ("MiniMax-M3", "MiniMax-M2") if not models or m in models]
+    model = args.model or (preferred[0] if preferred else models[0])
     base_url = (probe["results"].get(region) or {}).get("base_url") or get_provider(region)["base_url"]
     say(f"   ✓ region={region} endpoint={base_url} model={model}")
     results["region"] = region
@@ -178,7 +179,8 @@ def main() -> int:
             for n in [x for x in o["notes"] if "英文检索词" in x or "检索完成" in x or "检索失败" in x][:4]:
                 say("     ·", n)
             for src in ((m.get("evidence") or {}).get("sources") or [])[:5]:
-                say(f"     [{src.get('n')}] read={src.get('page_read')} {str(src.get('title') or '')[:90]}")
+                say(f"     [{src.get('n')}] read={src.get('page_read')} {str(src.get('url') or '')[:60]} "
+                    f"{str(src.get('title') or '')[:70]} {('(' + src['page_error'] + ')') if src.get('page_error') else ''}")
             for issue in [i for i in (m.get("review") or {}).get("issues") or [] if i.get("severity") == "warn"][:6]:
                 say(f"     ! {issue.get('kind')}: {issue.get('text')} — {str(issue.get('detail_zh') or issue.get('detail'))[:140]}")
             say("     reply:", re.sub(r"\s+", " ", str(m.get("content") or ""))[:500])

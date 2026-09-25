@@ -216,6 +216,7 @@ def build_evidence(query: str, sources: list[dict[str, Any]], pages: list[dict[s
             "preprint": s["preprint"],
             "date": s["date"] or (page and _page_date(page)) or "",
             "page_read": bool(page.get("ok")),
+            "page_error": str(page.get("error") or "")[:120] if page and not page.get("ok") else "",
             "passages": passages[:4],
         })
         blob = "\n".join([str(s.get("title") or ""), str(s.get("snippet") or "")] + passages)

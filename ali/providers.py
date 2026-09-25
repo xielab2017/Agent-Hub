@@ -296,10 +296,10 @@ PROVIDERS: dict[str, dict[str, Any]] = {
         "openai_compatible": True,
         "hint": "MiniMax 国际区 api.minimax.io（OpenAI 兼容，亦支持 /anthropic）。中国大陆账号 / Key 请选「MiniMax（中国大陆区）」。",
         "models": _m(
-            fast="MiniMax-M2",
-            main="MiniMax-M2",
-            vision="MiniMax-M2",
-            reasoning="MiniMax-M2",
+            fast="MiniMax-M3",
+            main="MiniMax-M3",
+            vision="MiniMax-M3",
+            reasoning="MiniMax-M3",
             embedding="",
             reranker="",
         ),
@@ -330,10 +330,10 @@ PROVIDERS: dict[str, dict[str, Any]] = {
         "hint": ("MiniMax 中国大陆区 api.minimaxi.com（OpenAI 兼容），含 Coding / Token Plan（sk-cp-…）；"
                  "Anthropic 兼容地址 https://api.minimax.cn/anthropic 也可直接填入。国际账号请选「MiniMax（国际区）」。"),
         "models": _m(
-            fast="MiniMax-M2",
-            main="MiniMax-M2",
-            vision="MiniMax-M2",
-            reasoning="MiniMax-M2",
+            fast="MiniMax-M3",
+            main="MiniMax-M3",
+            vision="MiniMax-M3",
+            reasoning="MiniMax-M3",
             embedding="",
             reranker="",
         ),
@@ -517,7 +517,7 @@ HYBRID_PRESETS: dict[str, dict[str, Any]] = {
     "china_office": {
         "label": "国内办公：Kimi办 + DeepSeek推 + MiniMax快",
         "routes": {
-            "simple": {"provider": "minimax-cn", "model": "MiniMax-M2"},
+            "simple": {"provider": "minimax-cn", "model": "MiniMax-M3"},
             "office": {"provider": "kimi", "model": "kimi-for-coding"},
             "vision": {"provider": "kimi", "model": "kimi-for-coding"},
             "reasoning": {"provider": "deepseek", "model": "deepseek-reasoner"},
