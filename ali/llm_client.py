@@ -202,11 +202,18 @@ def _format_http_error(
     where = f" url={url}" if url else ""
     who = f" model={model}" if model else ""
     if exc.code == 401:
+        low = (url or "").lower()
+        vendor = ""
+        if "openrouter" in low:
+            vendor = "OpenRouter 密钥以 sk-or- 开头。"
+        elif "nvidia" in low:
+            vendor = "NVIDIA 密钥以 nvapi- 开头。"
+        elif "minimax" in low:
+            vendor = ("MiniMax 国际区（api.minimax.io）与中国大陆区（api.minimaxi.com）的 Key 不通用，"
+                      "请确认所选厂商区域与 Key 所属区域一致。")
         return (
-            "HTTP 401 Unauthorized — API Key 无效，或密钥与后端厂商不匹配。"
-            "OpenRouter 密钥以 sk-or- 开头（后端须选 openrouter）；"
-            "NVIDIA 密钥以 nvapi- 开头（后端须选 nvidia-nim）。"
-            f"{where}{who} 详情: {hint[:300]}"
+            "HTTP 401 Unauthorized — API Key 无效、已过期，或与所选厂商 / 区域不匹配。"
+            f"{vendor}{where}{who} 详情: {hint[:300]}"
         )
     if exc.code == 400:
         return (
@@ -224,6 +231,17 @@ def _format_http_error(
     return f"HTTP {exc.code}: {hint[:500]}{where}{who}"
 
 
+RETRY_STATUS = (429, 500, 502, 503, 504, 529)
+RETRY_DELAYS = (1.5, 4.0)
+
+
+def _retry_after(value: Any) -> float | None:
+    try:
+        return max(0.0, min(float(value), 10.0))
+    except (TypeError, ValueError):
+        return None
+
+
 def stream_chat(
     base_url: str,
     api_key: str,
@@ -235,8 +253,63 @@ def stream_chat(
     on_token: Callable[[str], None] | None = None,
     temperature: float | None = None,
     max_tokens: int | None = None,
+    meta: dict[str, Any] | None = None,
+    retry_delays: tuple[float, ...] = RETRY_DELAYS,
+    sleep: Callable[[float], None] = time.sleep,
 ) -> str:
-    """Stream chat completions; returns full assistant text."""
+    """Stream chat completions; returns full assistant text.
+
+    Rate limits (429), provider 5xx and dropped connections are retried with
+    backoff while nothing has streamed yet.  ``meta`` receives ``attempts``,
+    ``retries`` (status per retry) and ``truncated`` (stream ended without a
+    finish marker).
+    """
+    meta = meta if meta is not None else {}
+    streamed = {"n": 0}
+
+    def _tok(t: str) -> None:
+        streamed["n"] += 1
+        if on_token:
+            on_token(t)
+
+    meta.setdefault("retries", [])
+    for attempt in range(len(retry_delays) + 1):
+        meta["attempts"] = attempt + 1
+        try:
+            return _stream_chat_once(
+                base_url, api_key, model=model, messages=messages, timeout=timeout, verify_tls=verify_tls,
+                on_token=_tok, temperature=temperature, max_tokens=max_tokens, meta=meta,
+            )
+        except Exception as exc:  # noqa: BLE001
+            status = getattr(exc, "status", None)
+            # Refused / reset connections are worth another try; a timeout already
+            # waited the full budget, so it is not retried.
+            timed_out = isinstance(exc, TimeoutError) or "timed out" in str(exc).lower()
+            transient = status in RETRY_STATUS or (
+                status is None and not timed_out and isinstance(exc, (urllib.error.URLError, ConnectionError))
+            )
+            if streamed["n"] or not transient or attempt >= len(retry_delays):
+                raise
+            delay = _retry_after(getattr(exc, "retry_after", None))
+            meta["retries"].append(status or type(exc).__name__)
+            sleep(retry_delays[attempt] if delay is None else delay)
+    raise RuntimeError("unreachable")
+
+
+def _stream_chat_once(
+    base_url: str,
+    api_key: str,
+    *,
+    model: str,
+    messages: list[dict[str, str]],
+    timeout: float = 120,
+    verify_tls: bool = True,
+    on_token: Callable[[str], None] | None = None,
+    temperature: float | None = None,
+    max_tokens: int | None = None,
+    meta: dict[str, Any] | None = None,
+) -> str:
+    meta = meta if meta is not None else {}
     base = _normalize_base(base_url)
     if not base:
         raise ValueError("base_url empty")
@@ -288,6 +361,7 @@ def stream_chat(
 
     ctx = _ssl_context(verify_tls)
     parts: list[str] = []
+    completed = False
     try:
         with urllib.request.urlopen(req, timeout=timeout, context=ctx) as resp:
             # Bound per-read waits so a provider that never sends [DONE] cannot
@@ -313,6 +387,7 @@ def stream_chat(
                 if text.startswith("data:"):
                     payload = text[5:].strip()
                     if payload == "[DONE]":
+                        completed = True
                         break
                     try:
                         obj = json.loads(payload)
@@ -336,6 +411,7 @@ def stream_chat(
                         if on_token:
                             on_token(delta)
                     if finished:
+                        completed = True
                         break
                     if parts and (time.time() - last_data) > idle_limit:
                         break
@@ -347,6 +423,11 @@ def stream_chat(
         msg = _format_http_error(exc, url=url, model=model)
         if exc.code == 401:
             raise RuntimeError(msg) from exc
+        if exc.code in RETRY_STATUS:
+            err = RuntimeError(msg)
+            err.status = exc.code  # type: ignore[attr-defined]
+            err.retry_after = (exc.headers or {}).get("Retry-After") if exc.headers else None  # type: ignore[attr-defined]
+            raise err from exc
         # Non-stream fallback (some gateways reject SSE but accept JSON)
         if exc.code in (400, 404, 415, 422):
             try:
@@ -365,6 +446,8 @@ def stream_chat(
                 raise RuntimeError(f"{msg} | 非流式重试失败: {fallback_exc}") from fallback_exc
         raise RuntimeError(msg) from exc
 
+    if parts and not completed:
+        meta["truncated"] = True  # connection ended without finish_reason / [DONE]
     if not parts:
         # Some endpoints ignore stream=true
         return _chat_once(

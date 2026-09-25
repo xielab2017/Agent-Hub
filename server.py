@@ -105,6 +105,12 @@ def main(argv: list[str] | None = None) -> int:
     except Exception:  # noqa: BLE001
         pass
     start_scheduler()
+    try:
+        from ali.streaming import recover_interrupted_runs
+
+        recover_interrupted_runs()
+    except Exception:  # noqa: BLE001
+        pass
     RUNTIME["host"] = args.host
     RUNTIME["port"] = args.port
     server = ThreadingHTTPServer((args.host, args.port), Handler)

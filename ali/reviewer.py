@@ -32,18 +32,22 @@ _DOI_CANDIDATE_RE = re.compile(r"(?:\bdoi\s*[:：]\s*|doi\.org/)([^" + _STOP + r
 _DOI_VALID_RE = re.compile(r"^10\.\d{4,9}/[-._;()/:A-Za-z0-9<>]+$")
 _PMID_RE = re.compile(r"\bPMID\s*[:：]?\s*([^" + _STOP + r"]+)", re.I)
 
+# Mass / activity per volume in any case (ng/ml, pg/mL, mg/dL, IU/L); tried before bare "ng".
+CONC_UNIT = r"(?i:(?:[pnmµμu]?g|IU|U)\s*/\s*[dmµμ]?l)(?![a-z])"
 _UNITS = (
-    r"nM|μM|µM|uM|mM|pM|fM|mg/kg|mg/mL|μg/mL|ng/mL|mg|μg|µg|ng|kg|kDa|Da|Å|bp|kb|Mb|Gb|aa|"
+    CONC_UNIT + r"|nM|μM|µM|uM|mM|pM|fM|mg/kg|mg|μg|µg|ng|kg|kDa|Da|Å|bp|kb|Mb|Gb|aa|"
     r"mmHg|°C|倍|fold|例|名患者|名受试者|名|位患者|人|只小鼠|只|个样本|个细胞|samples?|patients?|"
     r"participants?|subjects?|cells?|mice|reads|genes?|个基因"
 )
 _NUM = r"\d+(?:[.,]\d+)*(?:\.\d+)?"
+_RANGE_SEP = r"\s*(?:-|–|—|~|～|至|到)\s*"
+_NUM_RANGE = _NUM + r"(?:" + _RANGE_SEP + _NUM + r")?"
 _CLAIM_PATTERNS: list[tuple[str, re.Pattern, str]] = [
     ("percent", re.compile(r"(?<![\w.])(" + _NUM + r")\s*[%％]"), "warn"),
     ("p_value", re.compile(r"\b[pP]\s*(?:值)?\s*[<=≤>≥]\s*(" + r"\d*\.?\d+(?:\s*[×x*]\s*10\^?-?\d+|[eE]-?\d+)?" + r")"), "warn"),
     ("statistic", re.compile(r"\b(?:IC50|EC50|Kd|Ki|HR|OR|RR|AUC|R2|R²|FDR|log2FC|CI)\s*(?:值)?\s*[=:：为≈~]?\s*(" + _NUM + r")", re.I), "warn"),
     ("sample_size", re.compile(r"\b[nN]\s*=\s*(\d[\d,]*)"), "warn"),
-    ("quantity", re.compile(r"(?<![\w.])(" + _NUM + r")\s*(?:" + _UNITS + r")(?![A-Za-z])"), "info"),
+    ("quantity", re.compile(r"(?<![\w.])(" + _NUM_RANGE + r")\s*(?:" + _UNITS + r")(?![A-Za-z])"), "info"),
 ]
 _YEAR_RE = re.compile(r"^(?:19|20)\d{2}$")
 _EVIDENCE_NUM_RE = re.compile(r"\d+(?:[.,]\d+)*")
@@ -98,6 +102,14 @@ def normalize_number(raw: str) -> str:
     return s
 
 
+def normalize_value(raw: str) -> str:
+    """normalize_number, keeping ranges ("0.26–1.86" → "0.26-1.86")."""
+    parts = [p for p in re.split(_RANGE_SEP, (raw or "").strip()) if p]
+    if len(parts) == 2:
+        return f"{normalize_number(parts[0])}-{normalize_number(parts[1])}"
+    return normalize_number(raw)
+
+
 def _evidence_numbers(evidence: str) -> set[str]:
     out: set[str] = set()
     for m in _EVIDENCE_NUM_RE.findall(evidence or ""):
@@ -109,7 +121,14 @@ def _evidence_numbers(evidence: str) -> set[str]:
     return out
 
 
+def _states_value(value: str, nums: set[str]) -> bool:
+    return all(p in nums for p in normalize_value(value).split("-") if p)
+
+
 def _traceable(value: str, kind: str, evidence_nums: set[str]) -> bool:
+    rng = normalize_value(value)
+    if "-" in rng:
+        return all(p in evidence_nums for p in rng.split("-"))
     n = normalize_number(value)
     if n in evidence_nums:
         return True
@@ -187,8 +206,10 @@ def review_reply(
             "回复使用了编号引用，但本轮没有检索到任何来源。",
         ))
     else:
+        # Sources may carry task-wide numbers ("n"); otherwise they are 1..N in order.
+        valid = {int(s.get("n") or i) for i, s in enumerate(srcs, start=1)}
         for n in cited_set:
-            if n < 1 or n > n_sources:
+            if n not in valid:
                 issues.append(_issue("citation_out_of_range", "warn", f"[{n}]", f"Only {n_sources} sources were retrieved.",
                                      f"本轮只检索到 {n_sources} 条来源。"))
 
@@ -250,10 +271,11 @@ def review_reply(
     seen: set[str] = set()
     spans: list[tuple[int, int]] = []
     number_prose = _DOI_RE.sub(" ", _URL_RE.sub(" ", prose))
+    reply_nums = _evidence_numbers(number_prose)
     for kind, pat, severity in _CLAIM_PATTERNS:
         for m in pat.finditer(number_prose):
             raw = m.group(1)
-            norm = normalize_number(re.split(r"\s*[×x*eE]", raw)[0]) if kind == "p_value" else normalize_number(raw)
+            norm = normalize_number(re.split(r"\s*[×x*eE]", raw)[0]) if kind == "p_value" else normalize_value(raw)
             if _YEAR_RE.match(norm) and kind == "quantity":
                 continue
             # One claim per number: skip repeats and overlaps with an earlier pattern
@@ -270,12 +292,21 @@ def review_reply(
                     shown = m.group(0).strip()
                     if any(f.get("conflict") for f in support):
                         alt = next((c for c in conflicts_ev if any(v["value"] == norm for v in c["values"])), None)
-                        others = ", ".join(v["display"] for v in (alt or {}).get("values", []) if v["value"] != norm)
-                        issues.append(_issue(
-                            "conflicting_number", "warn", shown,
-                            f"Sources disagree on this metric (other values: {others or 'n/a'}) — state both and justify the choice.",
-                            f"来源对该指标的数值不一致（其他值：{others or '无'}）——应同时列出并说明取舍理由。",
-                        ))
+                        other_vals = [v for v in (alt or {}).get("values", []) if v["value"] != norm]
+                        others = ", ".join(v["display"] for v in other_vals)
+                        if other_vals and all(_states_value(v["value"], reply_nums) for v in other_vals):
+                            # The reply already reports the competing values — the digest's instruction was followed.
+                            issues.append(_issue(
+                                "conflict_reported", "info", shown,
+                                f"Sources disagree ({others}); the reply states both values.",
+                                f"来源数值不一致（{others}）；回复已同时列出。",
+                            ))
+                        else:
+                            issues.append(_issue(
+                                "conflicting_number", "warn", shown,
+                                f"Sources disagree on this metric (other values: {others or 'n/a'}) — state both and justify the choice.",
+                                f"来源对该指标的数值不一致（其他值：{others or '无'}）——应同时列出并说明取舍理由。",
+                            ))
                     elif max(int(f.get("domains") or 0) for f in support) < 2:
                         issues.append(_issue(
                             "single_source_number", "info", shown,

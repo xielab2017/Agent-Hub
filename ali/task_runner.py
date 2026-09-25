@@ -41,6 +41,7 @@ _RESEARCH_HINT = re.compile(
 )
 _SUMMARY_HINT = re.compile(r"总结|汇总|整理|报告|综述|结论|summary|summari|report|conclude", re.I)
 _ZH_NUM = "一二三四五六七八九十"
+MAX_TASK_SOURCES = 60
 
 RESEARCH_TEMPLATE = [
     ("检索资料", "围绕目标联网检索，收集权威来源（官方 / 数据库 / 学术优先），列出来源清单 [n] 与每个来源的关键信息。", True),
@@ -69,7 +70,7 @@ def _iso(ts: float | None) -> str:
 
 def _split_numbered(text: str) -> tuple[str, list[str]]:
     """'goal … 1. a 2. b' / one step per line → (goal, [a, b])."""
-    marks = list(re.finditer(r"(?:(?<=[\s：:，,；;。])|^)(\d{1,2})[.、)）](?!\d)\s*", text))
+    marks = list(re.finditer(r"(?:(?<=[\s：:，,；;。？?！!）)】])|^)(\d{1,2})[.、)）](?!\d)\s*", text))
     seq: list[re.Match] = []
     for m in marks:
         if int(m.group(1)) == len(seq) + 1:
@@ -285,8 +286,9 @@ def _record_step(task: dict[str, Any], message_id: str) -> None:
         raise FileNotFoundError("step reply not found")
     info = summarize_reply(str(msg.get("content") or ""))
     rv = msg.get("review") or {}
+    failed = bool(msg.get("error") or msg.get("demo") or msg.get("cancelled"))  # step did not complete
     st.update(
-        status="done" if not msg.get("error") else "blocked",
+        status="done" if not failed else "blocked",
         message_id=message_id,
         summary=info["summary"],
         open_issues=info["open_issues"],
@@ -294,7 +296,7 @@ def _record_step(task: dict[str, Any], message_id: str) -> None:
         finished_at=_now(),
     )
     st["_issues"] = [f"{i.get('kind')}: {i.get('text')}" for i in (rv.get("issues") or []) if i.get("severity") == "warn"][:5]
-    if msg.get("error"):
+    if failed:
         task["status"] = "blocked"
         task["blocked_reason"] = "error"
 
@@ -319,6 +321,10 @@ def advance(task_id: str, *, message_id: str = "", force: bool = False) -> dict[
             return {"status": "blocked", "reason": "error", "task": public(task)}
         if cur.get("status") == "running" and not force:
             _save(task)
+            if not message_id and not _live_run(task["session_id"]):
+                # The step's prompt was never sent or its run died (reload / gateway restart):
+                # hand it out again so "continue" can re-run it.
+                return {"status": "next", "resumed": True, "task": public(task), **step_prompt(task, idx)}
             return {"status": "running", "task": public(task)}
         if not force:
             warn = int((cur.get("review") or {}).get("warn") or 0)
@@ -351,6 +357,15 @@ def advance(task_id: str, *, message_id: str = "", force: bool = False) -> dict[
         return {"status": "next", "task": public(task), **step_prompt(task, nxt)}
 
 
+def _live_run(session_id: str) -> bool:
+    try:
+        from . import streaming
+
+        return streaming.session_job(session_id) is not None
+    except Exception:  # noqa: BLE001
+        return False
+
+
 def stop(task_id: str) -> dict[str, Any]:
     with _lock:
         task = get_task(task_id)
@@ -376,6 +391,55 @@ def set_mode(task_id: str, mode: str) -> dict[str, Any]:
         task["mode"] = mode
         _save(task)
     return {"task": public(task)}
+
+
+# ── task-wide source numbering ────────────────────────────────────────
+
+
+def _url_key(url: str) -> str:
+    return re.sub(r"^https?://(www\.)?", "", (url or "").strip().split("#")[0]).rstrip("/").lower()
+
+
+def register_sources(task_id: str, sources: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Number one step's sources in the task's single list, so ``[n]`` means the
+    same source in every step.  Returns the sources with their task-wide ``n``."""
+    with _lock:
+        task = get_task(task_id)
+        if task is None:
+            return [dict(s, n=i) for i, s in enumerate(sources or [], start=1)]
+        reg = task.setdefault("sources", [])
+        by_url = {_url_key(r.get("url") or ""): r["n"] for r in reg}
+        out = []
+        for s in sources or []:
+            if not isinstance(s, dict):
+                continue
+            key = _url_key(str(s.get("url") or ""))
+            n = by_url.get(key)
+            if n is None:
+                n = len(reg) + 1
+                reg.append({"n": n, "url": str(s.get("url") or ""), "title": str(s.get("title") or "")[:300],
+                            "snippet": str(s.get("snippet") or "")[:400], "source": str(s.get("source") or ""),
+                            "tier": str(s.get("tier") or ""), "step": int(task.get("cursor") or 0) + 1})
+                by_url[key] = n
+            out.append({**s, "n": n})
+        task["sources"] = reg[:MAX_TASK_SOURCES]
+        _save(task)
+    return out
+
+
+def task_sources(task_id: str) -> list[dict[str, Any]]:
+    task = get_task(task_id) if task_id else None
+    return list((task or {}).get("sources") or [])
+
+
+def sources_block(sources: list[dict[str, Any]]) -> str:
+    """Prompt block for steps that do not search: cite earlier steps' sources by their numbers."""
+    if not sources:
+        return ""
+    lines = ["## Sources collected in earlier steps of this task (cite as [n] with these numbers; do not invent new ones)"]
+    for s in sources:
+        lines.append(f"- [{s['n']}] [{s.get('title') or s.get('url')}]({s.get('url')}) — {(s.get('snippet') or '')[:200]}")
+    return "\n".join(lines)
 
 
 def public(task: dict[str, Any]) -> dict[str, Any]:

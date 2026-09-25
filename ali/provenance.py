@@ -169,7 +169,7 @@ def compact_search(search: dict[str, Any] | None) -> dict[str, Any]:
         url = str(s.get("url") or "")
         sources.append(
             {
-                "n": i,
+                "n": int(s.get("n") or i),
                 "title": str(s.get("title") or "")[:300],
                 "url": url,
                 "domain": _host(url),

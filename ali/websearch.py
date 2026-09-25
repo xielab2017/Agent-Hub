@@ -599,7 +599,7 @@ def _engine_cascade(provider: str, intent_first: list[Any]) -> list[Any]:
     return engines
 
 
-def _search_once(query: str, *, limit: int, provider: str = "auto") -> dict[str, Any]:
+def _search_once(query: str, *, limit: int, provider: str = "auto", deadline: float | None = None) -> dict[str, Any]:
     q = (query or "").strip()
     if not q:
         return {"ok": False, "error": "empty query", "results": []}
@@ -611,6 +611,9 @@ def _search_once(query: str, *, limit: int, provider: str = "auto") -> dict[str,
     errors: list[str] = []
     used: list[str] = []
     for fn in engines:
+        if deadline is not None and time.monotonic() >= deadline:
+            errors.append("search deadline exceeded")
+            break
         try:
             data = fn(q, limit=limit)
         except Exception as exc:  # noqa: BLE001
@@ -622,13 +625,15 @@ def _search_once(query: str, *, limit: int, provider: str = "auto") -> dict[str,
         if got:
             used.append(str(data.get("engine") or getattr(fn, "__name__", "?")))
             results.extend(got)
-        # auto: gather ≥2 campus engines for diversity; keyed Google alone is enough
+        # auto: gather ≥2 campus engines for diversity; keyed Google alone is enough.
+        # The parity engine re-runs this cascade, so it does not count as a distinct engine.
         if provider == "auto":
-            if any(u.startswith("google") or u.startswith("serpapi") for u in used) and len(results) >= max(3, limit // 2):
+            distinct = [u for u in used if u != "minimax_parity"]
+            if any(u.startswith("google") or u.startswith("serpapi") for u in distinct) and len(results) >= max(3, limit // 2):
                 break
-            if len(used) >= 2 and len(results) >= limit:
+            if len(distinct) >= 2 and len(results) >= limit:
                 break
-            if len(used) >= 3:
+            if len(distinct) >= 3:
                 break
         elif len(results) >= limit:
             break
@@ -679,11 +684,11 @@ def deep_search(query: str, *, limit: int = 10) -> dict[str, Any]:
             break
         # First query gets full cascade; expansions prefer Chinese engines + bing
         if i == 0:
-            hit = _search_once(qq, limit=per_limit, provider=provider)
+            hit = _search_once(qq, limit=per_limit, provider=provider, deadline=deadline)
         else:
-            hit = _search_once(qq, limit=max(3, per_limit // 2), provider="bing")
-            if not hit.get("results"):
-                hit = _search_once(qq, limit=max(3, per_limit // 2), provider="so360")
+            hit = _search_once(qq, limit=max(3, per_limit // 2), provider="bing", deadline=deadline)
+            if not hit.get("results") and time.monotonic() < deadline:
+                hit = _search_once(qq, limit=max(3, per_limit // 2), provider="so360", deadline=deadline)
         per_query.append({"query": qq, "ok": hit.get("ok"), "n": len(hit.get("results") or [])})
         merged.extend(hit.get("results") or [])
         errors.extend(hit.get("errors") or [])
@@ -1063,8 +1068,11 @@ def _domain(url: str) -> str:
 
 def _structure_sources(results: list[dict[str, Any]], *, limit: int = 12) -> list[dict[str, Any]]:
     """Dedupe / domain-cap results into portable source objects."""
+    from .source_quality import classify_source
+
     out: list[dict[str, Any]] = []
     seen_urls: set[str] = set()
+    seen_titles: set[str] = set()
     per_domain: dict[str, int] = {}
     for r in results or []:
         if not isinstance(r, dict):
@@ -1073,10 +1081,18 @@ def _structure_sources(results: list[dict[str, Any]], *, limit: int = 12) -> lis
         title = str(r.get("title") or "").strip()
         if not url or url in seen_urls:
             continue
+        # The same paper arrives from several indexes (PubMed / DOI / OpenAlex / Europe PMC).
+        tkey = re.sub(r"[^0-9a-z\u4e00-\u9fff]+", "", title.lower())
+        if len(tkey) >= 24 and tkey in seen_titles:
+            continue
         dom = _domain(url)
-        if dom and per_domain.get(dom, 0) >= 2:
+        # Literature indexes legitimately return many distinct papers from one host.
+        cap = 6 if classify_source(url, str(r.get("source") or "")).get("tier") in ("academic", "database") else 2
+        if dom and per_domain.get(dom, 0) >= cap:
             continue
         seen_urls.add(url)
+        if len(tkey) >= 24:
+            seen_titles.add(tkey)
         if dom:
             per_domain[dom] = per_domain.get(dom, 0) + 1
         out.append(
@@ -1092,8 +1108,28 @@ def _structure_sources(results: list[dict[str, Any]], *, limit: int = 12) -> lis
     return out
 
 
+_COMMAND_PREFIX = re.compile(
+    r"^\s*(?:请|请你|帮我|帮忙|麻烦|你)?\s*(?:联网|上网|网上|在网上|去网上)?\s*"
+    r"(?:搜索|检索|搜一下|搜一搜|搜搜|查一下|查一查|查查|查找|查询|找一下|找找|search(?:\s+the\s+web)?(?:\s+for)?|google|look\s+up)"
+    r"(?:一下)?\s*[:：，,]?\s*",
+    re.I,
+)
+
+
+_CRED_BAND = {"official": 0, "database": 0, "academic": 0, "news": 1, "other": 2, "ugc": 3}
+
+
+def clean_search_query(query: str) -> str:
+    """Drop the chat command around a search ("搜索一下：…？") so engines get the topic."""
+    q = re.sub(r"\s+", " ", (query or "").strip())
+    cleaned = _COMMAND_PREFIX.sub("", q, count=1).strip()
+    cleaned = cleaned.rstrip("?？!！。.、,，;；~ ")
+    return cleaned if len(cleaned) >= 2 else q
+
+
 def search_structured(query: str, *, limit: int = 8, deep: bool = True) -> dict[str, Any]:
     """Structured search payload for planners / lane grounding."""
+    query = clean_search_query(query)
     # MiniMax-code style operator pre-processing.  If the query contains
     # site:/inurl:/intitle:/intext:/inanchor/-exclude/~synonym/"exact" the
     # planner likely wants results filtered by those constraints; we parse
@@ -1152,11 +1188,15 @@ def search_structured(query: str, *, limit: int = 8, deep: bool = True) -> dict[
     # plausible-looking summary from hiding a dictionary page, duplicate, or
     # weakly related result.
     tokens = _query_tokens(query)
+    ascii_tokens = [t for t in tokens if t.isascii()]
+
     def _coverage(item: dict[str, Any]) -> float:
         blob = f"{item.get('title') or ''} {item.get('snippet') or ''}".lower()
-        if not tokens:
+        # A Chinese question answered by an English paper: judge it on the English terms.
+        toks = ascii_tokens if ascii_tokens and not re.search(r"[\u4e00-\u9fff]", blob) else tokens
+        if not toks:
             return 1.0
-        return sum(1 for token in tokens if token.lower() in blob) / len(tokens)
+        return sum(1 for token in toks if token.lower() in blob) / len(toks)
 
     quality_scores = [_coverage(s) for s in sources]
     from .source_quality import annotate, is_authoritative
@@ -1165,6 +1205,9 @@ def search_structured(query: str, *, limit: int = 8, deep: bool = True) -> dict[
         1 for s in sources if is_authoritative(str(s.get("url") or ""), str(s.get("source") or ""))
     )
     sources = [annotate(s) for s in sources]
+    # Numbering follows credibility: papers / official pages before news, vendors and forums
+    # (stable, so relevance order is kept inside each band).
+    sources.sort(key=lambda s: _CRED_BAND.get(str(s.get("tier") or ""), 2))
     quality = {
         "relevance": round(sum(quality_scores) / max(len(quality_scores), 1), 3),
         "source_count": len(sources),

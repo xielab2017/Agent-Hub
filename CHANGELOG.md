@@ -1,5 +1,69 @@
 # Changelog
 
+## v5.3.3 — 2026-09-25
+
+Search, problem handling, scientific tasks and continuity, tested end to end
+against a real Agent Hub server on a simulated network: search engines,
+PubMed / Europe PMC / Crossref / OpenAlex and article pages served from real
+PubMed records on the circulating-irisin measurement controversy, plus a stub
+model that answers only from the context the Hub sends it. Everything it
+exposed is fixed.
+
+**Search**
+- The chat command is stripped before searching ("搜索一下：…？" → the topic).
+- Chinese research questions ("人血浆中鸢尾素的浓度") route to the literature
+  databases; English-only APIs (PubMed / OpenAlex / arXiv) get the question's
+  English terms, and skip the request when there are none.
+- The same paper returned by several indexes is listed once; literature hosts
+  are no longer capped at two results.
+- Sources are numbered by credibility (papers / official first, forums last).
+- A Chinese question answered by English papers is no longer flagged
+  "low relevance — do not state numbers".
+- The search deadline now covers the whole engine cascade (slow engines
+  could hold a request for ~50 s).
+- Search runs inside the stream: the chat request returns at once and progress
+  shows live. A failed search says so ("N 个引擎失败…") instead of
+  "检索完成 · 0 条来源".
+
+**Evidence and review**
+- Concentrations are understood: `ng/ml`, `pg/mL`, `mg/dL`, `µg/L`, molar
+  units, ranges (`0.26–1.86 ng/ml`), normalised to one unit and keyed by
+  analyte and sample (blood / CSF / urine…). A ≥5× disagreement between
+  sources is reported as a conflict (3.6 vs 100 ng/ml); cohort variation
+  (3.6 vs 4.3) is not. Assay names (ELISA, MS…) are never taken as the analyte.
+- A reply that states both conflicting values is noted, not warned — it did
+  what the evidence digest asked; silently picking one side is still a warning.
+- Reviewer labels for evidence issues in the UI (they showed raw keys).
+
+**Problem handling**
+- Rate limits (429), provider 5xx and dropped connections are retried with
+  backoff (Retry-After honoured) before any token streams; a bad key is not.
+- A stream that ends without a finish marker is marked
+  "回复可能不完整"; malformed streams fall back to a normal request.
+- Stop really stops: the run aborts its provider stream, the reply keeps what
+  was streamed (marked stopped), and a run replaced by a newer message is
+  dropped instead of landing after the newer answer.
+- No model reply → the message is stored as an error (or demo), never as an
+  answer: tasks stop there instead of "completing" a step, and the diagnostic
+  is not reviewed or fed back to the model. A missing model falls back to the
+  backend's model; a missing model / key is named in the reply.
+- 401 hints name the vendor / MiniMax region instead of always listing
+  OpenRouter / NVIDIA prefixes.
+
+**Scientific tasks and continuity**
+- Numbered steps written after "？" are recognised (the user's plan was being
+  replaced by a generic template).
+- A task step no longer triggers web search because an earlier step's title
+  in its prompt says "检索".
+- One source numbering per task: [n] means the same source in every step;
+  steps that do not search get the task's source list and are reviewed
+  against it.
+- After a reload or gateway restart, "继续" re-issues a step whose prompt was
+  never sent or whose run died.
+- A turn left unanswered by a gateway restart gets an "interrupted" note.
+- Model history is bounded (newest turns within a size budget, a note when
+  older ones are left out) and excludes failed replies.
+
 ## v5.3.2 — 2026-09-25
 
 MiniMax provider brought up to date.

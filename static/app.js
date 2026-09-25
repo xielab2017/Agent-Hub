@@ -15,7 +15,7 @@ const FONT_SIZE_LABELS = {
   zh: { 13: "小 13", 14: "中 14", 15: "中大 15", 16: "大 16", 18: "特大 18" },
   en: { 13: "S 13", 14: "M 14", 15: "M+ 15", 16: "L 16", 18: "XL 18" },
 };
-const LOGO_VER = "5.3.2";
+const LOGO_VER = "5.3.3";
 const DEFAULT_LOGO = `/brand/suat-logo-color.png?v=${LOGO_VER}`;
 const LOGO_PRESETS = [
   { id: "suat-color", src: `/brand/suat-logo-color.png?v=${LOGO_VER}`, labelKey: "appearance.logoPresetColor" },
@@ -288,6 +288,10 @@ const I18N = {
     "rv.unverified_identifier": "标识符待核验",
     "rv.unresolved_identifier": "标识符无法解析",
     "rv.untraceable_number": "数字无出处",
+    "rv.single_source_number": "单一来源数字",
+    "rv.conflicting_number": "来源数值冲突",
+    "rv.conflict_reported": "已列出分歧",
+    "rv.ugc_only_sources": "仅有论坛/自媒体来源",
     "review.issues": "审查：{n} 项待核实",
     "review.notes": "{n} 条提示",
     "review.online": "联网核验引用",
@@ -569,6 +573,10 @@ const I18N = {
     "rv.unverified_identifier": "Identifier to verify",
     "rv.unresolved_identifier": "Unresolvable identifier",
     "rv.untraceable_number": "Untraceable number",
+    "rv.single_source_number": "Single-source number",
+    "rv.conflicting_number": "Sources disagree",
+    "rv.conflict_reported": "Disagreement reported",
+    "rv.ugc_only_sources": "Forum / self-media only",
     "review.issues": "Review: {n} to verify",
     "review.notes": "{n} note(s)",
     "review.online": "Verify citations online",
@@ -2454,7 +2462,7 @@ function detectTaskSteps(text) {
   const tx = String(text || "");
   if (tx.length < 12) return 0;
   const nums = [];
-  const re = /(?:^|[\s：:，,；;。])(\d{1,2})[.、)）](?!\d)\s*\S/g;
+  const re = /(?:^|[\s：:，,；;。？?！!）)】])(\d{1,2})[.、)）](?!\d)\s*\S/g;
   let m;
   while ((m = re.exec(tx))) {
     const n = Number(m[1]);

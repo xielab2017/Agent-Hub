@@ -186,7 +186,12 @@ def test_running_step_without_reply_does_not_advance():
     with sandbox() as store:
         sid = store.create_session(title="t").id
         t = task_runner.create_task(sid, "1. a 2. b")["task"]
-        assert task_runner.advance(t["id"])["status"] == "running"
+        # a run for this step is in flight: nothing to do yet
+        with mock.patch.object(task_runner, "_live_run", return_value=True):
+            assert task_runner.advance(t["id"])["status"] == "running"
+        # no run (page reload / gateway restart): the same step is handed out again, not skipped
+        again = task_runner.advance(t["id"])
+        assert again["status"] == "next" and again["resumed"] and again["step"] == 1 and "a" in again["prompt"]
         skipped = task_runner.advance(t["id"], force=True)
         assert skipped["step"] == 2 and skipped["task"]["steps"][0]["status"] == "skipped"
 
@@ -211,6 +216,17 @@ E2E = r"""
 import json, sys, time
 sys.path.insert(0, sys.argv[1])
 from ali import sessions as store, streaming, task_runner, pending_intent
+
+real_direct = streaming._direct_llm_reply
+
+def fake_direct(q, session_id, msg_text, model, parts, *, route_info=None, preamble=""):
+    # stands in for a configured model (no network in tests)
+    text = "## 本步结论\n- 完成：" + msg_text.splitlines()[1][:40]
+    parts.append(text)
+    streaming._put(q, "token", {"text": text})
+    return True
+
+streaming._direct_llm_reply = fake_direct
 
 def run_step(sid, nxt):
     before = len([m for m in store.get_session(sid).messages if m.get("role") == "assistant"])
@@ -240,8 +256,18 @@ while True:
         break
     nxt = out
 users = [m.get("content") for m in store.get_session(s.id).messages if m.get("role") == "user"]
+
+# Without a model the Hub can only show its demo notice: the task must stop, not "finish".
+streaming._direct_llm_reply = real_direct
+s2 = store.create_session(title="task demo")
+res2 = task_runner.create_task(s2.id, "整理报告：1. 列出要点 2. 写成段落")
+tid = res2["task"]["id"]
+demo_msg = run_step(s2.id, res2["next"])
+demo = task_runner.advance(tid, message_id=demo_msg["id"])
 print(json.dumps({"final": out["status"], "seen": seen, "users": users,
-                  "done_steps": out["task"]["done_steps"], "total": len(out["task"]["steps"])}, ensure_ascii=False))
+                  "done_steps": out["task"]["done_steps"], "total": len(out["task"]["steps"]),
+                  "demo_flag": demo_msg.get("demo"), "demo_status": demo["status"], "demo_reason": demo.get("reason")},
+                 ensure_ascii=False))
 """
 
 
@@ -263,3 +289,4 @@ def test_task_end_to_end_through_chat_pipeline():
     assert all(s["has_review"] and s["has_prov"] and s["task_route"] for s in out["seen"])
     assert out["seen"][1]["steer"] == "- 用英文写" and not out["seen"][2]["steer"]
     assert out["users"][0].startswith("▶ 步骤 1/4：列出要点")
+    assert out["demo_flag"] is True and out["demo_status"] == "blocked" and out["demo_reason"] == "error"

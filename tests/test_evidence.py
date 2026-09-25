@@ -117,12 +117,17 @@ def test_reviewer_flags_conflict_single_source_and_ugc():
     from ali.reviewer import review_reply
 
     ev = build_evidence("TP53", SOURCES)
-    rv = review_reply("TP53 突变约占 50% 的肿瘤 [1][2]；也有说法为 30% [3]。", sources=SOURCES, evidence=ev)
+    # Picking one side of a disagreement silently is flagged …
+    rv = review_reply("TP53 突变约占 50% 的肿瘤 [1][2]。", sources=SOURCES, evidence=ev)
     kinds = {(i["kind"], i["text"]) for i in rv["issues"]}
-    assert ("conflicting_number", "50%") in kinds and ("conflicting_number", "30%") in kinds
+    assert ("conflicting_number", "50%") in kinds
     assert rv["ok"] is False
     conflict = next(i for i in rv["issues"] if i["kind"] == "conflicting_number" and i["text"] == "50%")
     assert "30%" in conflict["detail"] and "30%" in conflict["detail_zh"]
+    # … reporting both values is what the evidence digest asks for: noted, not a warning.
+    both = review_reply("TP53 突变约占 50% 的肿瘤 [1][2]；也有说法为 30% [3]。", sources=SOURCES, evidence=ev)
+    assert {(i["kind"], i["severity"]) for i in both["issues"]} >= {("conflict_reported", "info")}
+    assert not any(i["kind"] == "conflicting_number" for i in both["issues"]) and both["ok"] is True
 
     single = [{"title": "Only one", "url": "https://a.org/x", "snippet": "adoption reached 37% in 2024"}]
     rv2 = review_reply("adoption reached 37% [1]", sources=single, evidence=build_evidence("q", single))

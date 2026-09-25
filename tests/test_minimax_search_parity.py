@@ -461,6 +461,7 @@ def test_parity_engine_runs_offline_without_fabricating():
         return {"ok": False, "sources": [], "context_markdown": "", "engines": [], "errors": ["offline"]}
 
     # Patch both websearch and any direct call paths.
+    original = websearch.search_structured
     websearch.search_structured = fake_search_structured
     try:
         res = se.search_minimax_parity("site:wikipedia.org 世界杯")
@@ -471,9 +472,8 @@ def test_parity_engine_runs_offline_without_fabricating():
         assert res.get("operators", {}).get("site") == "wikipedia.org"
         assert res.get("cleaned_query") == "世界杯"
     finally:
-        # Restore — not strictly needed because monkeypatch isn't used here,
-        # but be tidy.
-        pass
+        # Restore: later tests call the real search_structured.
+        websearch.search_structured = original
 
 
 # ── 9. End-to-end: World Cup + site: ────────────────────────────────

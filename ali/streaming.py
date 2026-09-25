@@ -332,7 +332,8 @@ def _append_job_event(stream_id: str, event: str, data: dict[str, Any]) -> None:
     elif event == "progress":
         job["pct"] = int(data.get("pct") or job.get("pct") or 0)
     elif event == "done":
-        job["status"] = "error" if data.get("error") else "done"
+        if not job.get("cancel_requested"):  # the done that follows a cancel keeps "cancelled"
+            job["status"] = "error" if data.get("error") else "done"
         _stamp_job_elapsed(job, data)
     elif event == "error":
         job["status"] = "error"
@@ -518,12 +519,80 @@ def cancel_stream(session_id: str) -> bool:
         job = JOBS.get(sid)
         if job and job.get("status") == "running":
             job["status"] = "cancelled"
+            job["cancel_requested"] = True
             job["finished_at"] = time.time()
         ACTIVE.pop(session_id, None)
     # Emit outside lock — nested _put + lock previously could stall callers.
     if q is not None:
         _put(q, "cancelled", {"session_id": session_id})
         _put(q, "done", {"session_id": session_id})
+    return True
+
+
+INTERRUPTED_NOTE = "（这条消息的运行被中断：Agent Hub 网关在回复完成前重启了。请重新发送，或在任务面板点「继续」。）"
+
+
+def recover_interrupted_runs(*, max_age_days: float = 7.0) -> int:
+    """At gateway start: close turns whose run died with the previous process.
+
+    A session whose last message is a sent user turn has no reply and no live
+    run — say so in the chat (stored as an error, so it never reaches a model)
+    instead of leaving the question silently unanswered.
+    """
+    fixed = 0
+    cutoff = time.time() - max_age_days * 86400
+    try:
+        rows = store.list_sessions(include_archived=False)
+    except Exception:  # noqa: BLE001
+        return 0
+    for row in rows:
+        try:
+            if float(row.get("updated_at") or 0) < cutoff:
+                continue
+            session = store.get_session(str(row.get("id") or ""))
+            if session is None or not session.messages or session_job(session.id):
+                continue
+            last = session.messages[-1]
+            if last.get("role") != "user" or not last.get("route"):
+                continue
+            store.append_messages(session.id, {"role": "assistant", "content": INTERRUPTED_NOTE,
+                                               "error": True, "interrupted": True})
+            fixed += 1
+        except Exception:  # noqa: BLE001
+            continue
+    return fixed
+
+
+class StreamCancelled(Exception):
+    """Raised inside a run whose job was stopped (user Stop or a newer message)."""
+
+
+def _job_cancelled(stream_id: str) -> bool:
+    job = JOBS.get(stream_id or "")
+    return bool(job and job.get("cancel_requested"))
+
+
+def _cancelled_for_queue(q: Any) -> bool:
+    return _job_cancelled(QUEUE_STREAM.get(id(q), ""))
+
+
+def _user_turns(session_id: str) -> int:
+    session = store.get_session(session_id)
+    return sum(1 for m in (session.messages if session else []) if m.get("role") == "user")
+
+
+def _store_final(session_id: str, stream_id: str, route_info: dict[str, Any], assistant_msg: dict[str, Any]) -> bool:
+    """Append the run's reply unless it was stopped.  Returns False when dropped.
+
+    A stopped run keeps what was streamed (marked ``cancelled``); a run that a
+    newer message superseded is dropped so it cannot land after the newer reply.
+    """
+    if _job_cancelled(stream_id):
+        if _user_turns(session_id) > int(route_info.get("_user_turns") or 0):
+            return False
+        assistant_msg["cancelled"] = True
+        assistant_msg["content"] = (str(assistant_msg.get("content") or "").rstrip() + "\n\n（已停止生成）").strip()
+    store.append_messages(session_id, assistant_msg)
     return True
 
 
@@ -888,6 +957,10 @@ def start_chat(
     )
 
     need_search = False if simple_chat else web_search
+    if need_search is None and task_id:
+        # A task step's plan already decided whether it searches; its prompt quotes
+        # earlier steps ("步骤 1「检索资料」…") and must not re-trigger keyword search.
+        need_search = False
     if need_search is None:
         low = msg.lower()
         need_search = any(
@@ -931,75 +1004,31 @@ def start_chat(
             route_info.setdefault("_thinking_notes", []).append(f"Excel 联网填写失败：{exc}")
 
     if need_search and not (excel_fill_task and route_info.get("excel_fill", {}).get("ok")):
-        # General web search context (skip duplicate when Excel fill already searched per-row)
-        try:
-            from . import websearch as websearch_mod
-
-            route_info.setdefault("_thinking_notes", []).append("正在深度联网检索…")
-            scfg = cfg.get("search") if isinstance(cfg.get("search"), dict) else {}
-            try:
-                search_limit = max(4, min(16, int(scfg.get("max_results") or 8)))
-            except (TypeError, ValueError):
-                search_limit = 8
-            search_res = websearch_mod.search_structured(msg, limit=search_limit, deep=True)
-            search_block = str(search_res.get("context_markdown") or "")
-            try:
-                from . import provenance as provenance_mod
-
-                route_info["_search"] = provenance_mod.compact_search(search_res)
-            except Exception:  # noqa: BLE001
-                pass
-            # Deep search opens the top pages; every search gets graded + cross-checked evidence.
-            read_pages = bool(deep_search) if deep_search is not None else (
-                scfg.get("fetch_pages", True) is not False and scfg.get("deep", True) is not False
-            )
-            route_info["deep_search"] = read_pages
-            try:
-                from . import evidence as evidence_mod, page_fetch
-
-                srcs = list(search_res.get("sources") or [])
-                pages = []
-                if read_pages and srcs and scfg.get("fetch_pages", True) is not False:
-                    route_info.setdefault("_thinking_notes", []).append("正在打开原文页面提取关键段落…")
-                    pages = page_fetch.fetch_pages(srcs, msg, max_pages=int(scfg.get("max_pages") or 3))
-                ev = evidence_mod.build_evidence(msg, srcs, pages)
-                ev_block = evidence_mod.render_block(ev)
-                if ev_block:
-                    search_block = (search_block + "\n\n" + ev_block).strip()
-                route_info["_evidence"] = evidence_mod.compact(ev)
-                cov = ev.get("coverage") or {}
-                route_info.setdefault("_thinking_notes", []).append(
-                    f"证据核对：{cov.get('sources', 0)} 条来源 · 权威 {cov.get('authoritative', 0)} · "
-                    f"已读原文 {cov.get('pages_read', 0)} · 多源一致数值 {cov.get('corroborated_facts', 0)} · "
-                    f"冲突 {len(ev.get('conflicts') or [])}"
-                )
-            except Exception as exc:  # noqa: BLE001
-                route_info.setdefault("_thinking_notes", []).append(f"证据核对跳过：{exc}")
-            extra_system = (extra_system + "\n\n" + search_block).strip() if extra_system else search_block
-            route_info["web_search"] = True
-            route_info["web_search_deep"] = True
-            # Soft-parse engines from block header if present
-            route_info["web_search_mode"] = "deep"
-            # Compact thinking summary (not dumped into workflow progress)
-            n_src = search_block.count("\n- [")
-            route_info.setdefault("_thinking_notes", []).append(
-                f"检索完成 · 深度搜索 · 约 {n_src} 条来源（详情用于模型上下文，不写入工作流进度栏）"
-            )
-            # Keep a short excerpt for the thinking UI (truncate)
-            excerpt = "\n".join(
-                ln for ln in search_block.splitlines()
-                if ln.startswith("- [") or ln.startswith("Engines:") or ln.startswith("Query:")
-            )[:1200]
-            if excerpt:
-                route_info.setdefault("_thinking_notes", []).append(excerpt)
-        except Exception as exc:  # noqa: BLE001
-            route_info["web_search"] = False
-            route_info["web_search_error"] = str(exc)
-            route_info.setdefault("_thinking_notes", []).append(f"联网检索不可用：{exc}")
+        # Searching can take tens of seconds on a slow network: it runs in the
+        # stream worker (live progress), not before this request returns.
+        route_info["_deferred_search"] = {"query": msg, "deep_search": deep_search}
+        route_info["web_search"] = True
+        route_info["web_search_deep"] = True
+        route_info["web_search_mode"] = "deep"
+        extra_system = (extra_system + "\n\n" + SEARCH_MARKER).strip() if extra_system else SEARCH_MARKER
     elif need_search:
         route_info["web_search"] = True
         if not route_info.get("_thinking_notes"):
             route_info.setdefault("_thinking_notes", []).append("使用 Excel 填写阶段已完成的检索结果")
+
+    if task_id and not route_info.get("_deferred_search"):
+        # Task steps that do not search still cite what earlier steps found, by the task's numbers.
+        try:
+            from . import task_runner as _tr
+
+            reg = _tr.task_sources(task_id)
+            if reg:
+                block = _tr.sources_block(reg)
+                extra_system = (extra_system + "\n\n" + block).strip() if extra_system else block
+                route_info["_search"] = {"sources": reg, "task_sources": True}
+                route_info["task_sources"] = len(reg)
+        except Exception:  # noqa: BLE001
+            pass
 
     # Agent Hub core path: multi-step office workflow (not chit-chat)
     mode = (execution_mode or "workflow").strip() or "workflow"
@@ -1117,6 +1146,7 @@ def start_chat(
             old_job = JOBS.get(old)
             if old_job and old_job.get("status") == "running":
                 old_job["status"] = "cancelled"
+                old_job["cancel_requested"] = True
                 old_job["finished_at"] = time.time()
         STREAMS[stream_id] = q
         ACTIVE[session_id] = stream_id
@@ -1137,6 +1167,7 @@ def start_chat(
     if display_message and display_message != msg:
         meta["expanded"] = True
     store.append_messages(session_id, meta)
+    route_info["_user_turns"] = _user_turns(session_id)
     audit.log_event(
         "chat_start",
         {
@@ -1240,6 +1271,8 @@ def _attach_provenance(
     try:
         from . import reviewer
 
+        if route_info.get("_model_failed"):
+            raise LookupError("no model reply to review")  # diagnostics, not an answer
         search = route_info.get("_search") if isinstance(route_info.get("_search"), dict) else {}
         assistant_msg["review"] = reviewer.review_reply(
             final_text,
@@ -1277,6 +1310,123 @@ def _attach_provenance(
         pass
 
 
+SEARCH_MARKER = "<<agent-hub:search-results>>"
+
+
+def _renumber_sources_block(block: str, sources: list[dict[str, Any]]) -> str:
+    """Rewrite the '- [i] [title](url)' lines of a search block to the sources' own ``n``."""
+    by_pos = iter([int(s.get("n") or 0) for s in sources])
+    out = []
+    for line in (block or "").splitlines():
+        m = re.match(r"^- \[(\d+)\] \[", line)
+        if m:
+            n = next(by_pos, None)
+            if n:
+                line = f"- [{n}]" + line[m.end(1) + 1:]
+        out.append(line)
+    return "\n".join(out)
+
+
+def _run_deferred_search(q: queue.Queue, route_info: dict[str, Any], *, quiet: bool = False) -> str:
+    """Web search + page reading + evidence digest for one turn; returns the prompt block."""
+    from .settings import load_campus_config
+
+    job = route_info.pop("_deferred_search", None) or {}
+    msg = str(job.get("query") or "")
+    deep_search = job.get("deep_search")
+    cfg = load_campus_config()
+    search_block = ""
+
+    def note(text: str) -> None:
+        _think(q, str(text), kind="search", quiet=quiet)
+
+    try:
+        from . import websearch as websearch_mod
+
+        note("正在深度联网检索…")
+        scfg = cfg.get("search") if isinstance(cfg.get("search"), dict) else {}
+        try:
+            search_limit = max(4, min(16, int(scfg.get("max_results") or 8)))
+        except (TypeError, ValueError):
+            search_limit = 8
+        search_res = websearch_mod.search_structured(msg, limit=search_limit, deep=True)
+        search_block = str(search_res.get("context_markdown") or "")
+        if route_info.get("task_id") and search_res.get("sources"):
+            # Multi-step task: one numbering for the whole task, so [n] stays unambiguous across steps.
+            from . import task_runner
+
+            numbered = task_runner.register_sources(str(route_info["task_id"]), list(search_res["sources"]))
+            search_block = _renumber_sources_block(search_block, numbered)
+            search_res = {**search_res, "sources": numbered}
+            this_step = {s.get("n") for s in numbered}
+            earlier = [s for s in task_runner.task_sources(str(route_info["task_id"])) if s.get("n") not in this_step]
+            if earlier:
+                search_block = (search_block + "\n\n" + task_runner.sources_block(earlier)).strip()
+                # earlier steps' sources stay citable: review against the whole task list
+                route_info["_task_sources"] = earlier
+        engines = ", ".join(search_res.get("engines") or [])
+        if not search_res.get("sources"):
+            errors = [str(e) for e in (search_res.get("errors") or [])]
+            failed = sorted({e.split(":", 1)[0].strip() for e in errors if ":" in e})
+            reason = (f"{len(failed)} 个引擎失败：{', '.join(failed[:6])}" if failed else "没有找到相关结果")
+            if any("timed out" in e or "deadline" in e for e in errors):
+                reason += "（网络超时）"
+            route_info["web_search_error"] = (reason + (" — " + errors[0] if errors else ""))[:300]
+            note(f"联网检索失败：{reason}——本轮没有外部来源，回答未经联网核实")
+        try:
+            from . import provenance as provenance_mod
+
+            route_info["_search"] = provenance_mod.compact_search(search_res)
+            if route_info.get("_task_sources"):
+                route_info["_search"]["sources"] = sorted(
+                    list(route_info["_search"].get("sources") or []) + list(route_info.pop("_task_sources")),
+                    key=lambda x: int(x.get("n") or 0))
+        except Exception:  # noqa: BLE001
+            pass
+        # Deep search opens the top pages; every search gets graded + cross-checked evidence.
+        read_pages = bool(deep_search) if deep_search is not None else (
+            scfg.get("fetch_pages", True) is not False and scfg.get("deep", True) is not False
+        )
+        route_info["deep_search"] = read_pages
+        try:
+            from . import evidence as evidence_mod, page_fetch
+
+            srcs = list(search_res.get("sources") or [])
+            pages = []
+            if read_pages and srcs and scfg.get("fetch_pages", True) is not False:
+                note("正在打开原文页面提取关键段落…")
+                pages = page_fetch.fetch_pages(srcs, msg, max_pages=int(scfg.get("max_pages") or 3))
+            ev = evidence_mod.build_evidence(msg, srcs, pages)
+            ev_block = evidence_mod.render_block(ev)
+            if ev_block:
+                search_block = (search_block + "\n\n" + ev_block).strip()
+            route_info["_evidence"] = evidence_mod.compact(ev)
+            cov = ev.get("coverage") or {}
+            if srcs:
+                note(
+                    f"证据核对：{cov.get('sources', 0)} 条来源 · 权威 {cov.get('authoritative', 0)} · "
+                    f"已读原文 {cov.get('pages_read', 0)} · 多源一致数值 {cov.get('corroborated_facts', 0)} · "
+                    f"冲突 {len(ev.get('conflicts') or [])}"
+                )
+        except Exception as exc:  # noqa: BLE001
+            note(f"证据核对跳过：{exc}")
+        n_src = len(search_res.get("sources") or [])
+        if n_src:
+            note(f"检索完成 · {n_src} 条来源" + (f" · 引擎 {engines}" if engines else ""))
+        # Keep a short excerpt for the thinking UI (truncate)
+        excerpt = "\n".join(
+            ln for ln in search_block.splitlines()
+            if ln.startswith("- [") or ln.startswith("Engines:") or ln.startswith("Query:")
+        )[:1200]
+        if excerpt:
+            note(excerpt)
+    except Exception as exc:  # noqa: BLE001
+        route_info["web_search"] = False
+        route_info["web_search_error"] = str(exc)
+        note(f"联网检索不可用：{exc}")
+    return search_block
+
+
 def _run_agent_streaming(
     session_id: str,
     msg_text: str,
@@ -1300,6 +1450,12 @@ def _run_agent_streaming(
     quiet = bool(route_info.get("quiet_thinking") or route_info.get("simple_chat"))
     for note in route_info.pop("_thinking_notes", None) or []:
         _think(q, str(note), kind="search", quiet=quiet)
+    if route_info.get("_deferred_search"):
+        block = _run_deferred_search(q, route_info, quiet=quiet)
+        preamble = preamble.replace(SEARCH_MARKER, block) if SEARCH_MARKER in preamble else (
+            (preamble + "\n\n" + block).strip() if block else preamble)
+        route_public0 = {k: v for k, v in route_info.items() if not str(k).startswith("_")}
+        _put(q, "route", route_public0)
 
     skills_list = route_info.get("skills") or []
     skipped = bool(route_info.get("skills_skipped"))
@@ -1336,6 +1492,8 @@ def _run_agent_streaming(
     def on_token(delta: str) -> None:
         if not delta:
             return
+        if _cancelled_for_queue(q):
+            raise StreamCancelled()  # closes the provider stream: stop spending tokens
         assistant_parts.append(delta)
         _put(q, "token", {"text": delta})
 
@@ -1488,12 +1646,9 @@ def _run_agent_streaming(
                 _put(q, "meta", {"mode": "hermes-inproc", "engine": "hermes", "agent_mode": True})
                 session = store.get_session(session_id)
                 history = list(session.messages[:-1]) if session else []
-                clean_history = []
-                for m in history:
-                    role = m.get("role")
-                    content = m.get("content")
-                    if role in ("user", "assistant") and isinstance(content, str):
-                        clean_history.append({"role": role, "content": content})
+                clean_history, _dropped = model_history(history)
+                if _dropped:
+                    route_info["history_trimmed"] = _dropped
 
                 cfg_now = load_campus_config()
                 provider = str(route_info.get("provider") or (cfg_now.get("backend") or {}).get("type") or "")
@@ -1739,6 +1894,10 @@ def _run_agent_streaming(
             assistant_msg["tools"] = tools_seen
         if route_info.get("_heal_attempted"):
             assistant_msg["healed"] = True
+        if route_info.get("_model_failed"):
+            assistant_msg["error"] = True
+        elif route_info.get("_demo"):
+            assistant_msg["demo"] = True
         with _lock:
             job = JOBS.get(stream_id)
             if job and job.get("started_at") is not None:
@@ -1778,7 +1937,8 @@ def _run_agent_streaming(
             route_info=route_info,
             tools=tools_seen,
         )
-        store.append_messages(session_id, assistant_msg)
+        if not _store_final(session_id, stream_id, route_info, assistant_msg):
+            return
 
         # Keep finalize non-blocking: cheap estimates only (usage tracker side-effects
         # previously stalled the SSE "done" event on some installs).
@@ -1804,6 +1964,8 @@ def _run_agent_streaming(
             "healed": bool(route_info.get("_heal_attempted")),
             "usage": usage_data,
         }
+        if assistant_msg.get("error"):
+            done_payload["error"] = True
         if assistant_msg.get("provenance"):
             done_payload["provenance"] = assistant_msg["provenance"]
         if assistant_msg.get("review"):
@@ -1824,6 +1986,13 @@ def _run_agent_streaming(
         _put(q, "done", done_payload)
 
     except Exception as exc:  # noqa: BLE001
+        if isinstance(exc, StreamCancelled) or _job_cancelled(stream_id):
+            partial = "".join(assistant_parts).strip()
+            if partial:
+                _store_final(session_id, stream_id, route_info,
+                             store.ensure_message_id({"role": "assistant", "content": partial,
+                                                      "route": {k: v for k, v in route_info.items() if not str(k).startswith("_")}}))
+            return
         err = str(exc)
         # Prefer clean provider messages over urllib class names
         if err.startswith("HTTPError:"):
@@ -1912,11 +2081,7 @@ def _run_agent_streaming(
                     elif AIAgent is not None:
                         session = store.get_session(session_id)
                         history = list(session.messages[:-1]) if session else []
-                        clean_history = [
-                            {"role": m["role"], "content": m["content"]}
-                            for m in history
-                            if m.get("role") in ("user", "assistant") and isinstance(m.get("content"), str)
-                        ]
+                        clean_history, _ = model_history(history)
                         heal_user_msg, heal_extra = hermes_turn_input(AIAgent, retry_preamble, msg_text)
                         kwargs = {
                             "platform": "cli",
@@ -1989,7 +2154,8 @@ def _run_agent_streaming(
                         route_info=route_info,
                         tools=tools_seen,
                     )
-                    store.append_messages(session_id, assistant_msg)
+                    if not _store_final(session_id, stream_id, route_info, assistant_msg):
+                        return
                     _progress(q, 3, 100, "summarize")
                     _think(q, "Heal 重试完成，汇总交付", kind="heal")
                     done_payload = {
@@ -2147,6 +2313,39 @@ def _apply_hermes_agent_tls(agent: Any, verify_tls: bool) -> None:
                 pass
 
 
+HISTORY_BUDGET_CHARS = 48_000
+HISTORY_MESSAGE_CHARS = 12_000
+
+
+def model_history(
+    messages: list[dict[str, Any]],
+    *,
+    roles: tuple[str, ...] = ("user", "assistant"),
+    budget_chars: int = HISTORY_BUDGET_CHARS,
+    message_chars: int = HISTORY_MESSAGE_CHARS,
+) -> tuple[list[dict[str, str]], int]:
+    """Prior turns to send to a model: newest first within a size budget.
+
+    Failed replies (``error``) are diagnostics, not conversation, and are left
+    out.  Returns ``(messages, dropped_count)``.
+    """
+    usable = [m for m in messages or []
+              if m.get("role") in roles and isinstance(m.get("content"), str) and m.get("content").strip()
+              and not m.get("error")]
+    kept: list[dict[str, str]] = []
+    used = 0
+    for m in reversed(usable):
+        body = m["content"]
+        if len(body) > message_chars:
+            body = body[: message_chars // 2] + "\n…(truncated)…\n" + body[-message_chars // 2:]
+        if kept and used + len(body) > budget_chars:
+            break
+        kept.append({"role": m["role"], "content": body})
+        used += len(body)
+    kept.reverse()
+    return kept, len(usable) - len(kept)
+
+
 def _with_recent_history(prompt: str, session_id: str, *, turns: int = 6, chars: int = 800) -> str:
     """Insert the last few chat turns before the ``[USER]`` part of a Hermes CLI prompt."""
     try:
@@ -2298,7 +2497,8 @@ def _direct_llm_reply(
     route_key = str(route_info.get("route_key") or "office")
     use_model = coerce_model_for_provider(
         provider,
-        (model or route_info.get("model") or "").strip(),
+        # Empty route slots fall back to the backend's own model before giving up.
+        (model or route_info.get("model") or backend.get("model") or "").strip(),
         route_key=route_key,
     )
     verify_tls = resolve_backend_verify_tls(cfg, route_info)
@@ -2307,10 +2507,15 @@ def _direct_llm_reply(
         timeout = min(timeout, 25.0)
 
     if not base_url or not use_model:
+        route_info["_direct_error"] = (
+            "未配置接口地址（base_url）" if not base_url else f"未配置模型：路由 `{route_key}` 没有可用模型"
+        ) + "——请在「设置 → 模型」中选择。"
         return False
     # Ollama often needs no key; others need a key
     if not api_key and provider not in ("local-ollama",):
+        route_info["_direct_error"] = "未设置 API Key——请在「设置 → 模型」中填写。"
         return False
+    route_info["model"] = route_info.get("model") or use_model
 
     mismatch = key_provider_mismatch(provider, api_key)
     if mismatch:
@@ -2329,11 +2534,11 @@ def _direct_llm_reply(
     if preamble:
         messages.append({"role": "system", "content": preamble})
     # Workspace path is already embedded in grounded preamble; avoid a weak one-liner that invites invention.
-    for m in history:
-        role = m.get("role")
-        content = m.get("content")
-        if role in ("user", "assistant", "system") and isinstance(content, str):
-            messages.append({"role": role, "content": content})
+    kept, dropped = model_history(history, roles=("user", "assistant", "system"))
+    if dropped:
+        route_info["history_trimmed"] = dropped
+        messages.append({"role": "system", "content": f"(The {dropped} oldest messages of this chat were omitted to fit the context window.)"})
+    messages.extend(kept)
     messages.append({"role": "user", "content": msg_text})
 
     _put(
@@ -2352,6 +2557,8 @@ def _direct_llm_reply(
     def on_token(delta: str) -> None:
         if not delta:
             return
+        if _cancelled_for_queue(q):
+            raise StreamCancelled()  # closes the provider stream: stop spending tokens
         assistant_parts.append(delta)
         _put(q, "token", {"text": delta})
 
@@ -2444,6 +2651,7 @@ def _direct_llm_reply(
             _put(q, "meta", {"mode": "direct-llm", "error": str(exc)[:240]})
             return False
     else:
+        call_meta: dict[str, Any] = {}
         try:
             text = llm_client.stream_chat(
                 base_url,
@@ -2455,7 +2663,17 @@ def _direct_llm_reply(
                 on_token=on_token,
                 temperature=route_info.get("temperature"),
                 max_tokens=route_info.get("max_tokens"),
+                meta=call_meta,
             )
+            if call_meta.get("retries"):
+                route_info["llm_retries"] = list(call_meta["retries"])
+            if call_meta.get("truncated"):
+                route_info["reply_truncated"] = True
+                cut_note = "\n\n> ⚠ 模型连接中途断开，这条回复可能不完整——可以让我“继续”。"
+                assistant_parts.append(cut_note)
+                _put(q, "token", {"text": cut_note})
+        except StreamCancelled:
+            raise
         except Exception as exc:  # noqa: BLE001
             route_info["_direct_error"] = str(exc)[:500]
             text = _provider_fallback(exc)
@@ -2481,19 +2699,30 @@ def _demo_reply(
     status = agent_status()
     cfg = load_campus_config()
     health = workflows.health_snapshot()
-    route_info = route_info or {}
+    route_info = route_info if route_info is not None else {}
     direct_ready = bool(status.get("direct_llm"))
+    # No model produced this reply.  A configured model that failed is stored as
+    # an error; plain demo mode is marked as such.  Either way tasks stop instead
+    # of treating a diagnostic as a finished step.
+    route_info["_model_failed" if direct_ready else "_demo"] = True
     direct_error = str(route_info.get("_direct_error") or "").strip()
     if direct_ready:
         # Direct LLM is a valid production path. Never tell a user to install
         # Hermes merely because the optional tool-capable Agent path failed.
+        already_direct = str(route_info.get("chat_engine") or "") in ("direct", "direct-llm")
         lines = [
-            "Agent 通道暂时不可用，已检测到 Direct LLM 配置，但本次模型请求未返回内容。\n\n",
-            f"**路由**: {route_info.get('tier', '?')} → `{route_info.get('route_key', '')}` model=`{route_info.get('model') or '(未配置)'}`\n",
-            f"**后端**: `{((cfg.get('backend') or {}).get('type'))}` · **建议**: 重试一次或在控制中心切换为 Direct LLM。\n",
+            ("模型没有返回内容。\n\n" if already_direct
+             else "Agent 通道暂时不可用，已检测到 Direct LLM 配置，但本次模型请求未返回内容。\n\n"),
         ]
         if direct_error:
-            lines.append(f"**错误摘要**: `{direct_error}`\n\n")
+            lines.append(f"**原因**: {direct_error}\n\n")
+        lines += [
+            f"**路由**: {route_info.get('tier', '?')} → `{route_info.get('route_key', '')}` model=`{route_info.get('model') or '(未配置)'}`\n",
+            f"**后端**: `{((cfg.get('backend') or {}).get('type'))}` · **建议**: "
+            + ("按上面的原因修正后重试。\n" if direct_error else
+               ("重试一次；仍失败请在设置里检查模型与 API Key。\n" if already_direct
+                else "重试一次或在控制中心切换为 Direct LLM。\n")),
+        ]
     else:
         lines = [
             "Agent Hub **Campus Office** demo mode（未检测到本地 Agent 运行时）。\n\n",

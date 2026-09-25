@@ -63,6 +63,12 @@ _INTENT_RULES: list[tuple[str, frozenset[str]]] = [
     })),
 ]
 INTENTS = {name: kws for name, kws in _INTENT_RULES}
+# Research-question cues that do not name a database topic ("血浆中鸢尾素的浓度").
+_SCIENCE_CUES = (
+    "浓度", "血浆", "血清", "脑脊液", "机制", "细胞", "小鼠", "大鼠", "动物模型", "患者", "受试者", "疗效",
+    "剂量", "代谢", "激素", "肌肉因子", "分泌因子", "质谱", "测量方法", "检测方法", "实验设计", "样本量",
+    "显著性", "对照组", "随机对照", "队列研究", "生物标志物", "myokine", "biomarker", "in vivo", "in vitro",
+)
 
 
 def classify_intent(query: str) -> str:
@@ -78,6 +84,8 @@ def classify_intent(query: str) -> str:
     for name, kws in _INTENT_RULES:
         if any(k.lower() in q for k in kws):
             return name
+    if any(k in q for k in _SCIENCE_CUES):
+        return "academic"
     # Database identifiers / biomedical topics (TP53, NCT…, CHEMBL…, PDB 4HHB…) are research queries.
     try:
         from .science_connectors import detect_entities
@@ -358,9 +366,9 @@ def search_wikipedia_event(query: str, *, limit: int = 6, timeout: float = 4.0) 
 
 def search_openalex(query: str, *, limit: int = 8, timeout: float = 15.0) -> dict[str, Any]:
     """OpenAlex works API — `display_name`, abstract_inverted_index reconstructed to text."""
-    q = (query or "").strip()
+    q = _en_query(query)
     if not q:
-        return {"ok": False, "error": "empty query", "results": [], "engine": "openalex"}
+        return {"ok": False, "error": "no English search terms", "results": [], "engine": "openalex"}
     errors: list[str] = []
     items: list[dict[str, Any]] = []
     try:
@@ -402,6 +410,15 @@ def search_openalex(query: str, *, limit: int = 8, timeout: float = 15.0) -> dic
     }
 
 
+def _en_query(q: str) -> str:
+    """English-only APIs (OpenAlex / arXiv / PubMed) get the English terms of a mixed query."""
+    if not re.search(r"[\u4e00-\u9fff]", q or ""):
+        return (q or "").strip()
+    from .science_connectors import _english_terms
+
+    return _english_terms(q)
+
+
 def _reconstruct_inverted(idx: dict[str, list[int]]) -> str:
     """OpenAlex stores abstracts as inverted index; reconstruct a short preview."""
     if not idx:
@@ -416,9 +433,9 @@ def _reconstruct_inverted(idx: dict[str, list[int]]) -> str:
 
 def search_arxiv(query: str, *, limit: int = 8, timeout: float = 8.0) -> dict[str, Any]:
     """arXiv API — Atom feed, free, no key."""
-    q = (query or "").strip()
+    q = _en_query(query)
     if not q:
-        return {"ok": False, "error": "empty query", "results": [], "engine": "arxiv"}
+        return {"ok": False, "error": "no English search terms", "results": [], "engine": "arxiv"}
     errors: list[str] = []
     items: list[dict[str, Any]] = []
     try:
@@ -463,9 +480,9 @@ def search_arxiv(query: str, *, limit: int = 8, timeout: float = 8.0) -> dict[st
 
 def search_pubmed(query: str, *, limit: int = 8, timeout: float = 8.0) -> dict[str, Any]:
     """NCBI PubMed eSearch + eSummary — free, no key (rate-limited to 3 rps without key)."""
-    q = (query or "").strip()
+    q = _en_query(query)
     if not q:
-        return {"ok": False, "error": "empty query", "results": [], "engine": "pubmed"}
+        return {"ok": False, "error": "no English search terms", "results": [], "engine": "pubmed"}
     errors: list[str] = []
     items: list[dict[str, Any]] = []
     try:

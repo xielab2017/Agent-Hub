@@ -163,7 +163,7 @@ def fetch_pages(
 
     Each row carries ``n`` (the source number) so passages stay citable.
     """
-    picks = [(i, s) for i, s in enumerate(sources or [], start=1) if isinstance(s, dict) and s.get("url")]
+    picks = [(int(s.get("n") or i), s) for i, s in enumerate(sources or [], start=1) if isinstance(s, dict) and s.get("url")]
     picks = [(i, s) for i, s in picks if not _SKIP_EXT.search(str(s.get("url")))][: max(0, int(max_pages))]
     if not picks:
         return []
