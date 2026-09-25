@@ -303,11 +303,12 @@ PROVIDERS: dict[str, dict[str, Any]] = {
             embedding="",
             reranker="",
         ),
+        # Model ids as listed by the live /v1/models endpoint (2026-09).
         "suggestions": {
-            "fast": ["MiniMax-M2.7-highspeed", "MiniMax-M2.5-highspeed", "MiniMax-M2", "MiniMax-Text-01"],
-            "main": ["MiniMax-M2.7", "MiniMax-M2.5", "MiniMax-M2.1", "MiniMax-M2", "MiniMax-Text-01"],
-            "vision": ["MiniMax-M2", "MiniMax-Text-01"],
-            "reasoning": ["MiniMax-M2.7", "MiniMax-M2.5", "MiniMax-M2"],
+            "fast": ["MiniMax-M2.7-highspeed", "MiniMax-M2.5-highspeed", "MiniMax-M2.1-highspeed", "MiniMax-M2"],
+            "main": ["MiniMax-M3", "MiniMax-M2.7", "MiniMax-M2.5", "MiniMax-M2.1", "MiniMax-M2"],
+            "vision": ["MiniMax-M3", "MiniMax-M2"],
+            "reasoning": ["MiniMax-M3", "MiniMax-M2.7", "MiniMax-M2.5", "MiniMax-M2"],
             "embedding": [],
             "reranker": [],
         },
@@ -336,11 +337,12 @@ PROVIDERS: dict[str, dict[str, Any]] = {
             embedding="",
             reranker="",
         ),
+        # Model ids as listed by the live /v1/models endpoint (2026-09).
         "suggestions": {
-            "fast": ["MiniMax-M2.7-highspeed", "MiniMax-M2.5-highspeed", "MiniMax-M2", "MiniMax-Text-01"],
-            "main": ["MiniMax-M2.7", "MiniMax-M2.5", "MiniMax-M2.1", "MiniMax-M2", "MiniMax-Text-01"],
-            "vision": ["MiniMax-M2", "MiniMax-Text-01"],
-            "reasoning": ["MiniMax-M2.7", "MiniMax-M2.5", "MiniMax-M2"],
+            "fast": ["MiniMax-M2.7-highspeed", "MiniMax-M2.5-highspeed", "MiniMax-M2.1-highspeed", "MiniMax-M2"],
+            "main": ["MiniMax-M3", "MiniMax-M2.7", "MiniMax-M2.5", "MiniMax-M2.1", "MiniMax-M2"],
+            "vision": ["MiniMax-M3", "MiniMax-M2"],
+            "reasoning": ["MiniMax-M3", "MiniMax-M2.7", "MiniMax-M2.5", "MiniMax-M2"],
             "embedding": [],
             "reranker": [],
         },

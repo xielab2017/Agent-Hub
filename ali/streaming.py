@@ -597,7 +597,10 @@ def _store_final(session_id: str, stream_id: str, route_info: dict[str, Any], as
 
 
 
-_MODEL_THINK_TAG = r"think(?:ing)?|reasoning|redacted_reasoning|thought"
+# Reasoning blocks, plus native tool-call markup some models (MiniMax-M2, Qwen …) print as text
+# when no tool API is in play — never part of the visible answer.
+_MODEL_THINK_TAG = r"think(?:ing)?|reasoning|redacted_reasoning|thought|minimax:tool_call|tool_call|function_calls"
+_TOOL_CALL_RE = re.compile(r"<\s*(?:minimax:tool_call|tool_call|function_calls)\b|<\s*invoke\s+name=", re.I)
 
 
 def strip_model_think_tags(text: str) -> str:
@@ -620,10 +623,15 @@ def strip_model_think_tags(text: str) -> str:
     stub = re.search(r"<\s*/?\s*[A-Za-z_]{0,32}$", s)
     if stub:
         name = re.sub(r"^<\s*/?\s*", "", stub.group(0), flags=re.I).lower()
-        names = ("think", "thinking", "reasoning", "redacted_reasoning", "thought")
+        names = ("think", "thinking", "reasoning", "redacted_reasoning", "thought", "minimax:tool_call",
+                 "tool_call", "function_calls")
         if not name or any(n.startswith(name) for n in names):
             s = s[: stub.start()]
     return s
+
+
+def looks_like_tool_call(text: str) -> bool:
+    return bool(_TOOL_CALL_RE.search(text or ""))
 
 
 def sanitize_workflow_output(text: str) -> str:
@@ -1311,6 +1319,14 @@ def _attach_provenance(
 
 
 SEARCH_MARKER = "<<agent-hub:search-results>>"
+DIRECT_NO_TOOLS_NOTE = (
+    "No tools can be called in this conversation mode. Any web search has already been done by Agent Hub "
+    "and its results are in the context above — answer directly from them, in plain Markdown, "
+    "and never output tool-call markup such as <tool_call> or <invoke>."
+)
+DIRECT_TOOL_RETRY = (
+    "工具调用在当前模式下不可用。请不要再输出任何工具调用标记，直接用上文已提供的检索结果和你的知识作答。"
+)
 
 
 def _renumber_sources_block(block: str, sources: list[dict[str, Any]]) -> str:
@@ -2537,6 +2553,8 @@ def _direct_llm_reply(
     if preamble:
         messages.append({"role": "system", "content": preamble})
     # Workspace path is already embedded in grounded preamble; avoid a weak one-liner that invites invention.
+    # Direct mode has no tool API: agent-trained models otherwise answer with a tool call.
+    messages.append({"role": "system", "content": DIRECT_NO_TOOLS_NOTE})
     kept, dropped = model_history(history, roles=("user", "assistant", "system"))
     if dropped:
         route_info["history_trimmed"] = dropped
@@ -2685,7 +2703,21 @@ def _direct_llm_reply(
     if text and not assistant_parts:
         assistant_parts.append(text)
         _put(q, "token", {"text": text})
-    return bool("".join(assistant_parts).strip())
+    produced = "".join(assistant_parts)
+    if looks_like_tool_call(produced) and not strip_model_think_tags(produced).strip():
+        # The model tried to call a tool instead of answering: ask once more, plainly.
+        route_info["tool_call_retry"] = True
+        retry_msgs = messages + [{"role": "assistant", "content": produced[:2000]},
+                                 {"role": "user", "content": DIRECT_TOOL_RETRY}]
+        try:
+            llm_client.stream_chat(base_url, api_key, model=use_model, messages=retry_msgs, timeout=timeout,
+                                   verify_tls=verify_tls, on_token=on_token,
+                                   temperature=route_info.get("temperature"), max_tokens=route_info.get("max_tokens"))
+        except StreamCancelled:
+            raise
+        except Exception as exc:  # noqa: BLE001
+            route_info["_direct_error"] = f"模型只返回了工具调用，重试失败：{exc}"[:500]
+    return bool(strip_model_think_tags("".join(assistant_parts)).strip())
 
 
 def _demo_reply(

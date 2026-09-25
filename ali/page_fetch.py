@@ -124,6 +124,37 @@ def _default_fetch(url: str) -> str:
     return websearch._http(url, timeout=5.0, max_timeout=5.0, redirect_check=is_public_url)
 
 
+_PMID_URL = re.compile(r"^https?://(?:pubmed\.ncbi\.nlm\.nih\.gov|(?:www\.)?europepmc\.org/(?:article|abstract)/MED)/(\d{4,9})/?$", re.I)
+_DOI_URL = re.compile(r"^https?://(?:dx\.)?doi\.org/(10\.\d{4,9}/[^\s?#]+)$", re.I)
+
+
+def scholarly_abstract(url: str) -> dict[str, str] | None:
+    """Title + abstract for a PubMed / DOI link from Europe PMC.
+
+    DOI links redirect to publisher sites that block automated readers; the
+    abstract is what the evidence needs, and Europe PMC serves it as JSON.
+    """
+    from urllib.parse import quote, unquote
+
+    m, d = _PMID_URL.match(url or ""), _DOI_URL.match(url or "")
+    if not (m or d):
+        return None
+    q = f"EXT_ID:{m.group(1)} AND SRC:MED" if m else f'DOI:"{unquote(d.group(1))}"'
+    from . import websearch
+
+    raw = websearch._http("https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=" + quote(q)
+                          + "&resultType=core&format=json&pageSize=1", timeout=6.0, max_timeout=6.0)
+    import json
+
+    hits = ((json.loads(raw or "{}").get("resultList") or {}).get("result")) or []
+    if not hits or not hits[0].get("abstractText"):
+        return None
+    h = hits[0]
+    abstract = re.sub(r"<[^>]+>", " ", str(h.get("abstractText") or ""))
+    cite = " ".join(x for x in (str(h.get("journalTitle") or ""), str(h.get("pubYear") or "")) if x)
+    return {"title": str(h.get("title") or ""), "text": re.sub(r"\s+", " ", f"{h.get('title') or ''}. {abstract} {cite}").strip()}
+
+
 def fetch_page(url: str, query: str, *, fetch: Callable[[str], str] | None = None) -> dict[str, Any]:
     row: dict[str, Any] = {"url": url, "ok": False, "title": "", "chars": 0, "passages": [], "error": ""}
     if not str(url or "").startswith(("http://", "https://")) or _SKIP_EXT.search(url):
@@ -131,6 +162,21 @@ def fetch_page(url: str, query: str, *, fetch: Callable[[str], str] | None = Non
         return row
     if fetch is None and not is_public_url(url):
         row["error"] = "skipped (not a public address)"
+        return row
+    paper = None
+    if fetch is None:
+        try:
+            paper = scholarly_abstract(url)
+        except Exception:  # noqa: BLE001 — fall back to the page itself
+            paper = None
+    if paper:
+        text, row["title"], row["via"] = paper["text"][:MAX_PAGE_CHARS * 3], paper["title"], "europepmc"
+        row["chars"] = len(text)
+        row["passages"] = best_passages(text, query)
+        row["text"] = text[:MAX_PAGE_CHARS]
+        row["ok"] = bool(row["passages"])
+        if not row["ok"]:
+            row["error"] = "no passage matched the query"
         return row
     try:
         html = (fetch or _default_fetch)(url)

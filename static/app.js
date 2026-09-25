@@ -4297,7 +4297,7 @@ function finishWorkflowProgress(ok = true) {
 }
 
 /** Model think / reasoning tags to hide from the main reply bubble. */
-const MODEL_THINK_TAG = "think(?:ing)?|reasoning|redacted_reasoning|thought";
+const MODEL_THINK_TAG = "think(?:ing)?|reasoning|redacted_reasoning|thought|minimax:tool_call|tool_call|function_calls";
 
 /**
  * Strip <think>…</think> (and common variants) from assistant text.
@@ -4319,7 +4319,7 @@ function stripModelThinkTags(text) {
   const stub = s.match(/<\s*\/?\s*[A-Za-z_]{0,32}$/);
   if (stub) {
     const name = stub[0].replace(/^<\s*\/?\s*/i, "").toLowerCase();
-    const names = ["think", "thinking", "reasoning", "redacted_reasoning", "thought"];
+    const names = ["think", "thinking", "reasoning", "redacted_reasoning", "thought", "minimax:tool_call", "tool_call", "function_calls"];
     if (!name || names.some((n) => n.startsWith(name))) {
       s = s.slice(0, -stub[0].length);
     }

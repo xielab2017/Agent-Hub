@@ -150,7 +150,11 @@ def main() -> int:
     out = run(sid, "搜索：人血浆中鸢尾素（irisin）的浓度是多少？质谱和 ELISA 的结果为什么不一致？", web_search=True, deep_search=True)
     for n in out["notes"][:4]:
         say("     ·", n)
-    all_ok &= show("search", out, not out["msg"].get("error") and bool(re.search(r"\[\d+\]", out["msg"].get("content") or "")))
+    pages = [p for p in (out["msg"].get("evidence") or {}).get("sources") or []]
+    for p in pages[:6]:
+        say(f"     [{p.get('n')}] {p.get('tier')} read={p.get('page_read')} {p.get('url')}")
+    all_ok &= show("search", out, not out["msg"].get("error") and bool(re.search(r"\[\d+\]", out["msg"].get("content") or ""))
+                   and "<invoke" not in (out["msg"].get("content") or ""))
 
     say("== 4. memory")
     out = run(sid, "我上一个问题问的是什么？只用一句话回答。", web_search=False)
@@ -169,6 +173,9 @@ def main() -> int:
             m = o["msg"]
             say(f"   step {nxt['step']}/{nxt['total']} {nxt['title']}: {o['secs']}s error={bool(m.get('error'))} "
                 f"warn={(m.get('review') or {}).get('warn')}")
+            for issue in [i for i in (m.get("review") or {}).get("issues") or [] if i.get("severity") == "warn"][:6]:
+                say(f"     ! {issue.get('kind')}: {issue.get('text')} — {str(issue.get('detail_zh') or issue.get('detail'))[:140]}")
+            say("     reply:", re.sub(r"\s+", " ", str(m.get("content") or ""))[:500])
             adv = task_runner.advance(tid, message_id=m["id"])
             if adv["status"] == "blocked" and adv.get("reason") == "review":
                 say("     reviewer paused the task:", adv.get("issues"), "→ continuing")
