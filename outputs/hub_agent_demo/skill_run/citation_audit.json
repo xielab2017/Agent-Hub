@@ -1,0 +1,128 @@
+[
+ {
+  "section": "GDF15 Biology, Structure, and TGF-β Superfamily Context",
+  "issues": [
+   {
+    "sentence": "Originally identified as macrophage inhibitory cytokine-1 (MIC-1), GDF15 is classified as a distant, divergent member, with limited sequence identity and structural homology to canonical ligands such as TGF-β1, activins, or bone morphogenetic proteins [R9, R10].",
+    "cards": [
+     "R9",
+     "R10"
+    ],
+    "issue": "R9 and R10 describe GDF15 as a 'divergent'/'distant' TGF-β superfamily member but do not explicitly state that there is limited sequence identity or structural homology to TGF-β1, activins, or BMPs. The homology claim is an inference from the 'divergent/distant' wording.",
+    "fix": "Soften the claim, e.g., 'classifying it as a distant, divergent member, consistent with limited homology to canonical ligands such as TGF-β1, activins, or bone morphogenetic proteins.'"
+   },
+   {
+    "sentence": "Like other superfamily ligands, GDF15 is synthesized as a precursor pro-protein; the N-terminal propeptide is cleaved to release a C-terminal mature domain that assembles into a disulfide-linked homodimer of approximately 25 kDa, the biologically active circulating form [R10].",
+    "cards": [
+     "R10"
+    ],
+    "issue": "R10's abstract only states GDF15 'circulates as a 25-kDa dimer.' It does not describe pro-protein synthesis, N-terminal propeptide cleavage, release of a C-terminal mature domain, or disulfide-linked assembly.",
+    "fix": "Cite a source that actually describes the pro-protein processing and disulfide-linked homodimer, or rephrase to: 'GDF15 circulates as a ~25 kDa dimer, consistent with the precursor-pro-protein/mature-domain architecture shared by other TGF-β superfamily ligands [R10].'"
+   },
+   {
+    "sentence": "The mature domain retains the canonical cystine-knot motif, but its receptor-engagement surface differs substantially from those of activins or BMPs, explaining selective interaction with GFRAL rather than with type I/type II activin or BMP receptor complexes [R9, R10].",
+    "cards": [
+     "R9",
+     "R10"
+    ],
+    "issue": "Neither R9 nor R10 mentions the cystine-knot motif. The explicit exclusion of type I/type II activin or BMP receptor engagement at the cited evidence is not tested or stated; R9 only shows GDF15 binds 'specifically' to GFRAL.",
+    "fix": "Remove the cystine-knot assertion (unsupported by cited cards) and qualify the receptor selectivity claim, e.g., 'R9 demonstrated specific high-affinity binding to GFRAL, consistent with a receptor-engagement surface distinct from those of activins or BMPs [R9, R10].'"
+   },
+   {
+    "sentence": "Whereas many TGF-β superfamily ligands are constitutively expressed in a tissue-restricted manner, GDF15 is generally expressed at low levels in healthy tissue but is rapidly upregulated by cellular stressors, including mitochondrial dysfunction, endoplasmic reticulum stress, inflammatory cytokines, AMPK-mediated energetic stress, and oncogenic transformation [R6, R7, R23].",
+    "cards": [
+     "R6",
+     "R7",
+     "R23"
+    ],
+    "issue": "Of the five listed inducers, only ER stress and AMPK-mediated energetic stress are explicitly supported by the cited cards (R23). 'Mitochondrial dysfunction,' 'inflammatory cytokines,' and 'oncogenic transformation' as direct GDF15 inducers are not stated in R6, R7, or R23. R7 mentions advanced cancer (a disease state), not oncogenic transformation as an inducer.",
+    "fix": "Replace with what the cards actually support, e.g., 'including endoplasmic reticulum stress and AMPK-mediated energetic stress [R23], and more broadly cellular stress and disease states including cancer [R6, R7].'"
+   },
+   {
+    "sentence": "GDF15, by contrast, binds with high affinity to GFRAL, an orphan member of the GDNF family receptor α family, which lacks intrinsic catalytic activity and requires the receptor tyrosine kinase RET as a signaling co-receptor [R9, R10].",
+    "cards": [
+     "R9",
+     "R10"
+    ],
+    "issue": "R9 and R10 state GFRAL is an orphan GDNF family receptor α-like receptor requiring RET for signaling, but neither explicitly states that GFRAL 'lacks intrinsic catalytic activity.' This is an inference from RET being the coreceptor.",
+    "fix": "Rephrase as 'which requires the receptor tyrosine kinase RET as a signaling co-receptor [R9, R10]' or qualify, e.g., 'which, lacking intrinsic signaling capacity on its own, requires RET as a co-receptor.'"
+   },
+   {
+    "sentence": "GDF15 does not appear to engage canonical type I or type II receptors at physiologically relevant concentrations, and SMAD-mediated transcription is not the dominant effector of its metabolic or anorectic actions [R9, R10].",
+    "cards": [
+     "R9",
+     "R10"
+    ],
+    "issue": "Neither R9 nor R10 explicitly tests or states that GDF15 fails to engage type I/type II receptors at physiological concentrations, nor do they mention SMAD-mediated transcription at all. R9 only shows specific binding to GFRAL.",
+    "fix": "Cite a source that explicitly addresses the lack of type I/II receptor engagement and SMAD involvement, or remove the sentence and rephrase, e.g., 'R9 demonstrated specific high-affinity binding of GDF15 to GFRAL-RET [R9, R10]; whether canonical type I/II receptors or SMAD effectors contribute to GDF15 actions is not addressed by these studies.'"
+   },
+   {
+    "sentence": "First, GFRAL expression is restricted, within the resolution of current assays, to neurons of the area postrema (AP) and nucleus of the solitary tract (NTS); the AP's lack of a complete blood-brain barrier provides direct access for circulating ligand [R9, R10].",
+    "cards": [
+     "R9",
+     "R10"
+    ],
+    "issue": "The claim about the AP lacking a complete blood-brain barrier is not stated in R9 or R10; it is general anatomical knowledge being attributed to these citations.",
+    "fix": "Move the BBB statement out of the citation or cite an appropriate source, e.g., 'GFRAL expression is restricted to neurons of the area postrema (AP) and nucleus of the solitary tract (NTS) [R9, R10], an area that lacks a complete blood-brain barrier.'"
+   },
+   {
+    "sentence": "GDF15 induces emesis in Suncus murinus and nausea/malaise-associated behaviors (pica, conditioned taste aversion) in non-emetic rodents, and contributes to chemotherapy-induced malaise [R8]",
+    "cards": [
+     "R8"
+    ],
+    "issue": "R8 documents pica as a nausea/malaise-associated behavior in non-emetic rodents but does not mention conditioned taste aversion (CTA) among the behaviors tested.",
+    "fix": "Remove 'conditioned taste aversion' from the parenthetical list, e.g., 'nausea/malaise-associated behaviors (e.g., anorexia and pica) in non-emetic rodents [R8].'"
+   }
+  ]
+ },
+ {
+  "section": "Introduction and Scope",
+  "issues": [
+   {
+    "sentence": "The discovery that the orphan receptor GFRAL, expressed exclusively within the resolution of current assays in neurons of the area postrema—a circumventricular organ that contacts circulating ligands outside the blood–brain barrier—and the nucleus of the solitary tract in the hindbrain, serves as the high-affinity binding partner for GDF15 and signals through the RET co-receptor provided a coherent mechanistic framework for the anorexia, weight loss, nausea, and metabolic remodeling that accompany states of elevated GDF15 in vivo [R9, R10].",
+    "cards": [
+     "R9",
+     "R10"
+    ],
+    "issue": "R9 and R10 abstracts describe anorexia, weight loss, and metabolic effects (e.g., insulin resistance in GFRAL-deficient mice in R10) but do not explicitly mention nausea; nausea/aversive emetic circuitry is the focus of R8, which is not cited here.",
+    "fix": "Add R8 or remove 'nausea' from this sentence, since R9/R10 abstracts do not establish the nausea/emetic component of the framework."
+   },
+   {
+    "sentence": "The mature C-terminal domain assembles into a disulfide-linked homodimer of approximately 25 kDa that circulates at concentrations varying by orders of magnitude across physiological and pathological states [R10].",
+    "cards": [
+     "R10"
+    ],
+    "issue": "R10's abstract states only that GDF15 'circulates as a 25-kDa dimer'; it does not specify that the dimer is 'disulfide-linked' or that it represents the 'mature C-terminal domain.'",
+    "fix": "Rewrite to match what R10 supports (e.g., 'circulates as a 25-kDa dimer'), or cite a dedicated biochemistry/structural reference for the disulfide-linked C-terminal homodimer."
+   },
+   {
+    "sentence": "In Suncus murinus and in non-emetic species, GDF15 produces pica and conditioned taste aversion, and contributes to chemotherapy- and pregnancy-associated malaise [R8, R20, R22].",
+    "cards": [
+     "R8",
+     "R20",
+     "R22"
+    ],
+    "issue": "R8's abstract lists 'anorexia and pica' as malaise-associated behaviors but does not explicitly mention conditioned taste aversion (CTA); the other two cards (R20, R22) address pregnancy/HG rather than non-emetic species behaviors.",
+    "fix": "Drop 'conditioned taste aversion' (not supported by the R8 abstract) or cite a source that specifically demonstrates CTA in response to GDF15."
+   },
+   {
+    "sentence": "We critically examine the evidence for GDF15 as a biomarker across cardiovascular, renal, oncologic, and metabolic disease, evaluate the rapidly expanding therapeutic landscape of neutralizing antibodies, agonists, and small molecules [R17], and consider what the available data do—and do not—show.",
+    "cards": [
+     "R17"
+    ],
+    "issue": "R17 is a UK Biobank proteomics/mediation study on cardio-renal-metabolic comorbidity; it does not evaluate the therapeutic landscape of GDF15 'agonists and small molecules,' and only briefly mentions the neutralizing antibody ponsegromab.",
+    "fix": "Replace R17 with the relevant review(s) covering GDF15 therapeutics (e.g., R6 or R7) for this part of the scope statement."
+   },
+   {
+    "sentence": "Human genetic data supporting a causal role for GFRAL variants in obesity remain modest [R6, R9, R10].",
+    "cards": [
+     "R6",
+     "R9",
+     "R10"
+    ],
+    "issue": "R9 (Yang 2017) and R10 (Mullican 2017) are receptor-identification studies in mice/nonhuman primates and their abstracts do not discuss human genetic data on GFRAL variants; only R6 mentions 'some human genetic studies support an interrelationship with human obesity.'",
+    "fix": "Cite R6 alone (or add a dedicated human GFRAL-variant genetics study) for this claim; R9 and R10 do not provide the human genetic evidence."
+   }
+  ]
+ }
+]

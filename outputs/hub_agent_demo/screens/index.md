@@ -3,3 +3,8 @@
 - 2026-09-26 03:49:55 UTC — `003_A_pubmed-answer.png` — agent used pubmed_search, pubmed_search, pubmed_search, pubmed_search
 - 2026-09-26 03:49:59 UTC — `004_A_skill-running.png` — typed (plain language): 帮我写一篇关于 GDF15 与衰老和代谢的英文综述，先小规模试跑一下看看效果。
 - 2026-09-26 03:50:06 UTC — `005_A_skill-answer.png` — agent used run_skill
+- 2026-09-26 04:02:23 UTC — `006_A_skill-finished.png` — skill run done
+- 2026-09-26 04:02:27 UTC — `007_A_files-running.png` — typed (plain language): 工作区里有哪些文件？读一下 notes.md 并告诉我下一步该做什么。
+- 2026-09-26 04:02:34 UTC — `008_A_files-answer.png` — agent used list_files, read_file
+- 2026-09-26 04:02:50 UTC — `009_A_stop-running.png` — skill running — ■ 停止 button on the card
+- 2026-09-26 04:02:54 UTC — `010_A_stop-done.png` — clicked ■ 停止 — run stopped, partial files kept
