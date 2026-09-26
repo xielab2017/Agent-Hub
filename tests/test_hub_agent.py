@@ -189,3 +189,22 @@ def test_run_skill_accepts_loose_ids_and_argument_shapes():
         assert r.get("run_id") and "--smoke" not in r["args"]
         bad = tools.call("run_skill", {"skill": "grant-writer", "topic": "x"})
         assert "no runnable skill" in bad["error"] and "toy" in bad["error"]
+
+
+def test_saved_profile_is_used_only_for_its_own_topic():
+    """MiniMax-M3 (CI run 36209331150) attached the multi-omics profile to a GDF15 review."""
+    topics = hub_agent._profile_topics(ROOT / "skills" / "literature-review" / "profiles")
+    assert "EasyMultiProfiler" in topics["multiomics-emp"] and "THBS4" in topics["thbs4"]
+    assert not hub_agent.topics_overlap("GDF15 in ageing and metabolism", topics["thbs4"])
+    assert not hub_agent.topics_overlap("GDF15 in aging and metabolic regulation", topics["multiomics-emp"])
+    assert hub_agent.topics_overlap("THBS4 in muscle ageing", topics["thbs4"])
+    assert hub_agent.topics_overlap("multi-omics analysis software", topics["multiomics-emp"])
+    import test_skill_runner as tsr
+
+    with tempfile.TemporaryDirectory() as tmp, tsr.hub(Path(tmp)) as (root, _loaded, _messages):
+        prof = tsr._toy_skill(root) / "profiles"
+        (prof / "omics.yaml").write_text("topic: Multi-omics software with EasyMultiProfiler\\nplan: false\\n")
+        r = hub_agent.Tools().call("run_skill", {"skill": "toy", "topic": "GDF15 in ageing", "profile": "omics"})
+        assert "--profile" not in r["args"] and "not used" in r["note"]
+        r = hub_agent.Tools().call("run_skill", {"skill": "toy", "topic": "EasyMultiProfiler review", "profile": "omics"})
+        assert "--profile" in r["args"]

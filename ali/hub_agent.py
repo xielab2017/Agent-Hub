@@ -131,7 +131,8 @@ class Tools:
                 continue
             prof_dir = Path(s["path"]) / "profiles"
             rows.append({"id": s["id"], "description": meta.get("description") or "", "triggers": meta.get("triggers") or "",
-                         "profiles": sorted(p.stem for p in prof_dir.glob("*.y*ml")) if prof_dir.is_dir() else []})
+                         "profiles": sorted(p.stem for p in prof_dir.glob("*.y*ml")) if prof_dir.is_dir() else [],
+                         "profile_topics": _profile_topics(prof_dir)})
         return {"skills": rows}
 
     def _resolve_skill(self, skill: str) -> tuple[str, list[str]]:
@@ -177,13 +178,23 @@ class Tools:
                 args[k] = extra[k]
         if not args.get("topic") and not args.get("profile"):
             return {"error": "give a topic (English works best) or a profile"}
+        note = ""
+        if args.get("topic") and args.get("profile"):  # a saved profile is for its own topic, not any review
+            ptopic = next((r.get("profile_topics", {}).get(args["profile"], "") for r in self.t_list_skills()["skills"]
+                           if r["id"] == resolved), "")
+            if ptopic and not topics_overlap(args["topic"], ptopic):
+                note = (f"profile {args['profile']!r} is for another topic ({ptopic[:100]}); not used — the skill "
+                        "plans a profile for this topic. ")
+                args.pop("profile")
         display = f"/skill {resolved} " + " ".join(f"{k}={v}" for k, v in args.items())
         run = skill_runner.start_run(resolved, args, session_id=self.session_id, display=display, announce=False)
         info = {"run_id": run["id"], "skill": resolved, "args": run["args"], "status": run["status"],
                 "out": run["out"]}
         if self.on_skill_run:
             self.on_skill_run(info)
-        return {**info, "note": "running in the background; the progress card in the chat shows each stage"}
+        return {**info, "note": note + "Started in the background; the progress card in the chat shows each stage "
+                                       "and the Word file when done. Now give the final answer (what is running, what "
+                                       "it will produce, that the card tracks it) — do not poll skill_status."}
 
     def t_skill_status(self, run_id: str = "", **_: Any) -> dict[str, Any]:
         from . import skill_runner
@@ -207,12 +218,39 @@ def system_prompt(tools: Tools, *, skills_hint: str = "") -> str:
         "literature, the user's files, a long pipeline); answer simple questions directly. Never invent tool "
         "results, papers or numbers; cite what the tools returned. Never say you started, ran, searched, listed or "
         "read anything unless a TOOL RESULT in this conversation shows it — to do it, send the JSON. Do not put "
-        "any text before or after the JSON.\n"
+        "any text before or after the JSON. Search results already shown above were fetched automatically and may "
+        "miss the literature: when the user asks for papers, literature, evidence or PMIDs, call pubmed_search.\n"
         "When the user wants a deliverable that a runnable skill produces (e.g. a literature review / 综述 → "
         "run_skill literature-review with an English topic), start it with run_skill and then tell the user it is "
         "running, what it will produce and roughly how long it takes — do not write the deliverable yourself.\n"
         "Tools:\n" + "\n".join(lines) + f"\n{skills_hint or skills_line(tools)}"
     )
+
+
+def _profile_topics(prof_dir: Path) -> dict[str, str]:
+    out: dict[str, str] = {}
+    if not prof_dir.is_dir():
+        return out
+    for p in sorted(prof_dir.glob("*.y*ml")):
+        m = re.search(r"^topic:\s*(?:>-?|\|-?)?\s*(.*?)(?=^\S|\Z)", p.read_text(encoding="utf-8", errors="replace"), re.S | re.M)
+        out[p.stem] = " ".join((m.group(1) if m else "").replace("'", "").replace('"', "").split())[:240]
+    return out
+
+
+_STOP = set("a an and as at by for from in into of on or the to with review role roles its their between via "
+            "systematic critical comparison analysis".split())
+
+
+def topics_overlap(a: str, b: str) -> bool:
+    """Is topic ``a`` the topic of profile ``b``? Named entities (THBS4, GDF15, EasyMultiProfiler …) decide when the
+    request has any; otherwise at least half of its content words must appear in the profile's topic."""
+    ids = lambda t: {w.lower() for w in re.findall(r"\b(?=\w*\d)[A-Za-z0-9-]{3,}\b|\b[A-Z][A-Z0-9-]{2,}\b|\b[A-Z][a-z]+[A-Z]\w*\b", t)}  # noqa: E731
+    words = lambda t: {w for w in re.findall(r"[a-z0-9][a-z0-9-]{2,}", t.lower()) if w not in _STOP}  # noqa: E731
+    want_ids = ids(a)
+    if want_ids:
+        return bool(want_ids & (ids(b) | words(b)))
+    wa = words(a)
+    return bool(wa) and len(wa & words(b)) * 2 >= len(wa)
 
 
 def skills_line(tools: Tools) -> str:
@@ -224,7 +262,9 @@ def skills_line(tools: Tools) -> str:
     if not rows:
         return "Runnable skills installed: none."
     return "Runnable skills installed (use these exact ids with run_skill): " + "; ".join(
-        f"{r['id']}" + (f" (profiles: {', '.join(r['profiles'])})" if r["profiles"] else "") for r in rows) + "."
+        f"{r['id']}" + (" (saved profiles, use one ONLY when the user's topic is that same topic, otherwise omit "
+                        "profile: " + "; ".join(f"{k} = {v[:120]}" for k, v in r["profile_topics"].items()) + ")"
+                        if r.get("profile_topics") else "") for r in rows) + "."
 
 
 def parse_action(text: str) -> dict[str, Any] | None:
