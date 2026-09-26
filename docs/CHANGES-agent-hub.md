@@ -38,5 +38,14 @@
 - CLI 参数漂移检查：CLI 版本缺少所需参数时给出明确提示；`agents-check.yml` 在 GitHub 上安装真实 CLI 核对参数并截屏演示。
 - 文件：`ali/agent_cli.py`、`ali/runtimes.py`、`ali/streaming.py`、`ali/routes.py`、`static/app.js`、`tests/fakes/`。
 
+## 7. 所有 API 直接当 agent 用（Hub agent）
+
+- 新增 `ali/hub_agent.py`：对话模式为「Agent」且未连接外部 claw 时，Hub 用当前配置的任意模型（OpenAI / Anthropic
+  兼容接口、多模型分级路由均可）跑自己的工具循环，由模型根据上下文决定调用 `web_search`、`read_url`、
+  `pubmed_search`、`list_files` / `read_file`（仅限工作区）、`list_skills`、`run_skill`、`skill_status`。
+- 直接说「帮我写一篇…综述」即可启动 literature-review Skill 并显示实时进度卡片，无需斜杠命令。
+- 问候与「快聊」仍是普通回复；配置 `ali.hub_agent: false` 可关闭。
+- GitHub 工作流「Hub agent check」（提交标题含 `[hub-agent]`）用 MiniMax-M3 通过界面实测并截图。
+
 ## 安全
 - 所有 key / token 只存 `secrets.json`（0600），界面、日志、截图中遮挡；每次提交前做泄漏检查。
