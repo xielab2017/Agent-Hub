@@ -181,6 +181,45 @@ def main() -> int:
                 reply = last.inner_text()[:300]
                 report["steps"].append({"step": f"chat-{rid}", "tier": tiers, "reply": reply})
                 shots.take(page, "A", f"chat-{rid}", note=f"{tiers} tier → {rid} account answers")
+            # ── 5. one model picker for every source: tick several → fused answer ─────────
+            close_control(page)
+            page.reload(wait_until="domcontentloaded")
+            page.wait_for_selector("#input", timeout=60000)
+            page.wait_for_function("() => typeof state !== 'undefined' && !!state.currentId", timeout=60000)
+            page.click("#btn-new")
+            page.wait_for_timeout(1200)
+            api_src = "minimax-cn::MiniMax-M3" if key else "campus-openai-compatible::stub-model"
+            if not key:
+                api(hub, "/api/connections/campus-openai-compatible/test", {})
+            picks = [api_src, "claude-code::opus", "cursor::"]
+            page.click("#model-pick-btn")
+            page.wait_for_selector(".model-pick-row", timeout=60000)
+            for sid in picks:
+                page.locator(f'.model-pick-row[data-id="{sid}"] input').check()
+            page.wait_for_timeout(600)
+            shots.take(page, "A", "picker", note="模型按钮: API models + signed-in accounts in one list, three ticked")
+            report["steps"].append({"step": "picker", "button": page.inner_text("#model-pick-btn")})
+            page.click("#input")
+            sd.command(page, "比较 CRISPR-Cas9 与碱基编辑在脱靶风险上的差异，给出简明结论。")
+            page.wait_for_timeout(4000)
+            shots.take(page, "A", "fusion-running", note="fusion: each model answering (progress per model)")
+            wait_reply(page, timeout_s=420)
+            last = page.locator("#messages .msg.assistant").last
+            box = last.locator(".fusion-box")
+            if box.count():
+                box.locator("summary").click()
+                page.wait_for_timeout(600)
+            last.scroll_into_view_if_needed()
+            shots.take(page, "A", "fusion-answer", note="fused answer + each model's own answer (expanded)")
+            sid_now = page.evaluate("() => state.currentId")
+            sess = api(hub, f"/api/sessions/{sid_now}")
+            msgs = (sess.get("session") or sess).get("messages") or []
+            fm = next((m for m in reversed(msgs) if m.get("role") == "assistant"), {})
+            fus = (fm.get("route") or {}).get("fusion") or {}
+            report["steps"].append({"step": "fusion", "engine": (fm.get("route") or {}).get("chat_engine"),
+                                    "synthesizer": fus.get("synthesizer"), "reply": (fm.get("content") or "")[:400],
+                                    "members": [{k: x.get(k) for k in ("label", "ok", "seconds", "error")}
+                                                for x in fus.get("members") or []]})
             browser.close()
     finally:
         hub.stop()
@@ -191,7 +230,9 @@ def main() -> int:
           and all(steps.get(f"{name}-auth", {}).get("logged_in") for name in ("claude", "codex", "cursor"))
           and all(rid in (steps.get(f"chat-{rid}") or {}).get("reply", "").replace("Claude Code", "claude-code")
                   .replace("OpenAI Codex", "codex").replace("Cursor", "cursor") for rid in ("claude-code", "codex", "cursor"))
-          and steps.get("claws-clean", {}).get("agent_rows") == 0)
+          and steps.get("claws-clean", {}).get("agent_rows") == 0
+          and steps.get("fusion", {}).get("engine") == "fusion"
+          and sum(1 for m in steps.get("fusion", {}).get("members", []) if m.get("ok")) >= 3)
     print("RESULT:", "PASS" if ok else "CHECK", flush=True)
     return 0 if ok else 1
 

@@ -479,6 +479,32 @@ def resolve_route(
     }
 
 
+def pin_source(source: str, cfg: dict[str, Any] | None = None, base: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Route one turn to exactly ``provider::model`` (the chat's model picker): an API vendor with its own
+    endpoint / key / TLS, or an agent account.  Tier, depth and review flags come from ``base``."""
+    from .connections import AGENT_ACCOUNTS, is_agent, split_source
+    from .providers import connection, get_provider
+
+    cfg = cfg or load_campus_config()
+    pid, model = split_source(source)
+    info = dict(base or resolve_route("auto", "", cfg))
+    if is_agent(pid):
+        info.update(provider=pid, agent_cli=pid, model=model, base_url="", api_key_env="", pinned=source,
+                    label=AGENT_ACCOUNTS[pid]["label_en"])
+    else:
+        if not get_provider(pid):
+            raise ValueError(f"unknown model source: {source}")
+        c = connection(cfg, pid)
+        info.update(provider=pid, agent_cli="", model=model, base_url=c["base_url"], pinned=source,
+                    api_key_env=(get_provider(pid) or {}).get("api_key_env") or "")
+    info["backend_type"] = pid
+    external = {"openai", "anthropic", "nvidia-nim", "nvidia-api", "nvidia-hosted", "openrouter", "minimax",
+                "minimax-cn", "gemini", "deepseek", "kimi", "claude-code", "codex", "cursor"}
+    if str(cfg.get("data_policy") or "internal").lower() == "restricted" and pid in external:
+        info.update(blocked=True, block_reason=f"data_policy=restricted forbids external provider '{pid}'")
+    return info
+
+
 def routing_matrix() -> list[dict[str, Any]]:
     cfg = load_campus_config()
     rows = []

@@ -343,6 +343,11 @@ def handle_get(handler) -> None:
     if path == "/api/skills":
         return _json(handler, 200, skills.list_skills())
 
+    if path == "/api/models/sources":  # the chat's model picker: API vendors' models + agent accounts
+        from . import connections as _conns
+
+        return _json(handler, 200, _conns.model_sources())
+
     if path == "/api/connections/agents":  # agent accounts (Claude Code / Codex / Cursor) as model sources
         from . import connections as _conns
 
@@ -1103,6 +1108,7 @@ def handle_post(handler) -> None:
                 deep_search=bool(body.get("deep_search")) if "deep_search" in body else None,
                 task_id=str(body.get("task_id") or ""),
                 task_step=int(body.get("task_step") or 0) if str(body.get("task_step") or "0").isdigit() else 0,
+                models=[str(m) for m in (body.get("models") or []) if isinstance(m, str)][:8],
             )
             return _json(handler, 200, result)
         except ValueError as exc:

@@ -2852,6 +2852,142 @@ function renderTaskDock(sessionId) {
 
 // ── Sources & evidence panel ───────────────────────────────────────────
 
+// ── Model picker: every source (API vendors' models + signed-in accounts), multi-select → fused answer ──
+// Ids are "provider::model" (ali/connections.model_sources). None picked = 自动 (tier routing).
+state.pickedModels = state.pickedModels || [];
+state.modelSources = state.modelSources || [];
+
+async function loadModelSources() {
+  try { state.modelSources = (await api("/api/models/sources", { timeoutMs: 60000 })).sources || []; }
+  catch (_) { state.modelSources = state.modelSources || []; }
+  return state.modelSources;
+}
+
+function sourceLabel(id) {
+  const s = (state.modelSources || []).find((x) => x.id === id);
+  const zh = state.prefs.language !== "en";
+  if (!s) return String(id).split("::").pop() || String(id);
+  if (s.kind === "agent") {
+    const acct = (zh ? s.group : s.group_en || s.group).split("（")[0].split(" (")[0];
+    return s.model ? `${acct} · ${s.model}` : acct;
+  }
+  // the same model name at two vendors: add the vendor
+  const twins = (state.pickedModels || []).filter((x) => x !== id && String(x).split("::").pop() === s.model);
+  return twins.length ? `${s.model}（${(zh ? s.group : s.group_en || s.group).split(" /")[0]}）` : s.model;
+}
+
+function updateModelPickButton() {
+  const btn = $("#model-pick-btn");
+  if (!btn) return;
+  const zh = state.prefs.language !== "en";
+  const ids = state.pickedModels || [];
+  btn.classList.toggle("fusion", ids.length > 1);
+  btn.textContent = !ids.length ? (zh ? "模型：自动" : "Model: auto")
+    : ids.length === 1 ? `${zh ? "模型：" : "Model: "}${sourceLabel(ids[0])}`
+      : `${zh ? "融合 · " : "Fusion · "}${ids.map(sourceLabel).join(" + ")}`;
+  btn.title = ids.length > 1 ? (zh ? "所选模型同时作答，再合并成一份回答" : "The chosen models answer together; one merges them") : "";
+}
+
+function setPickedModels(ids) {
+  state.pickedModels = [...new Set(ids.filter(Boolean))].slice(0, 6);
+  // one picked source also drives the legacy single select, so older paths send the same model
+  updateModelPickButton();
+  persistChatModeAndModel();
+}
+
+function renderModelPicker() {
+  const pop = $("#model-pick-pop");
+  if (!pop) return;
+  const zh = state.prefs.language !== "en";
+  const L = (a, b) => (zh ? a : b);
+  const q = (pop.querySelector(".model-pick-search")?.value || "").trim().toLowerCase();
+  const picked = new Set(state.pickedModels || []);
+  const groups = new Map();
+  (state.modelSources || []).forEach((src) => {
+    const name = zh ? src.group : (src.group_en || src.group);
+    if (q && !`${name} ${src.model} ${src.label || ""}`.toLowerCase().includes(q)) return;
+    const key = `${src.kind === "agent" ? "2" : "1"}|${name}`;
+    if (!groups.has(key)) groups.set(key, { name, kind: src.kind, rows: [] });
+    groups.get(key).rows.push(src);
+  });
+  const rows = [...groups.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([, g]) => `
+      <div class="model-pick-group"><div class="model-pick-head">${g.kind === "agent" ? L("账号 · ", "Account · ") : ""}${escapeHtml(g.name)}</div>
+      ${g.rows.map((src) => `<label class="model-pick-row ${src.ready ? "" : "off"}" data-id="${escapeHtml(src.id)}">
+        <input type="checkbox" ${picked.has(src.id) ? "checked" : ""} ${src.ready ? "" : "disabled"} />
+        <span>${escapeHtml(src.kind === "agent" ? (src.model || L("默认模型", "default model")) : src.model)}</span>
+        ${src.ready ? "" : `<a href="#" class="model-pick-login">${escapeHtml(src.note || L("未登录", "not signed in"))} · ${L("去登录", "sign in")}</a>`}
+      </label>`).join("")}</div>`).join("");
+  pop.innerHTML = `<div class="model-pick-top">
+      <input class="model-pick-search" placeholder="${L("搜索模型…", "Search models…")}" value="${escapeHtml(q)}" />
+      <button type="button" class="btn ghost chip model-pick-auto">${L("自动（按分级路由）", "Auto (tier routing)")}</button></div>
+    <div class="muted model-pick-hint">${L("勾选一个：只用它回答；勾选多个：同时作答并融合成一份回答。", "Tick one to use it; tick several to have them answer together and merge.")}</div>
+    <div class="model-pick-list">${rows || `<div class="muted">${L("还没有可用模型 — 在 控制中心 → 多模型 API 添加 key 或登录账号", "No models yet — add keys or sign in under Control Center → 多模型 API")}</div>`}</div>`;
+  const search = pop.querySelector(".model-pick-search");
+  search.oninput = () => { const pos = search.selectionStart; renderModelPicker(); const s2 = pop.querySelector(".model-pick-search"); s2.focus(); s2.setSelectionRange(pos, pos); };
+  pop.querySelector(".model-pick-auto").onclick = () => { setPickedModels([]); renderModelPicker(); };
+  pop.querySelectorAll(".model-pick-row input").forEach((cb) => {
+    cb.onchange = () => {
+      const id = cb.closest(".model-pick-row").dataset.id;
+      const next = new Set(state.pickedModels || []);
+      if (cb.checked) next.add(id); else next.delete(id);
+      setPickedModels([...next]);
+    };
+  });
+  pop.querySelectorAll(".model-pick-login").forEach((a) => {
+    a.onclick = async (e) => {
+      e.preventDefault();
+      pop.hidden = true;
+      if (typeof openControl === "function") await openControl();
+      const tab = document.querySelector("[data-ctab=connections]");
+      if (tab) tab.click();
+    };
+  });
+}
+
+async function toggleModelPicker(force) {
+  const pop = $("#model-pick-pop");
+  const btn = $("#model-pick-btn");
+  if (!pop || !btn) return;
+  const open = force != null ? force : pop.hidden;
+  if (open) {
+    pop.hidden = false;
+    btn.setAttribute("aria-expanded", "true");
+    pop.innerHTML = `<div class="muted" style="padding:8px">${state.prefs.language !== "en" ? "加载模型…" : "loading models…"}</div>`;
+    await loadModelSources();
+    renderModelPicker();
+    updateModelPickButton();
+  } else {
+    pop.hidden = true;
+    btn.setAttribute("aria-expanded", "false");
+  }
+}
+
+document.addEventListener("click", (e) => {
+  const wrap = e.target.closest && e.target.closest(".model-pick-wrap");
+  if (e.target.closest && e.target.closest("#model-pick-btn")) { toggleModelPicker(); return; }
+  if (!wrap) { const pop = $("#model-pick-pop"); if (pop && !pop.hidden) toggleModelPicker(false); }
+});
+
+// Fused answer: each model's own answer under the merged reply
+function renderFusionBox(msgEl, fusion) {
+  if (!msgEl || !fusion || !(fusion.members || []).length) return;
+  const zh = state.prefs.language !== "en";
+  let box = msgEl.querySelector(".fusion-box");
+  if (!box) {
+    box = document.createElement("details");
+    box.className = "fusion-box";
+    const anchor = msgEl.querySelector(".evidence-box") || msgEl.querySelector(".review-box") || msgEl.querySelector(".msg-actions");
+    if (anchor) anchor.insertAdjacentElement("beforebegin", box); else msgEl.appendChild(box);
+  }
+  const ok = fusion.members.filter((m) => m.ok).length;
+  box.innerHTML = `<summary>${zh ? "融合回答" : "Fused answer"} · ${ok}/${fusion.members.length} ${zh ? "个模型作答" : "models answered"}${fusion.synthesizer ? ` · ${zh ? "合并：" : "merged by "}${escapeHtml(fusion.synthesizer)}` : ""} — ${zh ? "展开看各模型原始回答" : "expand for each model's answer"}</summary>
+    ${fusion.members.map((m) => `<div class="fusion-member ${m.ok ? "" : "err"}">
+      <div class="fusion-member-head"><strong>${escapeHtml(m.label || m.source)}</strong>
+        <span class="muted">${m.kind === "agent" ? (zh ? "账号" : "account") : "API"} · ${m.seconds != null ? m.seconds + " s" : ""}</span>
+        ${m.ok ? "" : `<span class="conn-badge err">✗ ${escapeHtml(m.error || "")}</span>`}</div>
+      ${m.ok ? `<div class="fusion-member-body">${renderMd(m.answer || "")}</div>` : ""}</div>`).join("")}`;
+}
+
 function renderEvidenceBox(msgEl, ev) {
   if (!msgEl || !ev || !(ev.sources || []).length) return;
   let box = msgEl.querySelector(".evidence-box");
@@ -3590,7 +3726,10 @@ function updateMessageElapsedMeta(assistantEl, route, elapsedMs) {
   if (!meta) return;
   const role = "Agent Hub";
   let routeBit = "";
-  if (route && agentLabel(route.chat_engine)) {
+  if (route && route.chat_engine === "fusion") {
+    const n = ((route.fusion || {}).members || []).length;
+    routeBit = ` · ${state.prefs.language !== "en" ? "融合" : "Fusion"}${n ? ` · ${n} ${state.prefs.language !== "en" ? "个模型" : "models"}` : ""}`;
+  } else if (route && agentLabel(route.chat_engine)) {
     routeBit = ` · ${agentLabel(route.chat_engine)}`;
   } else if (route && route.tier) {
     routeBit = ` · ${route.tier}/${route.route_key || ""}${route.model ? " · " + route.model : ""}`;
@@ -3929,6 +4068,7 @@ function makeStreamHandlers(sessionId, assistantEl, bodyEl, startRoute, stateBag
         if (a && payload && payload.provenance) ensureProvenanceButton(a);
         if (a && payload && payload.review) renderReviewBox(a, payload.review);
         if (a && payload && payload.evidence) renderEvidenceBox(a, payload.evidence);
+        if (a && payload && payload.route && payload.route.fusion) renderFusionBox(a, payload.route.fusion);
         if (a && payload && payload.content && !state.taskPending[sessionId]) renderNextChips(a, payload.content);
         if (b) {
           b.innerHTML = renderMd(bag.full || "(完成)");
@@ -5026,6 +5166,9 @@ function syncComposerFromSettings() {
   if (modeSel) modeSel.value = ali.chat_mode === "single" ? "single" : "auto";
   syncRouteLabels();
   populateModelSelect(ali.last_model || modelsMain(cfg) || "");
+  state.pickedModels = Array.isArray(ali.last_models) ? ali.last_models.filter((x) => typeof x === "string") : [];
+  updateModelPickButton();
+  if (state.pickedModels.length) loadModelSources().then(updateModelPickButton);
   const depthSel = $("#thinking-depth-select");
   if (depthSel) {
     const depth = normalizeThinkingDepth(
@@ -5086,6 +5229,7 @@ async function persistChatModeAndModel() {
       lastModel = lastModel.replace(/^deepseek-ai\//, "");
     }
     cfg.ali.last_model = lastModel;
+    cfg.ali.last_models = (state.pickedModels || []).slice(0, 6);
     cfg.ali.default_route = ($("#route-select") && $("#route-select").value) || "auto";
     cfg.ali.thinking_depth = normalizeThinkingDepth(
       ($("#thinking-depth-select") && $("#thinking-depth-select").value) || state.prefs.thinkingDepth || "medium"
@@ -5273,7 +5417,10 @@ function appendMessage(m, scroll = true) {
   if (m.id) div.dataset.mid = m.id;
   const role = m.role === "user" ? "You" : "Agent Hub";
   let route = "";
-  if (m.route && agentLabel(m.route.chat_engine)) {
+  if (m.route && m.route.chat_engine === "fusion") {
+    const n = ((m.route.fusion || {}).members || []).length;
+    route = ` · ${state.prefs.language !== "en" ? "融合" : "Fusion"}${n ? ` · ${n} ${state.prefs.language !== "en" ? "个模型" : "models"}` : ""}`;
+  } else if (m.route && agentLabel(m.route.chat_engine)) {
     route = ` · ${agentLabel(m.route.chat_engine)}`;  // answered by the vendor agent
   } else if (m.route && m.route.tier) {
     route = ` · ${m.route.tier}/${m.route.route_key || ""}${m.route.model ? " · " + m.route.model : ""}`;
@@ -5333,6 +5480,7 @@ function appendMessage(m, scroll = true) {
   if (m.role === "assistant" && m.grounding_check) showGroundingWarn(m.grounding_check, div);
   if (m.role === "assistant" && m.review) renderReviewBox(div, m.review);
   if (m.role === "assistant" && m.evidence) renderEvidenceBox(div, m.evidence);
+  if (m.role === "assistant" && m.route && m.route.fusion) renderFusionBox(div, m.route.fusion);
   if (m.role === "assistant" && m.content && !(m.route && m.route.task_id) && !m.error) renderNextChips(div, m.content);
   $("#messages").appendChild(div);
   if (m.role === "assistant" && m.route && m.route.multi_subagents) {
@@ -7070,6 +7218,7 @@ async function sendMessage(overrideText, extra = {}) {
     }
   }
 
+  if ((state.pickedModels || []).length > 1) extra = { ...extra, _skip_multi: true };  // fusion runs server-side
   if (planRes && planRes.need_parallel && (planRes.lanes || []).length >= 2 && !extra._skip_multi) {
     if (overrideText == null) $("#input").value = "";
     state.pendingFiles = [];
@@ -7151,7 +7300,8 @@ async function sendMessage(overrideText, extra = {}) {
       body: JSON.stringify({
         message: text,
         route: "auto",
-        model: ($("#model-select")?.value || "").trim(),
+        model: (state.pickedModels || []).length === 1 ? state.pickedModels[0] : ($("#model-select")?.value || "").trim(),
+        models: state.pickedModels || [],
         thinking_depth: normalizeThinkingDepth(
           ($("#thinking-depth-select") && $("#thinking-depth-select").value) || state.prefs.thinkingDepth || "medium"
         ),

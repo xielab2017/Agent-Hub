@@ -721,8 +721,12 @@ def start_chat(
     deep_search: bool | None = None,
     task_id: str = "",
     task_step: int = 0,
+    models: list[str] | None = None,
 ) -> dict[str, Any]:
-    """Start a background agent run; returns stream_id for SSE."""
+    """Start a background agent run; returns stream_id for SSE.
+
+    ``models``: sources from the chat's model picker (``provider::model``, API vendors or agent accounts).
+    One pins the turn to that source; several fuse their answers (ali/fusion.py)."""
     from . import agents as agents_mod, audit, ecosystem, routing, skills as skills_mod, soul as soul_mod
     from .settings import load_campus_config
 
@@ -801,6 +805,13 @@ def start_chat(
     # Auto Agents continue to follow the composer/classified route unchanged.
     effective_route = agent_route if active_sub and agent_route != "auto" else (route or "auto")
     route_info = routing.resolve_route(effective_route, msg, cfg)
+    sources = [str(x).strip() for x in (models or []) if str(x).strip()]
+    if not sources and "::" in (model or ""):
+        sources = [str(model).strip()]
+    if sources:  # the model picker chose explicitly: pin the first source, fuse when there are several
+        route_info = routing.pin_source(sources[0], cfg, route_info)
+        if len(sources) > 1:
+            route_info["fusion_sources"] = sources
     if route_info.get("blocked"):
         raise ValueError(route_info.get("block_reason") or "route blocked by data_policy")
 
@@ -833,7 +844,8 @@ def start_chat(
             raise ValueError(
                 f"data_policy=restricted forbids external provider '{sub_provider}'"
             )
-    if route_info.get("agent_cli"):  # an agent-account tier: its own model ("" = the agent CLI's default)
+    if route_info.get("agent_cli") or route_info.get("pinned"):
+        # an agent-account tier / a picked source: its own model ("" = the agent CLI's default)
         resolved_model = str(route_info.get("model") or "")
     elif active_sub and sub_model:
         resolved_model = sub_model
@@ -1148,12 +1160,21 @@ def start_chat(
     if acct:
         # the tier is bound to an agent account (多模型 API): it answers the chat; greetings and task steps use
         # the nearest API vendor when there is one (fast, and task steps expect a plain model)
-        http = _http_route_info(route_info, cfg) if (simple_chat or task_id) else None
+        # (a source picked explicitly answers even greetings — the user chose it)
+        http = _http_route_info(route_info, cfg) if (simple_chat or task_id) and not route_info.get("pinned") else None
+        if route_info.get("pinned") and simple_chat:
+            route_info["simple_chat"] = False
         if http:
             route_info = http
             resolved_model = str(http.get("model") or "")
         else:
             chat_engine = acct
+    if route_info.get("pinned") and not route_info.get("agent_cli") and chat_engine not in ("hub-agent", "direct"):
+        # a picked API model answers itself, not the connected claw's own model
+        chat_engine = "hub-agent" if (prefer_agent and not simple_chat and not task_id
+                                      and _hub_agent_enabled(ali if isinstance(ali, dict) else {})) else "direct"
+    if len(route_info.get("fusion_sources") or []) > 1 and not simple_chat and not task_id:
+        chat_engine = "fusion"
     route_info["hub_chat_mode"] = hub_chat_mode
     route_info["hub_fast_chat"] = not prefer_agent  # legacy field for older UI
     route_info["chat_engine"] = chat_engine
@@ -1711,7 +1732,21 @@ def _run_agent_streaming(
                     except Exception:  # noqa: BLE001
                         pass
 
-            if use_agent_cli:
+            if engine == "fusion":
+                used = _fusion_reply(q, session_id, msg_text, active_preamble, assistant_parts, route_info=route_info)
+                if not used:
+                    first = dict(route_info)
+                    if first.get("agent_cli"):
+                        used = _agent_cli_reply(q, session_id, msg_text, active_preamble, assistant_parts,
+                                                route_info={**first, "chat_engine": first["agent_cli"]},
+                                                workspace=workspace)
+                    if not used:
+                        http = _http_route_info(first) if first.get("agent_cli") else first
+                        used = bool(http) and _direct_llm_reply(q, session_id, msg_text, (http or {}).get("model") or model,
+                                                                assistant_parts, route_info=http, preamble=active_preamble)
+                if not used:
+                    _demo_reply(q, msg_text, assistant_parts, route_info=route_info, preamble=active_preamble)
+            elif use_agent_cli:
                 used = _agent_cli_reply(q, session_id, msg_text, active_preamble, assistant_parts,
                                         route_info=route_info, workspace=workspace)
                 if not used:
@@ -2092,7 +2127,7 @@ def _run_agent_streaming(
         }
         lean_route = {
             k: route_public.get(k)
-            for k in ("tier", "route_key", "model", "provider", "chat_engine", "simple_chat")
+            for k in ("tier", "route_key", "model", "provider", "chat_engine", "simple_chat", "fusion")
             if k in route_public
         }
         done_payload: dict[str, Any] = {
@@ -2446,6 +2481,54 @@ def _hub_agent_reply(
         piece = answer[i:i + 64]
         assistant_parts.append(piece)
         _put(q, "token", {"text": piece})
+    return True
+
+
+def _fusion_reply(
+    q: queue.Queue,
+    session_id: str,
+    msg_text: str,
+    preamble: str,
+    assistant_parts: list[str],
+    *,
+    route_info: dict[str, Any],
+) -> bool:
+    """Several picked models answer in parallel; one merges them (ali/fusion.py). Members are kept on the route."""
+    from . import fusion
+    from .settings import load_campus_config
+
+    sources = list(route_info.get("fusion_sources") or [])
+    names = [fusion.label(m) for m in fusion.resolve(sources, load_campus_config())]
+    _think(q, f"融合回答：{len(names)} 个模型同时作答 — {' / '.join(names)}", kind="dispatch")
+    _put(q, "meta", {"mode": "fusion", "engine": "fusion", "agent_mode": False, "fusion": names})
+    session = store.get_session(session_id)
+    history = list(session.messages[:-1]) if session else []
+    kept, _dropped = model_history(history, roles=("user", "assistant"))
+    streamed = {"n": 0}
+
+    def on_event(kind: str, data: Any) -> None:
+        if kind == "member_start":
+            _think(q, f"{data['label']} 作答中…", kind="tool")
+            _put(q, "tool", {"name": data["label"], "preview": "fusion member"})
+        elif kind == "member_done":
+            mark = f"✓ {data['label']} · {data.get('seconds')} s" if data.get("ok") \
+                else f"✗ {data['label']}：{str(data.get('error') or '')[:120]}"
+            _think(q, mark, kind="tool")
+            _progress(q, 2, 60, "fusion-members")
+        elif kind == "token" and data:
+            if not streamed["n"]:
+                _think(q, "合并各模型回答…", kind="execute")
+            streamed["n"] += 1
+            assistant_parts.append(str(data))
+            _put(q, "token", {"text": str(data)})
+
+    result = fusion.run(msg_text, sources, preamble=preamble, history=kept, hub_session=session_id,
+                        on_event=on_event, cancelled=lambda: _cancelled_for_queue(q))
+    route_info["fusion"] = {"members": result["members"], "synthesizer": result.get("synthesizer") or "",
+                            "error": result.get("error") or ""}
+    if not streamed["n"]:
+        _think(q, f"融合失败：{result.get('error')}", kind="dispatch")
+        return False
     return True
 
 

@@ -2100,3 +2100,25 @@ hr.soft {
   border: 1px solid var(--border); border-radius: 10px; background: color-mix(in srgb, var(--accent) 8%, transparent); }
 .quick-login-bar .muted { flex: 1 1 260px; font-size: 12px; }
 .agent-card .agent-login { margin-top: 6px; }
+
+/* chat model picker (API models + accounts, multi-select → fused answer) */
+.model-pick-wrap { position: relative; display: inline-block; }
+.model-pick-btn { max-width: 380px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.model-pick-btn.fusion { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.model-pick-pop { position: absolute; bottom: calc(100% + 6px); left: 0; z-index: 50; width: min(420px, 90vw);
+  max-height: 60vh; overflow: auto; padding: 8px; border: 1px solid var(--border); border-radius: 10px;
+  background: var(--panel, var(--bg)); box-shadow: 0 8px 28px rgba(0,0,0,.35); }
+.model-pick-top { display: flex; gap: 6px; margin-bottom: 4px; }
+.model-pick-search { flex: 1; }
+.model-pick-hint { font-size: 12px; margin: 2px 0 6px; }
+.model-pick-head { font-size: 12px; font-weight: 700; margin: 8px 0 2px; opacity: .85; }
+.model-pick-row { display: flex; align-items: center; gap: 8px; padding: 3px 4px; border-radius: 6px; cursor: pointer; }
+.model-pick-row:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.model-pick-row.off { opacity: .55; cursor: default; }
+.model-pick-login { margin-left: auto; font-size: 12px; }
+.fusion-box { margin: 8px 0; border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; }
+.fusion-box > summary { cursor: pointer; font-size: 13px; }
+.fusion-member { border-top: 1px dashed var(--border); padding: 6px 0; }
+.fusion-member.err { opacity: .75; }
+.fusion-member-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.fusion-member-body { font-size: 13px; }

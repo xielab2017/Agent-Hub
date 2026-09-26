@@ -30,6 +30,9 @@ Rehearsal of the skill demo with a stub model.
 """
 
 
+TAG = ""  # --tag: lets two stub "vendors" answer differently
+
+
 def agent_reply(msgs: list) -> str:
     """Rehearsal of the Hub agent protocol: pick tools from keywords, then answer."""
     user = [m["content"] for m in msgs if m.get("role") == "user" and not str(m.get("content", "")).startswith("TOOL RESULT")][-1]
@@ -39,7 +42,7 @@ def agent_reply(msgs: list) -> str:
             else ["list_files", "read_file"] if "工作区" in user else [])
     todo = [t for t in plan if t not in done]
     if not todo:
-        return "Stub agent answer after tools: " + ", ".join(done) if done else "Stub reply."
+        return "Stub agent answer after tools: " + ", ".join(done) if done else "Stub reply" + TAG + "."
     args = {"pubmed_search": {"query": "THBS4 skeletal muscle ageing"}, "list_skills": {},
             "run_skill": {"skill": "literature-review", "topic": "GDF15 in ageing and metabolism", "smoke": True},
             "list_files": {}, "read_file": {"path": "notes.md"}}[todo[0]]
@@ -67,7 +70,12 @@ class Handler(BaseHTTPRequestHandler):
         req = json.loads(self.rfile.read(n) or b"{}")
         msgs = req.get("messages") or []
         text = json.dumps(msgs)
-        reply = SKILL_MD if "SKILL.md" in text else agent_reply(msgs) if "Agent mode (Agent Hub)" in text else "Stub reply."
+        if "Write the merged answer now." in text:  # the fusion synthesizer (ali/fusion.py)
+            n = text.count("### [")
+            reply = f"Fused answer from {n} models{TAG}.\n\n各模型一致 / 分歧: A and B agree."
+        else:
+            reply = SKILL_MD if "SKILL.md" in text else agent_reply(msgs) if "Agent mode (Agent Hub)" in text \
+                else "Stub reply" + TAG + "."
         if not req.get("stream"):
             return self._send(200, json.dumps({"choices": [{"message": {"role": "assistant", "content": reply},
                                                             "finish_reason": "stop"}]}).encode())
@@ -80,7 +88,10 @@ class Handler(BaseHTTPRequestHandler):
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--port", type=int, default=9911)
+    ap.add_argument("--tag", default="")
     a = ap.parse_args()
+    global TAG
+    TAG = f" [{a.tag}]" if a.tag else ""
     ThreadingHTTPServer(("127.0.0.1", a.port), Handler).serve_forever()
 
 

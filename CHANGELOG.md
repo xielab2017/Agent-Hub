@@ -14,6 +14,15 @@
   the run ends as **stopped**, not failed, keeping the files it made so far (evidence cards, drafts) for
   download. A run left "running" by a Hub restart can be closed the same way. In agent chat "停止刚才的综述"
   stops the chat's running skill (tool `stop_skill`, only when the user asks to stop).
+- **One model picker for every source, multi-select, fused answers.** The model button next to Agent（工具）
+  lists every usable model in one place — each API vendor's models (fetched / suggested / bound) and the
+  signed-in accounts (Claude opus / sonnet / haiku, ChatGPT via Codex, Cursor) — as `provider::model`
+  (`GET /api/models/sources`). Tick one: that vendor or account answers (its own endpoint and key; not the
+  active backend). Tick several: **融合回答** — all answer in parallel with the same context (search evidence,
+  workspace), one API model merges them into one reply that keeps agreements and names disagreements, and each
+  model's own answer can be expanded under it (`ali/fusion.py`, engine `fusion`, `route.fusion.members`). A
+  failed member is recorded and the rest still merge; greetings and task steps use the first picked source.
+  The selection is remembered (`ali.last_models`).
 - **Agent accounts are model sources (多模型 API, not Claws).** Claude subscription (Claude Code), ChatGPT
   (Codex) and Cursor are installed, signed in and permissioned in the 多模型 API tab, next to the API vendors;
   several can be signed in at once. **Quick sign-in** (快捷登录): one click installs the CLI if needed and opens

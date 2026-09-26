@@ -71,6 +71,76 @@ def agents_view() -> dict[str, Any]:
     return {"ok": True, "agents": [rows[rid] for rid in AGENT_ACCOUNTS if rid in rows]}
 
 
+SOURCE_SEP = "::"
+
+
+def split_source(source: str) -> tuple[str, str]:
+    """``"minimax-cn::MiniMax-M3"`` → ("minimax-cn", "MiniMax-M3"); ``"claude-code::"`` → ("claude-code", "")."""
+    pid, _, model = str(source or "").partition(SOURCE_SEP)
+    return pid.strip(), model.strip()
+
+
+_CURSOR_MODELS: dict[str, Any] = {"at": 0.0, "models": []}
+
+
+def _cursor_models() -> list[str]:
+    """Models the signed-in Cursor account offers (``cursor-agent models``), cached 10 min."""
+    import subprocess
+
+    from . import agent_cli
+
+    if time.time() - _CURSOR_MODELS["at"] < 600:
+        return list(_CURSOR_MODELS["models"])
+    models: list[str] = []
+    binpath = agent_cli.find_bin("cursor")
+    if binpath:
+        try:
+            out = subprocess.run([binpath, "models"], capture_output=True, text=True, timeout=20,
+                                 env=agent_cli.build_env("cursor"))
+            for ln in (out.stdout or "").splitlines():
+                tok = ln.strip().split()[0] if ln.strip() else ""
+                tok = tok.strip("-*•").strip()
+                if tok and not tok.lower().startswith(("available", "model", "error", "usage")) and len(tok) < 60:
+                    models.append(tok)
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+    _CURSOR_MODELS.update(at=time.time(), models=models[:40])
+    return models[:40]
+
+
+def model_sources(cfg: dict[str, Any] | None = None, *, agents: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    """Every model the chat can use, one list: API vendors with a key (their fetched / suggested / bound models)
+    and the signed-in agent accounts.  Ids are ``provider::model``; no secrets."""
+    cfg = cfg or _cfg()
+    out: list[dict[str, Any]] = []
+    hybrid = cfg.get("hybrid") or {}
+    backend = str((cfg.get("backend") or {}).get("type") or "")
+    for c in list_connections(cfg):
+        pid = c["provider"]
+        if not (c.get("key_present") or pid == "local-ollama"):
+            continue
+        bound = [str((hybrid.get(rk) or {}).get("model") or "") for rk in hybrid
+                 if (hybrid.get(rk) or {}).get("provider") == pid]
+        if pid == backend:
+            bound += [str(v) for v in (cfg.get("models") or {}).values() if isinstance(v, str)]
+        fetched = list(c.get("models") or [])
+        names = [m for m in dict.fromkeys([*bound, *fetched[:60], *(c.get("default_models") or [])]) if m]
+        for m in names:
+            out.append({"id": f"{pid}{SOURCE_SEP}{m}", "kind": "api", "provider": pid, "model": m, "label": m,
+                        "group": c.get("label") or pid, "group_en": c.get("label_en") or pid, "ready": True,
+                        "bound": m in bound})
+    for a in (agents if agents is not None else agents_view()["agents"]):
+        rid = a["id"]
+        models = [""] + (list(AGENT_ACCOUNTS[rid]["models"]) if rid != "cursor" else
+                         (_cursor_models() if a.get("logged_in") else []) or ["auto"])
+        for m in dict.fromkeys(models):
+            out.append({"id": f"{rid}{SOURCE_SEP}{m}", "kind": "agent", "provider": rid, "model": m,
+                        "label": (m or "默认"), "label_en": (m or "default"), "group": a["label"],
+                        "group_en": a["label_en"], "ready": bool(a.get("installed") and a.get("logged_in")),
+                        "note": "" if a.get("logged_in") else ("未安装" if not a.get("installed") else "未登录")})
+    return {"ok": True, "sources": out}
+
+
 def _cfg() -> dict[str, Any]:
     from .settings import load_campus_config
 
