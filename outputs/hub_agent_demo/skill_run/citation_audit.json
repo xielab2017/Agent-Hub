@@ -1,0 +1,142 @@
+[
+ {
+  "section": "Molecular Biology and Transcriptional Regulation of GDF15 in Stress",
+  "issues": [
+   {
+    "sentence": "The human gene maps to chromosome 19q13.11 and is encoded in a single exon [R7, R8].",
+    "cards": [
+     "R7",
+     "R8"
+    ],
+    "issue": "Neither R7 nor R8 abstract mentions the chromosomal location (19q13.11) or that the gene is encoded in a single exon.",
+    "fix": "This specific genomic claim requires a citation to a primary source that explicitly reports the chromosomal locus and single-exon architecture."
+   },
+   {
+    "sentence": "The primary translation product is a preproprotein of approximately 308 amino acids: after signal-peptide cleavage the protein dimerises through disulphide bonds in the C-terminal cystine-knot domain and is secreted as a disulphide-linked mature dimer of approximately 25 kDa following cleavage of an N-terminal prodomain [R18, R19].",
+    "cards": [
+     "R18",
+     "R19"
+    ],
+    "issue": "R18 and R19 abstracts support the 25 kDa disulfide-linked dimer and (for R19) furin cleavage of a ~62 kDa precursor, but neither abstract supports the specific '308 amino acids' number, the 'C-terminal cystine-knot domain', or the explicit 'N-terminal prodomain' cleavage description.",
+    "fix": "Retain citation for the 25 kDa disulfide-linked dimer; cite a primary structural paper for the 308-aa length and cystine-knot/N-terminal prodomain architecture."
+   },
+   {
+    "sentence": "Furin-family proprotein convertases cleave the proprotein at a consensus RXXR site, generating a non-covalent latent complex in which the prodomain remains associated with the mature dimer [R19].",
+    "cards": [
+     "R19"
+    ],
+    "issue": "R19 abstract confirms furin-like cleavage and secretion of the 25 kDa disulfide-linked dimer but does not support the specific 'RXXR consensus site', the formation of a 'non-covalent latent complex', or retention of the prodomain with the mature dimer.",
+    "fix": "Cite a paper that specifically mapped the RXXR furin site and characterised the prodomain/mature non-covalent complex (e.g., the Bauskin/Mokrzycki/Marchand biochemical studies)."
+   },
+   {
+    "sentence": "In parallel, an integrated stress-response (ISR)-responsive module couples GDF15 transcription to eIF2α phosphorylation and downstream ATF4/CHOP activity through canonical amino-acid response elements (AAREs) and ER stress elements (ERSEs) [R4].",
+    "cards": [
+     "R4"
+    ],
+    "issue": "R4 abstract states that ER and other stresses induce GDF15 but does not mention eIF2α phosphorylation, ATF4/CHOP, AAREs, or ERSEs as specific regulatory elements.",
+    "fix": "Cite the primary papers that defined the AARE/ERSE-driven ATF4/CHOP axis in the GDF15 promoter (e.g., the Park/Conte et al. studies)."
+   },
+   {
+    "sentence": "Additional stress-responsive elements in the promoter have been reported to confer responsiveness to inflammatory, growth-factor, oxidative and mechanical cues, although the specific factor identities and their relative in vivo contributions have not been systematically defined by ChIP-based mapping [R7, R4].",
+    "cards": [
+     "R7",
+     "R4"
+    ],
+    "issue": "R4 abstract mentions inflammatory, metabolic and oxidative stresses inducing GDF15 but does not specifically support 'growth-factor' or 'mechanical' cues as promoter-driven responses. R7 abstract is too general to support these specific cue categories.",
+    "fix": "Growth-factor- and mechanical-cue responsiveness of the GDF15 promoter requires citations to specific studies demonstrating those inputs."
+   },
+   {
+    "sentence": "In hepatocytes and many cancer cell lines, ER stress engages an XBP1/CHOP/ATF4 axis that drives GDF15 as part of the canonical unfolded protein response [R4].",
+    "cards": [
+     "R4"
+    ],
+    "issue": "R4 abstract does not mention an XBP1/CHOP/ATF4 axis, nor does it specify hepatocytes or cancer cell lines as tissue contexts in which ER stress drives GDF15.",
+    "fix": "Cite primary studies that specifically demonstrate the XBP1/CHOP/ATF4 axis driving GDF15 in hepatocytes/cancer cell lines."
+   },
+   {
+    "sentence": "In myocytes, contractile activity and mitochondrial strain activate an ISR programme (PERK/eIF2α/ATF4) [R21]",
+    "cards": [
+     "R21"
+    ],
+    "issue": "R21 abstract shows that acute exercise increases UPR/ISR markers (including EIF2K3/PERK and ATF4) and GDF15 in skeletal muscle, but does not specifically attribute ISR activation to 'contractile activity' or 'mitochondrial strain' as the causal drivers.",
+    "fix": "Re-phrase to match R21's evidence: 'In human skeletal muscle, acute exercise induces GDF15 alongside the UPR/ISR markers ATF4, CHOP, PERK and GADD34 [R21].'"
+   },
+   {
+    "sentence": "In adipocytes, catecholamine-driven sympathetic outflow elicits GDF15 release that contributes to adipose lipolysis via GFRAL–RET signalling, independent of anorexia [R12].",
+    "cards": [
+     "R12"
+    ],
+    "issue": "Direction of effect is reversed. R12 demonstrates the opposite pathway: tumor-derived GDF15 activates GFRAL–RET in brainstem neurons, which drives sympathetic outflow to adipose tissue producing ATGL-dependent lipolysis, independent of anorexia. GFRAL is not present in adipocytes, and the sentence incorrectly places sympathetic outflow upstream of GDF15 release rather than downstream of GDF15–GFRAL–RET activation.",
+    "fix": "Correct wording: 'Tumor-derived GDF15 activates GFRAL–RET signalling in brainstem neurons, which drives sympathetic outflow to adipose tissue, eliciting ATGL-dependent lipolysis independent of anorexia [R12].'"
+   },
+   {
+    "sentence": "First, the integrated stress response to mitochondria (ISRmt): OMA1-dependent proteolysis of DELE1 liberates a cytosolic fragment that activates the eIF2α kinase HRI, driving selective ATF4/ATF5 translation and GDF15 transcription. This pathway is engaged in primary mitochondrial myopathies, in which circulating GDF15 rises dramatically and GDF15 neutralisation improves muscle mass and exercise capacity [R22].",
+    "cards": [
+     "R22"
+    ],
+    "issue": "R22 abstract supports the PolgD257A PMM model and the finding that GDF15 neutralisation improves muscle mass/exercise capacity, but does not describe the ISRmt mechanism (OMA1/DELE1/HRI/ATF4–ATF5). The ISRmt molecular details are not in R22.",
+    "fix": "Cite the primary ISRmt papers (e.g., Guo et al. on OMA1–DELE1–HRI) for the molecular mechanism; retain R22 only for the PMM/GDF15-neutralisation evidence."
+   },
+   {
+    "sentence": "Second, an ISR-independent arm in which cytosolic mtDNA—released via BAX/BAK macropores or VDAC oligomerisation—activates cGAS–STING and downstream type I interferon and NF-κB programmes, with elevated monocyte GDF15 accompanying cGAS-STING-driven interferon release in systemic sclerosis [R13, R14].",
+    "cards": [
+     "R13",
+     "R14"
+    ],
+    "issue": "R13 supports VDAC1-dependent mtDNA release, cGAS–STING-driven IFN-β release, and elevated monocyte GDF15 in systemic sclerosis, but does not mention 'BAX/BAK macropores' or an 'NF-κB programme' specifically. R14 abstract supports mitokine/cGAS–STING concepts generally but not the BAX/BAK mechanism.",
+    "fix": "Cite a primary study that specifically implicates BAX/BAK macropores in mtDNA release for the BAX/BAK claim."
+   },
+   {
+    "sentence": "Cross-species pharmacology compounds this uncertainty: foundational GDF15-injection studies used human protein in rodents, and human genetic evidence for a primary role of GDF15 in common obesity is mixed rather than uniformly supportive [R8].",
+    "cards": [
+     "R8"
+    ],
+    "issue": "R8 abstract mentions that animal model studies use GDF15 and that 'some human genetic studies support an interrelationship with human obesity', but does not specifically state that foundational injection studies used human protein in rodents, nor does it explicitly characterise the human obesity genetic evidence as 'mixed'.",
+    "fix": "Cite a source that specifically documents the cross-species use of recombinant human GDF15 in rodent injection studies; re-phrase 'mixed' evidence as supported by R8's 'some human genetic studies'."
+   },
+   {
+    "sentence": "The relative contributions of ISRmt versus cGAS–STING across tissues, and the upstream sensors (GCN2, PERK, HRI, PKR) that couple specific stresses to GDF15 induction in non-cancer settings, remain poorly mapped [R4].",
+    "cards": [
+     "R4"
+    ],
+    "issue": "R4 abstract does not enumerate GCN2, PERK, HRI or PKR as upstream eIF2α kinases coupling specific stresses to GDF15, nor does it directly compare ISRmt vs cGAS–STING contributions across tissues.",
+    "fix": "Cite a review or primary source that specifically maps these eIF2α kinases to GDF15 induction across stresses."
+   }
+  ]
+ },
+ {
+  "section": "Introduction and Scope",
+  "issues": [
+   {
+    "sentence": "This conceptual shift coincided with renewed interest in GDF15 as a metabolic regulator, prompted by the recognition that circulating concentrations rise during infection, mitochondrial dysfunction, exercise, pregnancy, cancer and cardiometabolic disease, and that pharmacological elevation of GDF15 reduces food intake and body mass in rodents largely independently of classical appetite regulators such as leptin, ghrelin and glucagon-like peptide 1 [R2, R8, R10].",
+    "cards": [
+     "R2",
+     "R8",
+     "R10"
+    ],
+    "issue": "The specific conditions \"infection\" and \"mitochondrial dysfunction\" are not mentioned in the cited abstracts. R2 discusses pregnancy and general 'disease states'; R8 mentions cellular stress, disease, and metformin/exercise; R10 mentions broad stressors and cachexia. None specifically reference infections (R3 is the source that does) or mitochondrial dysfunction (R4/R14 are the sources that do).",
+    "fix": "Either rephrase to the more general wording supported by the cited cards (e.g., 'a range of disease states, pregnancy, cancer and cardiometabolic disease') or replace/add citations to R3 (which lists infections) and R4 or R14 (which address mitochondrial dysfunction)."
+   },
+   {
+    "sentence": "We first outline the molecular biology and transcriptional regulation of GDF15 in stress, including the integrated stress response and mitochondrial signalling axes—encompassing cytosolic mtDNA–cGAS–STING coupling—that drive its expression under proteostatic and inflammatory challenge [R4, R13, R14].",
+    "cards": [
+     "R4",
+     "R13",
+     "R14"
+    ],
+    "issue": "The specific term \"integrated stress response\" (ISR/PERK–eIF2α–ATF4 axis) does not appear in any of the cited abstracts. R4 mentions ER, mitochondrial, inflammatory, metabolic and oxidative stresses generically; R13 and R14 discuss cGAS–STING, not ISR. The remaining claims (mitochondrial signalling, mtDNA–cGAS–STING coupling, proteostatic/inflammatory challenge) are supported.",
+    "fix": "Replace \"integrated stress response\" with wording supported by the cited cards, e.g., \"endoplasmic reticulum and other cellular stress pathways,\" or add a citation that explicitly discusses ISR-driven GDF15 transcription (e.g., ATF4/CHOP)."
+   },
+   {
+    "sentence": "yet modestly elevated levels are reproducibly induced by metformin and by endurance exercise in both mice and humans and are, at least in rodents, associated with improved metabolic profiles and decreased adiposity [R2, R8, R9].",
+    "cards": [
+     "R2",
+     "R8",
+     "R9"
+    ],
+    "issue": "R2's abstract states that GDF15 is \"decreased in physically fit individuals,\" which does not directly support the claim that metformin and endurance exercise induce GDF15 elevation in mice and humans (that specific claim is supported by R8). The metabolic-profile/adiposity claim is supported by R9, not R2.",
+    "fix": "Drop R2 from this citation or replace it with an additional source supporting the metformin/exercise induction in rodents. Keep R8 and R9 for the induction and the adiposity/metabolic benefit claims respectively."
+   }
+  ]
+ }
+]
