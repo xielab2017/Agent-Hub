@@ -171,7 +171,9 @@ def system_prompt(tools: Tools, *, skills_hint: str = "") -> str:
         "You will get the tool's result and can call another tool. When you have what you need, reply with the "
         "final answer in normal Markdown (no JSON). Use tools only when they add something (current facts, "
         "literature, the user's files, a long pipeline); answer simple questions directly. Never invent tool "
-        "results, papers or numbers; cite what the tools returned.\n"
+        "results, papers or numbers; cite what the tools returned. Never say you started, ran, searched, listed or "
+        "read anything unless a TOOL RESULT in this conversation shows it — to do it, send the JSON. Do not put "
+        "any text before or after the JSON.\n"
         "When the user wants a deliverable that a runnable skill produces (e.g. a literature review / 综述 → "
         "run_skill literature-review with an English topic), start it with run_skill and then tell the user it is "
         "running, what it will produce and roughly how long it takes — do not write the deliverable yourself.\n"
@@ -180,28 +182,57 @@ def system_prompt(tools: Tools, *, skills_hint: str = "") -> str:
 
 
 def parse_action(text: str) -> dict[str, Any] | None:
-    """A tool request in the model's reply, or None when the reply is the final answer."""
+    """A tool request in the model's reply, or None when the reply is the final answer.
+
+    Models sometimes put a sentence before the JSON ("我先列出工作区文件。{"tool": …}"): a known tool request
+    anywhere in the reply still counts, so the step is taken instead of showing raw JSON to the user."""
     s = (text or "").strip()
     m = re.match(r"^```(?:json)?\s*(\{.*\})\s*```$", s, re.S)
     if m:
         s = m.group(1)
-    if not s.startswith("{"):
-        return None
-    try:
-        obj = json.loads(s)
-    except json.JSONDecodeError:
-        from .review_writer import extract_json
-
+    obj: Any = None
+    if s.startswith("{"):
         try:
-            obj = extract_json(s)
-        except ValueError:
-            return None
+            obj = json.loads(s)
+        except json.JSONDecodeError:
+            from .review_writer import extract_json
+
+            try:
+                obj = extract_json(s)
+            except ValueError:
+                obj = None
+    if not (isinstance(obj, dict) and isinstance(obj.get("tool"), str)):
+        obj = _embedded_action(s)
     if isinstance(obj, dict) and isinstance(obj.get("tool"), str) and obj["tool"] != "final":
         args = obj.get("args") if isinstance(obj.get("args"), dict) else {}
         return {"tool": obj["tool"].strip(), "args": args, "why": str(obj.get("why") or "")[:200]}
     if isinstance(obj, dict) and obj.get("tool") == "final":
         return {"tool": "final", "answer": str(obj.get("answer") or (obj.get("args") or {}).get("answer") or "")}
     return None
+
+
+def _embedded_action(s: str) -> dict[str, Any] | None:
+    """The first ``{"tool": "<known tool>", …}`` object inside prose (or a fenced block inside prose)."""
+    dec = json.JSONDecoder()
+    for m in re.finditer(r"\{\s*\"tool\"\s*:", s):
+        try:
+            obj, _end = dec.raw_decode(s, m.start())
+        except json.JSONDecodeError:
+            continue
+        if isinstance(obj, dict) and obj.get("tool") in Tools.SPEC:
+            return obj
+    return None
+
+
+# a reply that says it did / is doing something although no tool ran ("技能已启动", "我先列出…")
+_CLAIM = re.compile(r"已(经)?(启动|开始|运行|检索|搜索|读取|列出)|正在(为你|帮你)?(启动|运行|检索|搜索|读取)|我(先|来|将)(为你|帮你)?"
+                    r"(启动|运行|列出|读取|检索|搜索|查)|\b(I(?:'ve| have)? (?:started|launched|searched|read)|"
+                    r"let me (?:start|run|search|list|read|check))\b", re.I)
+
+
+def claims_action(text: str) -> bool:
+    s = text or ""
+    return bool(_CLAIM.search(s)) or any(re.search(rf"`?\b{re.escape(n)}\b`?", s) for n in Tools.SPEC)
 
 
 def _clip(obj: Any) -> str:
@@ -217,11 +248,21 @@ def run(llm: Callable[[list[dict[str, str]]], str], messages: list[dict[str, str
     steps: list[dict[str, Any]] = []
     skill_runs: list[dict[str, Any]] = []
     answer = ""
+    nudged = False
     for i in range(max_steps):
         if cancelled and cancelled():
             break
         reply = llm(convo)
         act = parse_action(reply)
+        if act is None and not steps and not nudged and claims_action(reply):
+            # the model described an action instead of requesting it: say so once and let it call the tool
+            nudged = True
+            convo.append({"role": "assistant", "content": reply})
+            convo.append({"role": "user", "content": "No tool has run yet — nothing was started, searched or read. "
+                                                     "If a tool is needed, reply now with ONLY the JSON object "
+                                                     '{"tool": …, "args": {…}, "why": …}; otherwise give the final '
+                                                     "answer without claiming any action."})
+            continue
         if act is None:
             answer = reply.strip()
             break

@@ -147,3 +147,29 @@ def test_engine_selection_uses_hub_agent_for_plain_models():
     assert pick("agent", "direct", simple_chat=True, hub_agent=True) == "direct"  # greetings stay fast
     assert pick("agent", "hermes", hub_agent=True) == "hermes"
     assert pick("agent", "claude-code", hub_agent=True) == "claude-code"
+
+
+def test_tool_json_after_prose_is_still_a_tool_request():
+    """MiniMax-M3 (CI run 36208901199): '我先列出工作区文件…{"tool": "list_files", …}' was shown as the answer."""
+    act = hub_agent.parse_action('我先列出工作区文件，再读取 `notes.md` 的内容。{"tool": "list_files", "args": {"path": "."}, '
+                                 '"why": "列出工作区当前文件"}')
+    assert act["tool"] == "list_files" and act["args"] == {"path": "."}
+    fenced = 'Let me check.\n```json\n{"tool": "read_file", "args": {"path": "notes.md"}}\n```'
+    assert hub_agent.parse_action(fenced)["tool"] == "read_file"
+    assert hub_agent.parse_action('Use {"tool": "rm_rf"} carefully.') is None  # unknown tool inside prose: an answer
+
+
+def test_claimed_action_without_a_tool_call_gets_one_nudge():
+    """MiniMax-M3 answered '技能已启动…' without calling run_skill; the loop must make it actually call the tool."""
+    llm = scripted("好的！我来为你启动 literature-review skill（smoke=true）。技能已启动，预计 2–5 分钟完成。",
+                   '{"tool": "list_files", "args": {}}', "工作区里有 notes.md。")
+    with tempfile.TemporaryDirectory() as ws:
+        (Path(ws) / "notes.md").write_text("x")
+        res = hub_agent.run(llm, [{"role": "user", "content": "x"}], hub_agent.Tools(workspace=ws))
+    assert [s["tool"] for s in res["steps"]] == ["list_files"] and res["answer"] == "工作区里有 notes.md。"
+    assert "No tool has run yet" in llm.seen[1][-1]["content"]
+    plain = scripted("THBS4 is a matricellular protein.")
+    assert hub_agent.run(plain, [{"role": "user", "content": "x"}], hub_agent.Tools())["answer"].startswith("THBS4")
+    assert len(plain.seen) == 1  # an ordinary answer is not nudged
+    twice = scripted("我先列出文件。", "我先列出文件。")
+    assert hub_agent.run(twice, [{"role": "user", "content": "x"}], hub_agent.Tools())["answer"] == "我先列出文件。"
