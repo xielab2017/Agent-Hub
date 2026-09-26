@@ -220,3 +220,69 @@ def test_author_skill_gives_up_after_three_corrections():
             skill_runner.author_skill("literature-review", source=src, llm=llm)
         assert len(calls) == 4 and "YAML keys" in calls[1]
         assert not (root / "literature-review").exists()  # nothing half-authored is installed
+
+
+SLOW_ENTRY = '''
+import argparse, pathlib, time
+ap = argparse.ArgumentParser(); ap.add_argument("--out"); ap.add_argument("--topic", default="")
+a = ap.parse_args()
+pathlib.Path(a.out, "evidence_cards.json").write_text("[]")
+print("[     0s] queries: 3", flush=True)
+time.sleep(60)
+print("RESULT: PASS {}", flush=True)
+'''
+
+
+def _wait(run_id: str, secs: float = 10.0) -> dict:
+    for _ in range(int(secs / 0.05)):
+        r = skill_runner.get_run(run_id)
+        if r["status"] != "running":
+            return r
+        time.sleep(0.05)
+    return skill_runner.get_run(run_id)
+
+
+def test_stop_ends_a_run_as_stopped_with_its_partial_outputs():
+    with tempfile.TemporaryDirectory() as tmp, hub(Path(tmp)) as (root, _loaded, messages):
+        d = _toy_skill(root)
+        (d / "run.py").write_text(SLOW_ENTRY)
+        run = skill_runner.start_run("toy", "GDF15", session_id="s1")
+        for _ in range(100):  # wait until the entry has written its partial file
+            if skill_runner.get_run(run["id"])["lines"]:
+                break
+            time.sleep(0.05)
+        r = skill_runner.stop_run(run["id"])
+        assert r["status"] == "running" and r["stage"] == "stopping…"
+        r = _wait(run["id"])
+        assert r["status"] == "stopped" and not r.get("error") and r["stage"] == "stopped by the user"
+        assert [o["name"] for o in r["outputs"]] == ["evidence_cards.json"]
+        assert "stopping" not in json.loads((skill_runner.RUNS_DIR / run["id"] / "run.json").read_text())
+        assert "stopped by the user" in messages[-1][1]["content"]
+        assert skill_runner.stop_run(run["id"])["status"] == "stopped"  # a second click changes nothing
+
+
+def test_stop_closes_a_run_left_running_by_a_restart():
+    with tempfile.TemporaryDirectory() as tmp, hub(Path(tmp)):
+        d = skill_runner.RUNS_DIR / "toy-stale"
+        d.mkdir(parents=True)
+        (d / "run.json").write_text(json.dumps({"id": "toy-stale", "skill": "toy", "status": "running", "out": tmp}))
+        r = skill_runner.stop_run("toy-stale")
+        assert r["status"] == "stopped" and "restarted" in r["stage"]
+        assert json.loads((d / "run.json").read_text())["status"] == "stopped"
+
+
+def test_stop_route_stops_the_run():
+    from ali import routes
+
+    with tempfile.TemporaryDirectory() as tmp, hub(Path(tmp)) as (root, _loaded, _messages):
+        d = _toy_skill(root)
+        (d / "run.py").write_text(SLOW_ENTRY)
+        run = skill_runner.start_run("toy", "GDF15")
+        sent = {}
+        h = mock.Mock(path=f"/api/skill-runs/{run['id']}/stop", headers={"Content-Length": "2"})
+        h.rfile.read.return_value = b"{}"
+        with mock.patch.object(routes, "_json", lambda _h, code, body: sent.update(code=code, body=body)), \
+                mock.patch.object(routes, "requires_auth", lambda p: False):
+            routes.handle_post(h)
+        assert sent["code"] == 200 and sent["body"]["id"] == run["id"]
+        assert _wait(run["id"])["status"] == "stopped"

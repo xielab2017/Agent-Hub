@@ -1,5 +1,23 @@
 # Changelog
 
+## v5.5.0 — 2026-09-26
+
+- **Every configured API acts as an agent (Hub agent).** With chat mode Agent and no external claw, the Hub
+  runs its own tool loop over whichever model is configured (any OpenAI- or Anthropic-compatible vendor, hybrid
+  tiers included; `ali/hub_agent.py`). From the conversation the model decides to call `web_search`,
+  `read_url`, `pubmed_search`, `list_files` / `read_file` (workspace only), `list_skills`, `run_skill`,
+  `skill_status` — plain "写一篇…综述" starts the literature-review skill with a live progress card, no slash
+  command needed. Greetings and 快聊 stay plain replies; `ali.hub_agent: false` switches the loop off. The
+  workflow "Hub agent check" (`[hub-agent]`) drives it through the UI with MiniMax-M3 and screenshots.
+- **Stop button for running skills.** Every skill progress card (started by `/skill`, by the Hub agent or the
+  API) has **■ 停止 / Stop** while it runs: the process is terminated (killed after a short grace period) and
+  the run ends as **stopped**, not failed, keeping the files it made so far (evidence cards, drafts) for
+  download. A run left "running" by a Hub restart can be closed the same way. In agent chat "停止刚才的综述"
+  stops the chat's running skill (tool `stop_skill`, only when the user asks to stop).
+- **Version shown after download.** 5.5.0 is set in `ali/__init__.py`, `ali/config.py`, `pyproject.toml`,
+  README, and the `?v=` asset query and label in `static/index.html` (these were still 5.3.6, so browsers could
+  keep old cached files); a test keeps them in step.
+
 ## v5.4.0 — 2026-09-26
 
 - **Multi-vendor model APIs (Control Center → 多模型 API).** Several vendors can be connected at once, each
@@ -18,13 +36,6 @@
   stored by the Hub and never displayed), Codex browser link or device code, or an API key for either. A flag
   check refuses to run a CLI version whose `--help` lacks the flags the adapter needs; the workflow
   "Agents check" verifies the real CLIs' flags and drives the UI with screenshots.
-- **Every configured API acts as an agent (Hub agent).** With chat mode Agent and no external claw, the Hub
-  runs its own tool loop over whichever model is configured (any OpenAI- or Anthropic-compatible vendor, hybrid
-  tiers included; `ali/hub_agent.py`). From the conversation the model decides to call `web_search`,
-  `read_url`, `pubmed_search`, `list_files` / `read_file` (workspace only), `list_skills`, `run_skill`,
-  `skill_status` — plain "写一篇…综述" starts the literature-review skill with a live progress card, no slash
-  command needed. Greetings and 快聊 stay plain replies; `ali.hub_agent: false` switches the loop off. The
-  workflow "Hub agent check" (`[hub-agent]`) drives it through the UI with MiniMax-M3 and screenshots.
 - **Runnable literature-review skill** (from v5.3.6+): `/skill`, `/skill-author`, `/skill-export`,
   reviewer gap filling, seeds always kept as evidence, citation audit — see `docs/CHANGES-agent-hub.md`.
 

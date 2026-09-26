@@ -232,3 +232,18 @@ def test_one_skill_run_per_turn_and_trial_from_the_users_words():
                             hub_agent.Tools(question="帮我写一篇 GDF15 综述，先小规模试跑一下"))
         assert len(res["skill_runs"]) == 1 and "--smoke" in res["skill_runs"][0]["args"]
         assert "already started" in res["steps"][1]["error"]
+
+
+def test_stop_skill_stops_this_chats_run_only_when_asked():
+    import test_skill_runner as tsr
+    from ali import skill_runner
+
+    with tempfile.TemporaryDirectory() as tmp, tsr.hub(Path(tmp)) as (root, _loaded, _messages):
+        (tsr._toy_skill(root) / "run.py").write_text(tsr.SLOW_ENTRY)
+        run = skill_runner.start_run("toy", "GDF15", session_id="s7")
+        refused = hub_agent.Tools(session_id="s7", question="进度怎么样？").call("stop_skill", {})
+        assert "did not ask to stop" in refused["error"] and skill_runner.get_run(run["id"])["status"] == "running"
+        assert "no running" in hub_agent.Tools(session_id="other", question="停止").call("stop_skill", {})["error"]
+        r = hub_agent.Tools(session_id="s7", question="停止刚才的综述").call("stop_skill", {})
+        assert r["id"] == run["id"]
+        assert tsr._wait(run["id"])["status"] == "stopped"

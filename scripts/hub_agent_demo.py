@@ -136,6 +136,46 @@ def main() -> int:
                     ok_all &= info.get("status") == "done"
                 report["turns"].append(turn)
                 (out / "demo.json").write_text(json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8")
+            # 4. the stop button on a running skill card (a full run, so it is still going when clicked)
+            turn = {"turn": "stop", "expected": ["stopped"], "ok": False}
+            try:
+                page.click("#btn-new")
+                page.wait_for_timeout(1200)
+                if args.stub:  # offline the review fails in seconds; a slow stand-in skill exercises the button
+                    slow = out / "slow-demo"
+                    slow.mkdir(exist_ok=True)
+                    (slow / "SKILL.md").write_text("---\nname: slow-demo\ndescription: slow stand-in for the stop "
+                                                   "check\nentry: run.py\n---\n\n# Slow demo\n", encoding="utf-8")
+                    (slow / "run.py").write_text(
+                        "import argparse, pathlib, time\nap = argparse.ArgumentParser(); ap.add_argument('--out'); "
+                        "ap.add_argument('--topic', default='')\na = ap.parse_args()\n"
+                        "pathlib.Path(a.out, 'evidence_cards.json').write_text('[]')\n"
+                        "for i in range(600):\n    print(f'[{i:6d}s] working', flush=True); time.sleep(1)\n",
+                        encoding="utf-8")
+                    api(hub, "/api/skills/install", {"path": str(slow)})
+                    sd.command(page, "/skill slow-demo GDF15")
+                else:
+                    sd.command(page, "/skill literature-review GDF15 and exercise adaptation in skeletal muscle")
+                card = page.locator(".msg.skill-run").last
+                stop = card.locator(".skill-run-stop")
+                stop.wait_for(state="visible", timeout=120000)
+                page.wait_for_timeout(15000)
+                card.scroll_into_view_if_needed()
+                shots.take(page, "A", "stop-running", note="skill running — ■ 停止 button on the card")
+                stop.click()
+                page.wait_for_function("() => { const c = [...document.querySelectorAll('.msg.skill-run')].pop();"
+                                       " return c && c.classList.contains('stopped'); }", timeout=60000)
+                page.wait_for_timeout(1000)
+                card.scroll_into_view_if_needed()
+                shots.take(page, "A", "stop-done", note="clicked ■ 停止 — run stopped, partial files kept")
+                info = api(hub, f"/api/skill-runs/{card.get_attribute('data-run')}")
+                turn.update(ok=info.get("status") == "stopped", status=info.get("status"), stage=info.get("stage"),
+                            outputs=[o["name"] for o in info.get("outputs") or []])
+            except Exception as exc:  # noqa: BLE001 — recorded, the screenshots show where it stopped
+                turn["error"] = f"{type(exc).__name__}: {exc}"[:300]
+                shots.take(page, "A", "stop-error", note=turn["error"][:120])
+            ok_all &= turn["ok"]
+            report["turns"].append(turn)
             browser.close()
     finally:
         hub.stop()
@@ -143,6 +183,10 @@ def main() -> int:
             stub.terminate()
         (out / "demo.json").write_text(json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8")
     for t in report["turns"]:
+        if t["turn"] == "stop":
+            print(f"stop    status={t.get('status')} outputs={t.get('outputs')} ok={t['ok']} {t.get('error', '')}",
+                  flush=True)
+            continue
         print(f"{t['turn']:7s} engine={t['engine']} tools={t['tools']} ok={t['ok']}", flush=True)
     print("RESULT:", "PASS" if ok_all else "CHECK", flush=True)
     return 0 if ok_all else 1

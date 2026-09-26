@@ -1916,7 +1916,9 @@ def handle_post(handler) -> None:
 
     if len(parts) == 4 and parts[:2] == ["api", "skill-runs"] and parts[3] == "stop":
         try:
-            return _json(handler, 200, skill_runner.stop_run(parts[2]))
+            run = skill_runner.stop_run(parts[2])
+            audit.log_event("skill_stop", {"run": parts[2], "status": run.get("status")})
+            return _json(handler, 200, run)
         except FileNotFoundError as exc:
             return _json(handler, 404, {"error": str(exc)})
 

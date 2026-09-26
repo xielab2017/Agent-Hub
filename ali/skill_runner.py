@@ -166,9 +166,12 @@ def start_run(skill_id: str, args: Any = "", *, session_id: str = "", out_dir: s
                     on_line(line)
         rc = proc.wait()
         with _LOCK:
-            run.update(status="done" if rc == 0 else "failed", returncode=rc, finished_at=time.time(),
-                       outputs=_outputs(out))
-            if rc != 0 and run["lines"]:
+            stopped = bool(run.pop("stopping", False))
+            run.update(status="stopped" if stopped else "done" if rc == 0 else "failed", returncode=rc,
+                       finished_at=time.time(), outputs=_outputs(out))
+            if stopped:  # partial outputs (evidence cards, drafts) stay downloadable
+                run["stage"] = "stopped by the user"
+            elif rc != 0 and run["lines"]:
                 run["error"] = next((ln for ln in reversed(run["lines"]) if ln.strip()), "")[:400]
         _PROCS.pop(run_id, None)
         _save(run)
@@ -183,7 +186,8 @@ def _record_in_session(run: dict[str, Any]) -> None:
     from . import sessions as store
 
     summ = run.get("summary") or {}
-    lines = [f"**Skill `{run['skill']}` — {run['status']}** (run `{run['id']}`)"]
+    lines = [f"**Skill `{run['skill']}` — {'stopped by the user' if run['status'] == 'stopped' else run['status']}** "
+             f"(run `{run['id']}`)"]
     if summ:
         chk = summ.get("citation_check") or {}
         lines.append(f"{summ.get('title', '')}\n\n{summ.get('sections')} sections · {summ.get('words')} words · "
@@ -227,11 +231,34 @@ def list_runs(limit: int = 20) -> list[dict[str, Any]]:
     return rows
 
 
-def stop_run(run_id: str) -> dict[str, Any]:
+def stop_run(run_id: str, *, grace: float = 8.0) -> dict[str, Any]:
+    """Stop a running skill: terminate, then kill after ``grace`` seconds. The run ends as ``stopped`` (not failed)
+    with its partial outputs; stopping a finished run changes nothing."""
     proc = _PROCS.get(run_id)
     if proc and proc.poll() is None:
+        with _LOCK:
+            run = _RUNS.get(run_id)
+            if run is not None:
+                run["stopping"] = True
+                run["stage"] = "stopping…"
         proc.terminate()
-    return get_run(run_id)
+
+        def _kill_later() -> None:
+            try:
+                proc.wait(timeout=grace)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+
+        threading.Thread(target=_kill_later, name=f"skill-stop-{run_id}", daemon=True).start()
+        return get_run(run_id)
+    info = get_run(run_id)
+    if info.get("status") == "running" and run_id not in _PROCS:  # left "running" by a Hub restart: close it
+        with _LOCK:
+            run = _RUNS.get(run_id) or {k: v for k, v in info.items() if k not in ("lines", "next")}
+            run.update(status="stopped", stage="stopped (no process — the Hub restarted)", finished_at=time.time())
+        _save(run)
+        return get_run(run_id)
+    return info
 
 
 def run_file(run_id: str, name: str) -> Path:

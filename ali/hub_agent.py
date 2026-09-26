@@ -52,6 +52,8 @@ class Tools:
                       "start a runnable skill in the background (e.g. literature-review writes a full cited review "
                       "as Word); its live progress card appears in the chat"),
         "skill_status": ('{"run_id": "…"}', "stage / result of a skill run started earlier"),
+        "stop_skill": ('{"run_id": "…"}', "stop a running skill run when the user asks to stop / cancel it "
+                                        "(omit run_id for the run started in this chat)"),
     }
 
     def call(self, name: str, args: dict[str, Any]) -> dict[str, Any]:
@@ -206,6 +208,21 @@ class Tools:
                                        "and the Word file when done. Now give the final answer (what is running, what "
                                        "it will produce, that the card tracks it) — do not poll skill_status."}
 
+    def t_stop_skill(self, run_id: str = "", **_: Any) -> dict[str, Any]:
+        from . import skill_runner
+
+        if self.question and not wants_stop(self.question):
+            return {"error": "the user did not ask to stop a run; only stop a skill when asked (停止 / 取消 / stop)"}
+        rid = str(run_id or "").strip()
+        if not rid:  # the latest run of this chat that is still going
+            rid = next((r["id"] for r in skill_runner.list_runs(50) if r.get("status") == "running"
+                        and (not self.session_id or r.get("session_id") == self.session_id)), "")
+        if not rid:
+            return {"error": "no running skill run in this chat"}
+        r = skill_runner.stop_run(rid)
+        return {k: r.get(k) for k in ("id", "skill", "status", "stage")} | {
+            "note": "stopping; the progress card shows 已停止 and any partial files when the process has exited"}
+
     def t_skill_status(self, run_id: str = "", **_: Any) -> dict[str, Any]:
         from . import skill_runner
 
@@ -271,6 +288,13 @@ _DELIVER = re.compile(r"写|撰写|起草|生成|制作|做(一|个|篇|份)|出
 
 def wants_deliverable(question: str) -> bool:
     return bool(_DELIVER.search(question or ""))
+
+
+_STOP_ASK = re.compile(r"停止|停掉|停下|终止|取消|中止|别跑了|不要跑了|\b(stop|cancel|abort|halt|kill)\b", re.I)
+
+
+def wants_stop(question: str) -> bool:
+    return bool(_STOP_ASK.search(question or ""))
 
 
 _TRIAL = re.compile(r"试跑|小规模|先试|试一下|测试一下|快速版|\b(smoke|trial run|quick (?:run|test)|dry run)\b", re.I)
@@ -422,6 +446,8 @@ def _summary(name: str, result: dict[str, Any]) -> str:
         return ", ".join(s["id"] for s in result.get("skills") or []) or "none"
     if name == "run_skill":
         return f"started {result.get('skill')} ({result.get('run_id')})"
+    if name == "stop_skill":
+        return f"{result.get('id')}: {result.get('status')}"
     if name == "skill_status":
         return f"{result.get('status')}: {str(result.get('stage') or '')[:100]}"
     return "ok"

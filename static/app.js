@@ -2509,8 +2509,10 @@ function skillCard(title) {
   if (empty) empty.remove();
   const div = document.createElement("div");
   div.className = "msg assistant skill-run";
+  const zh = state.prefs.language !== "en";
   div.innerHTML = `<div class="meta">Agent Hub · skill</div><div class="skill-run-head"><strong>${escapeHtml(title)}</strong>
-    <span class="skill-run-status muted">…</span></div><div class="skill-run-stage muted"></div>
+    <span class="skill-run-status muted">…</span>
+    <button type="button" class="btn ghost chip skill-run-stop hidden" title="${zh ? "停止这次运行（已生成的文件保留）" : "Stop this run (files made so far are kept)"}">■ ${zh ? "停止" : "Stop"}</button></div><div class="skill-run-stage muted"></div>
     <pre class="skill-run-log"></pre><div class="skill-run-out"></div>`;
   $("#messages").appendChild(div);
   div.scrollIntoView({ block: "end" });
@@ -2570,7 +2572,21 @@ async function pollSkillRun(runId, card, zh) {
   const status = card.querySelector(".skill-run-status");
   const stage = card.querySelector(".skill-run-stage");
   const logEl = card.querySelector(".skill-run-log");
+  const stopBtn = card.querySelector(".skill-run-stop");
   card.dataset.run = runId;
+  if (stopBtn) {
+    stopBtn.onclick = async () => {
+      stopBtn.disabled = true;
+      stopBtn.textContent = zh ? "停止中…" : "Stopping…";
+      try {
+        await api(`/api/skill-runs/${encodeURIComponent(runId)}/stop`, { method: "POST", body: "{}" });
+      } catch (err) {
+        stopBtn.disabled = false;
+        stopBtn.textContent = `■ ${zh ? "停止" : "Stop"}`;
+        status.textContent = `✗ ${err.message || err}`;
+      }
+    };
+  }
   const lines = [];
   let since = 0;
   const t0 = Date.now();
@@ -2584,14 +2600,16 @@ async function pollSkillRun(runId, card, zh) {
       stage.textContent = r.stage || "";
       const mins = Math.round((Date.now() - t0) / 60000);
       status.textContent = r.status === "running" ? `⏳ ${zh ? "运行中" : "running"} · ${mins} min · ${lines.length} ${zh ? "行日志" : "log lines"}`
-        : (r.status === "done" ? "✓ " : "✗ ") + r.status;
+        : r.status === "done" ? "✓ done" : r.status === "stopped" ? `■ ${zh ? "已停止" : "stopped"}` : "✗ " + r.status;
+      if (stopBtn) stopBtn.classList.toggle("hidden", r.status !== "running");
       if (r.status !== "running") {
+        if (stopBtn) stopBtn.remove();
         const s = r.summary || {};
         const chk = s.citation_check || {};
         card.querySelector(".skill-run-out").innerHTML = (s.title ? `<p><strong>${escapeHtml(s.title)}</strong><br>${escapeHtml(
           `${s.sections} sections · ${s.words} words · ${chk.cited} references cited · ${s.llm_calls} model calls (${s.model})`)}</p>` : "")
           + (r.outputs || []).slice().sort((a, b) => (b.name.endsWith(".docx") ? 1 : 0) - (a.name.endsWith(".docx") ? 1 : 0)).map((o) => `<a class="btn chip" href="/api/skill-runs/${encodeURIComponent(runId)}/file?name=${encodeURIComponent(o.name)}" download>⬇ ${escapeHtml(o.name)}</a>`).join(" ");
-        if (r.status !== "done") card.classList.add("error");
+        if (r.status !== "done") card.classList.add(r.status === "stopped" ? "stopped" : "error");
         return;
       }
     }

@@ -2063,6 +2063,8 @@ hr.soft {
 /* runnable skills (/skill, /skill-author) */
 .msg.skill-run .skill-run-head { display: flex; gap: .6rem; align-items: baseline; flex-wrap: wrap; }
 .msg.skill-run .skill-run-stage { font-size: .85em; margin: .25rem 0; }
+.msg.skill-run .skill-run-stop { flex: 0 0 auto; margin-left: auto; color: var(--danger, #e5484d); }
+.msg.skill-run.stopped { border-color: var(--warning, #d4a72c); }
 .msg.skill-run .skill-run-log { max-height: 22rem; overflow: auto; font-size: .78em; line-height: 1.35;
   background: var(--code-bg, rgba(127,127,127,.08)); padding: .5rem .7rem; border-radius: 6px; white-space: pre-wrap; }
 .msg.skill-run .skill-run-out { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .4rem; }
