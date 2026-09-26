@@ -1,13 +1,13 @@
-[01:04:33] hub A: ['backend: stub http://127.0.0.1:9911/v1']
-[01:04:33] hub A up at http://127.0.0.1:8765 (state /tmp/agenthub-A-o7ejh53s)
-[01:04:40] screenshot 001_A_connections.png
-[01:04:41] screenshot 002_A_vendor-cards.png
-[01:04:45] screenshot 003_A_office-chat.png
-[01:04:47] screenshot 004_A_claws-agents.png
-[01:04:50] screenshot 005_A_claude-link.png
-[01:04:50] screenshot 006_A_claude-signed-in.png
-[01:04:52] screenshot 007_A_codex-device.png
-[01:04:56] screenshot 008_A_codex-signed-in.png
-[01:05:01] screenshot 009_A_chat-claude-code.png
-[01:05:05] screenshot 010_A_chat-codex.png
+[01:15:04] hub A: ['backend: stub http://127.0.0.1:9911/v1']
+[01:15:04] hub A up at http://127.0.0.1:8765 (state /tmp/agenthub-A-7oiak43k)
+[01:15:12] screenshot 011_A_connections.png
+[01:15:12] screenshot 012_A_vendor-cards.png
+[01:15:16] screenshot 013_A_office-chat.png
+[01:15:18] screenshot 014_A_claws-agents.png
+[01:15:21] screenshot 015_A_claude-link.png
+[01:15:22] screenshot 016_A_claude-signed-in.png
+[01:15:24] screenshot 017_A_codex-device.png
+[01:15:27] screenshot 018_A_codex-signed-in.png
+[01:15:32] screenshot 019_A_chat-claude-code.png
+[01:15:36] screenshot 020_A_chat-codex.png
 RESULT: PASS
