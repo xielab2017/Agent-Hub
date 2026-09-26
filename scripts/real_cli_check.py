@@ -39,7 +39,7 @@ def main() -> int:
         extra = run([binpath, "exec", "resume", "--help"]) if rid == "codex" else run([binpath, "setup-token", "--help"])
         login = run([binpath, "login", "--help"]) if rid == "codex" else ""
         report[rid] = {"bin": binpath, "version": version[0] if version else "", "missing": agent_cli.check_flags(
-            rid, help_text=help_text), "help_head": help_text[:4000], "extra_help": extra[:2500], "login_help": login[:2500]}
+            rid, help_text=help_text), "help": help_text[:30000], "extra_help": extra[:2500], "login_help": login[:2500]}
         print(rid, report[rid]["version"], "missing:", report[rid]["missing"] or "none")
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     Path(a.out).write_text(json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8")

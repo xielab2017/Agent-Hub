@@ -41,9 +41,11 @@ WRITE_TOOLS = "Read,Grep,Glob,Edit,Write,MultiEdit,WebSearch,WebFetch"
 # flags each adapter needs; any one of the alternatives must appear in the CLI's --help
 NEEDED_FLAGS = {
     "claude-code": [("--print", "-p"), ("--output-format",), ("--resume", "-r"), ("--permission-mode",),
-                    ("--allowedTools", "--allowed-tools"), ("--verbose",)],
+                    ("--allowedTools", "--allowed-tools"), ("--verbose",), ("--include-partial-messages",),
+                    ("--append-system-prompt",), ("--model",)],
     "codex": [("--json",), ("--sandbox", "-s"), ("--skip-git-repo-check",)],
 }
+NEEDED_VALUES = {"claude-code": ["dontAsk", "acceptEdits"], "codex": ["read-only", "workspace-write"]}
 _ANSI = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]|\x1b\][^\x07]*\x07|\r")
 _URL = re.compile(r"https://[^\s'\"<>\x1b]+")
 _DEVICE_CODE = re.compile(r"\b([A-Z0-9]{4}-[A-Z0-9]{4,5})\b")
@@ -145,8 +147,12 @@ def cli_help(rid: str, binpath: str) -> str:
 def check_flags(rid: str, binpath: str = "", help_text: str | None = None) -> list[str]:
     """Flags the adapter needs that this CLI version does not document ([] = compatible)."""
     text = help_text if help_text is not None else cli_help(rid, binpath or find_bin(rid))
-    return [alts[0] for alts in NEEDED_FLAGS[rid]
-            if not any(re.search(r"(?<![\w-])" + re.escape(a) + r"(?![\w-])", text) for a in alts)]
+    missing = [alts[0] for alts in NEEDED_FLAGS[rid]
+               if not any(re.search(r"(?<![\w-])" + re.escape(a) + r"(?![\w-])", text) for a in alts)]
+    # permission-mode values the adapter passes must be offered by this version
+    opt = "--permission-mode" if rid == "claude-code" else "--sandbox"
+    missing += [f"{opt} {v}" for v in NEEDED_VALUES.get(rid, []) if not re.search(rf"\b{v}\b", text)]
+    return missing
 
 
 # ── per-Hub-session CLI session ids ────────────────────────────────────

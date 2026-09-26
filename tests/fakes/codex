@@ -12,7 +12,7 @@ if log:
 if args[:1] == ["--version"]:
     print("codex-cli 0.99.0"); sys.exit(0)
 if args[:2] == ["exec", "--help"]:
-    print("Usage: codex exec [OPTIONS] [PROMPT]\n  --json\n  -s, --sandbox <SANDBOX_MODE>\n  --skip-git-repo-check\n"
+    print("Usage: codex exec [OPTIONS] [PROMPT]\n  --json\n  -s, --sandbox <SANDBOX_MODE>  [possible values: read-only, workspace-write, danger-full-access]\n  --skip-git-repo-check\n"
           "  -C, --cd <DIR>\n  -m, --model <MODEL>\nCommands:\n  resume  Resume a previous session"); sys.exit(0)
 if args[:2] == ["login", "status"]:
     if (home / "auth.json").exists():

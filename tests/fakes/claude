@@ -12,7 +12,8 @@ if args[:1] == ["--version"]:
     print("2.9.0 (Claude Code)"); sys.exit(0)
 if args[:1] == ["--help"]:
     print("Usage: claude [options] [prompt]\n  -p, --print  print response\n  --output-format <format>\n"
-          "  --verbose\n  --include-partial-messages\n  -r, --resume [sessionId]\n  --permission-mode <mode>\n"
+          "  --verbose\n  --include-partial-messages\n  -r, --resume [sessionId]\n"
+          "  --permission-mode <mode>  (choices: \"acceptEdits\", \"auto\", \"default\", \"dontAsk\", \"plan\")\n"
           "  --allowedTools, --allowed-tools <tools...>\n  --model <model>\n  --append-system-prompt <prompt>")
     sys.exit(0)
 if args[:1] == ["setup-token"]:

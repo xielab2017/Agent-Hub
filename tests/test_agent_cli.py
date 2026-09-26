@@ -58,8 +58,10 @@ def wait(job_id: str, until=lambda j: j["status"] != "running", timeout: float =
 
 def test_flag_check_catches_cli_drift():
     assert agent_cli.check_flags("claude-code", help_text=agent_cli.cli_help("claude-code", str(FAKES / "claude"))) == []
-    assert agent_cli.check_flags("codex", help_text="Usage: codex exec [PROMPT]\n  --json\n  -s, --sandbox") == [
+    assert agent_cli.check_flags("codex", help_text="codex exec\n  --json\n  -s, --sandbox read-only workspace-write") == [
         "--skip-git-repo-check"]
+    assert agent_cli.check_flags("codex", help_text="--json --sandbox --skip-git-repo-check read-only") == [
+        "--sandbox workspace-write"]
     assert "--permission-mode" in agent_cli.check_flags("claude-code", help_text="-p, --print --output-format")
 
 
