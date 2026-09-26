@@ -134,18 +134,52 @@ class Tools:
                          "profiles": sorted(p.stem for p in prof_dir.glob("*.y*ml")) if prof_dir.is_dir() else []})
         return {"skills": rows}
 
-    def t_run_skill(self, skill: str = "", topic: str = "", profile: str = "", smoke: bool = False, **extra: Any) -> dict[str, Any]:
+    def _resolve_skill(self, skill: str) -> tuple[str, list[str]]:
+        """The runnable skill the model meant ("literature_review", "Literature Review", "综述" → literature-review)."""
+        rows = self.t_list_skills()["skills"]
+        ids = [r["id"] for r in rows]
+        norm = lambda x: re.sub(r"[^a-z0-9\u4e00-\u9fff]+", "", str(x).lower())  # noqa: E731
+        want = norm(skill)
+        for r in rows:
+            if want and want in (norm(r["id"]), norm(r["id"]).replace("skill", "")):
+                return r["id"], ids
+        for r in rows:  # a trigger word or a unique partial id
+            trig = [norm(t) for t in re.split(r"[,，;/]", str(r.get("triggers") or "")) if t.strip()]
+            if want and (want in trig or want.replace("skill", "") in trig):
+                return r["id"], ids
+        partial = [r["id"] for r in rows if want and (want in norm(r["id"]) or norm(r["id"]) in want)]
+        if len(partial) == 1:
+            return partial[0], ids
+        if not want and len(rows) == 1:
+            return rows[0]["id"], ids
+        return "", ids
+
+    def t_run_skill(self, skill: str = "", topic: str = "", profile: str = "", smoke: Any = False, **extra: Any) -> dict[str, Any]:
         from . import skill_runner
 
-        args: dict[str, Any] = {k: v for k, v in {"topic": topic, "profile": profile, "smoke": bool(smoke)}.items() if v}
+        nested = extra.pop("args", None)  # {"skill": …, "args": {"topic": …}} — accept the nested shape too
+        if isinstance(nested, dict):
+            topic = topic or str(nested.get("topic") or "")
+            profile = profile or str(nested.get("profile") or "")
+            smoke = smoke or nested.get("smoke", False)
+            extra = {**nested, **extra}
+        for alt in ("query", "title", "subject", "theme", "question", "prompt"):  # topic under another name
+            if not topic and isinstance(extra.get(alt), str):
+                topic = extra[alt]
+        smoke = smoke if isinstance(smoke, bool) else str(smoke).strip().lower() in ("1", "true", "yes", "on", "smoke")
+        resolved, ids = self._resolve_skill(skill or extra.get("id") or extra.get("name") or "")
+        if not resolved:
+            return {"error": f"no runnable skill {skill!r}; available: {', '.join(ids) or 'none installed'}"}
+        args: dict[str, Any] = {k: v for k, v in {"topic": str(topic).strip(), "profile": str(profile).strip(),
+                                                   "smoke": smoke}.items() if v}
         for k in ("min_refs", "max_cards", "fresh"):
-            if k in extra and extra[k] not in (None, ""):
+            if k in extra and extra[k] not in (None, "", False):
                 args[k] = extra[k]
         if not args.get("topic") and not args.get("profile"):
             return {"error": "give a topic (English works best) or a profile"}
-        display = f"/skill {skill} " + " ".join(f"{k}={v}" for k, v in args.items())
-        run = skill_runner.start_run(str(skill), args, session_id=self.session_id, display=display, announce=False)
-        info = {"run_id": run["id"], "skill": skill, "args": run["args"], "status": run["status"],
+        display = f"/skill {resolved} " + " ".join(f"{k}={v}" for k, v in args.items())
+        run = skill_runner.start_run(resolved, args, session_id=self.session_id, display=display, announce=False)
+        info = {"run_id": run["id"], "skill": resolved, "args": run["args"], "status": run["status"],
                 "out": run["out"]}
         if self.on_skill_run:
             self.on_skill_run(info)
@@ -177,8 +211,20 @@ def system_prompt(tools: Tools, *, skills_hint: str = "") -> str:
         "When the user wants a deliverable that a runnable skill produces (e.g. a literature review / 综述 → "
         "run_skill literature-review with an English topic), start it with run_skill and then tell the user it is "
         "running, what it will produce and roughly how long it takes — do not write the deliverable yourself.\n"
-        "Tools:\n" + "\n".join(lines) + (f"\n{skills_hint}" if skills_hint else "")
+        "Tools:\n" + "\n".join(lines) + f"\n{skills_hint or skills_line(tools)}"
     )
+
+
+def skills_line(tools: Tools) -> str:
+    """The installed runnable skill ids, so the model calls run_skill with a real id."""
+    try:
+        rows = tools.t_list_skills()["skills"]
+    except Exception:  # noqa: BLE001
+        return ""
+    if not rows:
+        return "Runnable skills installed: none."
+    return "Runnable skills installed (use these exact ids with run_skill): " + "; ".join(
+        f"{r['id']}" + (f" (profiles: {', '.join(r['profiles'])})" if r["profiles"] else "") for r in rows) + "."
 
 
 def parse_action(text: str) -> dict[str, Any] | None:

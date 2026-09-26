@@ -99,8 +99,11 @@ def main() -> int:
                 used = [s["tool"] for s in steps]
                 turn = {"turn": key, "engine": route.get("chat_engine"), "provider": route.get("provider"),
                         "model": route.get("model"), "tools": used, "expected": expect,
+                        "steps": [{k: s.get(k) for k in ("tool", "args", "ok", "error")} for s in steps],
                         "ok": all(t in used for t in expect), "answer": (last.get("content") or "")[:600],
                         "skill_runs": route.get("skill_runs") or []}
+                if key == "skill":  # the skill must actually have started, not just been attempted
+                    turn["ok"] = turn["ok"] and bool(turn["skill_runs"])
                 ok_all &= turn["ok"]
                 page.locator("#messages .msg.assistant").last.scroll_into_view_if_needed()
                 shots.take(page, "A", f"{key}-answer", note=f"agent used {', '.join(used) or 'no tools'}")

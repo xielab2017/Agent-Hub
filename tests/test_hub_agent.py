@@ -173,3 +173,19 @@ def test_claimed_action_without_a_tool_call_gets_one_nudge():
     assert len(plain.seen) == 1  # an ordinary answer is not nudged
     twice = scripted("我先列出文件。", "我先列出文件。")
     assert hub_agent.run(twice, [{"role": "user", "content": "x"}], hub_agent.Tools())["answer"] == "我先列出文件。"
+
+
+def test_run_skill_accepts_loose_ids_and_argument_shapes():
+    """MiniMax-M3 (CI run 36209115132) called run_skill twice and no run started: accept the shapes models use."""
+    import test_skill_runner as tsr
+
+    with tempfile.TemporaryDirectory() as tmp, tsr.hub(Path(tmp)) as (root, _loaded, _messages):
+        tsr._toy_skill(root)
+        tools = hub_agent.Tools(session_id="s9")
+        assert "toy" in hub_agent.skills_line(tools)
+        r = tools.call("run_skill", {"skill": "Toy", "args": {"topic": "GDF15 in ageing", "smoke": "true"}})
+        assert r.get("run_id") and r["skill"] == "toy" and r["args"] == ["--topic", "GDF15 in ageing", "--smoke"]
+        r = tools.call("run_skill", {"skill": "toy_skill", "query": "GDF15", "smoke": "false"})
+        assert r.get("run_id") and "--smoke" not in r["args"]
+        bad = tools.call("run_skill", {"skill": "grant-writer", "topic": "x"})
+        assert "no runnable skill" in bad["error"] and "toy" in bad["error"]
