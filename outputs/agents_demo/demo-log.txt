@@ -1,15 +1,18 @@
-[06:29:47] hub A: ['backend: stub http://127.0.0.1:9911/v1']
-[06:29:47] hub A up at http://127.0.0.1:8765 (state /tmp/agenthub-A-tckzu_uz)
-[06:29:54] screenshot 034_A_connections.png
-[06:29:55] screenshot 035_A_vendor-cards.png
-[06:30:06] screenshot 036_A_office-chat.png
-[06:30:08] screenshot 037_A_accounts.png
-[06:30:11] screenshot 038_A_claude-quick.png
-[06:30:16] screenshot 039_A_codex-device.png
-[06:30:28] screenshot 040_A_accounts-signed-in.png
-[06:30:34] screenshot 041_A_tiers-accounts.png
-[06:30:36] screenshot 042_A_claws.png
-[06:30:41] screenshot 043_A_chat-claude-code.png
-[06:30:45] screenshot 044_A_chat-cursor.png
-[06:30:50] screenshot 045_A_chat-codex.png
+[08:04:37] hub A: ['backend: stub http://127.0.0.1:9911/v1']
+[08:04:38] hub A up at http://127.0.0.1:8765 (state /tmp/agenthub-A-ay3owuyp)
+[08:04:46] screenshot 046_A_connections.png
+[08:04:46] screenshot 047_A_vendor-cards.png
+[08:04:54] screenshot 048_A_office-chat.png
+[08:04:56] screenshot 049_A_accounts.png
+[08:04:59] screenshot 050_A_claude-quick.png
+[08:05:03] screenshot 051_A_codex-device.png
+[08:05:14] screenshot 052_A_accounts-signed-in.png
+[08:05:21] screenshot 053_A_tiers-accounts.png
+[08:05:23] screenshot 054_A_claws.png
+[08:05:27] screenshot 055_A_chat-claude-code.png
+[08:05:32] screenshot 056_A_chat-cursor.png
+[08:05:36] screenshot 057_A_chat-codex.png
+[08:05:39] screenshot 058_A_picker.png
+[08:05:43] screenshot 059_A_fusion-running.png
+[08:05:56] screenshot 060_A_fusion-answer.png
 RESULT: PASS

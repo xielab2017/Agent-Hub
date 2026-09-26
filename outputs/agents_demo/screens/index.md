@@ -43,3 +43,18 @@
 - 2026-09-26 06:30:41 UTC — `043_A_chat-claude-code.png` — reasoning tier → claude-code account answers
 - 2026-09-26 06:30:45 UTC — `044_A_chat-cursor.png` — office tier → cursor account answers
 - 2026-09-26 06:30:50 UTC — `045_A_chat-codex.png` — all tier → codex account answers
+- 2026-09-26 08:04:46 UTC — `046_A_connections.png` — 多模型 API: vendors connected side by side + tier routing test
+- 2026-09-26 08:04:46 UTC — `047_A_vendor-cards.png` — vendor cards: own key (masked), endpoint, TLS, test status
+- 2026-09-26 08:04:54 UTC — `048_A_office-chat.png` — office-tier chat answered by MiniMax-M3 (hybrid routing)
+- 2026-09-26 08:04:56 UTC — `049_A_accounts.png` — 多模型 API: quick sign-in bar + Claude / ChatGPT(Codex) / Cursor accounts
+- 2026-09-26 08:04:59 UTC — `050_A_claude-quick.png` — ⚡ Claude 一键登录: sign-in page opened in a new tab, code box ready
+- 2026-09-26 08:05:03 UTC — `051_A_codex-device.png` — ChatGPT (Codex): device-code sign-in in its account card
+- 2026-09-26 08:05:14 UTC — `052_A_accounts-signed-in.png` — three accounts signed in at the same time
+- 2026-09-26 08:05:21 UTC — `053_A_tiers-accounts.png` — tier routing: reasoning → Claude subscription, office → Cursor
+- 2026-09-26 08:05:23 UTC — `054_A_claws.png` — Claws: claws only — agent accounts moved to 多模型 API
+- 2026-09-26 08:05:27 UTC — `055_A_chat-claude-code.png` — reasoning tier → claude-code account answers
+- 2026-09-26 08:05:32 UTC — `056_A_chat-cursor.png` — office tier → cursor account answers
+- 2026-09-26 08:05:36 UTC — `057_A_chat-codex.png` — all tier → codex account answers
+- 2026-09-26 08:05:39 UTC — `058_A_picker.png` — 模型按钮: API models + signed-in accounts in one list, three ticked
+- 2026-09-26 08:05:43 UTC — `059_A_fusion-running.png` — fusion: each model answering (progress per model)
+- 2026-09-26 08:05:56 UTC — `060_A_fusion-answer.png` — fused answer + each model's own answer (expanded)
