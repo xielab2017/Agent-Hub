@@ -14,6 +14,12 @@
   the run ends as **stopped**, not failed, keeping the files it made so far (evidence cards, drafts) for
   download. A run left "running" by a Hub restart can be closed the same way. In agent chat "停止刚才的综述"
   stops the chat's running skill (tool `stop_skill`, only when the user asks to stop).
+- **Double-click start / stop scripts.** Next to each start launcher there is now a stop launcher:
+  `Stop Agent Hub.command` (macOS / Linux, runs `ctl.sh stop` and confirms the page is gone), `stop-agent-hub.bat`
+  (Windows: the PID file's process tree plus anything listening on the Hub port) and `stop.sh`. Fixed in
+  `start-agent-hub.bat`: stdout and stderr went to the same file, which PowerShell's `Start-Process` refuses;
+  batch files now use CRLF (`.gitattributes`). Workflow "Launchers check" runs start → health (this version) →
+  stop on Windows, macOS and Linux.
 - **Version shown after download.** 5.5.0 is set in `ali/__init__.py`, `ali/config.py`, `pyproject.toml`,
   README, and the `?v=` asset query and label in `static/index.html` (these were still 5.3.6, so browsers could
   keep old cached files); a test keeps them in step.

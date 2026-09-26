@@ -9,6 +9,7 @@ if "%HOST%"=="" set HOST=0.0.0.0
 set STATE_DIR=%LOCALAPPDATA%\hermes-ali
 if not exist "%STATE_DIR%" mkdir "%STATE_DIR%"
 set LOG_FILE=%STATE_DIR%\ali.log
+set ERR_FILE=%STATE_DIR%\ali.err.log
 set PID_FILE=%STATE_DIR%\ali.pid
 
 echo ==========================================
@@ -19,7 +20,7 @@ echo.
 powershell -NoProfile -Command "try { (Invoke-WebRequest -UseBasicParsing http://127.0.0.1:%PORT%/api/health -TimeoutSec 2).StatusCode } catch { exit 1 }" >nul 2>&1
 if not errorlevel 1 (
   echo Already running on http://127.0.0.1:%PORT%
-  start "" "http://127.0.0.1:%PORT%"
+  if not defined AGENT_HUB_NO_BROWSER start "" "http://127.0.0.1:%PORT%"
   goto :done
 )
 
@@ -41,12 +42,12 @@ where python3 >nul 2>nul && (
   goto :launch
 )
 echo Python not found. Install Python 3.9+ and retry.
-pause
+if not defined AGENT_HUB_NO_PAUSE pause
 exit /b 1
 
 :launch
 echo Starting detached Hub on http://127.0.0.1:%PORT% ...
-powershell -NoProfile -Command "$p = Start-Process -FilePath '%EXE%' -ArgumentList '%ARGS%' -WorkingDirectory '%CD%' -WindowStyle Hidden -RedirectStandardOutput '%LOG_FILE%' -RedirectStandardError '%LOG_FILE%' -PassThru; Set-Content -Path '%PID_FILE%' -Value $p.Id"
+powershell -NoProfile -Command "$p = Start-Process -FilePath '%EXE%' -ArgumentList '%ARGS%' -WorkingDirectory '%CD%' -WindowStyle Hidden -RedirectStandardOutput '%LOG_FILE%' -RedirectStandardError '%ERR_FILE%' -PassThru; Set-Content -Path '%PID_FILE%' -Value $p.Id"
 
 powershell -NoProfile -Command "for ($i=0; $i -lt 12; $i++) { try { $r = Invoke-WebRequest -UseBasicParsing http://127.0.0.1:%PORT%/api/health -TimeoutSec 1; if ($r.StatusCode -eq 200) { exit 0 } } catch {} Start-Sleep -Milliseconds 400 }; exit 1"
 if errorlevel 1 (
@@ -55,11 +56,12 @@ if errorlevel 1 (
   echo Gateway ready — log: %LOG_FILE%
 )
 
-start "" "http://127.0.0.1:%PORT%"
+if not defined AGENT_HUB_NO_BROWSER start "" "http://127.0.0.1:%PORT%"
 
 :done
 echo.
 echo Gateway is backgrounded. Closing this window does NOT stop Agent Hub / Claw.
+echo To stop it: double-click stop-agent-hub.bat
 echo.
-timeout /t 3 >nul
+if not defined AGENT_HUB_NO_PAUSE timeout /t 3 >nul
 exit /b 0

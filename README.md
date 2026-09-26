@@ -69,14 +69,15 @@
 ```bash
 git clone https://github.com/xielab2017/Agent-Hub.git
 cd Agent-Hub
-chmod +x ctl.sh "Start Agent Hub.command" start.sh
+chmod +x ctl.sh "Start Agent Hub.command" "Stop Agent Hub.command" start.sh stop.sh
 ```
 
-2. 双击 **`Start Agent Hub.command`**，或：
+2. 双击 **`Start Agent Hub.command`** 启动，双击 **`Stop Agent Hub.command`** 停止；或：
 
 ```bash
-./ctl.sh start
+./ctl.sh start      # 启动（后台运行，关闭终端也不会停）
 ./ctl.sh open
+./ctl.sh stop       # 停止（或 ./stop.sh）
 ```
 
 浏览器：<http://127.0.0.1:8765>
@@ -111,7 +112,7 @@ python3 server.py --host 127.0.0.1 --port 9876 --open
 从 GitHub 下载 ZIP 后，macOS 也可能丢失执行权限；可重新赋权：
 
 ```bash
-chmod +x ctl.sh "Start Agent Hub.command" start.sh
+chmod +x ctl.sh "Start Agent Hub.command" "Stop Agent Hub.command" start.sh stop.sh
 ```
 
 可选（开机自启 + 崩溃自动拉起）：
@@ -131,6 +132,7 @@ cd Agent-Hub
 start-agent-hub.bat
 ```
 
+双击 **`start-agent-hub.bat`** 启动（后台运行，关闭窗口也不会停），双击 **`stop-agent-hub.bat`** 停止。
 或 PowerShell：`.\start.ps1`
 
 ### Linux / 通用命令行
@@ -294,9 +296,11 @@ Agent-Hub/
 ├── server.py              # HTTP 网关入口
 ├── bootstrap.py           # 引导 / 依赖检查
 ├── ctl.sh                 # start/stop/status/install-service
-├── Start Agent Hub.command  # macOS 一键后台启动
-├── start-agent-hub.bat    # Windows 一键后台启动
-├── start.sh / start.ps1
+├── Start Agent Hub.command  # macOS / Linux 双击启动（后台）
+├── Stop Agent Hub.command   # macOS / Linux 双击停止
+├── start-agent-hub.bat    # Windows 双击启动（后台）
+├── stop-agent-hub.bat     # Windows 双击停止
+├── start.sh / stop.sh / start.ps1
 ├── ali/                   # 业务逻辑（路由、流式、Agent、Soul…）
 ├── static/                # Web UI（HTML/CSS/JS）+ brand 资源
 ├── tests/                 # pytest（CI：.github/workflows/tests.yml）
@@ -323,7 +327,7 @@ git pull
 
 简要更新：
 
-- **v5.5.0** — 任意已配置的模型 API 直接当 Agent：按上下文自行检索文献、读工作区文件、启动 Skill（如「写一篇综述」→ literature-review）；Skill 进度卡片新增「停止」按钮（已停止的运行保留已生成文件）
+- **v5.5.0** — 任意已配置的模型 API 直接当 Agent：按上下文自行检索文献、读工作区文件、启动 Skill（如「写一篇综述」→ literature-review）；Skill 进度卡片新增「停止」按钮（已停止的运行保留已生成文件）；新增双击停止脚本 `Stop Agent Hub.command` / `stop-agent-hub.bat`（与启动脚本成对），修复 Windows 启动脚本日志重定向
 - **v5.4.0** — 多模型 API（多家厂商并存、按任务等级路由）；Claude Code / Codex 作为 Agent，支持外部链接登录
 - **v5.3.6** — 真实 MiniMax 实测（GitHub Actions「MiniMax live check」，默认模型 MiniMax-M3）：直连 / Hermes 全部通过；修复工具调用标记外泄、文献摘要读取、PubMed 排序、中文科研问题的英文检索词、无关文献过滤、设计参数误报与点名文献核查
 - **v5.3.5** — 支持 Anthropic 兼容接口（如 MiniMax `https://api.minimax.cn/anthropic`，Coding Plan / Claude Code 用的地址）：地址以 `/anthropic` 结尾时自动走 Messages API；可在 MiniMax 厂商下选用该地址

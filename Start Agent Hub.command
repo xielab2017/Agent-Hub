@@ -30,7 +30,7 @@ echo "浏览器: http://127.0.0.1:${PORT}"
 echo
 echo "要点："
 echo "  · 网关已在后台运行 — 可安全关闭本窗口，Hub 不会停"
-echo "  · 关闭浏览器页签 ≠ 停止 Hub / Claw；显式停止请用："
+echo "  · 关闭浏览器页签 ≠ 停止 Hub / Claw；停止请双击「Stop Agent Hub.command」，或："
 echo "      ./ctl.sh stop"
 echo "  · 开机自启 + 崩溃重启（macOS）："
 echo "      ./ctl.sh install-service"

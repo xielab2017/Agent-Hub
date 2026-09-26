@@ -1,0 +1,84 @@
+name: Launchers check (double-click start / stop)
+
+# Runs the real double-click launchers on each OS: start → /api/health answers with this version → stop → the
+# page is gone. Windows: start-agent-hub.bat / stop-agent-hub.bat; macOS / Linux: "Start Agent Hub.command" /
+# "Stop Agent Hub.command". Runs when a launcher changes, or manually.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["**"]
+    paths:
+      - "start-agent-hub.bat"
+      - "stop-agent-hub.bat"
+      - "Start Agent Hub.command"
+      - "Stop Agent Hub.command"
+      - "ctl.sh"
+      - "start.sh"
+      - "stop.sh"
+      - ".github/workflows/launchers-check.yml"
+
+jobs:
+  launchers:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    env:
+      AGENT_HUB_NO_PAUSE: "1"
+      AGENT_HUB_NO_BROWSER: "1"
+      HERMES_ALI_PORT: "8799"
+      HERMES_ALI_HOST: "127.0.0.1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Start (Windows, start-agent-hub.bat)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: call start-agent-hub.bat
+      - name: Start (macOS / Linux, Start Agent Hub.command)
+        if: runner.os != 'Windows'
+        run: ./"Start Agent Hub.command"
+      - name: Health shows this version
+        shell: python
+        run: |
+          import json, re, time, urllib.request
+          want = re.search(r'VERSION = "([^"]+)"', open("ali/config.py", encoding="utf-8").read()).group(1)
+          for _ in range(60):
+              try:
+                  h = json.load(urllib.request.urlopen("http://127.0.0.1:8799/api/health", timeout=2))
+                  break
+              except OSError:
+                  time.sleep(1)
+          else:
+              raise SystemExit("Hub did not start")
+          print("health version:", h.get("version"), "expected:", want)
+          assert h.get("version") == want
+      - name: Stop (Windows, stop-agent-hub.bat)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: call stop-agent-hub.bat
+      - name: Stop (macOS / Linux, Stop Agent Hub.command)
+        if: runner.os != 'Windows'
+        run: ./"Stop Agent Hub.command"
+      - name: Page is gone
+        shell: python
+        run: |
+          import time, urllib.request
+          time.sleep(2)
+          try:
+              urllib.request.urlopen("http://127.0.0.1:8799/api/health", timeout=2)
+          except OSError:
+              print("stopped: health no longer answers")
+          else:
+              raise SystemExit("Hub still running after the stop launcher")
+      - name: Logs on failure
+        if: failure()
+        shell: bash
+        run: |
+          cat "$LOCALAPPDATA/hermes-ali/ali.log" "$LOCALAPPDATA/hermes-ali/ali.err.log" 2>/dev/null || true
+          cat ~/.hermes/ali/ali.log 2>/dev/null | tail -50 || true

@@ -52,6 +52,9 @@
 - 每张 Skill 进度卡片（`/skill`、Hub agent 自动启动或 API 启动）运行时都有「■ 停止」按钮：结束进程（超时强制结束），
   状态记为「已停止」而不是失败，已生成的文件（证据卡、草稿）仍可下载；Hub 重启后残留的「运行中」记录也能关闭。
 - 在 Agent 对话里说「停止刚才的综述」也能停止（工具 `stop_skill`，仅在用户要求停止时生效）。
+- 双击启动 / 停止脚本成对：新增 `Stop Agent Hub.command`（macOS / Linux）、`stop-agent-hub.bat`（Windows）、`stop.sh`，
+  停止后确认网页已不再响应；修复 Windows 启动脚本 stdout / stderr 写同一文件导致 PowerShell 拒绝启动的问题；
+  GitHub「Launchers check」在 Windows / macOS / Linux 上实测 启动 → 版本号 → 停止。
 - 版本号统一为 5.5.0（`ali/__init__.py`、`ali/config.py`、`pyproject.toml`、README、`static/index.html` 的
   `?v=` 与版本标签），下载后界面显示新版本，浏览器不会沿用旧缓存；新增测试保证各处一致。
 
