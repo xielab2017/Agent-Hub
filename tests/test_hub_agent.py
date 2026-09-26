@@ -185,9 +185,9 @@ def test_run_skill_accepts_loose_ids_and_argument_shapes():
         assert "toy" in hub_agent.skills_line(tools)
         r = tools.call("run_skill", {"skill": "Toy", "args": {"topic": "GDF15 in ageing", "smoke": "true"}})
         assert r.get("run_id") and r["skill"] == "toy" and r["args"] == ["--topic", "GDF15 in ageing", "--smoke"]
-        r = tools.call("run_skill", {"skill": "toy_skill", "query": "GDF15", "smoke": "false"})
+        r = hub_agent.Tools().call("run_skill", {"skill": "toy_skill", "query": "GDF15", "smoke": "false"})
         assert r.get("run_id") and "--smoke" not in r["args"]
-        bad = tools.call("run_skill", {"skill": "grant-writer", "topic": "x"})
+        bad = hub_agent.Tools().call("run_skill", {"skill": "grant-writer", "topic": "x"})
         assert "no runnable skill" in bad["error"] and "toy" in bad["error"]
 
 
@@ -208,3 +208,27 @@ def test_saved_profile_is_used_only_for_its_own_topic():
         assert "--profile" not in r["args"] and "not used" in r["note"]
         r = hub_agent.Tools().call("run_skill", {"skill": "toy", "topic": "EasyMultiProfiler review", "profile": "omics"})
         assert "--profile" in r["args"]
+
+
+def test_a_literature_question_does_not_start_a_skill():
+    """MiniMax-M3 (CI run 36209611472) answered 'THBS4 … 有哪些研究证据？请查一下文献' by starting a full review."""
+    assert not hub_agent.wants_deliverable("THBS4 在骨骼肌衰老中有哪些研究证据？请查一下文献，简要总结并给出 PMID。")
+    assert not hub_agent.wants_deliverable("工作区里有哪些文件？读一下 notes.md 并告诉我下一步该做什么。")
+    assert hub_agent.wants_deliverable("帮我写一篇关于 GDF15 与衰老和代谢的英文综述，先小规模试跑一下看看效果。")
+    assert hub_agent.wants_deliverable("Please draft a review on GDF15 and ageing")
+    r = hub_agent.Tools(question="THBS4 有哪些研究证据？").call("run_skill", {"skill": "literature-review", "topic": "THBS4"})
+    assert "not for a pipeline run" in r["error"] and "pubmed_search" in r["error"]
+
+
+def test_one_skill_run_per_turn_and_trial_from_the_users_words():
+    """CI run 36209611472: run_skill was called three times and the user's '先小规模试跑' was dropped."""
+    import test_skill_runner as tsr
+
+    with tempfile.TemporaryDirectory() as tmp, tsr.hub(Path(tmp)) as (root, _loaded, _messages):
+        tsr._toy_skill(root)
+        call = '{"tool": "run_skill", "args": {"skill": "toy", "topic": "GDF15 in ageing"}}'
+        llm = scripted(call, call, "已启动。")
+        res = hub_agent.run(llm, [{"role": "user", "content": "x"}],
+                            hub_agent.Tools(question="帮我写一篇 GDF15 综述，先小规模试跑一下"))
+        assert len(res["skill_runs"]) == 1 and "--smoke" in res["skill_runs"][0]["args"]
+        assert "already started" in res["steps"][1]["error"]

@@ -37,6 +37,7 @@ class Tools:
         self.question = question
         self.on_skill_run = on_skill_run
         self.sources: list[dict[str, Any]] = []
+        self.started: list[dict[str, Any]] = []  # skill runs started in this turn (one per turn)
 
     # descriptions shown to the model (name → (args, what it does))
     SPEC = {
@@ -168,6 +169,14 @@ class Tools:
             if not topic and isinstance(extra.get(alt), str):
                 topic = extra[alt]
         smoke = smoke if isinstance(smoke, bool) else str(smoke).strip().lower() in ("1", "true", "yes", "on", "smoke")
+        smoke = smoke or wants_trial(self.question)  # "先小规模试跑" is the user's call, not the model's
+        if self.started:  # models sometimes repeat the call; never start the same pipeline twice in one turn
+            return {**self.started[0], "error": f"already started {self.started[0]['skill']} "
+                                                f"({self.started[0]['run_id']}) in this turn; give the final answer now"}
+        if self.question and not wants_deliverable(self.question):
+            return {"error": "the user asked a question, not for a pipeline run — answer it with the research tools "
+                             "(pubmed_search for literature / PMIDs, web_search, read_url); start a skill only when "
+                             "the user asks for its deliverable (e.g. 写一篇综述 / write a review)"}
         resolved, ids = self._resolve_skill(skill or extra.get("id") or extra.get("name") or "")
         if not resolved:
             return {"error": f"no runnable skill {skill!r}; available: {', '.join(ids) or 'none installed'}"}
@@ -190,6 +199,7 @@ class Tools:
         run = skill_runner.start_run(resolved, args, session_id=self.session_id, display=display, announce=False)
         info = {"run_id": run["id"], "skill": resolved, "args": run["args"], "status": run["status"],
                 "out": run["out"]}
+        self.started.append(info)
         if self.on_skill_run:
             self.on_skill_run(info)
         return {**info, "note": note + "Started in the background; the progress card in the chat shows each stage "
@@ -221,7 +231,8 @@ def system_prompt(tools: Tools, *, skills_hint: str = "") -> str:
         "any text before or after the JSON. Search results already shown above were fetched automatically and may "
         "miss the literature: when the user asks for papers, literature, evidence or PMIDs, call pubmed_search.\n"
         "When the user wants a deliverable that a runnable skill produces (e.g. a literature review / 综述 → "
-        "run_skill literature-review with an English topic), start it with run_skill and then tell the user it is "
+        "run_skill literature-review with an English topic; only when they ask for that deliverable, never for a "
+        "question about the literature), start it with run_skill and then tell the user it is "
         "running, what it will produce and roughly how long it takes — do not write the deliverable yourself.\n"
         "Tools:\n" + "\n".join(lines) + f"\n{skills_hint or skills_line(tools)}"
     )
@@ -251,6 +262,22 @@ def topics_overlap(a: str, b: str) -> bool:
         return bool(want_ids & (ids(b) | words(b)))
     wa = words(a)
     return bool(wa) and len(wa & words(b)) * 2 >= len(wa)
+
+
+# the user asks for something to be produced or run (not just a question): 写/撰写/生成… / write, draft, run …
+_DELIVER = re.compile(r"写|撰写|起草|生成|制作|做(一|个|篇|份)|出(一|个|篇|份)|整理成|试跑|跑(一下|一遍|个)|运行|启动|执行"
+                      r"|\b(write|draft|compose|produce|generate|prepare|create|run|start|launch)\b", re.I)
+
+
+def wants_deliverable(question: str) -> bool:
+    return bool(_DELIVER.search(question or ""))
+
+
+_TRIAL = re.compile(r"试跑|小规模|先试|试一下|测试一下|快速版|\b(smoke|trial run|quick (?:run|test)|dry run)\b", re.I)
+
+
+def wants_trial(question: str) -> bool:
+    return bool(_TRIAL.search(question or ""))
 
 
 def skills_line(tools: Tools) -> str:
@@ -358,7 +385,7 @@ def run(llm: Callable[[list[dict[str, str]]], str], messages: list[dict[str, str
         if on_step:
             on_step("tool", {"name": act["tool"], "args": act["args"], "why": act["why"], "step": i + 1})
         result = tools.call(act["tool"], act["args"])
-        if act["tool"] == "run_skill" and result.get("run_id"):
+        if act["tool"] == "run_skill" and result.get("run_id") and not result.get("error"):
             skill_runs.append(result)
         steps.append({"tool": act["tool"], "args": act["args"], "why": act["why"],
                       "ok": not result.get("error"), "error": result.get("error") or ""})
