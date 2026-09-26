@@ -2094,3 +2094,9 @@ hr.soft {
 .agent-login-url { word-break: break-all; }
 .agent-login-code { font-size: 1.2em; letter-spacing: .08em; padding: 2px 6px; }
 .agent-login-log { max-height: 8rem; overflow: auto; font-size: .75em; white-space: pre-wrap; margin: 0; }
+
+/* 多模型 API: quick sign-in for agent accounts */
+.quick-login-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0 12px; padding: 10px 12px;
+  border: 1px solid var(--border); border-radius: 10px; background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.quick-login-bar .muted { flex: 1 1 260px; font-size: 12px; }
+.agent-card .agent-login { margin-top: 6px; }

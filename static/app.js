@@ -3063,7 +3063,10 @@ async function renderConnectionsPanel(langZh) {
   const panel = $("#ctab-connections");
   if (!panel) return;
   let data = { connections: [], tiers: {}, mode: "single", backend: "" };
-  try { data = await api("/api/connections"); } catch (_) {}
+  let agents = [];
+  const [cRes, aRes] = await Promise.allSettled([api("/api/connections"), api("/api/connections/agents", { timeoutMs: 60000 })]);
+  if (cRes.status === "fulfilled") data = cRes.value;
+  if (aRes.status === "fulfilled") agents = aRes.value.agents || [];
   const L = (zh, en) => (langZh ? zh : en);
   const connected = data.connections.filter((c) => c.key_present || c.provider === "local-ollama");
   const tierNames = { simple: L("简单问答 C0", "Simple C0"), office: L("办公写作 C1", "Office C1"),
@@ -3071,8 +3074,12 @@ async function renderConnectionsPanel(langZh) {
   const tierRow = (rk) => {
     const cur = data.tiers[rk] || {};
     const opts = [`<option value="">${L("（未绑定：跟随办公）", "(unbound: follow office)")}</option>`]
-      .concat(connected.map((c) => `<option value="${escapeHtml(c.provider)}" ${c.provider === cur.provider ? "selected" : ""}>${escapeHtml(langZh ? c.label : c.label_en)}</option>`));
-    const models = (connected.find((c) => c.provider === cur.provider) || {});
+      .concat([`<optgroup label="${L("API 厂商", "API vendors")}">`], connected.map((c) => `<option value="${escapeHtml(c.provider)}" ${c.provider === cur.provider ? "selected" : ""}>${escapeHtml(langZh ? c.label : c.label_en)}</option>`), ["</optgroup>"])
+      .concat(agents.length ? [`<optgroup label="${L("账号登录（Agent）", "Signed-in accounts (agents)")}">`] : [],
+        agents.map((a) => `<option value="${escapeHtml(a.id)}" ${a.id === cur.provider ? "selected" : ""}>${escapeHtml(langZh ? a.label : a.label_en)}${a.logged_in ? "" : L(" · 未登录", " · not signed in")}</option>`),
+        agents.length ? ["</optgroup>"] : []);
+    const agentSel = agents.find((a) => a.id === cur.provider);
+    const models = agentSel ? { models: agentSel.models } : (connected.find((c) => c.provider === cur.provider) || {});
     const list = [...new Set([...(models.models || []), ...(models.default_models || []), cur.model].filter(Boolean))];
     return `<div class="conn-tier" data-tier="${rk}"><span>${escapeHtml(tierNames[rk])}</span>
       <select class="conn-tier-provider">${opts.join("")}</select>
@@ -3104,9 +3111,32 @@ async function renderConnectionsPanel(langZh) {
         <span class="muted conn-msg">${c.models && c.models.length ? `${c.models.length} ${L("个模型已获取", "models fetched")}` : escapeHtml(c.hint || "")}</span>
       </div></div>`;
   };
+  const short = { "claude-code": "Claude", codex: "ChatGPT / Codex", cursor: "Cursor" };
+  const quickBtn = (a) => `<button type="button" class="btn ${a.logged_in ? "ghost" : "primary"} quick-login" data-rid="${escapeHtml(a.id)}">${a.logged_in
+    ? `✓ ${escapeHtml(short[a.id] || a.id)}` : `⚡ ${escapeHtml(short[a.id] || a.id)} ${L("一键登录", "quick sign-in")}`}</button>`;
+  const tierNamesShort = { simple: L("简单", "simple"), office: L("办公", "office"), reasoning: L("推理", "reasoning"), vision: L("视觉", "vision") };
+  const agentCard = (a) => `<div class="conn-card agent-card" data-rid="${escapeHtml(a.id)}">
+      <div class="conn-head"><strong>${escapeHtml(langZh ? a.label : a.label_en)}</strong> <code>${escapeHtml(a.id)}</code>
+        ${!a.installed ? `<span class="conn-badge off">${L("未安装", "not installed")}</span>` : ""}
+        ${(a.tiers || []).map((rk) => `<span class="conn-badge ok">${L("用于", "serves")} ${escapeHtml(tierNamesShort[rk] || rk)}</span>`).join("")}</div>
+      <div class="muted">${L("账号", "Account")}：${escapeHtml(a.account)} · ${L("登录方式：外部链接", "sign in: browser link")}${a.device_login ? L(" / 设备码", " / device code") : ""} ${L("或", "or")} ${escapeHtml(a.key_label)}</div>
+      <div class="conn-row">
+        <button type="button" class="btn ghost chip agent-install">${a.installed ? L("升级", "Upgrade") : L("一键安装", "Install")}</button>
+        <button type="button" class="btn ghost chip agent-bind" data-tiers="office">${L("用于办公", "Use for office")}</button>
+        <button type="button" class="btn ghost chip agent-bind" data-tiers="reasoning">${L("用于推理", "Use for reasoning")}</button>
+        <button type="button" class="btn ghost chip agent-bind" data-tiers="simple,office,reasoning,vision">${L("用于全部对话", "Use for all chat")}</button>
+        ${(a.tiers || []).length ? `<button type="button" class="btn ghost chip agent-unbind">${L("解除绑定", "Unbind")}</button>` : ""}
+        <span class="muted conn-msg">${a.installed ? "" : escapeHtml((a.install_cmd || []).join(" && "))}</span>
+      </div>
+      <div class="agent-login-slot"></div></div>`;
   panel.innerHTML = `
-    <p class="muted">${L("同时接入多家厂商：每家各自保存 key、地址与 TLS，不会切换当前后端。下方「按任务等级路由」把简单问答 / 办公 / 推理 / 视觉分配给不同厂商（启用后后端切换为 Hybrid）。",
-      "Connect several vendors at once — each keeps its own key, endpoint and TLS; saving never switches the active backend. Tier routing below assigns simple / office / reasoning / vision to different vendors (the backend then becomes Hybrid).")}</p>
+    <p class="muted">${L("同时接入多家厂商：每家各自保存 key、地址与 TLS，不会切换当前后端。下方「按任务等级路由」把简单问答 / 办公 / 推理 / 视觉分配给不同厂商或已登录的账号（启用后后端切换为 Hybrid）。",
+      "Connect several vendors at once — each keeps its own key, endpoint and TLS; saving never switches the active backend. Tier routing below assigns simple / office / reasoning / vision to different vendors or signed-in accounts (the backend then becomes Hybrid).")}</p>
+    <div class="quick-login-bar"><strong>${L("快捷登录", "Quick sign-in")}</strong>
+      ${agents.map(quickBtn).join("")}
+      <span class="muted">${L("一键：未安装先自动安装，再打开官方授权页；可同时登录多个账号。", "One click: installs if needed, then opens the official sign-in page; several accounts can be signed in at once.")}</span></div>
+    <h4>${L("账号登录（订阅 / Agent）", "Signed-in accounts (subscriptions / agents)")} <span class="muted">${agents.filter((a) => a.logged_in).length}/${agents.length}</span></h4>
+    <div class="conn-grid agent-grid">${agents.map(agentCard).join("")}</div>
     <h4>${L("按任务等级路由", "Tier routing")} <span class="muted">(${data.mode === "hybrid" ? "Hybrid" : L("当前单一后端：", "single backend: ") + escapeHtml(data.backend)})</span></h4>
     <div class="conn-tiers">${["simple", "office", "reasoning", "vision"].map(tierRow).join("")}</div>
     <div class="row gap" style="justify-content:flex-start;margin:6px 0 12px"><button type="button" class="btn ghost chip" id="conn-route-test">${L("路由测试", "Test routing")}</button></div>
@@ -3115,7 +3145,63 @@ async function renderConnectionsPanel(langZh) {
     <div class="conn-grid">${data.connections.map(card).join("")}</div>`;
 
   const msg = (el, text) => { const m = el.querySelector(".conn-msg"); if (m) m.textContent = text; };
-  panel.querySelectorAll(".conn-card").forEach((el) => {
+  const rerender = () => renderConnectionsPanel(langZh);
+  const pollJob = async (job, el) => {
+    while (job && job.status === "running") {
+      await new Promise((res) => setTimeout(res, 1500));
+      try { job = (await api(`/api/runtimes/jobs/${encodeURIComponent(job.id)}`)).job; } catch (_) { break; }
+      const tail = String(job.log || "").trim().split("\n").slice(-1)[0] || "";
+      msg(el, `⏳ ${tail.slice(0, 120)}`);
+    }
+    return job;
+  };
+  const install = async (a, el, action = "install") => {
+    msg(el, L("安装中…", "installing…"));
+    const r = await api(`/api/runtimes/${action}`, { method: "POST", body: JSON.stringify({ runtime: a.id }) });
+    const job = await pollJob(r.job || r, el);
+    const ok = job && job.status === "ok";
+    msg(el, ok ? L("✓ 已安装", "✓ installed") : `✗ ${L("安装失败，见日志或手动运行：", "install failed — run manually: ")}${(a.install_cmd || []).join(" && ")}`);
+    return ok;
+  };
+  const bind = async (rid, tiers) => {
+    for (const rk of tiers) {
+      await api("/api/connections/tier", { method: "POST", body: JSON.stringify({ route_key: rk, provider: rid, model: "" }) });
+    }
+  };
+  panel.querySelectorAll(".agent-card").forEach((el) => {
+    const a = agents.find((x) => x.id === el.dataset.rid);
+    const slot = el.querySelector(".agent-login-slot");
+    el._login = mountAgentLogin(slot, a.id, langZh, { onChange: (st) => { if (st === "done" || st === "logout") rerender(); } });
+    el.querySelector(".agent-install").onclick = async () => {
+      try { if (await install(a, el, a.installed ? "upgrade" : "install")) rerender(); } catch (e) { msg(el, e.message); }
+    };
+    el.querySelectorAll(".agent-bind").forEach((b) => {
+      b.onclick = async () => {
+        if (!a.logged_in && !confirm(L("该账号还没登录，仍要绑定吗？（对话会提示先登录）", "This account is not signed in yet — bind anyway?"))) return;
+        try { await bind(a.id, b.dataset.tiers.split(",")); rerender(); } catch (e) { msg(el, e.message); }
+      };
+    });
+    const ub = el.querySelector(".agent-unbind");
+    if (ub) ub.onclick = async () => { await bind("", a.tiers || []); rerender(); };
+  });
+  panel.querySelectorAll(".quick-login").forEach((b) => {
+    b.onclick = async () => {
+      const a = agents.find((x) => x.id === b.dataset.rid);
+      const el = panel.querySelector(`.agent-card[data-rid="${a.id}"]`);
+      el.scrollIntoView({ block: "center" });
+      if (a.logged_in) { msg(el, L("已登录，可在上方「用于…」绑定到对话", "signed in — bind it to chat with “Use for …”")); return; }
+      const win = openAuthTab(langZh);  // opened now, inside the click; pointed at the sign-in page later
+      b.disabled = true;
+      try {
+        if (!a.installed && !(await install(a, el))) { if (win) win.close(); return; }
+        const box = await el._login;
+        const ok = await box._start("link", win);
+        msg(el, ok ? L("✓ 登录完成 — 用「用于办公 / 推理 / 全部对话」让它回答", "✓ signed in — use “Use for …” to let it answer")
+          : L("登录未完成，可重试或改用 API key", "sign-in not finished — retry or use an API key"));
+      } catch (e) { msg(el, e.message); if (win) win.close(); } finally { b.disabled = false; }
+    };
+  });
+  panel.querySelectorAll(".conn-card:not(.agent-card)").forEach((el) => {
     const pid = el.dataset.pid;
     el.querySelector(".conn-save").onclick = async () => {
       const body = { base_url: el.querySelector(".conn-url").value.trim(), verify_tls: el.querySelector(".conn-tls").checked,
@@ -8003,7 +8089,20 @@ async function renderSchedulePanel(langZh) {
 
 // ── Claude Code / Codex: external-link sign-in (Claws panel) ───────────
 
-async function mountAgentLogin(row, rid, langZh) {
+// A tab for an external sign-in page, opened inside the click (browsers block later pop-ups); it shows a short
+// note until the sign-in link is known.
+function openAuthTab(zh) {
+  let win = null;
+  try { win = window.open("about:blank", "_blank"); } catch (_) { return null; }
+  try {
+    win.document.title = "Agent Hub";
+    win.document.body.innerHTML = `<p style="font:16px system-ui,sans-serif;padding:24px">${zh
+      ? "Agent Hub 正在准备官方登录页…（如需先安装，会稍等片刻）" : "Agent Hub is preparing the official sign-in page…"}</p>`;
+  } catch (_) { /* cross-origin or blocked */ }
+  return win;
+}
+
+async function mountAgentLogin(row, rid, langZh, opts = {}) {
   const L = (zh, en) => (langZh ? zh : en);
   const box = document.createElement("div");
   box.className = "agent-login";
@@ -8031,9 +8130,15 @@ async function mountAgentLogin(row, rid, langZh) {
     };
     box.querySelectorAll("[data-login]").forEach((b) => { b.onclick = () => start(b.dataset.login); });
     const lo = box.querySelector("[data-logout]");
-    if (lo) lo.onclick = async () => { await api(`/api/runtimes/${rid}/logout`, { method: "POST", body: "{}" }); render(); };
+    if (lo) lo.onclick = async () => {
+      await api(`/api/runtimes/${rid}/logout`, { method: "POST", body: "{}" });
+      await render();
+      if (opts.onChange) opts.onChange("logout");
+    };
   };
-  const start = async (method) => {
+  // win: a tab opened inside the click (so the browser allows it); it is pointed at the sign-in link when it arrives
+  const start = async (method, win = null) => {
+    if (!win && method === "link") win = openAuthTab(langZh);
     const jobEl = box.querySelector(".agent-login-job");
     let body = { method };
     if (method === "api_key") {
@@ -8045,7 +8150,12 @@ async function mountAgentLogin(row, rid, langZh) {
     }
     let job;
     try { job = await api(`/api/runtimes/${rid}/login`, { method: "POST", body: JSON.stringify(body) }); }
-    catch (e) { jobEl.textContent = e.message; return; }
+    catch (e) { jobEl.textContent = e.message; if (win) win.close(); return false; }
+    let opened = false;
+    const openLink = (j) => {
+      if (opened || !j.url || !win || win.closed) return;
+      try { win.location.href = j.url; opened = true; } catch (_) { /* blocked: the link in the card still works */ }
+    };
     const draw = (j) => {
       jobEl.innerHTML = `<div class="agent-login-card">
         ${j.url ? `<div>${L("① 在浏览器打开并授权：", "① Open and authorise in your browser:")}<br><a class="agent-login-url" href="${escapeHtml(j.url)}" target="_blank" rel="noopener">${escapeHtml(j.url.length > 90 ? j.url.slice(0, 90) + "…" : j.url)}</a></div>` : `<div class="muted">${L("等待登录链接…", "waiting for the sign-in link…")}</div>`}
@@ -8062,6 +8172,7 @@ async function mountAgentLogin(row, rid, langZh) {
       };
     };
     draw(job);
+    openLink(job);
     let keepInput = "";
     while (job.status === "running") {
       await new Promise((res) => setTimeout(res, 1200));
@@ -8069,13 +8180,20 @@ async function mountAgentLogin(row, rid, langZh) {
       keepInput = inp ? inp.value : keepInput;
       try { job = await api(`/api/runtimes/login/${job.id}`); } catch (_) { break; }
       draw(job);
+      openLink(job);
       const again = jobEl.querySelector(".agent-login-input");
       if (again && keepInput) again.value = keepInput;
     }
+    if (win && !opened && !win.closed) win.close();
     await render();
     draw(job);
+    if (opts.onChange) opts.onChange(job.status);
+    return job.status === "done";
   };
+  box._start = start;
+  box._render = render;
   await render();
+  return box;
 }
 
 async function renderRuntimesPanel(langZh) {
@@ -8083,6 +8201,8 @@ async function renderRuntimesPanel(langZh) {
   if (!panel) return;
   let data = { runtimes: [], active: "auto", auto_runtime: "hermes", resolved: "direct", linked: "hermes", os: {}, agent_cli_home: "" };
   try { data = await api("/api/runtimes"); } catch (_) {}
+  // Claude Code / Codex / Cursor are model sources now: installed and signed in under 多模型 API
+  data.runtimes = (data.runtimes || []).filter((r) => r.family !== "agent-cli");
   const osKind = (data.os && data.os.kind) || data.platform || "";
   const autoPrefer = data.auto_runtime || "hermes";
   const autoLabel = data.resolved || autoPrefer || "direct";
@@ -8216,7 +8336,6 @@ async function renderRuntimesPanel(langZh) {
           : `<button type="button" class="btn ghost chip" data-copy="${escapeHtml(r.id)}">${langZh ? "复制命令" : "Copy cmds"}</button>`}
       </div>`;
     list.appendChild(row);
-    if (agentLabel(r.id)) mountAgentLogin(row, r.id, langZh);
   });
 
   $("#btn-runtime-set").onclick = async () => {

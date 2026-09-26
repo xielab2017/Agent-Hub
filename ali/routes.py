@@ -343,6 +343,11 @@ def handle_get(handler) -> None:
     if path == "/api/skills":
         return _json(handler, 200, skills.list_skills())
 
+    if path == "/api/connections/agents":  # agent accounts (Claude Code / Codex / Cursor) as model sources
+        from . import connections as _conns
+
+        return _json(handler, 200, _conns.agents_view())
+
     if path == "/api/connections":
         return _json(handler, 200, conn_mod.view())
     if path == "/api/connections/route-test":

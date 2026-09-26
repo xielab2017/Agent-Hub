@@ -3,6 +3,11 @@
 Saving a connection never switches ``backend.type``: the active backend (single vendor) or the hybrid tier map
 decides who answers; connections only make vendors available with their own key, endpoint and TLS policy.
 Keys live in the secrets store (``secrets.set_api_key(pid, …)``); config holds only non-secret fields.
+
+Agent accounts (Claude subscription via Claude Code, ChatGPT via Codex, Cursor) are model sources too: each signs
+in on its own (several at once), and a tier can be bound to one — chat on that tier is then answered by that
+agent.  Hub-internal HTTP calls (skills, search terms, the Hub agent) never go to an agent account; they use the
+nearest tier bound to an API vendor (``providers.hub_model``).
 """
 
 from __future__ import annotations
@@ -11,6 +16,59 @@ import time
 from typing import Any
 
 from .providers import PROVIDERS, connection, get_provider, key_provider_mismatch, list_connections
+
+
+# agent accounts usable as tier sources (ids = the agent CLI runtimes in ali/agent_cli.py)
+AGENT_ACCOUNTS: dict[str, dict[str, Any]] = {
+    "claude-code": {"label": "Claude 订阅（Claude Code）", "label_en": "Claude subscription (Claude Code)",
+                    "account": "Claude Pro / Max", "key_label": "Anthropic API key", "models": ["sonnet", "opus", "haiku"]},
+    "codex": {"label": "ChatGPT 订阅（Codex）", "label_en": "ChatGPT subscription (Codex)",
+              "account": "ChatGPT Plus / Pro", "key_label": "OpenAI API key", "models": []},
+    "cursor": {"label": "Cursor 账号（Cursor Agent）", "label_en": "Cursor account (Cursor Agent)",
+               "account": "Cursor", "key_label": "Cursor API key", "models": ["auto"]},
+}
+
+
+def is_agent(pid: str) -> bool:
+    return str(pid or "") in AGENT_ACCOUNTS
+
+
+def agents_view() -> dict[str, Any]:
+    """Each agent account: installed / signed in / how, permissions, install command (no secrets)."""
+    import threading
+
+    from . import agent_cli
+    from .runtimes import RUNTIMES
+
+    rows: dict[str, dict[str, Any]] = {}
+
+    def one(rid: str) -> None:
+        try:
+            st = agent_cli.auth_status(rid)
+        except Exception as exc:  # noqa: BLE001
+            st = {"installed": False, "logged_in": False, "detail": str(exc)}
+        rt = next((r for r in RUNTIMES if r.get("id") == rid), {})
+        inst = rt.get("install") or {}
+        import os
+
+        rows[rid] = {"id": rid, **AGENT_ACCOUNTS[rid], "installed": bool(st.get("installed")),
+                     "logged_in": bool(st.get("logged_in")), "detail": st.get("detail") or "",
+                     "mode": st.get("mode") or "", "permissions": st.get("permissions") or "read-only",
+                     "install_cmd": (inst.get("windows") if os.name == "nt" else inst.get("posix")) or [],
+                     "homepage": rt.get("homepage") or "", "device_login": rid == "codex"}
+
+    threads = [threading.Thread(target=one, args=(rid,), daemon=True) for rid in AGENT_ACCOUNTS]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join(timeout=30)
+    cfg = _cfg()
+    hybrid = cfg.get("hybrid") or {}
+    for rid, row in rows.items():
+        row["tiers"] = [rk for rk in ("simple", "office", "reasoning", "vision")
+                        if (hybrid.get(rk) or {}).get("provider") == rid
+                        and str((cfg.get("backend") or {}).get("type") or "") == "hybrid"]
+    return {"ok": True, "agents": [rows[rid] for rid in AGENT_ACCOUNTS if rid in rows]}
 
 
 def _cfg() -> dict[str, Any]:
@@ -137,6 +195,15 @@ def route_test(message: str = "") -> dict[str, Any]:
                        ("vision", "看这张图")):
         info = resolve_route(rk, message or sample, cfg)
         pid = str(info.get("provider") or "")
+        if is_agent(pid):
+            from . import agent_cli
+
+            st = agent_cli.auth_status(pid)
+            rows.append({"route_key": rk, "tier": info.get("tier"), "provider": pid, "model": info.get("model"),
+                         "base_url": f"{AGENT_ACCOUNTS[pid]['label_en']} · {st.get('detail') or ''}".strip(" ·"),
+                         "key_present": bool(st.get("logged_in")), "agent": True,
+                         "blocked": bool(info.get("blocked"))})
+            continue
         c = connection(cfg, pid) if get_provider(pid) and pid != "hybrid" else {}
         rows.append({"route_key": rk, "tier": info.get("tier"), "provider": pid, "model": info.get("model"),
                      "base_url": info.get("base_url"), "key_present": bool(c.get("key_present")),
@@ -150,7 +217,7 @@ def set_tier(route_key: str, provider: str, model: str) -> dict[str, Any]:
 
     if route_key not in ("simple", "office", "reasoning", "vision"):
         raise ValueError(f"unknown tier: {route_key}")
-    if provider and (not get_provider(provider) or provider == "hybrid"):
+    if provider and not is_agent(provider) and (not get_provider(provider) or provider == "hybrid"):
         raise ValueError(f"unknown provider: {provider}")
     cfg = _cfg()
     hybrid = dict(cfg.get("hybrid") or {})

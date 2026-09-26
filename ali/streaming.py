@@ -833,7 +833,9 @@ def start_chat(
             raise ValueError(
                 f"data_policy=restricted forbids external provider '{sub_provider}'"
             )
-    if active_sub and sub_model:
+    if route_info.get("agent_cli"):  # an agent-account tier: its own model ("" = the agent CLI's default)
+        resolved_model = str(route_info.get("model") or "")
+    elif active_sub and sub_model:
         resolved_model = sub_model
     else:
         resolved_model = (model or "").strip() or route_info.get("model") or ""
@@ -852,6 +854,8 @@ def start_chat(
     try:
         from .providers import coerce_model_for_provider, get_provider
 
+        if route_info.get("agent_cli"):
+            raise LookupError("agent account tier: no vendor model coercion")
         provider_now = str(route_info.get("provider") or "")
         raw_ui = (resolved_model or "").strip()
         # If UI still has NVIDIA org prefix but provider is DeepSeek, strip / remap
@@ -1140,6 +1144,16 @@ def start_chat(
         hub_chat_mode, runtime_resolved, simple_chat=simple_chat,
         hub_agent=_hub_agent_enabled(ali if isinstance(ali, dict) else {}) and not task_id,
     )
+    acct = str(route_info.get("agent_cli") or "")
+    if acct:
+        # the tier is bound to an agent account (多模型 API): it answers the chat; greetings and task steps use
+        # the nearest API vendor when there is one (fast, and task steps expect a plain model)
+        http = _http_route_info(route_info, cfg) if (simple_chat or task_id) else None
+        if http:
+            route_info = http
+            resolved_model = str(http.get("model") or "")
+        else:
+            chat_engine = acct
     route_info["hub_chat_mode"] = hub_chat_mode
     route_info["hub_fast_chat"] = not prefer_agent  # legacy field for older UI
     route_info["chat_engine"] = chat_engine
@@ -1675,7 +1689,8 @@ def _run_agent_streaming(
                 and resolved in ("openclaw", "qqclaw", "aliyun_claw")
                 and not route_info.get("simple_chat")
             )
-            use_agent_cli = engine in _AGENT_CLI and resolved == engine and not route_info.get("simple_chat")
+            use_agent_cli = engine in _AGENT_CLI and (resolved == engine or route_info.get("agent_cli") == engine) \
+                and not route_info.get("simple_chat")
 
             if use_hermes:
                 # Credentials already synced on Connect; light touch only when needed
@@ -1700,8 +1715,9 @@ def _run_agent_streaming(
                 used = _agent_cli_reply(q, session_id, msg_text, active_preamble, assistant_parts,
                                         route_info=route_info, workspace=workspace)
                 if not used:
-                    used = _direct_llm_reply(q, session_id, msg_text, model, assistant_parts,
-                                             route_info=route_info, preamble=active_preamble)
+                    http = _http_route_info(route_info) if route_info.get("agent_cli") else route_info
+                    used = bool(http) and _direct_llm_reply(q, session_id, msg_text, (http or {}).get("model") or model,
+                                                            assistant_parts, route_info=http, preamble=active_preamble)
                 if not used:
                     _demo_reply(q, msg_text, assistant_parts, route_info=route_info, preamble=active_preamble)
             elif use_openclaw:
@@ -2187,8 +2203,10 @@ def _run_agent_streaming(
                         used = _agent_cli_reply(q, session_id, msg_text, retry_preamble, assistant_parts,
                                                 route_info=route_info, workspace=workspace)
                         if not used:
-                            used = _direct_llm_reply(q, session_id, msg_text, model, assistant_parts,
-                                                     route_info=route_info, preamble=retry_preamble)
+                            http = _http_route_info(route_info) if route_info.get("agent_cli") else route_info
+                            used = bool(http) and _direct_llm_reply(
+                                q, session_id, msg_text, (http or {}).get("model") or model, assistant_parts,
+                                route_info=http, preamble=retry_preamble)
                         if not used:
                             _demo_reply(q, msg_text, assistant_parts, route_info=route_info, preamble=retry_preamble)
                     elif use_openclaw:
@@ -2431,6 +2449,22 @@ def _hub_agent_reply(
     return True
 
 
+def _http_route_info(route_info: dict[str, Any], cfg: dict[str, Any] | None = None) -> dict[str, Any] | None:
+    """The same turn on the nearest tier bound to an API vendor (when this tier is bound to an agent account)."""
+    from .providers import hub_model
+    from .settings import load_campus_config
+
+    if cfg is None:
+        cfg = load_campus_config()
+    hm = hub_model(cfg, str(route_info.get("route_key") or "office"))
+    if not hm.get("provider") or hm.get("error"):
+        return None
+    out = dict(route_info)
+    out.update(provider=hm["provider"], backend_type=hm["provider"], base_url=hm.get("base_url") or "",
+               model=hm.get("model") or "", agent_cli="", agent_fallback_from=route_info.get("agent_cli") or "")
+    return out
+
+
 def _agent_cli_reply(
     q: queue.Queue,
     session_id: str,
@@ -2474,7 +2508,9 @@ def _agent_cli_reply(
 
     timeout = float((load_campus_config().get("backend") or {}).get("timeout_seconds") or 900)
     try:
+        tier_model = str(route_info.get("model") or "") if route_info.get("agent_cli") == rid else ""
         result = agent_cli.run(rid, msg_text, hub_session=session_id, workspace=workspace, system=preamble or "",
+                               model=tier_model,
                                on_event=on_event, cancelled=lambda: _cancelled_for_queue(q),
                                timeout=max(timeout, 300.0), binpath=binpath)
     except Exception as exc:  # noqa: BLE001 — fall back to the direct model path

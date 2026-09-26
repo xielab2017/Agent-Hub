@@ -1268,6 +1268,12 @@ def list_connections(cfg: dict[str, Any]) -> list[dict[str, Any]]:
     return out
 
 
+def _model_for_slot_simple(cfg: dict[str, Any], route_key: str) -> str:
+    models = cfg.get("models") or {}
+    slot = {"simple": "fast", "office": "main", "reasoning": "reasoning"}.get(route_key, "main")
+    return str(models.get(slot) or models.get("main") or "")
+
+
 def hub_model(cfg: dict[str, Any], route_key: str = "office") -> dict[str, Any]:
     """Provider, endpoint, key, model and TLS policy for a Hub-internal call on ``route_key``.
 
@@ -1276,11 +1282,28 @@ def hub_model(cfg: dict[str, Any], route_key: str = "office") -> dict[str, Any]:
     """
     from .routing import resolve_route
 
+    from .connections import is_agent
+
     info = resolve_route(route_key, "", cfg)
     pid = str(info.get("provider") or "").strip()
-    if (not pid or pid == "hybrid") and route_key != "office":
+    if (not pid or pid == "hybrid" or is_agent(pid)) and route_key != "office":
         info = resolve_route("office", "", cfg)
         pid = str(info.get("provider") or "").strip()
+    if is_agent(pid):  # an agent account cannot serve an HTTP call: nearest tier bound to an API vendor
+        for rk in ("reasoning", "simple", "vision"):
+            alt = resolve_route(rk, "", cfg)
+            if alt.get("provider") and not is_agent(str(alt["provider"])) and alt["provider"] != "hybrid":
+                info, pid = alt, str(alt["provider"])
+                break
+        else:
+            prev = str((cfg.get("backend") or {}).get("previous_type") or "")
+            if prev and get_provider(prev) and prev != "hybrid":
+                conn = connection(cfg, prev)
+                return {"provider": prev, "base_url": conn["base_url"], "api_key": conn["api_key"],
+                        "model": str(_model_for_slot_simple(cfg, route_key) or ""), "verify_tls": conn["verify_tls"],
+                        "route": info}
+            return {"provider": "", "base_url": "", "api_key": "", "model": "", "verify_tls": True, "route": info,
+                    "error": "every tier is bound to an agent account; bind one tier to an API vendor for Hub tasks"}
     if not pid or pid == "hybrid":
         return {"provider": pid, "base_url": "", "api_key": "", "model": "", "verify_tls": True, "route": info}
     conn = connection(cfg, pid)

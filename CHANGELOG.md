@@ -14,7 +14,17 @@
   the run ends as **stopped**, not failed, keeping the files it made so far (evidence cards, drafts) for
   download. A run left "running" by a Hub restart can be closed the same way. In agent chat "停止刚才的综述"
   stops the chat's running skill (tool `stop_skill`, only when the user asks to stop).
-- **Cursor as a third external agent (Claws).** Runtime `cursor` drives the official Cursor CLI (`cursor-agent`,
+- **Agent accounts are model sources (多模型 API, not Claws).** Claude subscription (Claude Code), ChatGPT
+  (Codex) and Cursor are installed, signed in and permissioned in the 多模型 API tab, next to the API vendors;
+  several can be signed in at once. **Quick sign-in** (快捷登录): one click installs the CLI if needed and opens
+  the official sign-in page in a new tab by itself (the tab is opened inside the click, so browsers allow it).
+  **Tier routing** can bind simple / office / reasoning / vision to an account ("用于办公 / 推理 / 全部对话" on the
+  card, or the tier selects): chat on that tier is answered by that agent with the tier's model (e.g. `opus`)
+  — never the composer's model. Greetings, task steps and Hub-internal calls (skills, search terms, the Hub
+  agent) are HTTP model calls and go to the nearest tier bound to an API vendor. Claws lists claws only.
+  Fixed on the way: account cards share the vendor-card class, which made the vendor loop throw and left the
+  route-test and tier Save buttons dead.
+- **Cursor as a third external agent.** Runtime `cursor` drives the official Cursor CLI (`cursor-agent`,
   also installed as `agent`) headless: `-p … --output-format stream-json --stream-partial-output --trust
   --workspace <Hub workspace>`, live text and tool steps, per-session `--resume`. Cursor's print mode can write
   and run shell commands by default, so read-only (the default) passes `--mode ask`; workspace-write runs

@@ -340,6 +340,7 @@ def resolve_route(
     use_hybrid = backend_type == "hybrid" or (
         mode == "hybrid" and backend_type in ("", "hybrid")
     )
+    agent_cli_id = ""
     if use_hybrid:
         entry = hybrid.get(route_key) or {}
         if not str(entry.get("provider") or "").strip():  # an unbound tier follows the office vendor
@@ -347,7 +348,13 @@ def resolve_route(
         provider_id = (entry.get("provider") or "").strip() or provider_id
         if entry.get("model"):
             model = str(entry["model"]).strip()
-        prov = get_provider(provider_id) if provider_id and provider_id != "hybrid" else None
+        from .connections import is_agent
+
+        if is_agent(provider_id):  # an agent account answers this tier (Claude Code / Codex / Cursor)
+            agent_cli_id = provider_id
+            model = str(entry.get("model") or "").strip()  # "" = the agent CLI's own default model
+            base_url, api_key_env = "", ""
+        prov = get_provider(provider_id) if provider_id and provider_id != "hybrid" and not agent_cli_id else None
         if prov:
             from .providers import connection_base_url
 
@@ -358,7 +365,8 @@ def resolve_route(
         # vendor's short ids — coerce to the active provider's catalog form.
         from .providers import coerce_model_for_provider
 
-        model = coerce_model_for_provider(provider_id, model, route_key=route_key)
+        if not agent_cli_id:
+            model = coerce_model_for_provider(provider_id, model, route_key=route_key)
     elif provider_id and provider_id not in ("", "hybrid"):
         from .providers import coerce_model_for_provider
 
@@ -376,7 +384,7 @@ def resolve_route(
     # It is deliberately additive: old routing slot configs keep working.
     tier_models = routing.get("tier_models") or {}
     tier_entry = tier_models.get(tier) if isinstance(tier_models, dict) else None
-    if isinstance(tier_entry, dict) and str(tier_entry.get("model") or "").strip():
+    if isinstance(tier_entry, dict) and str(tier_entry.get("model") or "").strip() and not agent_cli_id:
         configured_provider = str(tier_entry.get("provider") or "").strip()
         # A concrete backend is authoritative. Old per-tier bindings from a
         # previous provider must not send a NVIDIA/DeepSeek model to MiniMax.
@@ -426,6 +434,9 @@ def resolve_route(
         "deepseek",
         "kimi",
         "hybrid",
+        "claude-code",
+        "codex",
+        "cursor",
     }
     if data_policy == "restricted":
         effective = provider_id if use_hybrid else backend_type
@@ -454,6 +465,7 @@ def resolve_route(
         "mode": "hybrid" if use_hybrid else "single",
         "auto": raw in ("auto", ""),
         "provider": provider_id,
+        "agent_cli": agent_cli_id,
         "backend_type": backend_type,
         "base_url": base_url,
         "api_key_env": api_key_env,
