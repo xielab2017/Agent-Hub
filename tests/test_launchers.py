@@ -62,3 +62,26 @@ def test_ctl_start_then_stop_launcher_stops_the_hub():
             assert again.returncode == 0  # stopping a stopped Hub is fine
         finally:
             subprocess.run([str(ROOT / "ctl.sh"), "stop"], cwd=ROOT, env=env, capture_output=True, timeout=60)
+
+
+def test_server_starts_when_its_output_is_a_windows_code_page_file():
+    """Windows launcher run 36216151908: stdout redirected to a log file used cp1252 and the banner crashed server.py."""
+    port = _free_port()
+    with tempfile.TemporaryDirectory() as tmp:
+        log = Path(tmp) / "ali.log"
+        env = {**os.environ, "PYTHONIOENCODING": "cp1252", "HERMES_ALI_STATE_DIR": tmp}
+        with open(log, "wb") as fh:
+            proc = subprocess.Popen([sys.executable, str(ROOT / "server.py"), "--host", "127.0.0.1", "--port", str(port),
+                                     "--no-browser"], stdout=fh, stderr=subprocess.STDOUT, env=env)
+        try:
+            import time
+
+            for _ in range(60):
+                if _health(port) or proc.poll() is not None:
+                    break
+                time.sleep(0.25)
+            assert proc.poll() is None, log.read_text(encoding="utf-8", errors="replace")[-400:]
+            assert _health(port)
+        finally:
+            proc.terminate()
+            proc.wait(timeout=10)

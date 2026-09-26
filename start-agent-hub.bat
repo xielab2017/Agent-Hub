@@ -11,6 +11,9 @@ if not exist "%STATE_DIR%" mkdir "%STATE_DIR%"
 set LOG_FILE=%STATE_DIR%\ali.log
 set ERR_FILE=%STATE_DIR%\ali.err.log
 set PID_FILE=%STATE_DIR%\ali.pid
+REM UTF-8 output: the log is a file, where Python would otherwise use the ANSI code page
+set PYTHONUTF8=1
+set PYTHONIOENCODING=utf-8
 
 echo ==========================================
 echo   Agent Hub — background gateway

@@ -18,7 +18,9 @@
   `Stop Agent Hub.command` (macOS / Linux, runs `ctl.sh stop` and confirms the page is gone), `stop-agent-hub.bat`
   (Windows: the PID file's process tree plus anything listening on the Hub port) and `stop.sh`. Fixed in
   `start-agent-hub.bat`: stdout and stderr went to the same file, which PowerShell's `Start-Process` refuses;
-  batch files now use CRLF (`.gitattributes`). Workflow "Launchers check" runs start → health (this version) →
+  batch files now use CRLF (`.gitattributes`). **Windows start never worked in the background:** with its output
+  redirected to the log file Python used the ANSI code page and the banner's box characters crashed `server.py`;
+  the server now writes UTF-8 on every platform and the launcher sets `PYTHONUTF8`. Workflow "Launchers check" runs start → health (this version) →
   stop on Windows, macOS and Linux.
 - **Version shown after download.** 5.5.0 is set in `ali/__init__.py`, `ali/config.py`, `pyproject.toml`,
   README, and the `?v=` asset query and label in `static/index.html` (these were still 5.3.6, so browsers could

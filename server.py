@@ -10,6 +10,14 @@ import threading
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
+# Console / log output in UTF-8 on every platform: on Windows a redirected stdout (the double-click launcher
+# writes the log to a file) defaults to the ANSI code page, and the banner's box characters crashed the server.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
+
 # Ensure repo root is importable when run as script
 ROOT = os.path.dirname(os.path.abspath(__file__))
 if ROOT not in sys.path:
