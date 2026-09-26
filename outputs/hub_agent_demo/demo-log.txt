@@ -1,13 +1,7 @@
-[01:39:12] hub A: ['chat mode: agent (Hub agent)']
-[01:39:13] hub A up at http://127.0.0.1:8765 (state /tmp/agenthub-A-e5g8qw2e)
-[01:39:16] screenshot 008_A_home.png
-[01:39:20] screenshot 009_A_pubmed-running.png
-[01:39:56] screenshot 010_A_pubmed-answer.png
-[01:40:00] screenshot 011_A_skill-running.png
-[01:40:05] screenshot 012_A_skill-answer.png
-[01:40:09] screenshot 013_A_files-running.png
-[01:40:20] screenshot 014_A_files-answer.png
-pubmed  engine=hub-agent tools=['pubmed_search', 'pubmed_search', 'pubmed_search', 'pubmed_search'] ok=True
-skill   engine=hub-agent tools=['run_skill', 'run_skill'] ok=True
-files   engine=hub-agent tools=['read_file', 'list_files', 'read_file'] ok=True
-RESULT: PASS
+[01:43:23] hub A: ['chat mode: agent (Hub agent)']
+[01:43:23] hub A up at http://127.0.0.1:8765 (state /tmp/agenthub-A-ks7j2tsy)
+[01:43:28] screenshot 015_A_home.png
+[01:43:31] screenshot 016_A_pubmed-running.png
+[01:43:48] screenshot 017_A_pubmed-answer.png
+[01:43:51] screenshot 018_A_skill-running.png
+[01:44:03] screenshot 019_A_skill-answer.png
