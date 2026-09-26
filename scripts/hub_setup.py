@@ -22,6 +22,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--stub", default="", help="base URL of an OpenAI-compatible stub model")
     ap.add_argument("--model", default="MiniMax-M3")
+    ap.add_argument("--agent", action="store_true", help="agent chat mode (the Hub agent answers with tools)")
     args = ap.parse_args()
     if args.stub:
         from ali.secrets import set_api_key
@@ -43,6 +44,14 @@ def main() -> int:
         print("Set MINIMAX_KEY first.")
         return 2
     print(review_pipeline.mask("backend: " + review_pipeline.configure(args.model)))
+    if args.agent:
+        from ali.settings import load_campus_config, save_campus_config
+
+        cfg = load_campus_config()
+        cfg.setdefault("ali", {})["hub_chat_mode"] = "agent"
+        cfg["ali"].pop("hub_fast_chat", None)
+        save_campus_config(cfg)
+        print("chat mode: agent (Hub agent)")
     return 0
 
 

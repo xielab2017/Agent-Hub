@@ -30,6 +30,22 @@ Rehearsal of the skill demo with a stub model.
 """
 
 
+def agent_reply(msgs: list) -> str:
+    """Rehearsal of the Hub agent protocol: pick tools from keywords, then answer."""
+    user = [m["content"] for m in msgs if m.get("role") == "user" and not str(m.get("content", "")).startswith("TOOL RESULT")][-1]
+    done = [m["content"].split(")", 1)[0].split("(", 1)[-1] for m in msgs
+            if m.get("role") == "user" and str(m.get("content", "")).startswith("TOOL RESULT")]
+    plan = (["pubmed_search"] if "文献" in user else ["list_skills", "run_skill"] if "综述" in user
+            else ["list_files", "read_file"] if "工作区" in user else [])
+    todo = [t for t in plan if t not in done]
+    if not todo:
+        return "Stub agent answer after tools: " + ", ".join(done) if done else "Stub reply."
+    args = {"pubmed_search": {"query": "THBS4 skeletal muscle ageing"}, "list_skills": {},
+            "run_skill": {"skill": "literature-review", "topic": "GDF15 in ageing and metabolism", "smoke": True},
+            "list_files": {}, "read_file": {"path": "notes.md"}}[todo[0]]
+    return json.dumps({"tool": todo[0], "args": args, "why": "rehearsal"})
+
+
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, *a):  # quiet
         pass
@@ -49,8 +65,9 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):  # noqa: N802
         n = int(self.headers.get("Content-Length") or 0)
         req = json.loads(self.rfile.read(n) or b"{}")
-        text = json.dumps(req.get("messages") or [])
-        reply = SKILL_MD if "SKILL.md" in text else "Stub reply."
+        msgs = req.get("messages") or []
+        text = json.dumps(msgs)
+        reply = SKILL_MD if "SKILL.md" in text else agent_reply(msgs) if "Agent mode (Agent Hub)" in text else "Stub reply."
         if not req.get("stream"):
             return self._send(200, json.dumps({"choices": [{"message": {"role": "assistant", "content": reply},
                                                             "finish_reason": "stop"}]}).encode())

@@ -1,0 +1,149 @@
+"""Hub agent: any configured model decides from context which tools / skills to use."""
+
+from __future__ import annotations
+
+import json
+import queue
+import sys
+import tempfile
+import time
+from pathlib import Path
+from unittest import mock
+
+import pytest
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "tests"))
+
+from ali import hub_agent  # noqa: E402
+
+
+def scripted(*replies):
+    """A fake model that returns the given replies in order and records what it was sent."""
+    seen = []
+    it = iter(replies)
+
+    def llm(convo):
+        seen.append([dict(m) for m in convo])
+        return next(it)
+
+    llm.seen = seen
+    return llm
+
+
+def test_parse_action_variants():
+    assert hub_agent.parse_action('{"tool": "web_search", "args": {"query": "x"}, "why": "facts"}')["tool"] == "web_search"
+    assert hub_agent.parse_action('```json\n{"tool": "read_url", "args": {"url": "https://a"}}\n```')["args"] == {"url": "https://a"}
+    assert hub_agent.parse_action('{"tool": "final", "answer": "done"}') == {"tool": "final", "answer": "done"}
+    assert hub_agent.parse_action("Here is the answer: {not json}") is None
+    assert hub_agent.parse_action("THBS4 is a matricellular protein.") is None
+    assert hub_agent.parse_action('{"result": 3}') is None  # JSON that is not a tool request is an answer
+
+
+def test_multi_step_tool_use_then_answer(monkeypatch):
+    from ali import review_writer as rw
+
+    monkeypatch.setattr(rw, "pubmed_search", lambda q, retmax=8: ["111", "222"])
+    monkeypatch.setattr(rw, "pubmed_fetch", lambda pmids: [
+        {"pmid": p, "title": f"Paper {p}", "journal": "J", "year": "2024", "doi": "", "abstract": "THBS4 finding"}
+        for p in pmids])
+    llm = scripted('{"tool": "pubmed_search", "args": {"query": "THBS4 muscle"}, "why": "find papers"}',
+                   "Two papers were found [PMID 111, 222].")
+    steps = []
+    res = hub_agent.run(llm, [{"role": "user", "content": "THBS4 在肌肉里有什么研究？"}], hub_agent.Tools(),
+                        on_step=lambda k, d: steps.append((k, d["name"])))
+    assert res["answer"].startswith("Two papers") and res["steps"][0]["tool"] == "pubmed_search"
+    assert steps == [("tool", "pubmed_search"), ("result", "pubmed_search")]
+    assert len(res["sources"]) == 2 and res["sources"][0]["url"].endswith("/111/")
+    last = llm.seen[1][-1]["content"]
+    assert last.startswith("TOOL RESULT (pubmed_search)") and "Paper 111" in last
+
+
+def test_unknown_tool_and_errors_are_returned_to_the_model():
+    llm = scripted('{"tool": "rm_rf", "args": {}}', '{"tool": "read_file", "args": {"path": "../../etc/passwd"}}',
+                   "I cannot do that.")
+    with tempfile.TemporaryDirectory() as ws:
+        res = hub_agent.run(llm, [{"role": "user", "content": "x"}], hub_agent.Tools(workspace=ws))
+    assert res["answer"] == "I cannot do that."
+    assert "unknown tool" in res["steps"][0]["error"] and "outside the Hub workspace" in res["steps"][1]["error"]
+
+
+def test_workspace_files_are_listed_and_read():
+    with tempfile.TemporaryDirectory() as ws:
+        (Path(ws) / "notes.md").write_text("# Plan\nRun the THBS4 review.\n")
+        (Path(ws) / "data.bin").write_bytes(b"\x00\x01")
+        tools = hub_agent.Tools(workspace=ws)
+        assert {i["name"] for i in tools.call("list_files", {})["items"]} == {"notes.md", "data.bin"}
+        assert "THBS4 review" in tools.call("read_file", {"path": "notes.md"})["text"]
+        assert "only text files" in tools.call("read_file", {"path": "data.bin"})["error"]
+
+
+def test_step_budget_forces_a_final_answer():
+    llm = scripted(*(['{"tool": "list_skills", "args": {}}'] * 3 + ["Final after budget."]))
+    with mock.patch("ali.skills.list_skills", lambda: {"skills": []}):
+        res = hub_agent.run(llm, [{"role": "user", "content": "x"}], hub_agent.Tools(), max_steps=3)
+    assert res["answer"] == "Final after budget." and len(res["steps"]) == 3
+
+
+def test_review_request_starts_the_literature_review_skill():
+    """'写一篇综述' → the model calls run_skill; the run starts and the UI is told (skill_run event)."""
+    import test_skill_runner as tsr
+    from ali import skill_runner
+
+    with tempfile.TemporaryDirectory() as tmp, tsr.hub(Path(tmp)) as (root, _loaded, messages):
+        tsr._toy_skill(root)
+        started = []
+        llm = scripted('{"tool": "list_skills", "args": {}, "why": "find a pipeline"}',
+                       '{"tool": "run_skill", "args": {"skill": "toy", "topic": "GDF15 in ageing", "smoke": true}}',
+                       "已启动综述 Skill，完成后会在进度卡片里给出 Word 下载。")
+        tools = hub_agent.Tools(session_id="s9", on_skill_run=started.append)
+        res = hub_agent.run(llm, [{"role": "user", "content": "帮我写一篇 GDF15 与衰老的综述"}], tools)
+        assert res["answer"].startswith("已启动") and started and started[0]["skill"] == "toy"
+        assert started[0]["args"] == ["--topic", "GDF15 in ageing", "--smoke"]
+        listed = json.loads(llm.seen[1][-1]["content"].split("\n")[1])
+        assert listed["skills"][0]["id"] == "toy"
+        for _ in range(100):
+            if skill_runner.get_run(started[0]["run_id"])["status"] != "running":
+                break
+            time.sleep(0.05)
+        assert skill_runner.get_run(started[0]["run_id"])["status"] == "done"
+        roles = [m["role"] for _sid, m in messages]
+        assert roles == ["assistant"]  # no duplicate "/skill" user line: the agent's reply announces it
+
+
+def test_hub_agent_reply_streams_answer_and_tool_events(monkeypatch):
+    from ali import streaming
+
+    q: queue.Queue = queue.Queue()
+    replies = iter(['{"tool": "web_search", "args": {"query": "MiniMax M3"}, "why": "current facts"}',
+                    "MiniMax-M3 is MiniMax's current flagship model."])
+    monkeypatch.setattr("ali.llm_client.stream_chat", lambda *a, **k: next(replies))
+    monkeypatch.setattr("ali.websearch.search_web", lambda q, limit=6, deep=False: {"results": [
+        {"title": "MiniMax M3", "url": "https://example.org/m3", "snippet": "flagship"}]})
+    monkeypatch.setattr("ali.providers.connection_base_url", lambda cfg, pid: "https://api.example/v1")
+    monkeypatch.setattr("ali.secrets.resolve_api_key", lambda cfg, provider="": {"key": "sk-test", "present": True})
+    monkeypatch.setattr(streaming.store, "get_session", lambda sid: None)
+    parts: list[str] = []
+    route = {"provider": "deepseek", "model": "deepseek-chat", "base_url": "https://api.example/v1",
+             "route_key": "office"}
+    ok = streaming._hub_agent_reply(q, "s1", "MiniMax M3 是什么？", "", parts, route_info=route, preamble="ctx")
+    events = []
+    while not q.empty():
+        events.append(q.get_nowait())
+    names = [e[0] if isinstance(e, tuple) else e.get("event") for e in events]
+    assert ok and "".join(parts).startswith("MiniMax-M3 is")
+    assert route["agent_steps"][0]["tool"] == "web_search" and route["agent_sources"][0]["url"] == "https://example.org/m3"
+    assert names.count("token") >= 1 and "tool" in names
+
+
+def test_engine_selection_uses_hub_agent_for_plain_models():
+    from ali.streaming import _chat_engine_for_runtime as pick
+
+    assert pick("agent", "direct", hub_agent=True) == "hub-agent"
+    assert pick("agent", "auto", hub_agent=True) == "hub-agent"
+    assert pick("agent", "direct", hub_agent=False) == "direct"
+    assert pick("direct", "direct", hub_agent=True) == "direct"  # 快聊 stays a plain reply
+    assert pick("agent", "direct", simple_chat=True, hub_agent=True) == "direct"  # greetings stay fast
+    assert pick("agent", "hermes", hub_agent=True) == "hermes"
+    assert pick("agent", "claude-code", hub_agent=True) == "claude-code"

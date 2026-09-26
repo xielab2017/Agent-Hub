@@ -114,7 +114,8 @@ def _outputs(out: Path) -> list[dict[str, Any]]:
 
 
 def start_run(skill_id: str, args: Any = "", *, session_id: str = "", out_dir: str | Path | None = None,
-              on_line: Callable[[str], None] | None = None, display: str = "") -> dict[str, Any]:
+              on_line: Callable[[str], None] | None = None, display: str = "",
+              announce: bool = True) -> dict[str, Any]:
     root, script = skill_entry(skill_id)
     run_id = f"{re.sub(r'[^a-z0-9-]+', '-', skill_id.lower())}-{time.strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:4]}"
     argv = parse_args(args)
@@ -133,7 +134,7 @@ def start_run(skill_id: str, args: Any = "", *, session_id: str = "", out_dir: s
     with _LOCK:
         _RUNS[run_id] = run
     _save(run)
-    if session_id:
+    if session_id and announce:  # an agent-started run is announced by the agent's own reply
         try:
             from . import sessions as store
 

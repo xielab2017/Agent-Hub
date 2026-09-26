@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import queue
 import re
 import sys
@@ -178,10 +179,14 @@ def _chat_engine_for_runtime(
     runtime_resolved: str,
     *,
     simple_chat: bool = False,
+    hub_agent: bool = False,
 ) -> str:
     prefer_agent = hub_chat_mode == "agent"
-    if simple_chat or runtime_resolved in ("", "direct", "auto") or not prefer_agent:
+    if simple_chat or not prefer_agent:
         return "direct"
+    if runtime_resolved in ("", "direct", "auto"):
+        # no external claw: the configured model itself acts as the agent (ali/hub_agent.py)
+        return "hub-agent" if hub_agent else "direct"
     if runtime_resolved == "hermes":
         return "hermes"
     if runtime_resolved in _OPENCLAW_FAMILY:
@@ -189,6 +194,11 @@ def _chat_engine_for_runtime(
     if runtime_resolved in _AGENT_CLI:
         return runtime_resolved
     return "direct"
+
+
+def _hub_agent_enabled(ali: dict[str, Any]) -> bool:
+    """The Hub's own agent loop answers in agent mode unless switched off (ali.hub_agent = false)."""
+    return (ali or {}).get("hub_agent") is not False
 
 
 def agent_status() -> dict[str, Any]:
@@ -207,7 +217,7 @@ def agent_status() -> dict[str, Any]:
     rt = runtimes.peek_runtime()
     resolved = str(rt.get("resolved") or "direct")
     hub_chat_mode = _resolve_hub_chat_mode(ali)
-    planned = _chat_engine_for_runtime(hub_chat_mode, resolved)
+    planned = _chat_engine_for_runtime(hub_chat_mode, resolved, hub_agent=_hub_agent_enabled(ali))
     hermes_ready = resolved == "hermes" and (cls is not None or cli.get("available"))
     if planned == "hermes":
         if cls is not None:
@@ -225,6 +235,8 @@ def agent_status() -> dict[str, Any]:
             engine = "direct-llm"
         else:
             engine = "demo"
+    elif planned == "hub-agent":
+        engine = "hub-agent" if direct_ready or backend.get("type") == "hybrid" else "demo"
     elif planned in _AGENT_CLI:
         from . import agent_cli as _acli
 
@@ -283,7 +295,7 @@ def agent_status() -> dict[str, Any]:
         "chat_engine": engine,
         "hub_chat_mode": hub_chat_mode,
         "hub_fast_chat": hub_chat_mode == "direct",
-        "agent_mode": planned in ("hermes", "openclaw", *_AGENT_CLI),
+        "agent_mode": planned in ("hermes", "openclaw", "hub-agent", *_AGENT_CLI),
         "python": sys.version.split()[0],
     }
 
@@ -1125,12 +1137,13 @@ def start_chat(
     hub_chat_mode = _resolve_hub_chat_mode(ali if isinstance(ali, dict) else {})
     prefer_agent = hub_chat_mode == "agent"
     chat_engine = _chat_engine_for_runtime(
-        hub_chat_mode, runtime_resolved, simple_chat=simple_chat
+        hub_chat_mode, runtime_resolved, simple_chat=simple_chat,
+        hub_agent=_hub_agent_enabled(ali if isinstance(ali, dict) else {}) and not task_id,
     )
     route_info["hub_chat_mode"] = hub_chat_mode
     route_info["hub_fast_chat"] = not prefer_agent  # legacy field for older UI
     route_info["chat_engine"] = chat_engine
-    route_info["agent_mode"] = chat_engine in ("hermes", "openclaw", *_AGENT_CLI)
+    route_info["agent_mode"] = chat_engine in ("hermes", "openclaw", "hub-agent", *_AGENT_CLI)
 
     if simple_chat:
         # Fast path: short preamble, skip workspace snapshot / heavy soul fuse
@@ -1719,6 +1732,14 @@ def _run_agent_streaming(
                         route_info=route_info,
                         preamble=active_preamble,
                     )
+                if not used:
+                    _demo_reply(q, msg_text, assistant_parts, route_info=route_info, preamble=active_preamble)
+            elif engine == "hub-agent" and not route_info.get("simple_chat"):
+                used = _hub_agent_reply(q, session_id, msg_text, model, assistant_parts, route_info=route_info,
+                                        preamble=active_preamble, workspace=workspace)
+                if not used:
+                    used = _direct_llm_reply(q, session_id, msg_text, model, assistant_parts,
+                                             route_info=route_info, preamble=active_preamble)
                 if not used:
                     _demo_reply(q, msg_text, assistant_parts, route_info=route_info, preamble=active_preamble)
             elif not use_hermes:
@@ -2320,6 +2341,94 @@ def _run_agent_streaming(
                     STREAMS.pop(stream_id, None)
 
             threading.Thread(target=_cleanup, daemon=True).start()
+
+
+def _hub_agent_reply(
+    q: queue.Queue,
+    session_id: str,
+    msg_text: str,
+    model: str,
+    assistant_parts: list[str],
+    *,
+    route_info: dict[str, Any] | None = None,
+    preamble: str = "",
+    workspace: str = "",
+) -> bool:
+    """Any configured model as an agent: it decides from context which tools / skills to use (ali/hub_agent.py)."""
+    from . import hub_agent, llm_client
+    from .providers import connection_base_url, hub_model
+    from .secrets import resolve_api_key
+    from .settings import load_campus_config, resolve_backend_verify_tls
+
+    route_info = route_info if route_info is not None else {}
+    cfg = load_campus_config()
+    provider = str(route_info.get("provider") or (cfg.get("backend") or {}).get("type") or "")
+    if provider in ("", "hybrid"):
+        hm = hub_model(cfg, str(route_info.get("route_key") or "office"))
+        provider, base_url, api_key, use_model = hm["provider"], hm["base_url"], hm["api_key"], hm["model"]
+        verify_tls = hm["verify_tls"]
+    else:
+        base_url = str(route_info.get("base_url") or connection_base_url(cfg, provider) or "")
+        api_key = str(resolve_api_key(cfg, provider=provider).get("key") or "")
+        use_model = str(model or route_info.get("model") or "")
+        verify_tls = resolve_backend_verify_tls(cfg, route_info)
+    use_model = use_model or str(route_info.get("model") or "")
+    if not base_url or not use_model or (not api_key and provider != "local-ollama"):
+        return False
+
+    ws = (workspace or cfg.get("workspace") or "").strip()
+    tools = hub_agent.Tools(session_id=session_id, workspace=ws, question=msg_text,
+                            on_skill_run=lambda info: _put(q, "skill_run", info))
+    session = store.get_session(session_id)
+    history = list(session.messages[:-1]) if session else []
+    kept, _dropped = model_history(history, roles=("user", "assistant"))
+    messages: list[dict[str, str]] = []
+    if preamble:
+        messages.append({"role": "system", "content": preamble})
+    messages.append({"role": "system", "content": hub_agent.system_prompt(tools)})
+    messages.extend(kept)
+    messages.append({"role": "user", "content": msg_text})
+    _put(q, "meta", {"mode": "hub-agent", "engine": "hub-agent", "agent_mode": True, "provider": provider,
+                     "model": use_model, "base_url": base_url})
+    _think(q, f"Hub Agent · {provider}/{use_model}：理解需求并按需调用工具", kind="dispatch")
+
+    def llm(convo: list[dict[str, str]]) -> str:
+        text = llm_client.stream_chat(base_url, api_key, model=use_model, messages=convo, timeout=240,
+                                      verify_tls=verify_tls, temperature=0.3, max_tokens=8000)
+        return strip_model_think_tags(text or "")
+
+    tool_rows = route_info.setdefault("agent_tools", [])
+
+    def on_step(kind: str, data: dict[str, Any]) -> None:
+        if kind == "tool":
+            preview = json.dumps(data.get("args") or {}, ensure_ascii=False)[:120]
+            tool_rows.append({"name": data["name"], "preview": preview})
+            _put(q, "tool", {"name": data["name"], "preview": preview})
+            _think(q, f"步骤 {data['step']} · {data['name']}：{data.get('why') or preview}", kind="tool")
+            _progress(q, 2, min(88, 40 + 8 * int(data["step"])), "execute")
+        else:
+            _put(q, "tool", {"name": data["name"], "status": "done" if data.get("ok") else "error"})
+            _think(q, f"{data['name']} → {data.get('summary') or ''}", kind="tool")
+
+    try:
+        result = hub_agent.run(llm, messages, tools, on_step=on_step, cancelled=lambda: _cancelled_for_queue(q))
+    except Exception as exc:  # noqa: BLE001 — fall back to the plain direct reply
+        _put(q, "meta", {"mode": "hub-agent", "engine": "hub-agent", "error": str(exc)[:300]})
+        _think(q, f"Hub Agent 出错，改用直连回答：{exc}", kind="dispatch")
+        return False
+    answer = (result.get("answer") or "").strip()
+    if not answer:
+        return False
+    route_info["agent_steps"] = result["steps"]
+    if result.get("sources"):
+        route_info["agent_sources"] = result["sources"][:30]
+    if result.get("skill_runs"):
+        route_info["skill_runs"] = [r["run_id"] for r in result["skill_runs"]]
+    for i in range(0, len(answer), 64):
+        piece = answer[i:i + 64]
+        assistant_parts.append(piece)
+        _put(q, "token", {"text": piece})
+    return True
 
 
 def _agent_cli_reply(

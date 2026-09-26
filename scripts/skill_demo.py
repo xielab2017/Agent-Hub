@@ -39,7 +39,7 @@ def say(*a: object) -> None:
 class Hub:
     """One Agent Hub server with its own state / home directories."""
 
-    def __init__(self, name: str, port: int, stub: str = "") -> None:
+    def __init__(self, name: str, port: int, stub: str = "", setup_args: list[str] | None = None) -> None:
         self.name, self.port = name, port
         self.url = f"http://127.0.0.1:{port}"
         self.home = Path(tempfile.mkdtemp(prefix=f"agenthub-{name}-"))
@@ -47,7 +47,7 @@ class Hub:
                     "AGENT_CLI_HOME": str(self.home / "cli"), "HERMES_HOME": str(self.home / "hermes"),
                     "HERMES_ALI_AGENT_DIR": str(self.home / "no-agent"), "HERMES_ALI_PASSWORD": "",
                     "PYTHONUNBUFFERED": "1"}
-        setup = [PY, str(ROOT / "scripts" / "hub_setup.py")] + (["--stub", stub] if stub else [])
+        setup = [PY, str(ROOT / "scripts" / "hub_setup.py")] + (["--stub", stub] if stub else []) + list(setup_args or [])
         out = subprocess.run(setup, env=self.env, capture_output=True, text=True, timeout=120)
         say(f"hub {name}:", (out.stdout or out.stderr).strip().splitlines()[-1:] or "")
         if out.returncode != 0:

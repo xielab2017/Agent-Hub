@@ -2045,7 +2045,9 @@ function renderEngineBadge(meta, routeInfo) {
   const mode = (meta && meta.mode) || "";
   const engine = (meta && meta.engine) || (routeInfo && routeInfo.chat_engine) || "";
   if (meta && meta.agent_mode) {
-    if (engine === "claude-code" || engine === "codex") {
+    if (engine === "hub-agent") {
+      el.textContent = "Hub Agent";
+    } else if (engine === "claude-code" || engine === "codex") {
       el.textContent = engine === "codex" ? "OpenAI Codex" : "Claude Code";
     } else if (mode.includes("openclaw") || engine === "openclaw") {
       el.textContent = t("engine.openclaw");
@@ -2104,7 +2106,8 @@ function renderModeBanner(status) {
     : ` · ${escapeHtml(t("hubChat.agent"))}`;
   if (engine === "hermes" || engine === "hermes-cli" || engine === "openclaw" || agent.agent_mode) {
     const engLabel = engine === "openclaw" ? t("engine.openclaw")
-      : engine === "claude-code" ? "Claude Code" : engine === "codex" ? "OpenAI Codex" : t("engine.hermes");
+      : engine === "claude-code" ? "Claude Code" : engine === "codex" ? "OpenAI Codex"
+      : engine === "hub-agent" ? "Hub Agent" : t("engine.hermes");
     el.innerHTML = `<strong>${escapeHtml(t("mode.agent"))}</strong> · ${escapeHtml(engLabel)}${hubBit}${clawBit || " · claw=<code>Hermes Agent</code>"}${autoBit}${soulBit}`;
   } else if (engine === "direct-llm" || agent.direct_llm) {
     el.innerHTML = `<strong>${escapeHtml(t("mode.ai"))}</strong>${hubBit} — <span class="key-masked">${escapeHtml(agent.api_key_masked || "API")}</span>${clawBit}${autoBit}${soulBit}`;
@@ -2129,7 +2132,7 @@ function renderAgent(status) {
   const engine = agent.chat_engine || "";
   if (engine === "hermes" || engine === "hermes-cli" || engine === "openclaw" || agent.agent_mode) {
     const eng = engine === "openclaw" ? "OpenClaw" : engine === "claude-code" ? "Claude Code"
-      : engine === "codex" ? "OpenAI Codex" : (clawName || "Hermes");
+      : engine === "codex" ? "OpenAI Codex" : engine === "hub-agent" ? "Hub Agent" : (clawName || "Hermes");
     el.textContent = `${t("mode.agent")} · ${eng} · ${policy || "office"}`;
     el.className = "badge ok";
   } else if (agent.direct_llm || engine === "direct-llm") {
@@ -2538,26 +2541,42 @@ async function authorSkill(sid, zh, runDir = "") {
 
 async function runSkill(sid, args, sessionId, display, zh) {
   const card = skillCard(`${zh ? "运行 Skill" : "Running skill"} ${sid}${args ? " · " + args : ""}`);
-  const status = card.querySelector(".skill-run-status");
-  const stage = card.querySelector(".skill-run-stage");
-  const logEl = card.querySelector(".skill-run-log");
   let run;
   try {
     run = await api(`/api/skills/${encodeURIComponent(sid)}/run`, {
       method: "POST", body: JSON.stringify({ args, session_id: sessionId, display }),
     });
   } catch (err) {
-    status.textContent = `✗ ${err.message || err}`;
+    card.querySelector(".skill-run-status").textContent = `✗ ${err.message || err}`;
     card.classList.add("error");
     return;
   }
-  card.dataset.run = run.id;
+  await pollSkillRun(run.id, card, zh);
+}
+
+const _watchedRuns = new Set();
+
+async function watchSkillRun(info) {
+  // A skill the Hub agent started on its own (e.g. "写一篇综述" → literature-review)
+  if (!info || !info.run_id || _watchedRuns.has(info.run_id)) return;
+  _watchedRuns.add(info.run_id);
+  const zh = state.prefs.language !== "en";
+  const args = (info.args || []).join(" ");
+  const card = skillCard(`${zh ? "Agent 已启动 Skill" : "Agent started skill"} ${info.skill || ""}${args ? " · " + args : ""}`);
+  await pollSkillRun(info.run_id, card, zh);
+}
+
+async function pollSkillRun(runId, card, zh) {
+  const status = card.querySelector(".skill-run-status");
+  const stage = card.querySelector(".skill-run-stage");
+  const logEl = card.querySelector(".skill-run-log");
+  card.dataset.run = runId;
   const lines = [];
   let since = 0;
   const t0 = Date.now();
   while (true) {
     let r;
-    try { r = await api(`/api/skill-runs/${encodeURIComponent(run.id)}?since=${since}`); } catch (err) { r = null; }
+    try { r = await api(`/api/skill-runs/${encodeURIComponent(runId)}?since=${since}`); } catch (err) { r = null; }
     if (r) {
       since = r.next;
       lines.push(...(r.lines || []));
@@ -2571,7 +2590,7 @@ async function runSkill(sid, args, sessionId, display, zh) {
         const chk = s.citation_check || {};
         card.querySelector(".skill-run-out").innerHTML = (s.title ? `<p><strong>${escapeHtml(s.title)}</strong><br>${escapeHtml(
           `${s.sections} sections · ${s.words} words · ${chk.cited} references cited · ${s.llm_calls} model calls (${s.model})`)}</p>` : "")
-          + (r.outputs || []).map((o) => `<a class="btn chip" href="/api/skill-runs/${encodeURIComponent(run.id)}/file?name=${encodeURIComponent(o.name)}" download>⬇ ${escapeHtml(o.name)}</a>`).join(" ");
+          + (r.outputs || []).map((o) => `<a class="btn chip" href="/api/skill-runs/${encodeURIComponent(runId)}/file?name=${encodeURIComponent(o.name)}" download>⬇ ${escapeHtml(o.name)}</a>`).join(" ");
         if (r.status !== "done") card.classList.add("error");
         return;
       }
@@ -7133,6 +7152,7 @@ function readSSE(url, handlers) {
             if (event === "heal" && handlers.onHeal) handlers.onHeal(payload);
             if (event === "token" && handlers.onToken) handlers.onToken(payload.text || "");
             if (event === "tool" && handlers.onTool) handlers.onTool(payload);
+            if (event === "skill_run" && payload.run_id) watchSkillRun(payload);  // started by the Hub agent
             if (event === "orchestration_plan" && handlers.onOrchestrationPlan) handlers.onOrchestrationPlan(payload);
             if ((event === "subagent_status" || event === "subagent_update") && handlers.onSubagentStatus) handlers.onSubagentStatus(payload);
             if (event === "subagent_done" && handlers.onSubagentDone) handlers.onSubagentDone(payload);

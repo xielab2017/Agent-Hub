@@ -1,0 +1,77 @@
+name: Hub agent check (any configured API acts as an agent)
+
+# Drives Agent Hub's UI with Playwright (scripts/hub_agent_demo.py). The only model is MiniMax-M3 from the
+# MINIMAX_KEY secret — no Claude Code / Codex / OpenClaw. Three plain-language requests (no slash commands):
+# a literature question (→ pubmed_search), "写一篇综述（小规模试跑）" (→ run_skill literature-review) and a
+# workspace question (→ list_files / read_file). Screenshots are pushed about every 90 s
+# (outputs/hub_agent_demo/screens/).
+# Trigger: "[hub-agent]" in the commit SUBJECT line, or manual.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["**"]
+
+permissions:
+  contents: write
+
+jobs:
+  hub-agent:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[hub-agent]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    concurrency:
+      group: hub-agent-check-${{ github.ref }}
+      cancel-in-progress: false
+    steps:
+      - name: Mode
+        env:
+          MSG: ${{ github.event.head_commit.message }}
+        run: |
+          SUBJECT=$(printf '%s\n' "$MSG" | head -n 1)
+          RUN=false
+          case "$SUBJECT" in *"[hub-agent]"*) RUN=true;; esac
+          [ "${{ github.event_name }}" = workflow_dispatch ] && RUN=true
+          echo "RUN=$RUN ($SUBJECT)"; echo "RUN=$RUN" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v4
+        if: env.RUN == 'true'
+      - uses: actions/setup-python@v5
+        if: env.RUN == 'true'
+        with:
+          python-version: "3.12"
+      - name: Install
+        if: env.RUN == 'true'
+        run: |
+          python -m pip install --upgrade pip pyyaml python-docx playwright pytest
+          python -m playwright install --with-deps chromium
+      - name: Tests
+        if: env.RUN == 'true'
+        run: python -m pytest -q tests/test_hub_agent.py tests/test_skill_runner.py 2>&1 | tail -3
+      - name: UI demo (live screenshots)
+        if: env.RUN == 'true'
+        env:
+          MINIMAX_KEY: ${{ secrets.MINIMAX_KEY }}
+        run: |
+          git config user.name "agent-hub-bot"
+          git config user.email "agent-hub-bot@users.noreply.github.com"
+          mkdir -p outputs/hub_agent_demo
+          scripts/push_loop.sh outputs/hub_agent_demo 90 > /dev/null 2>&1 &
+          echo $! > /tmp/push_loop.pid
+          set -o pipefail
+          python scripts/hub_agent_demo.py --out outputs/hub_agent_demo 2>&1 | tee outputs/hub_agent_demo/demo-log.txt
+      - name: Commit outputs
+        if: always() && env.RUN == 'true'
+        run: |
+          kill "$(cat /tmp/push_loop.pid 2>/dev/null)" 2>/dev/null || true
+          sleep 2
+          git rebase --abort 2>/dev/null || true
+          git add -f outputs/hub_agent_demo
+          git diff --cached --quiet || git commit -m "Hub agent check outputs (run ${{ github.run_id }})"
+          git fetch -q origin "${{ github.ref_name }}"
+          [ -z "$(git log --oneline "origin/${{ github.ref_name }}..HEAD")" ] && exit 0
+          for i in 1 2 3; do
+            git pull --rebase -X theirs origin "${{ github.ref_name }}" && git push origin "HEAD:${{ github.ref_name }}" && exit 0
+            git rebase --abort 2>/dev/null || true
+            sleep 5
+          done
+          echo "::error::could not push the outputs"; exit 1
