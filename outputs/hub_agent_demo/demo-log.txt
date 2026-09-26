@@ -1,13 +1,13 @@
-[01:35:24] hub A: ['chat mode: agent (Hub agent)']
-[01:35:24] hub A up at http://127.0.0.1:8765 (state /tmp/agenthub-A-jiz4pr_e)
-[01:35:27] screenshot 001_A_home.png
-[01:35:31] screenshot 002_A_pubmed-running.png
-[01:36:11] screenshot 003_A_pubmed-answer.png
-[01:36:15] screenshot 004_A_skill-running.png
-[01:36:18] screenshot 005_A_skill-answer.png
-[01:36:21] screenshot 006_A_files-running.png
-[01:36:23] screenshot 007_A_files-answer.png
+[01:39:12] hub A: ['chat mode: agent (Hub agent)']
+[01:39:13] hub A up at http://127.0.0.1:8765 (state /tmp/agenthub-A-e5g8qw2e)
+[01:39:16] screenshot 008_A_home.png
+[01:39:20] screenshot 009_A_pubmed-running.png
+[01:39:56] screenshot 010_A_pubmed-answer.png
+[01:40:00] screenshot 011_A_skill-running.png
+[01:40:05] screenshot 012_A_skill-answer.png
+[01:40:09] screenshot 013_A_files-running.png
+[01:40:20] screenshot 014_A_files-answer.png
 pubmed  engine=hub-agent tools=['pubmed_search', 'pubmed_search', 'pubmed_search', 'pubmed_search'] ok=True
-skill   engine=hub-agent tools=[] ok=False
-files   engine=hub-agent tools=[] ok=False
-RESULT: CHECK
+skill   engine=hub-agent tools=['run_skill', 'run_skill'] ok=True
+files   engine=hub-agent tools=['read_file', 'list_files', 'read_file'] ok=True
+RESULT: PASS
