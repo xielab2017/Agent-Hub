@@ -18,3 +18,16 @@
 - 2026-09-26 01:15:27 UTC — `018_A_codex-signed-in.png` — Codex signed in
 - 2026-09-26 01:15:32 UTC — `019_A_chat-claude-code.png` — chat through claude-code: streamed reply + tool use
 - 2026-09-26 01:15:36 UTC — `020_A_chat-codex.png` — chat through codex: streamed reply + tool use
+- 2026-09-26 06:06:25 UTC — `021_A_connections.png` — 多模型 API: vendors connected side by side + tier routing test
+- 2026-09-26 06:06:25 UTC — `022_A_vendor-cards.png` — vendor cards: own key (masked), endpoint, TLS, test status
+- 2026-09-26 06:06:29 UTC — `023_A_office-chat.png` — office-tier chat answered by MiniMax-M3 (hybrid routing)
+- 2026-09-26 06:06:31 UTC — `024_A_claws-agents.png` — Claws: Claude Code and Codex rows with sign-in controls
+- 2026-09-26 06:06:34 UTC — `025_A_claude-link.png` — Claude Code: external sign-in link shown, code box ready
+- 2026-09-26 06:06:35 UTC — `026_A_claude-signed-in.png` — Claude Code signed in — token stored by Agent Hub, never shown
+- 2026-09-26 06:06:36 UTC — `027_A_codex-device.png` — Codex: device-code sign-in (link + one-time code)
+- 2026-09-26 06:06:40 UTC — `028_A_codex-signed-in.png` — Codex signed in
+- 2026-09-26 06:06:42 UTC — `029_A_cursor-link.png` — Cursor: external sign-in link (cursor-agent login)
+- 2026-09-26 06:06:45 UTC — `030_A_cursor-signed-in.png` — Cursor signed in (account shown by cursor-agent status)
+- 2026-09-26 06:06:50 UTC — `031_A_chat-claude-code.png` — chat through claude-code: streamed reply + tool use
+- 2026-09-26 06:06:55 UTC — `032_A_chat-codex.png` — chat through codex: streamed reply + tool use
+- 2026-09-26 06:06:59 UTC — `033_A_chat-cursor.png` — chat through cursor: streamed reply + tool use

@@ -1,2 +1,3 @@
 claude-code 2.1.283 (Claude Code) missing: none
 codex codex-cli 0.157.1 missing: none
+cursor 2026.09.26-dd393fe missing: none

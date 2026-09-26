@@ -1,13 +1,16 @@
-[01:15:04] hub A: ['backend: stub http://127.0.0.1:9911/v1']
-[01:15:04] hub A up at http://127.0.0.1:8765 (state /tmp/agenthub-A-7oiak43k)
-[01:15:12] screenshot 011_A_connections.png
-[01:15:12] screenshot 012_A_vendor-cards.png
-[01:15:16] screenshot 013_A_office-chat.png
-[01:15:18] screenshot 014_A_claws-agents.png
-[01:15:21] screenshot 015_A_claude-link.png
-[01:15:22] screenshot 016_A_claude-signed-in.png
-[01:15:24] screenshot 017_A_codex-device.png
-[01:15:27] screenshot 018_A_codex-signed-in.png
-[01:15:32] screenshot 019_A_chat-claude-code.png
-[01:15:36] screenshot 020_A_chat-codex.png
+[06:06:18] hub A: ['backend: stub http://127.0.0.1:9911/v1']
+[06:06:18] hub A up at http://127.0.0.1:8765 (state /tmp/agenthub-A-v1sv2qu2)
+[06:06:25] screenshot 021_A_connections.png
+[06:06:25] screenshot 022_A_vendor-cards.png
+[06:06:29] screenshot 023_A_office-chat.png
+[06:06:31] screenshot 024_A_claws-agents.png
+[06:06:34] screenshot 025_A_claude-link.png
+[06:06:35] screenshot 026_A_claude-signed-in.png
+[06:06:36] screenshot 027_A_codex-device.png
+[06:06:40] screenshot 028_A_codex-signed-in.png
+[06:06:42] screenshot 029_A_cursor-link.png
+[06:06:45] screenshot 030_A_cursor-signed-in.png
+[06:06:50] screenshot 031_A_chat-claude-code.png
+[06:06:55] screenshot 032_A_chat-codex.png
+[06:06:59] screenshot 033_A_chat-cursor.png
 RESULT: PASS
