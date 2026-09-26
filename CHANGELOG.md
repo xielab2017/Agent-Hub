@@ -14,6 +14,14 @@
   the run ends as **stopped**, not failed, keeping the files it made so far (evidence cards, drafts) for
   download. A run left "running" by a Hub restart can be closed the same way. In agent chat "停止刚才的综述"
   stops the chat's running skill (tool `stop_skill`, only when the user asks to stop).
+- **Cursor as a third external agent (Claws).** Runtime `cursor` drives the official Cursor CLI (`cursor-agent`,
+  also installed as `agent`) headless: `-p … --output-format stream-json --stream-partial-output --trust
+  --workspace <Hub workspace>`, live text and tool steps, per-session `--resume`. Cursor's print mode can write
+  and run shell commands by default, so read-only (the default) passes `--mode ask`; workspace-write runs
+  without it; the Hub never passes `--force` / `--yolo`. Sign-in: **外部链接登录** (`cursor-agent login` with
+  `NO_OPEN_BROWSER`, the link shown in the Claws card), or a Cursor API key (`CURSOR_API_KEY`, stored by the
+  Hub); status from `cursor-agent status --format json`. Flags were checked against the real CLI's `--help`
+  (2026.09.26) on a GitHub runner; "Agents check" re-checks them on every run.
 - **Double-click start / stop scripts.** Next to each start launcher there is now a stop launcher:
   `Stop Agent Hub.command` (macOS / Linux, runs `ctl.sh stop` and confirms the page is gone), `stop-agent-hub.bat`
   (Windows: the PID file's process tree plus anything listening on the Hub port) and `stop.sh`. Fixed in

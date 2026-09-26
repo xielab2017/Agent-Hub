@@ -61,7 +61,7 @@ def close_control(page) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--out", default=str(ROOT / "outputs" / "agents_demo"))
-    ap.add_argument("--fakes", default="", help="directory with fake claude / codex CLIs to put first on PATH")
+    ap.add_argument("--fakes", default="", help="directory with fake claude / codex / cursor-agent CLIs to put first on PATH")
     args = ap.parse_args()
     out = Path(args.out).resolve()
     out.mkdir(parents=True, exist_ok=True)
@@ -138,8 +138,22 @@ def main() -> int:
             shots.take(page, "A", "codex-signed-in", note="Codex signed in")
             report["steps"].append({"step": "codex-auth", **api(hub, "/api/runtimes/codex/auth")})
 
+            # ── 3b. Cursor: external-link login ─────────────────────────
+            ubox = page.locator('.agent-login[data-rid="cursor"]')
+            ubox.scroll_into_view_if_needed()
+            ubox.locator('[data-login="link"]').click()
+            page.wait_for_selector('.agent-login[data-rid="cursor"] .agent-login-url', timeout=30000)
+            ubox.scroll_into_view_if_needed()
+            shots.take(page, "A", "cursor-link", note="Cursor: external sign-in link (cursor-agent login)")
+            page.wait_for_function("""() => /已登录|signed in/.test(document.querySelector('.agent-login[data-rid="cursor"] .agent-login-head')?.textContent || '')""",
+                                   timeout=40000)
+            ubox.scroll_into_view_if_needed()
+            shots.take(page, "A", "cursor-signed-in", note="Cursor signed in (account shown by cursor-agent status)")
+            report["steps"].append({"step": "cursor-auth", **api(hub, "/api/runtimes/cursor/auth")})
+
             # ── 4. chat through each agent ──────────────────────────────
-            for rid, text in (("claude-code", "请读一下工作区并总结项目结构"), ("codex", "列出工作区里的文件")):
+            for rid, text in (("claude-code", "请读一下工作区并总结项目结构"), ("codex", "列出工作区里的文件"),
+                              ("cursor", "读一下 notes.md 并总结")):
                 api(hub, "/api/runtimes/connect", {"runtime": rid})
                 close_control(page)
                 page.reload(wait_until="domcontentloaded")
@@ -158,7 +172,8 @@ def main() -> int:
         hub.stop()
         stub.terminate()
         (out / "demo.json").write_text(json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8")
-    ok = all(s.get("reply", "x") for s in report["steps"]) and any(s["step"] == "chat-codex" for s in report["steps"])
+    ok = all(s.get("reply", "x") for s in report["steps"]) and all(
+        any(s["step"] == f"chat-{rid}" for s in report["steps"]) for rid in ("codex", "cursor"))
     print("RESULT:", "PASS" if ok else "CHECK", flush=True)
     return 0 if ok else 1
 

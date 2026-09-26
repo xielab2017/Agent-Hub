@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+"""Fake Cursor CLI for tests: --help (the real 2026.09 text), login (link), status, logout, -p stream-json."""
+import json, os, sys, time, uuid
+from pathlib import Path
+args = sys.argv[1:]
+home = Path.home() / ".cursor"
+log = os.environ.get("FAKE_AGENT_LOG")
+if log:
+    with open(log, "a") as fh:
+        fh.write(json.dumps({"argv": args, "cursor_api_key": bool(os.environ.get("CURSOR_API_KEY")),
+                             "no_open_browser": os.environ.get("NO_OPEN_BROWSER"), "cwd": os.getcwd()}) + "\n")
+if args[:1] in (["--version"], ["-v"]):
+    print("2026.09.26-fake"); sys.exit(0)
+if args[:1] in (["--help"], ["-h"]):
+    print((Path(__file__).parent / "cursor-agent.help.txt").read_text()); sys.exit(0)
+if args[:1] in (["status"], ["whoami"]):
+    if os.environ.get("CURSOR_API_KEY") or (home / "auth.json").exists():
+        print(json.dumps({"isAuthenticated": True, "email": "user@example.org"}) if "json" in args else "Logged in as user@example.org")
+        sys.exit(0)
+    print(json.dumps({"isAuthenticated": False}) if "json" in args else "Not logged in"); sys.exit(0)
+if args[:1] == ["logout"]:
+    (home / "auth.json").unlink(missing_ok=True); print("Logged out"); sys.exit(0)
+if args[:1] == ["login"]:
+    print("Starting login process...\nAuthenticating with Cursor...\nWaiting for browser authentication...")
+    print("Open a browser and navigate to this link: https://cursor.com/loginDeepControl?challenge=fake&uuid=1234&mode=login", flush=True)
+    time.sleep(float(os.environ.get("FAKE_LOGIN_WAIT", "1")))
+    home.mkdir(parents=True, exist_ok=True)
+    (home / "auth.json").write_text(json.dumps({"token": "fake"}))
+    print("Login successful!"); sys.exit(0)
+if "-p" in args or "--print" in args:
+    if not (os.environ.get("CURSOR_API_KEY") or (home / "auth.json").exists()):
+        print("Error: Authentication required. Please run 'agent login' first, or set CURSOR_API_KEY environment variable.")
+        sys.exit(1)
+    prompt = args[args.index("-p") + 1] if "-p" in args else args[args.index("--print") + 1]
+    sid = args[args.index("--resume") + 1] if "--resume" in args else str(uuid.uuid4())
+    mode = args[args.index("--mode") + 1] if "--mode" in args else "agent"
+    out = lambda o: print(json.dumps({**o, "session_id": sid}), flush=True)
+    out({"type": "system", "subtype": "init", "apiKeySource": "login", "cwd": os.getcwd(), "model": "Auto",
+         "permissionMode": "default"})
+    out({"type": "user", "message": {"role": "user", "content": [{"type": "text", "text": prompt}]}})
+    out({"type": "tool_call", "subtype": "started", "call_id": "c1",
+         "tool_call": {"readToolCall": {"args": {"path": "notes.md"}}}})
+    out({"type": "tool_call", "subtype": "completed", "call_id": "c1",
+         "tool_call": {"readToolCall": {"args": {"path": "notes.md"}, "result": {"success": {"content": "..."}}}}})
+    reply = f"Fake Cursor ({mode} mode) read notes.md. You said: {prompt[-40:]}"
+    for i in range(0, len(reply), 12):  # --stream-partial-output: text deltas …
+        out({"type": "assistant", "message": {"role": "assistant", "content": [{"type": "text", "text": reply[i:i + 12]}]}})
+    out({"type": "assistant", "message": {"role": "assistant", "content": [{"type": "text", "text": reply}]}})  # … then the whole
+    out({"type": "result", "subtype": "success", "is_error": False, "duration_ms": 1234, "result": reply,
+         "request_id": "r1"})
+    sys.exit(0)
+print("unsupported", args, file=sys.stderr); sys.exit(2)

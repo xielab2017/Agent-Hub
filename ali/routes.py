@@ -430,7 +430,7 @@ def handle_get(handler) -> None:
         return _json(handler, 200, {"ok": True, "lanes": lanes, "count": len(lanes)})
 
     # vendor agent CLIs (Claude Code / Codex): sign-in status and login jobs
-    if len(parts) == 4 and parts[:2] == ["api", "runtimes"] and parts[3] == "auth" and parts[2] in ("claude-code", "codex"):
+    if len(parts) == 4 and parts[:2] == ["api", "runtimes"] and parts[3] == "auth" and parts[2] in ("claude-code", "codex", "cursor"):
         return _json(handler, 200, agent_cli.auth_status(parts[2]))
     if len(parts) == 4 and parts[:3] == ["api", "runtimes", "login"]:
         try:
@@ -1393,7 +1393,7 @@ def handle_post(handler) -> None:
         except ValueError as exc:
             return _json(handler, 400, {"error": str(exc)})
 
-    if len(parts) == 4 and parts[:2] == ["api", "runtimes"] and parts[2] in ("claude-code", "codex") \
+    if len(parts) == 4 and parts[:2] == ["api", "runtimes"] and parts[2] in ("claude-code", "codex", "cursor") \
             and parts[3] in ("login", "logout"):
         body = _read_json(handler)
         try:

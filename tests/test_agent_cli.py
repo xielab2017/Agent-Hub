@@ -143,3 +143,56 @@ def test_missing_cli_and_flag_drift_are_clear_errors():
         with mock.patch.object(agent_cli, "cli_help", lambda rid, b: "Usage: codex exec\n  --json"):
             with pytest.raises(RuntimeError, match="lacks --sandbox"):
                 agent_cli.run("codex", "hi")
+
+
+def test_cursor_flags_match_the_real_cli_help():
+    """The saved help is the real Cursor CLI 2026.09 --help (workflow cursor-cli-probe on a GitHub runner)."""
+    real = (FAKES / "cursor-agent.help.txt").read_text()
+    assert agent_cli.check_flags("cursor", help_text=real) == []
+    assert agent_cli.check_flags("cursor", help_text="Usage: agent\n  -p, --print\n  --output-format") != []
+
+
+def test_cursor_link_login_status_chat_resume_and_read_only_mode():
+    from ali.settings import load_campus_config, save_campus_config
+
+    with env() as (t, log):
+        with mock.patch.dict(os.environ, {"CURSOR_API_KEY": "shell-key-must-not-leak"}):
+            assert not agent_cli.auth_status("cursor")["logged_in"]
+            job = wait(agent_cli.start_login("cursor", "link")["id"])
+            assert job["status"] == "done" and job["url"].startswith("https://cursor.com/loginDeepControl")
+            st = agent_cli.auth_status("cursor")
+            assert st["logged_in"] and "user@example.org" in st["detail"]
+            events = []
+            r = agent_cli.run("cursor", "summarise notes.md", hub_session="c1", workspace=str(t / "ws"),
+                              system="HUB CONTEXT", on_event=lambda k, d: events.append((k, d)))
+            assert r["text"].startswith("Fake Cursor (ask mode) read notes.md.") and r["session_id"]
+            assert r["text"].endswith("summarise notes.md") and r["text"].count("Fake Cursor") == 1
+            assert ("tool", {"name": "read", "preview": '{"path": "notes.md"}'}) in events
+            assert sum(1 for k, _d in events if k == "token") >= 3  # streamed as deltas, the full repeat dropped
+            cfg = load_campus_config()
+            cfg.setdefault("ali", {})["agent_permissions"] = "workspace-write"
+            save_campus_config(cfg)
+            r2 = agent_cli.run("cursor", "edit it", hub_session="c1", workspace=str(t / "ws"))
+            assert r2["resumed"] and "(agent mode)" in r2["text"]
+        runs = [x for x in calls(log) if "-p" in x["argv"]]
+        a1, a2 = runs[0]["argv"], runs[1]["argv"]
+        assert a1[a1.index("--mode") + 1] == "ask" and a1[a1.index("--workspace") + 1] == str(t / "ws")
+        assert a1[a1.index("-p") + 1].startswith("HUB CONTEXT")  # the Hub context rides in the first prompt
+        assert "--mode" not in a2 and a2[a2.index("--resume") + 1] == r["session_id"]
+        for a in (a1, a2):  # never run-everything
+            assert "--force" not in a and "-f" not in a and "--yolo" not in a
+        assert all(not x["cursor_api_key"] for x in runs)  # the shell's key did not override the Hub login
+        assert all(x["no_open_browser"] == "1" for x in calls(log) if x["argv"][:1] == ["login"])
+        assert agent_cli.logout("cursor")["logged_in"] is False
+
+
+def test_cursor_api_key_login_and_clear_auth_error():
+    with env() as (_t, _log):
+        with pytest.raises(ValueError):
+            agent_cli.start_login("cursor", "device")
+        r = agent_cli.run("cursor", "hi")
+        assert "Authentication required" in r["error"] or "exited" in r["error"]
+        agent_cli.start_login("cursor", "api_key", api_key="key_cursor_test_000000000000")
+        assert agent_cli.auth_mode("cursor") == "api_key" and agent_cli.build_env("cursor")["CURSOR_API_KEY"]
+        assert agent_cli.auth_status("cursor")["detail"] == "Cursor API key"
+        assert agent_cli.run("cursor", "hi")["text"].startswith("Fake Cursor")

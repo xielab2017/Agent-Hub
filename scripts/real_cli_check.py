@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Check the real Claude Code / Codex CLIs against the flags ali/agent_cli.py uses (CLI drift guard).
+"""Check the real Claude Code / Codex / Cursor CLIs against the flags ali/agent_cli.py uses (CLI drift guard).
 
-    python scripts/real_cli_check.py --claude "$(npm prefix -g)/bin/claude" --codex "$(npm prefix -g)/bin/codex"
+    python scripts/real_cli_check.py --claude "$(npm prefix -g)/bin/claude" --codex "$(npm prefix -g)/bin/codex" \
+        --cursor ~/.local/bin/cursor-agent
 """
 
 from __future__ import annotations
@@ -28,16 +29,21 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--claude", required=True)
     ap.add_argument("--codex", required=True)
+    ap.add_argument("--cursor", default="", help="cursor-agent binary (optional)")
     ap.add_argument("--out", default=str(ROOT / "outputs" / "agents_demo" / "real-cli-check.json"))
     a = ap.parse_args()
     from ali import agent_cli
 
     report = {}
-    for rid, binpath in (("claude-code", a.claude), ("codex", a.codex)):
+    for rid, binpath in (("claude-code", a.claude), ("codex", a.codex), ("cursor", a.cursor)):
+        if not binpath:
+            continue
         version = run([binpath, "--version"]).strip().splitlines()[:1]
         help_text = agent_cli.cli_help(rid, binpath)
-        extra = run([binpath, "exec", "resume", "--help"]) if rid == "codex" else run([binpath, "setup-token", "--help"])
-        login = run([binpath, "login", "--help"]) if rid == "codex" else ""
+        extra = {"codex": [binpath, "exec", "resume", "--help"], "claude-code": [binpath, "setup-token", "--help"],
+                 "cursor": [binpath, "status", "--help"]}[rid]
+        extra = run(extra)
+        login = run([binpath, "login", "--help"]) if rid in ("codex", "cursor") else ""
         report[rid] = {"bin": binpath, "version": version[0] if version else "", "missing": agent_cli.check_flags(
             rid, help_text=help_text), "help": help_text[:30000], "extra_help": extra[:2500], "login_help": login[:2500]}
         print(rid, report[rid]["version"], "missing:", report[rid]["missing"] or "none")

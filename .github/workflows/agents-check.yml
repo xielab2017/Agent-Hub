@@ -1,6 +1,6 @@
-name: Agents check (multi-model + Claude Code / Codex)
+name: Agents check (multi-model + Claude Code / Codex / Cursor)
 
-# 1. Installs the real Claude Code and OpenAI Codex CLIs and checks their --help against the flags
+# 1. Installs the real Claude Code, OpenAI Codex and Cursor CLIs and checks their --help against the flags
 #    ali/agent_cli.py uses (CLI drift guard) — no account is needed for that.
 # 2. Drives Agent Hub's UI with Playwright (scripts/agents_demo.py): 多模型 API (MiniMax from the MINIMAX_KEY
 #    secret + a stub campus endpoint, tier routing), Claude Code external-link sign-in, Codex device-code
@@ -56,13 +56,17 @@ jobs:
             for i in 1 2 3; do npm install -g "$name" && ok=true && break; sleep 15; done
             $ok || npm install -g "$name@$known"
           done
+          # Cursor CLI: official install script (installs ~/.local/bin/cursor-agent)
+          for i in 1 2 3; do curl https://cursor.com/install -fsS | bash && break; sleep 15; done
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - name: Real CLI flag check
         if: env.RUN == 'true'
         continue-on-error: true  # a drift report must not stop the UI demo; it is committed with the outputs
         run: |
           mkdir -p outputs/agents_demo
           BIN="$(npm prefix -g)/bin"
-          python scripts/real_cli_check.py --claude "$BIN/claude" --codex "$BIN/codex" 2>&1 | tee outputs/agents_demo/real-cli-check.txt
+          python scripts/real_cli_check.py --claude "$BIN/claude" --codex "$BIN/codex" \
+            --cursor "$HOME/.local/bin/cursor-agent" 2>&1 | tee outputs/agents_demo/real-cli-check.txt
       - name: Tests
         if: env.RUN == 'true'
         run: python -m pytest -q tests/test_agent_cli.py tests/test_connections.py 2>&1 | tail -3

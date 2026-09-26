@@ -1,4 +1,4 @@
-"""Claude Code and OpenAI Codex as Agent Hub agents (runtimes ``claude-code`` / ``codex``).
+"""Claude Code, OpenAI Codex and Cursor as Agent Hub agents (runtimes ``claude-code`` / ``codex`` / ``cursor``).
 
 Chat turns
   ``run(rid, prompt, …)`` spawns the official CLI headless and streams its JSON events:
@@ -16,6 +16,9 @@ Login (external link)
   ``claude-code-oauth``), removed from all output, and injected as ``CLAUDE_CODE_OAUTH_TOKEN``.
   Codex: ``codex login`` (browser) / ``codex login --device-auth`` (URL + code) / ``--with-api-key`` (stdin);
   the CLI keeps its own credentials in ``~/.codex``.
+  Cursor: ``cursor-agent login`` with ``NO_OPEN_BROWSER`` prints the sign-in link; a Cursor API key is injected
+  as ``CURSOR_API_KEY``.  Cursor's print mode can write and run shell commands by default, so read-only runs
+  pass ``--mode ask``; the Hub never passes ``--force`` / ``--yolo`` (run everything).
 """
 
 from __future__ import annotations
@@ -35,7 +38,7 @@ from .config import STATE_DIR
 
 SESSIONS_FILE = STATE_DIR / "agent-sessions.json"
 OAUTH_SLOT = "claude-code-oauth"
-API_SLOTS = {"claude-code": "claude-code-api-key", "codex": "codex-api-key"}
+API_SLOTS = {"claude-code": "claude-code-api-key", "codex": "codex-api-key", "cursor": "cursor-api-key"}
 READ_TOOLS = "Read,Grep,Glob,WebSearch,WebFetch"
 WRITE_TOOLS = "Read,Grep,Glob,Edit,Write,MultiEdit,WebSearch,WebFetch"
 # flags each adapter needs; any one of the alternatives must appear in the CLI's --help
@@ -44,8 +47,11 @@ NEEDED_FLAGS = {
                     ("--allowedTools", "--allowed-tools"), ("--verbose",), ("--include-partial-messages",),
                     ("--append-system-prompt",), ("--model",)],
     "codex": [("--json",), ("--sandbox", "-s"), ("--skip-git-repo-check",)],
+    "cursor": [("--print", "-p"), ("--output-format",), ("--stream-partial-output",), ("--resume",), ("--mode",),
+               ("--trust",), ("--workspace",), ("--model",)],
 }
-NEEDED_VALUES = {"claude-code": ["dontAsk", "acceptEdits"], "codex": ["read-only", "workspace-write"]}
+NEEDED_VALUES = {"claude-code": ["dontAsk", "acceptEdits"], "codex": ["read-only", "workspace-write"],
+                 "cursor": ["stream-json", "ask"]}
 _ANSI = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]|\x1b\][^\x07]*\x07|\r")
 _URL = re.compile(r"https://[^\s'\"<>\x1b]+")
 _DEVICE_CODE = re.compile(r"\b([A-Z0-9]{4}-[A-Z0-9]{4,5})\b")
@@ -57,18 +63,20 @@ _LOCK = threading.Lock()
 
 
 def bin_name(rid: str) -> str:
-    return {"claude-code": "claude", "codex": "codex"}[rid]
+    return {"claude-code": "claude", "codex": "codex", "cursor": "cursor-agent"}[rid]
 
 
 def find_bin(rid: str) -> str:
-    name = bin_name(rid)
-    found = shutil.which(name)
-    if found:
-        return found
-    for cand in (Path.home() / ".local" / "bin" / name, Path.home() / ".claude" / "local" / name,
-                 Path.home() / ".npm-global" / "bin" / name):
-        if cand.exists():
-            return str(cand)
+    names = [bin_name(rid)] + (["agent"] if rid == "cursor" else [])  # Cursor installs both names
+    for name in names:
+        found = shutil.which(name)
+        if found and (name != "agent" or "cursor" in os.path.realpath(found)):
+            return found
+    for name in names[:1]:
+        for cand in (Path.home() / ".local" / "bin" / name, Path.home() / ".claude" / "local" / name,
+                     Path.home() / ".npm-global" / "bin" / name):
+            if cand.exists():
+                return str(cand)
     return ""
 
 
@@ -103,6 +111,13 @@ def build_env(rid: str) -> dict[str, str]:
             env["CLAUDE_CODE_OAUTH_TOKEN"] = _secret(OAUTH_SLOT)
         elif mode == "api_key" and _secret(API_SLOTS[rid]):
             env["ANTHROPIC_API_KEY"] = _secret(API_SLOTS[rid])
+    elif rid == "cursor":
+        if mode != "env":  # a shell key / endpoint must not override the Cursor login chosen in the Hub
+            for k in ("CURSOR_API_KEY", "CURSOR_API_ENDPOINT"):
+                env.pop(k, None)
+        if mode == "api_key" and _secret(API_SLOTS[rid]):
+            env["CURSOR_API_KEY"] = _secret(API_SLOTS[rid])
+        env["NO_OPEN_BROWSER"] = "1"  # the Hub shows the sign-in link itself
     else:
         if mode != "env":
             for k in ("OPENAI_API_KEY", "OPENAI_BASE_URL", "CODEX_API_KEY"):
@@ -134,7 +149,7 @@ def cli_help(rid: str, binpath: str) -> str:
     hit = _HELP_CACHE.get(key)
     if hit and hit[0] == mtime:
         return hit[1]
-    cmd = [binpath, "--help"] if rid == "claude-code" else [binpath, "exec", "--help"]
+    cmd = [binpath, "exec", "--help"] if rid == "codex" else [binpath, "--help"]
     try:
         out = subprocess.run(cmd, capture_output=True, text=True, timeout=30, env=build_env(rid))
         text = (out.stdout or "") + (out.stderr or "")
@@ -150,7 +165,7 @@ def check_flags(rid: str, binpath: str = "", help_text: str | None = None) -> li
     missing = [alts[0] for alts in NEEDED_FLAGS[rid]
                if not any(re.search(r"(?<![\w-])" + re.escape(a) + r"(?![\w-])", text) for a in alts)]
     # permission-mode values the adapter passes must be offered by this version
-    opt = "--permission-mode" if rid == "claude-code" else "--sandbox"
+    opt = {"claude-code": "--permission-mode", "codex": "--sandbox", "cursor": "--output-format / --mode"}[rid]
     missing += [f"{opt} {v}" for v in NEEDED_VALUES.get(rid, []) if not re.search(rf"\b{v}\b", text)]
     return missing
 
@@ -196,6 +211,19 @@ def build_command(rid: str, binpath: str, prompt: str, *, resume: str = "", mode
             cmd += ["--model", model]
         if system:
             cmd += ["--append-system-prompt", system]
+        return cmd
+    if rid == "cursor":
+        # print mode has write + shell tools by default: read-only asks for Q&A mode; never --force / --yolo
+        full = f"{system}\n\n{prompt}" if system and not resume else prompt
+        cmd = [binpath, "-p", full, "--output-format", "stream-json", "--stream-partial-output", "--trust"]
+        if workspace:
+            cmd += ["--workspace", workspace]
+        if level != "workspace-write":
+            cmd += ["--mode", "ask"]
+        if resume:
+            cmd += ["--resume", resume]
+        if model:
+            cmd += ["--model", model]
         return cmd
     opts = ["--json", "--skip-git-repo-check", "--sandbox",
             "workspace-write" if level == "workspace-write" else "read-only"]
@@ -276,6 +304,48 @@ def parse_codex_event(ev: dict[str, Any], st: dict[str, Any]) -> list[tuple[str,
     return out
 
 
+def parse_cursor_event(ev: dict[str, Any], st: dict[str, Any]) -> list[tuple[str, Any]]:
+    """Cursor ``--output-format stream-json`` (with ``--stream-partial-output``)."""
+    out: list[tuple[str, Any]] = []
+    t = ev.get("type")
+    sid = ev.get("session_id") or ev.get("chatId") or ev.get("chat_id")
+    if sid:
+        st["session_id"] = sid
+    if t == "system" and ev.get("subtype") == "init":
+        out.append(("meta", {"session_id": st.get("session_id"), "model": ev.get("model")}))
+    elif t == "assistant":
+        text = "".join(b.get("text") or "" for b in (ev.get("message") or {}).get("content") or []
+                       if isinstance(b, dict) and b.get("type") == "text")
+        if text:
+            # partial output sends deltas, then (in some versions) the whole message again: skip the repeat
+            seen = st.get("buf", "")
+            if seen and (text == seen or (len(text) > 40 and seen.endswith(text))):
+                return out
+            if seen and text.startswith(seen):  # cumulative snapshot → only the new part
+                text = text[len(seen):]
+            st["buf"] = seen + text
+            if text:
+                out.append(("token", text))
+    elif t == "tool_call":
+        call = ev.get("tool_call") or {}
+        kind = next(iter(call), "tool") if isinstance(call, dict) and call else "tool"
+        body = call.get(kind) if isinstance(call, dict) else {}
+        name = re.sub(r"ToolCall$", "", str(kind)) or "tool"
+        if ev.get("subtype") == "started":
+            out.append(("tool", {"name": name, "preview": _preview((body or {}).get("args") or body or {})}))
+        elif ev.get("subtype") == "completed":
+            res = (body or {}).get("result") or {}
+            if isinstance(res, dict) and res.get("error"):
+                out.append(("think", f"{name}: {_preview(res.get('error'))}"))
+    elif t == "result":
+        if ev.get("is_error") or ev.get("subtype") not in (None, "success"):
+            out.append(("error", str(ev.get("result") or ev.get("error") or "Cursor reported an error")))
+        elif ev.get("result") and not st.get("text_seen"):
+            out.append(("token", str(ev["result"])))
+        out.append(("meta", {"session_id": st.get("session_id"), "duration_ms": ev.get("duration_ms")}))
+    return out
+
+
 def run(rid: str, prompt: str, *, hub_session: str = "", workspace: str = "", model: str = "", system: str = "",
         on_event: Callable[[str, Any], None] | None = None, cancelled: Callable[[], bool] | None = None,
         timeout: float = 900.0, binpath: str = "") -> dict[str, Any]:
@@ -319,7 +389,7 @@ def run(rid: str, prompt: str, *, hub_session: str = "", workspace: str = "", mo
 
     threading.Thread(target=watchdog, daemon=True).start()
     threading.Thread(target=drain_err, daemon=True).start()
-    parse = parse_claude_event if rid == "claude-code" else parse_codex_event
+    parse = {"claude-code": parse_claude_event, "codex": parse_codex_event, "cursor": parse_cursor_event}[rid]
     for line in proc.stdout or []:
         line = line.strip()
         if not line.startswith("{"):
@@ -364,6 +434,10 @@ def login_command(rid: str, method: str, binpath: str) -> list[str]:
         if method not in ("link", "oauth"):
             raise ValueError("Claude Code signs in with the browser link (setup-token) or an API key")
         return [binpath, "setup-token"]
+    if rid == "cursor":
+        if method not in ("link", "oauth"):
+            raise ValueError("Cursor signs in with the browser link or a Cursor API key")
+        return [binpath, "login"]
     if method == "device":
         return [binpath, "login", "--device-auth"]
     if method == "link":
@@ -461,8 +535,8 @@ def start_login(rid: str, method: str = "link", *, api_key: str = "", binpath: s
                 os.close(job["_master"])
             except OSError:
                 pass
-        ok = rc == 0 and (job.get("token_saved") or rid == "codex")
-        if ok and rid == "codex":
+        ok = rc == 0 and (job.get("token_saved") or rid in ("codex", "cursor"))
+        if ok and rid in ("codex", "cursor"):
             set_mode("cli")
         job.update(status="done" if ok else "failed", finished_at=time.time(),
                    error="" if ok else (f"login exited with {rc}" if rc else "no token received"))
@@ -511,6 +585,28 @@ def auth_status(rid: str, *, binpath: str = "") -> dict[str, Any]:
             info.update(logged_in=True, detail="shell environment")
         elif (Path.home() / ".claude" / ".credentials.json").exists():
             info.update(logged_in=True, detail="Claude Code login (~/.claude)")
+    elif rid == "cursor":
+        if mode == "api_key" and _secret(API_SLOTS[rid]):
+            info.update(logged_in=True, detail="Cursor API key")
+        elif mode == "env" and os.environ.get("CURSOR_API_KEY"):
+            info.update(logged_in=True, detail="shell environment")
+        elif binpath:
+            try:
+                out = subprocess.run([binpath, "status", "--format", "json"], capture_output=True, text=True,
+                                     timeout=20, env=build_env(rid))
+                text = ((out.stdout or "") + (out.stderr or "")).strip()
+                try:
+                    data = json.loads(text[text.index("{"):]) if "{" in text else {}
+                except ValueError:
+                    data = {}
+                who = data.get("email") or data.get("userEmail") or data.get("user") or ""
+                logged = data.get("isAuthenticated", data.get("authenticated", data.get("loggedIn")))
+                if logged is None:
+                    logged = out.returncode == 0 and bool(text) and "not logged in" not in text.lower()
+                info["logged_in"] = bool(logged)
+                info["detail"] = (f"Cursor account {who}" if who else text.splitlines()[-1][:200]) if text else ""
+            except (OSError, subprocess.TimeoutExpired) as exc:
+                info["detail"] = str(exc)
     else:
         if mode == "api_key" and _secret(API_SLOTS[rid]):
             info.update(logged_in=True, detail="OpenAI API key")
@@ -537,7 +633,7 @@ def logout(rid: str, *, binpath: str = "") -> dict[str, Any]:
         set_api_key(OAUTH_SLOT, "")
     set_api_key(API_SLOTS[rid], "")
     binpath = binpath or find_bin(rid)
-    if rid == "codex" and binpath:
+    if rid in ("codex", "cursor") and binpath:
         try:
             subprocess.run([binpath, "logout"], capture_output=True, text=True, timeout=30, env=build_env(rid))
         except (OSError, subprocess.TimeoutExpired):

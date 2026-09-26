@@ -162,7 +162,7 @@ def get_ai_agent():
 
 
 _OPENCLAW_FAMILY = frozenset({"openclaw", "qqclaw", "aliyun_claw"})
-_AGENT_CLI = frozenset({"claude-code", "codex"})  # official vendor agent CLIs (ali/agent_cli.py)
+_AGENT_CLI = frozenset({"claude-code", "codex", "cursor"})  # official vendor agent CLIs (ali/agent_cli.py)
 
 
 def _resolve_hub_chat_mode(ali: dict[str, Any] | None) -> str:
@@ -2449,7 +2449,7 @@ def _agent_cli_reply(
     binpath = agent_cli.find_bin(rid) if rid in _AGENT_CLI else ""
     if not binpath:
         return False
-    label = "Claude Code" if rid == "claude-code" else "Codex"
+    label = {"claude-code": "Claude Code", "codex": "Codex", "cursor": "Cursor"}.get(rid, rid)
     _think(q, f"已接入 {label} · 官方 Agent CLI（权限：{agent_cli.permission_level()}）", kind="dispatch")
     _put(q, "meta", {"mode": rid, "engine": rid, "agent_mode": True, "bin": binpath})
     tools = route_info.setdefault("agent_tools", [])

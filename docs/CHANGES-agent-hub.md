@@ -58,5 +58,12 @@
 - 版本号统一为 5.5.0（`ali/__init__.py`、`ali/config.py`、`pyproject.toml`、README、`static/index.html` 的
   `?v=` 与版本标签），下载后界面显示新版本，浏览器不会沿用旧缓存；新增测试保证各处一致。
 
+## 9. Cursor 作为第三个外部 Agent（v5.5.0）
+
+- Claws 面板新增 Cursor：通过官方 Cursor CLI（`cursor-agent`）无界面运行，实时显示回答与工具步骤，同一会话自动续接。
+- 登录：「外部链接登录」（Hub 显示 Cursor 的授权链接，浏览器里用 Cursor 账号授权）或填 Cursor API key（由 Hub 保存，不显示）。
+- 权限：默认只读（Cursor 的 ask 模式，只回答、不改文件）；可改为「可写工作区」；Hub 从不使用 `--force` / `--yolo`（全部放行）。
+- 参数已对照真实 Cursor CLI（2026.09.26）的 `--help` 在 GitHub 上核对；「Agents check」每次运行都会重新核对。
+
 ## 安全
 - 所有 key / token 只存 `secrets.json`（0600），界面、日志、截图中遮挡；每次提交前做泄漏检查。

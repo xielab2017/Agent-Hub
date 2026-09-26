@@ -2047,8 +2047,8 @@ function renderEngineBadge(meta, routeInfo) {
   if (meta && meta.agent_mode) {
     if (engine === "hub-agent") {
       el.textContent = "Hub Agent";
-    } else if (engine === "claude-code" || engine === "codex") {
-      el.textContent = engine === "codex" ? "OpenAI Codex" : "Claude Code";
+    } else if (agentLabel(engine)) {
+      el.textContent = agentLabel(engine);
     } else if (mode.includes("openclaw") || engine === "openclaw") {
       el.textContent = t("engine.openclaw");
     } else {
@@ -2106,7 +2106,7 @@ function renderModeBanner(status) {
     : ` · ${escapeHtml(t("hubChat.agent"))}`;
   if (engine === "hermes" || engine === "hermes-cli" || engine === "openclaw" || agent.agent_mode) {
     const engLabel = engine === "openclaw" ? t("engine.openclaw")
-      : engine === "claude-code" ? "Claude Code" : engine === "codex" ? "OpenAI Codex"
+      : agentLabel(engine) ? agentLabel(engine)
       : engine === "hub-agent" ? "Hub Agent" : t("engine.hermes");
     el.innerHTML = `<strong>${escapeHtml(t("mode.agent"))}</strong> · ${escapeHtml(engLabel)}${hubBit}${clawBit || " · claw=<code>Hermes Agent</code>"}${autoBit}${soulBit}`;
   } else if (engine === "direct-llm" || agent.direct_llm) {
@@ -2131,8 +2131,8 @@ function renderAgent(status) {
   const hubMode = agent.hub_chat_mode || "agent";
   const engine = agent.chat_engine || "";
   if (engine === "hermes" || engine === "hermes-cli" || engine === "openclaw" || agent.agent_mode) {
-    const eng = engine === "openclaw" ? "OpenClaw" : engine === "claude-code" ? "Claude Code"
-      : engine === "codex" ? "OpenAI Codex" : engine === "hub-agent" ? "Hub Agent" : (clawName || "Hermes");
+    const eng = engine === "openclaw" ? "OpenClaw" : agentLabel(engine) ? agentLabel(engine)
+      : engine === "hub-agent" ? "Hub Agent" : (clawName || "Hermes");
     el.textContent = `${t("mode.agent")} · ${eng} · ${policy || "office"}`;
     el.className = "badge ok";
   } else if (agent.direct_llm || engine === "direct-llm") {
@@ -2503,6 +2503,10 @@ async function runSlashCommand(text, sessionId, fromInput) {
 }
 
 // ── Runnable skills (/skill, /skill-author) ────────────────────────────
+
+// the official vendor agent CLIs (ali/agent_cli.py) → display name; "" for other engines
+const AGENT_CLI_LABELS = { "claude-code": "Claude Code", codex: "OpenAI Codex", cursor: "Cursor" };
+function agentLabel(engine) { return AGENT_CLI_LABELS[engine] || ""; }
 
 function skillCard(title) {
   const empty = $("#empty-state");
@@ -3500,8 +3504,8 @@ function updateMessageElapsedMeta(assistantEl, route, elapsedMs) {
   if (!meta) return;
   const role = "Agent Hub";
   let routeBit = "";
-  if (route && (route.chat_engine === "claude-code" || route.chat_engine === "codex")) {
-    routeBit = ` · ${route.chat_engine === "codex" ? "OpenAI Codex" : "Claude Code"}`;
+  if (route && agentLabel(route.chat_engine)) {
+    routeBit = ` · ${agentLabel(route.chat_engine)}`;
   } else if (route && route.tier) {
     routeBit = ` · ${route.tier}/${route.route_key || ""}${route.model ? " · " + route.model : ""}`;
   }
@@ -5183,8 +5187,8 @@ function appendMessage(m, scroll = true) {
   if (m.id) div.dataset.mid = m.id;
   const role = m.role === "user" ? "You" : "Agent Hub";
   let route = "";
-  if (m.route && (m.route.chat_engine === "claude-code" || m.route.chat_engine === "codex")) {
-    route = ` · ${m.route.chat_engine === "codex" ? "OpenAI Codex" : "Claude Code"}`;  // answered by the vendor agent
+  if (m.route && agentLabel(m.route.chat_engine)) {
+    route = ` · ${agentLabel(m.route.chat_engine)}`;  // answered by the vendor agent
   } else if (m.route && m.route.tier) {
     route = ` · ${m.route.tier}/${m.route.route_key || ""}${m.route.model ? " · " + m.route.model : ""}`;
   }
@@ -8034,6 +8038,7 @@ async function mountAgentLogin(row, rid, langZh) {
     let body = { method };
     if (method === "api_key") {
       const key = prompt(rid === "claude-code" ? L("粘贴 Anthropic API key", "Paste an Anthropic API key")
+        : rid === "cursor" ? L("粘贴 Cursor API key（Cursor 设置 → Integrations / API keys）", "Paste a Cursor API key")
         : L("粘贴 OpenAI API key", "Paste an OpenAI API key"));
       if (!key) return;
       body.api_key = key.trim();
@@ -8211,7 +8216,7 @@ async function renderRuntimesPanel(langZh) {
           : `<button type="button" class="btn ghost chip" data-copy="${escapeHtml(r.id)}">${langZh ? "复制命令" : "Copy cmds"}</button>`}
       </div>`;
     list.appendChild(row);
-    if (r.id === "claude-code" || r.id === "codex") mountAgentLogin(row, r.id, langZh);
+    if (agentLabel(r.id)) mountAgentLogin(row, r.id, langZh);
   });
 
   $("#btn-runtime-set").onclick = async () => {

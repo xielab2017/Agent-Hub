@@ -283,9 +283,33 @@ RUNTIMES: list[dict[str, Any]] = [
             "note_en": "Chat runs through Codex (read-only sandbox by default; workspace-write can be enabled).",
         },
     },
+    {
+        "id": "cursor",
+        "family": "agent-cli",
+        "label": "Cursor",
+        "label_zh": "Cursor",
+        "desc": "Cursor's agent CLI (cursor-agent) — sign in with a Cursor account (browser link) or a Cursor API key.",
+        "desc_zh": "Cursor 官方 Agent CLI（cursor-agent）：用 Cursor 账号（浏览器授权链接）或 Cursor API key 登录。",
+        "homepage": "https://cursor.com/cli",
+        "docs": "https://cursor.com/docs/cli/overview",
+        "detect": {"whiches": ["cursor-agent"], "paths": ["~/.local/bin/cursor-agent", "~/.cursor/cli-config.json"]},
+        "install": {
+            "kind": "script",
+            "posix": ["curl https://cursor.com/install -fsS | bash"],
+            "windows": ["irm 'https://cursor.com/install?win32=true' | iex"],
+            "verify": ["cursor-agent", "--version"],
+        },
+        "login": True,
+        "optimize": {
+            "ali.agent_runtime": "cursor",
+            "note_zh": "对话交给 Cursor Agent（默认只读：只回答与提议修改，可在 Claws 面板改为可写工作区）。",
+            "note_en": "Chat runs through Cursor Agent (read-only by default — answers and proposes edits; "
+                       "workspace-write can be enabled).",
+        },
+    },
 ]
 
-AGENT_CLI_RUNTIMES = ("claude-code", "codex")
+AGENT_CLI_RUNTIMES = ("claude-code", "codex", "cursor")
 
 
 def get_runtime(runtime_id: str) -> dict[str, Any] | None:
@@ -397,6 +421,7 @@ def _iter_package_json_candidates(runtime_id: str) -> list[Path]:
         "nanoclaw": ["nanoclaw"],
         "claude-code": ["@anthropic-ai/claude-code"],
         "codex": ["@openai/codex"],
+        "cursor": ["cursor-agent"],
     }.get(runtime_id, [runtime_id.replace("_", "-"), runtime_id])
     cands: list[Path] = []
     # Prefer nested package under node_modules (npm --prefix installs)
@@ -466,6 +491,7 @@ def _bin_names_for_runtime(meta: dict[str, Any]) -> list[str]:
         "aliyun_claw": ["openclaw"],
         "claude-code": ["claude"],
         "codex": ["codex"],
+        "cursor": ["cursor-agent", "agent"],
     }.get(str(rid), [])
     for e in extras:
         if e not in names:
@@ -1136,6 +1162,9 @@ def upgrade_commands(runtime_id: str) -> list[str]:
         return ["claude update || npm install -g @anthropic-ai/claude-code@latest || true", "claude --version || true"]
     if runtime_id == "codex":
         return ["npm install -g @openai/codex@latest || true", "codex --version || true"]
+    if runtime_id == "cursor":
+        return ["cursor-agent update || (curl https://cursor.com/install -fsS | bash) || true",
+                "cursor-agent --version || true"]
 
     return base
 
