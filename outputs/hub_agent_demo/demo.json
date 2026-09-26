@@ -1,5 +1,5 @@
 {
- "run_url": "https://github.com/xielab2017/Agent-Hub/actions/runs/36209611472",
+ "run_url": "https://github.com/xielab2017/Agent-Hub/actions/runs/36209897302",
  "turns": [
   {
    "turn": "pubmed",
@@ -7,29 +7,91 @@
    "provider": "minimax-cn",
    "model": "MiniMax-M3",
    "tools": [
-    "run_skill"
+    "pubmed_search",
+    "web_search",
+    "pubmed_search",
+    "pubmed_search",
+    "pubmed_search",
+    "pubmed_search",
+    "pubmed_search",
+    "pubmed_search"
    ],
    "expected": [
     "pubmed_search"
    ],
    "steps": [
     {
-     "tool": "run_skill",
+     "tool": "pubmed_search",
+     "args": {},
+     "ok": true,
+     "error": ""
+    },
+    {
+     "tool": "web_search",
      "args": {
-      "skill": "literature-review",
-      "topic": "Thrombospondin-4 (THBS4) as a skeletal muscle-derived secreted factor: regulatory mechanisms in ageing and metabolism",
-      "profile": "thbs4",
-      "smoke": false
+      "query": "THBS4 thrombospondin-4 skeletal muscle aging ageing"
+     },
+     "ok": true,
+     "error": ""
+    },
+    {
+     "tool": "pubmed_search",
+     "args": {
+      "query": "THBS4 thrombospondin-4 skeletal muscle aging sarcopenia",
+      "max": 10
+     },
+     "ok": true,
+     "error": ""
+    },
+    {
+     "tool": "pubmed_search",
+     "args": {
+      "query": "THBS4 myokine aging",
+      "max": 10
+     },
+     "ok": true,
+     "error": ""
+    },
+    {
+     "tool": "pubmed_search",
+     "args": {
+      "query": "thrombospondin-4 muscle aging exercise",
+      "max": 10
+     },
+     "ok": true,
+     "error": ""
+    },
+    {
+     "tool": "pubmed_search",
+     "args": {
+      "query": "THBS4 sarcopenia elderly muscle",
+      "max": 10
+     },
+     "ok": true,
+     "error": ""
+    },
+    {
+     "tool": "pubmed_search",
+     "args": {
+      "query": "thrombospondin 4 muscle regeneration",
+      "max": 10
+     },
+     "ok": true,
+     "error": ""
+    },
+    {
+     "tool": "pubmed_search",
+     "args": {
+      "query": "THBS4 aging senescence muscle",
+      "max": 10
      },
      "ok": true,
      "error": ""
     }
    ],
-   "ok": false,
-   "answer": "已经在后台启动 `literature-review` 综述生成流程（使用 thbs4 配置档），该任务将围绕 **THBS4 作为骨骼肌分泌因子在衰老与代谢中的调控机制** 撰写完整综述。\n\n## 运行信息\n- **run_id**：`literature-review-20260926-014853-a364`\n- **profile**：`thbs4`（正好对应你这次的选题）\n- **预计产出**：带引用与 PMID 的结构化综述（.docx），位于 `/tmp/agenthub-A-perr5w1m/state/skill-runs/literature-review-20260926-014853-a364/out`\n- **进度追踪**：聊天窗口中的进度卡片会逐阶段显示（检索 → 筛选 → 抽取 → 写作 → 输出）\n\n## 初步证据线索（基于本轮公开检索的 3 条记录，仅供方向参考）\n| 来源 | 主题 | 是否直接相关 |\n|---|---|---|\n| [1] Kuroda et al., *PLoS ONE* 2019 · doi:10.1371/journal.pone.0224727 | THBS4 在胃癌微环境中的表达与临床病理意义 | ❌ 肿瘤方向，仅作为 THBS4 表达模式参考 |\n| [2] UniProt **P49744**（大鼠 Thbs4,",
-   "skill_runs": [
-    "literature-review-20260926-014853-a364"
-   ]
+   "ok": true,
+   "answer": "# THBS4 在骨骼肌衰老中的研究证据\n\n## 结论摘要 / Summary\n\n- **THBS4 是维持骨骼肌膜稳定性的关键分泌因子**：2016 年 *eLife* 论文直接证明 Thbs4 缺失会随年龄增长自发引起肌营养不良样改变，并加重两种肌营养不良小鼠模型的疾病进程 [1] (PMID: 27669143)。\n- **THBS4 通过组织膜附着复合体发挥作用**：在肌纤维中，THBS4 选择性增强 dystrophin-glycoprotein 与 integrin 附着复合体的囊泡运输，从而稳定肌膜 [1]。\n- **THBS4 过表达具有保护作用**：在小鼠中过表达 *Thbs4* 可减轻肌营养不良症状，提示其作为治疗靶点的潜力 [1]。\n- **THBS4 参与运动训练引起的骨骼肌转录重塑**：2021 年 *Sci Rep* 转录组研究显示，离心 / 向心运动适应过程中 ECM（细胞外基质）相关模块显著变化，THBS4 所在 ECM 重塑通路被富集 [2] (PMID: 34907264)。\n- **在肌营养不良与神经再支配模型中 THBS4 表达异常**：2000 年 *J Cell Biol* 与 2006 年 *Neurobiol Dis* 研究分别在 Duchenne 肌营养不良及再支配骨骼肌中检测到 THBS4 转录变化，提示其参与病理与修复过程 [3",
+   "skill_runs": []
   }
  ],
  "skill_install": "literature-review"
