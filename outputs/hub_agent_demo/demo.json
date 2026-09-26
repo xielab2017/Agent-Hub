@@ -1,5 +1,5 @@
 {
- "run_url": "https://github.com/xielab2017/Agent-Hub/actions/runs/36210587344",
+ "run_url": "https://github.com/xielab2017/Agent-Hub/actions/runs/36215955524",
  "turns": [
   {
    "turn": "pubmed",
@@ -10,7 +10,6 @@
     "pubmed_search",
     "pubmed_search",
     "pubmed_search",
-    "pubmed_search",
     "pubmed_search"
    ],
    "expected": [
@@ -26,8 +25,7 @@
     {
      "tool": "pubmed_search",
      "args": {
-      "query": "THBS4 thrombospondin-4 skeletal muscle aging",
-      "max": 10
+      "query": "THBS4 skeletal muscle aging"
      },
      "ok": true,
      "error": ""
@@ -35,8 +33,7 @@
     {
      "tool": "pubmed_search",
      "args": {
-      "query": "THBS4 sarcopenia age-related muscle loss",
-      "max": 10
+      "query": "THBS4 sarcopenia aging muscle"
      },
      "ok": true,
      "error": ""
@@ -44,161 +41,14 @@
     {
      "tool": "pubmed_search",
      "args": {
-      "query": "THBS4 satellite cell regeneration aging",
-      "max": 10
-     },
-     "ok": true,
-     "error": ""
-    },
-    {
-     "tool": "pubmed_search",
-     "args": {
-      "query": "thrombospondin-4 muscular dystrophy mouse model",
-      "max": 10
+      "query": "thrombospondin-4 muscle secretome aging exercise"
      },
      "ok": true,
      "error": ""
     }
    ],
    "ok": true,
-   "answer": "# THBS4 在骨骼肌衰老中的研究证据\n\n## 结论摘要\n- **THBS4 是维持骨骼肌膜稳定的关键因子**：2016 年 *eLife* 论文首次证明 Thbs4 基因缺失可在小鼠中自发引起与年龄相关的肌营养不良样改变，并加速两种肌营养不良模型病程 [1]。\n- **THBS4 通过组织膜附着复合体发挥保护作用**：在肌纤维内，Thbs4 选择性增强 dystrophin-glycoprotein 复合物（DGC）和 integrin 附着复合物的囊泡运输，从而稳定肌膜 [1]。\n- **过表达 THBS4 具有治疗潜力**：在小鼠 Duchenne 肌营养不良（DMD）和 LGMD2F（δ-sarcoglycan 缺失）模型中，过表达 Thbs4 可减轻肌营养不良表型 [1]。\n- **保护作用具有分泌/内质网应激依赖性**：THBS4 通过激活适应性 ER 应激反应、扩张内质网并增强肌膜稳定性发挥保护功能 [3]。\n- **保护作用并非对所有肌营养不良模型普适**：2024 年 *Sci Rep* 研究显示，在 β-sarcoglycan 缺失和 laminin α2 链缺失的小鼠中，Thbs4 敲除并未加重病情，说明 THBS4 的修饰效应具有背景依赖性 [2]。\n\n## 关键数据\n\n| 指标 / 发现 | 结果 | 来源 | 一致性 |\n|---|---|---|--",
-   "skill_runs": []
-  },
-  {
-   "turn": "skill",
-   "engine": "hub-agent",
-   "provider": "minimax-cn",
-   "model": "MiniMax-M3",
-   "tools": [
-    "run_skill"
-   ],
-   "expected": [
-    "run_skill"
-   ],
-   "steps": [
-    {
-     "tool": "run_skill",
-     "args": {
-      "skill": "literature-review",
-      "topic": "GDF15 (Growth Differentiation Factor 15) as a stress-induced cytokine in aging and metabolism: molecular mechanisms, mitochondrial stress response, GFRAL/RET signalling, metabolic regulation (energy homeostasis, lipid and glucose metabolism), involvement in ageing-related diseases, and therapeutic potential",
-      "smoke": true
-     },
-     "ok": true,
-     "error": ""
-    }
-   ],
-   "ok": true,
-   "answer": "综述试跑已启动 ✅\n\n## 运行信息\n| 项目 | 内容 |\n|---|---|\n| **Skill** | `literature-review`（多阶段文献综述流水线） |\n| **主题** | GDF15 在衰老与代谢中的分子机制 / 线粒体应激 / GFRAL-RET 信号 / 代谢调控 / 衰老相关疾病 / 治疗潜力 |\n| **模式** | `--smoke`（小规模试跑，验证管线是否通畅） |\n| **Run ID** | `literature-review-20260926-020724-db66` |\n| **输出目录** | `/tmp/agenthub-A-imugtzbu/state/skill-runs/literature-review-20260926-020724-db66/out` |\n| **预计产物** | 1) 引文检索清单（PMID + 摘要要点）2) 结构化大纲 3) Markdown / Word 综述初稿 |\n\n## 试跑将覆盖的章节（管线会自动组织）\n1. **Background** — GDF15 作为应激诱导细胞因子的发现与命名（TGF-β 超家族 / MIC-1）\n2. **Molecular mechanisms** — 转录调控（p53 / ATF3 / ATF4 / CHOP）、分泌与切割\n3. **Mitochon",
-   "skill_runs": [
-    "literature-review-20260926-020724-db66"
-   ],
-   "skill_result": {
-    "status": "done",
-    "stage": "citations: {'cited': 22, 'references': 22, 'out_of_range': [], 'uncited': [], 'citations': 85}",
-    "summary": {
-     "title": "GDF15 as a Stress-Induced Cytokine at the Crossroads of Aging and Metabolism: Mechanisms, Disease Relevance and Therapeutic Opportunities",
-     "model": "minimax-cn/MiniMax-M3",
-     "llm_calls": 29,
-     "queries": 4,
-     "records": 21,
-     "cards": 23,
-     "sections": 2,
-     "references": 22,
-     "citation_check": {
-      "cited": 22,
-      "references": 22,
-      "out_of_range": [],
-      "uncited": [],
-      "citations": 85
-     },
-     "words": 1693,
-     "featured": null
-    },
-    "outputs": [
-     {
-      "name": "citation_audit.json",
-      "bytes": 12110
-     },
-     {
-      "name": "draft_v1.md",
-      "bytes": 10804
-     },
-     {
-      "name": "evidence_cards.json",
-      "bytes": 56430
-     },
-     {
-      "name": "llm_trace.jsonl",
-      "bytes": 17515
-     },
-     {
-      "name": "profile.json",
-      "bytes": 5246
-     },
-     {
-      "name": "response_to_reviewers.md",
-      "bytes": 15292
-     },
-     {
-      "name": "review.docx",
-      "bytes": 47194
-     },
-     {
-      "name": "review_final.md",
-      "bytes": 20183
-     },
-     {
-      "name": "reviewer_reports.md",
-      "bytes": 34734
-     },
-     {
-      "name": "summary.json",
-      "bytes": 438
-     }
-    ],
-    "error": null
-   }
-  },
-  {
-   "turn": "files",
-   "engine": "hub-agent",
-   "provider": "minimax-cn",
-   "model": "MiniMax-M3",
-   "tools": [
-    "list_files",
-    "read_file",
-    "read_file"
-   ],
-   "expected": [
-    "list_files",
-    "read_file"
-   ],
-   "steps": [
-    {
-     "tool": "list_files",
-     "args": {},
-     "ok": true,
-     "error": ""
-    },
-    {
-     "tool": "read_file",
-     "args": {
-      "path": "notes.md"
-     },
-     "ok": true,
-     "error": ""
-    },
-    {
-     "tool": "read_file",
-     "args": {
-      "path": "outline.txt"
-     },
-     "ok": true,
-     "error": ""
-    }
-   ],
-   "ok": true,
-   "answer": "## 工作区文件清单\n\n| 文件名 | 大小 | 说明 |\n|---|---|---|\n| `notes.md` | 164 B | 项目笔记（目标 / 进度 / 待办） |\n| `outline.txt` | 57 B | 综述提纲（4 节标题） |\n\n## notes.md 内容\n\n> **项目笔记**\n> - 目标：投稿一篇 GDF15 与衰老代谢的综述\n> - 已完成：文献检索草案\n> - 待办：请导师审阅提纲；补充人群队列证据\n\n## 下一步建议\n\n对照 notes.md 待办与 outline.txt 现状，建议按以下顺序推进：\n\n1. **导师审阅提纲（首要）**\n   当前 `outline.txt` 只有 4 节标题（Introduction / GDF15 biology / Ageing / Metabolism），骨架偏薄。\n   先把每节扩展为 2–4 个子标题（例如 GDF15 biology 下设「受体 GFRAL / 信号通路 / 组织表达」），发给导师确认范围和切入点，避免后续返工。\n\n2. **补强人群队列证据（核心证据缺口）**\n   notes.md 把「补充人群队列证据」列为待办。GDF15 + 衰老代谢综述的常见队列包括：\n   - **InCHIANTI / Baltimore Longitudinal Study of Aging**",
+   "answer": "# THBS4 在骨骼肌衰老中的研究证据（简要文献综述）\n\n## 1. 结论摘要\n\n- **THBS4 是维持骨骼肌膜完整性的关键分泌因子**：Thbs4 在肌纤维中选择性增强 dystrophin-glycoprotein 与 integrin 黏附复合物的囊泡运输，稳定肌膜结构（PMID 27669143, eLife 2016）。\n- **THBS4 缺失会随年龄自发引起肌营养不良样改变**：Thbs4 基因敲除小鼠在 aging 过程中出现自发性 dystrophic 病变，并加速两种肌营养不良症小鼠模型的疾病进程（PMID 27669143）。\n- **THBS4 过表达具有保护作用**：在 dystrophic 小鼠模型中过表达小鼠 Thbs4 可减轻 dystrophic 病理，提示其作为肌膜保护/抗衰靶点的潜力（PMID 27669143）。\n- **THBS4 参与运动诱导的肌重塑**：eccentric vs concentric 运动适应过程中，细胞外基质模块（含 THBS4 类 ECM 蛋白）出现收缩模式特异性上调，提示 THBS4 在肌肉对机械负荷的适应中亦发挥作用（PMID 34907264, Sci Rep 2021）。\n- **直接命名\"THBS4 + sarcopenia/aging muscle\"的专项研究仍有限**：本轮检索未召回以 sarco",
    "skill_runs": []
   }
  ],
