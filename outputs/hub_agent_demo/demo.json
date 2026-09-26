@@ -1,19 +1,35 @@
 {
- "run_url": "https://github.com/xielab2017/Agent-Hub/actions/runs/36209331150",
+ "run_url": "https://github.com/xielab2017/Agent-Hub/actions/runs/36209611472",
  "turns": [
   {
    "turn": "pubmed",
    "engine": "hub-agent",
    "provider": "minimax-cn",
    "model": "MiniMax-M3",
-   "tools": [],
+   "tools": [
+    "run_skill"
+   ],
    "expected": [
     "pubmed_search"
    ],
-   "steps": [],
+   "steps": [
+    {
+     "tool": "run_skill",
+     "args": {
+      "skill": "literature-review",
+      "topic": "Thrombospondin-4 (THBS4) as a skeletal muscle-derived secreted factor: regulatory mechanisms in ageing and metabolism",
+      "profile": "thbs4",
+      "smoke": false
+     },
+     "ok": true,
+     "error": ""
+    }
+   ],
    "ok": false,
-   "answer": "# THBS4 与骨骼肌衰老 — 文献检索结果\n\n## 1. 结论摘要 / Summary\n\n- **直接证据缺失**：本轮深度文献检索（OpenAlex + UniProt + Ensembl，relevance=0.5）**未召回** THBS4 在「骨骼肌衰老（skeletal muscle ageing / sarcopenia）」这一具体语境下的同行评议研究 [1-3]。\n- **现有检索结果均为肿瘤或基础蛋白条目**：3 个来源中有 2 个是 UniProt 蛋白条目（大鼠 P49744 / 人 P35443），1 个是胃癌微环境中 THBS4 表达的临床病理研究，与骨骼肌衰老**不直接相关**[1-3]。\n- **背景一致性**：UniProt 注释显示 THBS4 是参与细胞-细胞与细胞-基质相互作用的黏附糖蛋白，涉及组织重塑与再生 [2,3]，与骨骼肌修复/再生存在功能相关性，但**目前没有该检索命中的文献专门验证其在骨骼肌衰老中的作用**[1-3]。\n- **结论标记**：本回答所有数字、PMIDs 与陈述均严格来自上述来源；**未出现骨骼肌衰老相关的实证证据**。\n\n## 2. 关键数据 / Key data\n\n| 指标 | 数值/陈述 | 来源 [n] | 一致性 |\n|---|---|---|---|\n| THBS4 蛋白功能 | 黏附糖蛋白，参与细胞-细",
-   "skill_runs": []
+   "answer": "已经在后台启动 `literature-review` 综述生成流程（使用 thbs4 配置档），该任务将围绕 **THBS4 作为骨骼肌分泌因子在衰老与代谢中的调控机制** 撰写完整综述。\n\n## 运行信息\n- **run_id**：`literature-review-20260926-014853-a364`\n- **profile**：`thbs4`（正好对应你这次的选题）\n- **预计产出**：带引用与 PMID 的结构化综述（.docx），位于 `/tmp/agenthub-A-perr5w1m/state/skill-runs/literature-review-20260926-014853-a364/out`\n- **进度追踪**：聊天窗口中的进度卡片会逐阶段显示（检索 → 筛选 → 抽取 → 写作 → 输出）\n\n## 初步证据线索（基于本轮公开检索的 3 条记录，仅供方向参考）\n| 来源 | 主题 | 是否直接相关 |\n|---|---|---|\n| [1] Kuroda et al., *PLoS ONE* 2019 · doi:10.1371/journal.pone.0224727 | THBS4 在胃癌微环境中的表达与临床病理意义 | ❌ 肿瘤方向，仅作为 THBS4 表达模式参考 |\n| [2] UniProt **P49744**（大鼠 Thbs4,",
+   "skill_runs": [
+    "literature-review-20260926-014853-a364"
+   ]
   }
  ],
  "skill_install": "literature-review"
