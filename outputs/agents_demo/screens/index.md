@@ -1,0 +1,10 @@
+- 2026-09-26 01:04:40 UTC — `001_A_connections.png` — 多模型 API: vendors connected side by side + tier routing test
+- 2026-09-26 01:04:41 UTC — `002_A_vendor-cards.png` — vendor cards: own key (masked), endpoint, TLS, test status
+- 2026-09-26 01:04:45 UTC — `003_A_office-chat.png` — office-tier chat answered by MiniMax-M3 (hybrid routing)
+- 2026-09-26 01:04:47 UTC — `004_A_claws-agents.png` — Claws: Claude Code and Codex rows with sign-in controls
+- 2026-09-26 01:04:50 UTC — `005_A_claude-link.png` — Claude Code: external sign-in link shown, code box ready
+- 2026-09-26 01:04:50 UTC — `006_A_claude-signed-in.png` — Claude Code signed in — token stored by Agent Hub, never shown
+- 2026-09-26 01:04:52 UTC — `007_A_codex-device.png` — Codex: device-code sign-in (link + one-time code)
+- 2026-09-26 01:04:56 UTC — `008_A_codex-signed-in.png` — Codex signed in
+- 2026-09-26 01:05:01 UTC — `009_A_chat-claude-code.png` — chat through claude-code: streamed reply + tool use
+- 2026-09-26 01:05:05 UTC — `010_A_chat-codex.png` — chat through codex: streamed reply + tool use

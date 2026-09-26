@@ -1,0 +1,2 @@
+claude-code 2.1.283 (Claude Code) missing: none
+codex codex-cli 0.157.0 missing: none

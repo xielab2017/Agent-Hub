@@ -1,0 +1,13 @@
+[01:04:33] hub A: ['backend: stub http://127.0.0.1:9911/v1']
+[01:04:33] hub A up at http://127.0.0.1:8765 (state /tmp/agenthub-A-o7ejh53s)
+[01:04:40] screenshot 001_A_connections.png
+[01:04:41] screenshot 002_A_vendor-cards.png
+[01:04:45] screenshot 003_A_office-chat.png
+[01:04:47] screenshot 004_A_claws-agents.png
+[01:04:50] screenshot 005_A_claude-link.png
+[01:04:50] screenshot 006_A_claude-signed-in.png
+[01:04:52] screenshot 007_A_codex-device.png
+[01:04:56] screenshot 008_A_codex-signed-in.png
+[01:05:01] screenshot 009_A_chat-claude-code.png
+[01:05:05] screenshot 010_A_chat-codex.png
+RESULT: PASS

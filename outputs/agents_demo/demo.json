@@ -1,0 +1,84 @@
+{
+ "run_url": "https://github.com/xielab2017/Agent-Hub/actions/runs/36207099820",
+ "steps": [
+  {
+   "step": "minimax-test",
+   "ok": true,
+   "count": 8,
+   "via": "models"
+  },
+  {
+   "step": "routes",
+   "routes": [
+    {
+     "route_key": "simple",
+     "tier": "C0",
+     "provider": "campus-openai-compatible",
+     "model": "stub-model",
+     "base_url": "http://127.0.0.1:9911/v1",
+     "key_present": true,
+     "blocked": false
+    },
+    {
+     "route_key": "office",
+     "tier": "C1",
+     "provider": "minimax-cn",
+     "model": "MiniMax-M3",
+     "base_url": "https://api.minimaxi.com/v1",
+     "key_present": true,
+     "blocked": false
+    },
+    {
+     "route_key": "reasoning",
+     "tier": "C3",
+     "provider": "campus-openai-compatible",
+     "model": "stub-model",
+     "base_url": "http://127.0.0.1:9911/v1",
+     "key_present": true,
+     "blocked": false
+    },
+    {
+     "route_key": "vision",
+     "tier": "Vision",
+     "provider": "minimax-cn",
+     "model": "MiniMax-M3",
+     "base_url": "https://api.minimaxi.com/v1",
+     "key_present": true,
+     "blocked": false
+    }
+   ]
+  },
+  {
+   "step": "claude-link",
+   "url": "https://claude.ai/oauth/authorize?code=true&client_id=fake&state=xyz"
+  },
+  {
+   "step": "claude-auth",
+   "runtime": "claude-code",
+   "installed": true,
+   "bin": "/home/runner/work/Agent-Hub/Agent-Hub/tests/fakes/claude",
+   "mode": "oauth",
+   "logged_in": true,
+   "detail": "Claude subscription (token held by Agent Hub)",
+   "permissions": "read-only"
+  },
+  {
+   "step": "codex-auth",
+   "runtime": "codex",
+   "installed": true,
+   "bin": "/home/runner/work/Agent-Hub/Agent-Hub/tests/fakes/codex",
+   "mode": "cli",
+   "logged_in": true,
+   "detail": "Logged in using ChatGPT",
+   "permissions": "read-only"
+  },
+  {
+   "step": "chat-claude-code",
+   "reply": "Agent Hub · Claude Code · 耗时 74ms\nClaw / Agent 处理过程\nFake Claude read the workspace. You said: 请读一下工作区并总结项目结构\n✓ 审查通过\n复制\n引用\n提交修改\n👍\n👎\n存为技能\n溯源"
+  },
+  {
+   "step": "chat-codex",
+   "reply": "Agent Hub · OpenAI Codex · 耗时 82ms\nClaw / Agent 处理过程\nFake Codex listed the workspace. You said: You are running inside Agent Hub (multi-\n✓ 审查通过\n复制\n引用\n提交修改\n👍\n👎\n存为技能\n溯源"
+  }
+ ]
+}
