@@ -1,7 +1,7 @@
-[01:53:58] hub A: ['chat mode: agent (Hub agent)']
-[01:53:59] hub A up at http://127.0.0.1:8765 (state /tmp/agenthub-A-b084x0tp)
-[01:54:01] screenshot 025_A_home.png
-[01:54:05] screenshot 026_A_pubmed-running.png
-[01:54:39] screenshot 027_A_pubmed-answer.png
-[01:54:42] screenshot 028_A_skill-running.png
-[01:54:52] screenshot 029_A_skill-answer.png
+[02:06:45] hub A: ['chat mode: agent (Hub agent)']
+[02:06:46] hub A up at http://127.0.0.1:8765 (state /tmp/agenthub-A-imugtzbu)
+[02:06:50] screenshot 001_A_home.png
+[02:06:54] screenshot 002_A_pubmed-running.png
+[02:07:20] screenshot 003_A_pubmed-answer.png
+[02:07:24] screenshot 004_A_skill-running.png
+[02:07:30] screenshot 005_A_skill-answer.png
