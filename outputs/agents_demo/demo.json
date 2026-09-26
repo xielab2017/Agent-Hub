@@ -1,5 +1,5 @@
 {
- "run_url": "https://github.com/xielab2017/Agent-Hub/actions/runs/36222701194",
+ "run_url": "https://github.com/xielab2017/Agent-Hub/actions/runs/36223876278",
  "steps": [
   {
    "step": "minimax-test",
@@ -50,7 +50,8 @@
   },
   {
    "step": "claude-link",
-   "url": "https://claude.ai/oauth/authorize?code=true&client_id=fake&state=xyz"
+   "url": "https://claude.ai/oauth/authorize?code=true&client_id=fake&state=xyz",
+   "auth_tab": "https://claude.ai/oauth/authorize?code=true&client_id=fake&state=xyz"
   },
   {
    "step": "claude-auth",
@@ -80,19 +81,71 @@
    "mode": "cli",
    "logged_in": true,
    "detail": "Cursor account user@example.org",
-   "permissions": "read-only"
+   "permissions": "read-only",
+   "auth_tab": "https://cursor.com/loginDeepControl?challenge=fake&uuid=1234&mode=login"
+  },
+  {
+   "step": "routes-accounts",
+   "routes": [
+    {
+     "route_key": "simple",
+     "tier": "C0",
+     "provider": "campus-openai-compatible",
+     "model": "stub-model",
+     "base_url": "http://127.0.0.1:9911/v1",
+     "key_present": true,
+     "blocked": false
+    },
+    {
+     "route_key": "office",
+     "tier": "C1",
+     "provider": "cursor",
+     "model": "",
+     "base_url": "Cursor account (Cursor Agent) · Cursor account user@example.org",
+     "key_present": true,
+     "agent": true,
+     "blocked": false
+    },
+    {
+     "route_key": "reasoning",
+     "tier": "C3",
+     "provider": "claude-code",
+     "model": "",
+     "base_url": "Claude subscription (Claude Code) · Claude subscription (token held by Agent Hub)",
+     "key_present": true,
+     "agent": true,
+     "blocked": false
+    },
+    {
+     "route_key": "vision",
+     "tier": "Vision",
+     "provider": "cursor",
+     "model": "",
+     "base_url": "Cursor account (Cursor Agent) · Cursor account user@example.org",
+     "key_present": true,
+     "agent": true,
+     "blocked": false
+    }
+   ]
+  },
+  {
+   "step": "claws-clean",
+   "agent_rows": 0
   },
   {
    "step": "chat-claude-code",
-   "reply": "Agent Hub · Claude Code · 耗时 71ms\nClaw / Agent 处理过程\nFake Claude read the workspace. You said: 请读一下工作区并总结项目结构\n✓ 审查通过\n复制\n引用\n提交修改\n👍\n👎\n存为技能\n溯源"
-  },
-  {
-   "step": "chat-codex",
-   "reply": "Agent Hub · OpenAI Codex · 耗时 86ms\nClaw / Agent 处理过程\nFake Codex listed the workspace. You said: You are running inside Agent Hub (multi-\n✓ 审查通过\n复制\n引用\n提交修改\n👍\n👎\n存为技能\n溯源"
+   "tier": "reasoning",
+   "reply": "Agent Hub · Claude Code · 耗时 80ms\nClaw / Agent 处理过程\nFake Claude read the workspace. You said: 证明根号二是无理数，并说明思路\n✓ 审查通过\n复制\n引用\n提交修改\n👍\n👎\n存为技能\n溯源"
   },
   {
    "step": "chat-cursor",
-   "reply": "Agent Hub · Cursor · 耗时 83ms\nClaw / Agent 处理过程\nFake Cursor (ask mode) read notes.md. You said: itative for this turn.\n\n读一下 notes.md 并总结\n✓ 审查通过\n复制\n引用\n提交修改\n👍\n👎\n存为技能\n溯源"
+   "tier": "office",
+   "reply": "Agent Hub · Cursor · 耗时 94ms\nClaw / Agent 处理过程\nFake Cursor (ask mode) read notes.md. You said: s them, and retries\n\n写一封实验室组会通知，时间周五下午三点\n✓ 审查通过\n复制\n引用\n提交修改\n👍\n👎\n存为技能\n溯源"
+  },
+  {
+   "step": "chat-codex",
+   "tier": "all",
+   "reply": "Agent Hub · OpenAI Codex · 耗时 85ms\nClaw / Agent 处理过程\nFake Codex listed the workspace. You said: You are running inside Agent Hub (multi-\n✓ 审查通过\n复制\n引用\n提交修改\n👍\n👎\n存为技能\n溯源"
   }
  ]
 }
