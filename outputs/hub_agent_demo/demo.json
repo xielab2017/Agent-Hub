@@ -92,6 +92,136 @@
    "ok": true,
    "answer": "# THBS4 在骨骼肌衰老中的研究证据\n\n## 结论摘要 / Summary\n\n- **THBS4 是维持骨骼肌膜稳定性的关键分泌因子**：2016 年 *eLife* 论文直接证明 Thbs4 缺失会随年龄增长自发引起肌营养不良样改变，并加重两种肌营养不良小鼠模型的疾病进程 [1] (PMID: 27669143)。\n- **THBS4 通过组织膜附着复合体发挥作用**：在肌纤维中，THBS4 选择性增强 dystrophin-glycoprotein 与 integrin 附着复合体的囊泡运输，从而稳定肌膜 [1]。\n- **THBS4 过表达具有保护作用**：在小鼠中过表达 *Thbs4* 可减轻肌营养不良症状，提示其作为治疗靶点的潜力 [1]。\n- **THBS4 参与运动训练引起的骨骼肌转录重塑**：2021 年 *Sci Rep* 转录组研究显示，离心 / 向心运动适应过程中 ECM（细胞外基质）相关模块显著变化，THBS4 所在 ECM 重塑通路被富集 [2] (PMID: 34907264)。\n- **在肌营养不良与神经再支配模型中 THBS4 表达异常**：2000 年 *J Cell Biol* 与 2006 年 *Neurobiol Dis* 研究分别在 Duchenne 肌营养不良及再支配骨骼肌中检测到 THBS4 转录变化，提示其参与病理与修复过程 [3",
    "skill_runs": []
+  },
+  {
+   "turn": "skill",
+   "engine": "hub-agent",
+   "provider": "minimax-cn",
+   "model": "MiniMax-M3",
+   "tools": [
+    "run_skill"
+   ],
+   "expected": [
+    "run_skill"
+   ],
+   "steps": [
+    {
+     "tool": "run_skill",
+     "args": {
+      "skill": "literature-review",
+      "topic": "GDF15 in aging and metabolism: molecular mechanisms, metabolic roles, and therapeutic potential",
+      "smoke": true
+     },
+     "ok": true,
+     "error": ""
+    }
+   ],
+   "ok": true,
+   "answer": "已启动 `literature-review` skill 进行小规模试跑 ✅\n\n## 📚 试跑概况\n\n| 项目 | 内容 |\n|---|---|\n| **Run ID** | `literature-review-20260926-015445-3cce` |\n| **Topic** | GDF15 in aging and metabolism: molecular mechanisms, metabolic roles, and therapeutic potential |\n| **模式** | `--smoke`（小规模试跑） |\n| **输出目录** | `/tmp/agenthub-A-b084x0tp/state/skill-runs/literature-review-20260926-015445-3cce/out` |\n\n## 🔎 试跑会做什么\n\n1. **PubMed 检索**：抓取 GDF15 / GFRAL / 衰老 / 代谢相关核心文献（试跑取少量样本）。\n2. **摘要与提纲**：抽取每篇的 mechanisms、metabolic roles、therapeutic potential 三个要点。\n3. **生成综述初稿（Word .docx）**：\n   - 英文撰写\n   - 包含 Abstract / Introduction / Molec",
+   "skill_runs": [
+    "literature-review-20260926-015445-3cce"
+   ],
+   "skill_result": {
+    "status": "done",
+    "stage": "citations: {'cited': 24, 'references': 24, 'out_of_range': [], 'uncited': [], 'citations': 100}",
+    "summary": {
+     "title": "GDF15 in aging and metabolism: molecular mechanisms, metabolic roles, and therapeutic potential",
+     "model": "minimax-cn/MiniMax-M3",
+     "llm_calls": 25,
+     "queries": 4,
+     "records": 29,
+     "cards": 27,
+     "sections": 2,
+     "references": 24,
+     "citation_check": {
+      "cited": 24,
+      "references": 24,
+      "out_of_range": [],
+      "uncited": [],
+      "citations": 100
+     },
+     "words": 1845,
+     "featured": null
+    },
+    "outputs": [
+     {
+      "name": "citation_audit.json",
+      "bytes": 4447
+     },
+     {
+      "name": "draft_v1.md",
+      "bytes": 10934
+     },
+     {
+      "name": "evidence_cards.json",
+      "bytes": 72761
+     },
+     {
+      "name": "llm_trace.jsonl",
+      "bytes": 15382
+     },
+     {
+      "name": "profile.json",
+      "bytes": 5217
+     },
+     {
+      "name": "response_to_reviewers.md",
+      "bytes": 15536
+     },
+     {
+      "name": "review.docx",
+      "bytes": 47230
+     },
+     {
+      "name": "review_final.md",
+      "bytes": 21846
+     },
+     {
+      "name": "reviewer_reports.md",
+      "bytes": 32798
+     },
+     {
+      "name": "summary.json",
+      "bytes": 397
+     }
+    ],
+    "error": null
+   }
+  },
+  {
+   "turn": "files",
+   "engine": "hub-agent",
+   "provider": "minimax-cn",
+   "model": "MiniMax-M3",
+   "tools": [
+    "list_files",
+    "read_file"
+   ],
+   "expected": [
+    "list_files",
+    "read_file"
+   ],
+   "steps": [
+    {
+     "tool": "list_files",
+     "args": {
+      "path": "."
+     },
+     "ok": true,
+     "error": ""
+    },
+    {
+     "tool": "read_file",
+     "args": {
+      "path": "notes.md"
+     },
+     "ok": true,
+     "error": ""
+    }
+   ],
+   "ok": true,
+   "answer": "## 工作区文件清单\n\n| 文件 | 大小 |\n|------|------|\n| `notes.md` | 164 B |\n| `outline.txt` | 57 B |\n\n## notes.md 内容摘要\n\n- **目标**：投稿一篇 *GDF15 与衰老代谢* 的综述\n- **已完成**：文献检索草案\n- **待办**：① 请导师审阅提纲　② 补充人群队列证据\n\n## 建议的下一步\n\n我先把 `outline.txt` 一并读出来，方便你直接对比提纲与笔记的进度：\n\n```bash\ncat workspace/outline.txt\n```\n\n读完以后，按优先级建议这样推进：\n\n1. **先把提纲发给导师审阅**（笔记里点名的事项 A）。\n   - 用 `outline.txt` 作为附件，配合一封简短的邮件/微信消息，说明\"已检索草案 + 待您确认提纲 + 是否需要补人群队列方向\"。\n2. **同步启动人群队列证据补充**（事项 B，不阻塞提纲）：\n   - 我可以用 `pubmed_search` 跑一轮 \"GDF15 human cohort aging mortality\" 之类的查询，把近 5 年的人群队列（血浆 GDF15 与全因死亡/衰弱/肌少症相关研究）拉一版候选清单出来，供你写进\"流行病学证据\"小节。\n3. **提纲定稿后**，如果你希望直接生成完整的 *",
+   "skill_runs": []
   }
  ],
  "skill_install": "literature-review"
