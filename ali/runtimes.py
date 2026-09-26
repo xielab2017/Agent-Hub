@@ -1484,6 +1484,13 @@ def _resolve_hub_llm(cfg: dict[str, Any] | None = None) -> dict[str, Any]:
             if tier_base_url:
                 base_url = tier_base_url
 
+    try:  # the vendor's own endpoint (multi-vendor connection override / alternates)
+        from .providers import connection_base_url
+
+        base_url = connection_base_url(cfg, pid) or base_url
+    except Exception:  # noqa: BLE001
+        pass
+
     return {
         "provider_id": pid,
         "api_key": api_key,

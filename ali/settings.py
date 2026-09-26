@@ -177,7 +177,7 @@ def resolve_backend_verify_tls(
     """Resolve TLS verification for the concrete routed LLM provider.
 
     Inheritance, most-specific first:
-    route_info.verify_tls → backend.provider_tls[provider] →
+    route_info.verify_tls → backend.provider_tls[provider] → connections[provider].verify_tls →
     hybrid[route_key].verify_tls → backend.verify_tls → secure default True.
     """
     route = route_info if isinstance(route_info, dict) else {}
@@ -193,6 +193,11 @@ def resolve_backend_verify_tls(
             return scoped
         if isinstance(scoped, dict) and isinstance(scoped.get("verify_tls"), bool):
             return bool(scoped["verify_tls"])
+
+    conns = cfg.get("connections") if isinstance(cfg.get("connections"), dict) else {}
+    conn = conns.get(provider) if provider else None  # multi-vendor connection ("多模型 API")
+    if isinstance(conn, dict) and isinstance(conn.get("verify_tls"), bool):
+        return bool(conn["verify_tls"])
 
     route_key = str(route.get("route_key") or "")
     hybrid = cfg.get("hybrid") if isinstance(cfg.get("hybrid"), dict) else {}
@@ -227,6 +232,10 @@ def save_campus_config(
             pass
     merged = _deep_merge(merged, data or {})
     # Never persist secrets
+    for conn in (merged.get("connections") or {}).values():
+        if isinstance(conn, dict):
+            for secret_key in ("api_key", "key", "token", "secret"):
+                conn.pop(secret_key, None)
     backend = merged.get("backend") or {}
     for secret_key in ("api_key", "password", "token", "secret"):
         backend.pop(secret_key, None)

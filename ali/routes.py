@@ -43,6 +43,7 @@ from . import (
     skill_capture,
     skill_runner,
     task_runner,
+    connections as conn_mod,
     streaming,
     subagent_planner,
     uploads,
@@ -340,6 +341,11 @@ def handle_get(handler) -> None:
 
     if path == "/api/skills":
         return _json(handler, 200, skills.list_skills())
+
+    if path == "/api/connections":
+        return _json(handler, 200, conn_mod.view())
+    if path == "/api/connections/route-test":
+        return _json(handler, 200, conn_mod.route_test((qs.get("message") or [""])[0]))
 
     # runnable skills: export bundle, runs, run output files
     if len(parts) == 4 and parts[:2] == ["api", "skills"] and parts[3] == "export":
@@ -1821,6 +1827,25 @@ def handle_post(handler) -> None:
         except FileNotFoundError as exc:
             return _json(handler, 404, {"error": str(exc)})
         return _json(handler, 200, {"ok": True, "review": review})
+
+    if path == "/api/connections/tier":
+        body = _read_json(handler)
+        try:
+            return _json(handler, 200, conn_mod.set_tier(str(body.get("route_key") or ""),
+                                                         str(body.get("provider") or ""), str(body.get("model") or "")))
+        except ValueError as exc:
+            return _json(handler, 400, {"error": str(exc)})
+    if len(parts) in (3, 4) and parts[:2] == ["api", "connections"] and parts[2] not in ("tier", "route-test"):
+        pid = parts[2]
+        body = _read_json(handler)
+        try:
+            if len(parts) == 3:
+                return _json(handler, 200, conn_mod.save(pid, body))
+            if parts[3] in ("test", "models"):
+                return _json(handler, 200, conn_mod.test(pid))
+        except ValueError as exc:
+            return _json(handler, 400, {"error": str(exc)})
+        return _json(handler, 404, {"error": "not found"})
 
     if path == "/api/skills/author":
         body = _read_json(handler)

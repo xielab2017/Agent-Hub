@@ -847,10 +847,12 @@ def start_chat(
         )
         if coerced:
             resolved_model = coerced
-        # Re-pin base_url from catalog for concrete cloud providers
+        # Re-pin base_url to the vendor's own endpoint (connection override / catalog) for cloud providers
         prov = get_provider(provider_now) if provider_now else None
         if prov and provider_now not in ("", "hybrid", "campus-openai-compatible", "local-ollama"):
-            catalog_url = str(prov.get("base_url") or "").strip()
+            from .providers import connection_base_url
+
+            catalog_url = str(connection_base_url(cfg, provider_now) or prov.get("base_url") or "").strip()
             if catalog_url:
                 route_info = dict(route_info)
                 route_info["base_url"] = catalog_url
@@ -1377,24 +1379,18 @@ def english_search_terms(query: str, route_info: dict[str, Any] | None = None, *
         if classify_intent(q) != "academic":
             return ""
         from . import llm_client
-        from .providers import get_provider, pick_base_url
-        from .secrets import resolve_api_key
-        from .settings import load_campus_config, resolve_backend_verify_tls
+        from .providers import hub_model
+        from .settings import load_campus_config
 
         cfg = load_campus_config()
-        backend = cfg.get("backend") or {}
-        provider = str(backend.get("type") or "").strip()
-        prov = get_provider(provider) if provider and provider != "hybrid" else None
-        base = pick_base_url(prov, str(backend.get("base_url") or "")) if prov else str(backend.get("base_url") or "")
-        models = cfg.get("models") or {}
-        model = str(models.get("fast") or models.get("main") or backend.get("model") or "").strip()
-        key = (resolve_api_key(cfg, provider=provider).get("key") or "") if provider else ""
+        hm = hub_model(cfg, "simple")  # the fast tier's vendor (its own endpoint and key under hybrid)
+        provider, base, model, key = hm["provider"], hm["base_url"], hm["model"], hm["api_key"]
         if not base or not model or (not key and provider != "local-ollama"):
             return ""
         # reasoning models (MiniMax-M2 …) think before answering: leave room for both
         text = llm_client._chat_once(
             base, key, model=model, timeout=timeout, max_tokens=1500, temperature=0.0,
-            verify_tls=resolve_backend_verify_tls(cfg, route_info or {}),
+            verify_tls=hm["verify_tls"],
             messages=[{"role": "system", "content": _EN_TERMS_PROMPT}, {"role": "user", "content": q[:500]}],
         )
     except Exception as exc:  # noqa: BLE001 — search still runs with the original words

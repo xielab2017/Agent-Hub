@@ -1201,3 +1201,88 @@ def probe_minimax_region(api_key: str, *, timeout: float = 6.0, verify_tls: bool
         if best["ok"] and region is None:
             region = pid
     return {"region": region, "base_url": results[region]["base_url"] if region else "", "results": results}
+
+
+# ── multi-vendor connections ("多模型 API") ─────────────────────────────
+#
+# cfg["connections"][pid] = {"enabled": bool, "base_url": str, "custom_base_url": bool, "verify_tls": bool}
+# Keys stay in the secrets store under the provider id (secrets.set_api_key(pid, …)); several vendors can be
+# connected at once without touching backend.type.  Hybrid tier routes, subagents and Hub-internal model calls
+# resolve each vendor's own endpoint through connection().
+
+
+def connection_base_url(cfg: dict[str, Any], pid: str) -> str:
+    """The vendor's endpoint: a connection override when allowed, else the catalog URL."""
+    prov = get_provider(pid)
+    conn = ((cfg.get("connections") or {}).get(pid) or {}) if isinstance(cfg, dict) else {}
+    override = str(conn.get("base_url") or "").strip()
+    backend = (cfg.get("backend") or {}) if isinstance(cfg, dict) else {}
+    if not override and str(backend.get("type") or "") == pid:
+        override = str(backend.get("base_url") or "").strip()  # the single-vendor backend URL still counts
+    if override and conn.get("custom_base_url"):
+        return override  # an explicitly custom endpoint (e.g. a campus / proxy gateway)
+    return pick_base_url(prov, override) if prov else override
+
+
+def connection(cfg: dict[str, Any], pid: str) -> dict[str, Any]:
+    """Everything needed to call vendor ``pid``: base_url, key, TLS policy, known models."""
+    from .secrets import mask_key, resolve_api_key
+    from .settings import resolve_backend_verify_tls
+
+    prov = get_provider(pid) or {}
+    conn = (cfg.get("connections") or {}).get(pid) or {}
+    info = resolve_api_key(cfg, provider=pid)
+    route = {"provider": pid}
+    models = list((cfg.get("available_models") or {}).get(pid) or [])
+    return {"provider": pid, "label": prov.get("label") or pid, "label_en": prov.get("label_en") or pid,
+            "base_url": connection_base_url(cfg, pid), "api_key": info.get("key") or "",
+            "key_present": bool(info.get("present")), "key_masked": mask_key(info.get("key") or ""),
+            "key_source": info.get("source") or "", "verify_tls": resolve_backend_verify_tls(cfg, route),
+            "enabled": bool(conn.get("enabled", info.get("present"))), "models": models,
+            "custom_base_url": bool(conn.get("custom_base_url")),
+            "base_urls": list(prov.get("base_urls") or ([prov["base_url"]] if prov.get("base_url") else []))}
+
+
+def _suggested_models(prov: dict[str, Any]) -> list[str]:
+    sugg = prov.get("suggestions") or {}
+    seq = [m for slot in ("main", "fast", "reasoning", "vision") for m in (sugg.get(slot) or [])] \
+        if isinstance(sugg, dict) else list(sugg)
+    seq += [m for m in (prov.get("models") or {}).values() if isinstance(m, str)]
+    return [m for m in dict.fromkeys(seq) if m][:12]
+
+
+def list_connections(cfg: dict[str, Any]) -> list[dict[str, Any]]:
+    """Every catalog vendor (hybrid excluded) with masked key status — never the key itself."""
+    out = []
+    probes = cfg.get("connection_probes") or {}
+    for pid in PROVIDERS:
+        if pid == "hybrid":
+            continue
+        c = connection(cfg, pid)
+        c.pop("api_key", None)
+        prov = PROVIDERS[pid]
+        c.update({"hint": prov.get("hint") or "", "openai_compatible": bool(prov.get("openai_compatible")),
+                  "default_models": _suggested_models(prov),
+                  "probe": probes.get(pid) or None})
+        out.append(c)
+    return out
+
+
+def hub_model(cfg: dict[str, Any], route_key: str = "office") -> dict[str, Any]:
+    """Provider, endpoint, key, model and TLS policy for a Hub-internal call on ``route_key``.
+
+    Single-vendor mode: the backend vendor.  Hybrid mode: the vendor bound to that tier, with its own endpoint and
+    key (a tier without a binding falls back to the office tier).
+    """
+    from .routing import resolve_route
+
+    info = resolve_route(route_key, "", cfg)
+    pid = str(info.get("provider") or "").strip()
+    if (not pid or pid == "hybrid") and route_key != "office":
+        info = resolve_route("office", "", cfg)
+        pid = str(info.get("provider") or "").strip()
+    if not pid or pid == "hybrid":
+        return {"provider": pid, "base_url": "", "api_key": "", "model": "", "verify_tls": True, "route": info}
+    conn = connection(cfg, pid)
+    return {"provider": pid, "base_url": info.get("base_url") or conn["base_url"], "api_key": conn["api_key"],
+            "model": str(info.get("model") or ""), "verify_tls": conn["verify_tls"], "route": info}

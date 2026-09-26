@@ -191,21 +191,28 @@ class _WriterNote:
 class HubLLM:
     """The configured Agent Hub model; retries and think-tag stripping included."""
 
-    def __init__(self, model: str = "", *, timeout: float = 300.0) -> None:
-        from .providers import get_provider, pick_base_url
+    def __init__(self, model: str = "", *, timeout: float = 300.0, route_key: str = "office") -> None:
+        from .providers import connection_base_url, get_provider, hub_model, pick_base_url
         from .secrets import resolve_api_key
         from .settings import load_campus_config, resolve_backend_verify_tls
 
         cfg = load_campus_config()
         backend = cfg.get("backend") or {}
         self.provider = str(backend.get("type") or "").strip()
-        prov = get_provider(self.provider) if self.provider and self.provider != "hybrid" else None
-        configured = str(backend.get("base_url") or "")
-        self.base_url = pick_base_url(prov, configured) if prov else configured
-        models = cfg.get("models") or {}
-        self.model = (model or str(models.get("main") or backend.get("model") or "")).strip()
-        self.api_key = resolve_api_key(cfg, provider=self.provider).get("key") or ""
-        self.verify_tls = resolve_backend_verify_tls(cfg, {})
+        if self.provider == "hybrid":  # multi-vendor: the vendor bound to this tier, with its own endpoint / key
+            hm = hub_model(cfg, route_key)
+            self.provider, self.base_url, self.api_key = hm["provider"], hm["base_url"], hm["api_key"]
+            self.model = (model or hm["model"]).strip()
+            self.verify_tls = hm["verify_tls"]
+        else:
+            prov = get_provider(self.provider) if self.provider else None
+            configured = str(backend.get("base_url") or "")
+            self.base_url = (connection_base_url(cfg, self.provider) or pick_base_url(prov, configured)) if prov \
+                else configured
+            models = cfg.get("models") or {}
+            self.model = (model or str(models.get("main") or backend.get("model") or "")).strip()
+            self.api_key = resolve_api_key(cfg, provider=self.provider).get("key") or ""
+            self.verify_tls = resolve_backend_verify_tls(cfg, {})
         self.timeout = timeout
         self.calls = 0
         self.trace: Path | None = None  # one JSON line per call (sizes, truncation, reply head) for diagnosis

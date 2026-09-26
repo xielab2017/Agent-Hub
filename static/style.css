@@ -2066,3 +2066,19 @@ hr.soft {
 .msg.skill-run .skill-run-log { max-height: 22rem; overflow: auto; font-size: .78em; line-height: 1.35;
   background: var(--code-bg, rgba(127,127,127,.08)); padding: .5rem .7rem; border-radius: 6px; white-space: pre-wrap; }
 .msg.skill-run .skill-run-out { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .4rem; }
+
+/* multi-vendor model APIs */
+.conn-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 10px; }
+.conn-card { border: 1px solid var(--border, rgba(127,127,127,.3)); border-radius: 8px; padding: 8px 10px; }
+.conn-head { display: flex; gap: .4rem; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
+.conn-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 4px 0; }
+.conn-row input.conn-key, .conn-row input.conn-url { flex: 1 1 150px; min-width: 0; }
+.conn-badge { font-size: .78em; padding: 1px 6px; border-radius: 10px; background: rgba(127,127,127,.18); }
+.conn-badge.ok { background: rgba(46,160,67,.25); } .conn-badge.err { background: rgba(218,54,51,.25); }
+.conn-badge.off { opacity: .7; }
+.conn-tiers { display: grid; gap: 6px; }
+.conn-tier { display: grid; grid-template-columns: 9rem 12rem 1fr auto; gap: 6px; align-items: center; }
+.conn-routes { width: 100%; border-collapse: collapse; font-size: .85em; margin-bottom: 10px; }
+.conn-routes td, .conn-routes th { border-bottom: 1px solid rgba(127,127,127,.25); padding: 3px 6px; text-align: left; }
+.conn-row .btn { white-space: nowrap; }
+.conn-row .conn-msg { flex: 1 1 100%; font-size: .8em; }

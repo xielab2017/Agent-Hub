@@ -342,12 +342,17 @@ def resolve_route(
     )
     if use_hybrid:
         entry = hybrid.get(route_key) or {}
+        if not str(entry.get("provider") or "").strip():  # an unbound tier follows the office vendor
+            entry = hybrid.get("office") or hybrid.get("main") or {}
         provider_id = (entry.get("provider") or "").strip() or provider_id
         if entry.get("model"):
             model = str(entry["model"]).strip()
         prov = get_provider(provider_id) if provider_id and provider_id != "hybrid" else None
         if prov:
-            base_url = prov.get("base_url") or base_url
+            from .providers import connection_base_url
+
+            # each vendor's own endpoint (connection override / alternates such as MiniMax …/anthropic)
+            base_url = connection_base_url(cfg, provider_id) or prov.get("base_url") or base_url
             api_key_env = prov.get("api_key_env") or api_key_env
         # Hybrid often leaves model empty while global models still hold another
         # vendor's short ids — coerce to the active provider's catalog form.
@@ -394,7 +399,9 @@ def resolve_route(
             if prov:
                 from .providers import pick_base_url
 
-                base_url = pick_base_url(prov, backend.get("base_url") or "" if provider_id == backend_type else "")
+                from .providers import connection_base_url
+
+                base_url = connection_base_url(cfg, provider_id) or pick_base_url(prov, "")
                 api_key_env = prov.get("api_key_env") or api_key_env
             from .providers import coerce_model_for_provider
 

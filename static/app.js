@@ -231,6 +231,7 @@ const I18N = {
     "control.mcp": "MCP",
     "control.recommend": "每日推荐",
     "control.skills": "Skills",
+    "control.connections": "多模型 API",
     "control.soul": "Soul",
     "control.agents": "Agents",
     "control.feedback": "反馈",
@@ -520,6 +521,7 @@ const I18N = {
     "control.ecosystem": "Ecosystem",
     "control.mcp": "MCP",
     "control.recommend": "Daily",
+    "control.connections": "Multi-model APIs",
     "control.skills": "Skills",
     "control.soul": "Soul",
     "control.agents": "Agents",
@@ -3008,6 +3010,116 @@ function bindSkillCaptureOverlay() {
       btn.disabled = false;
     }
   });
+}
+
+// ── Control Center: multi-vendor model APIs ("多模型 API") ──────────────
+
+async function renderConnectionsPanel(langZh) {
+  const panel = $("#ctab-connections");
+  if (!panel) return;
+  let data = { connections: [], tiers: {}, mode: "single", backend: "" };
+  try { data = await api("/api/connections"); } catch (_) {}
+  const L = (zh, en) => (langZh ? zh : en);
+  const connected = data.connections.filter((c) => c.key_present || c.provider === "local-ollama");
+  const tierNames = { simple: L("简单问答 C0", "Simple C0"), office: L("办公写作 C1", "Office C1"),
+    reasoning: L("推理 C3", "Reasoning C3"), vision: L("视觉 Vision", "Vision") };
+  const tierRow = (rk) => {
+    const cur = data.tiers[rk] || {};
+    const opts = [`<option value="">${L("（未绑定：跟随办公）", "(unbound: follow office)")}</option>`]
+      .concat(connected.map((c) => `<option value="${escapeHtml(c.provider)}" ${c.provider === cur.provider ? "selected" : ""}>${escapeHtml(langZh ? c.label : c.label_en)}</option>`));
+    const models = (connected.find((c) => c.provider === cur.provider) || {});
+    const list = [...new Set([...(models.models || []), ...(models.default_models || []), cur.model].filter(Boolean))];
+    return `<div class="conn-tier" data-tier="${rk}"><span>${escapeHtml(tierNames[rk])}</span>
+      <select class="conn-tier-provider">${opts.join("")}</select>
+      <input class="conn-tier-model" list="conn-models-${rk}" value="${escapeHtml(cur.model || "")}" placeholder="${L("模型 id", "model id")}" />
+      <datalist id="conn-models-${rk}">${list.map((m) => `<option value="${escapeHtml(m)}">`).join("")}</datalist>
+      <button type="button" class="btn ghost chip conn-tier-save">${L("保存", "Save")}</button></div>`;
+  };
+  const card = (c) => {
+    const pr = c.probe || {};
+    const badge = !c.key_present && c.provider !== "local-ollama" ? `<span class="conn-badge off">${L("未配置", "not set")}</span>`
+      : pr.ok ? `<span class="conn-badge ok">✓ ${L("可用", "ok")}${pr.count ? ` · ${pr.count} ${L("个模型", "models")}` : ""}</span>`
+      : pr.error ? `<span class="conn-badge err" title="${escapeHtml(pr.error)}">✗ ${L("测试失败", "failed")}</span>`
+      : `<span class="conn-badge">${L("已填 key", "key set")}</span>`;
+    const urls = (c.base_urls || []).map((u) => `<option value="${escapeHtml(u)}">`).join("");
+    return `<div class="conn-card" data-pid="${escapeHtml(c.provider)}">
+      <div class="conn-head"><strong>${escapeHtml(langZh ? c.label : c.label_en)}</strong> <code>${escapeHtml(c.provider)}</code> ${badge}
+        ${c.provider === data.backend ? `<span class="conn-badge">${L("当前后端", "active backend")}</span>` : ""}</div>
+      <div class="conn-row">
+        <input type="password" class="conn-key" autocomplete="off" placeholder="${c.key_present ? escapeHtml(c.key_masked || "••••") + L("（已保存，留空不改）", " (saved — leave empty to keep)") : L("粘贴 API key", "Paste API key")}" />
+        <input class="conn-url" list="conn-urls-${escapeHtml(c.provider)}" value="${escapeHtml(c.base_url || "")}" placeholder="Base URL" />
+        <datalist id="conn-urls-${escapeHtml(c.provider)}">${urls}</datalist>
+      </div>
+      <div class="conn-row">
+        <label class="attach-chip"><input type="checkbox" class="conn-tls" ${c.verify_tls ? "checked" : ""}/> TLS</label>
+        <label class="attach-chip"><input type="checkbox" class="conn-custom" ${c.custom_base_url ? "checked" : ""}/> ${L("自定义地址", "custom URL")}</label>
+        <button type="button" class="btn primary chip conn-save">${L("保存", "Save")}</button>
+        <button type="button" class="btn ghost chip conn-test">${L("测试 / 获取模型", "Test / fetch models")}</button>
+        ${c.key_present ? `<button type="button" class="btn ghost chip conn-clear">${L("删除 key", "Remove key")}</button>` : ""}
+        <span class="muted conn-msg">${c.models && c.models.length ? `${c.models.length} ${L("个模型已获取", "models fetched")}` : escapeHtml(c.hint || "")}</span>
+      </div></div>`;
+  };
+  panel.innerHTML = `
+    <p class="muted">${L("同时接入多家厂商：每家各自保存 key、地址与 TLS，不会切换当前后端。下方「按任务等级路由」把简单问答 / 办公 / 推理 / 视觉分配给不同厂商（启用后后端切换为 Hybrid）。",
+      "Connect several vendors at once — each keeps its own key, endpoint and TLS; saving never switches the active backend. Tier routing below assigns simple / office / reasoning / vision to different vendors (the backend then becomes Hybrid).")}</p>
+    <h4>${L("按任务等级路由", "Tier routing")} <span class="muted">(${data.mode === "hybrid" ? "Hybrid" : L("当前单一后端：", "single backend: ") + escapeHtml(data.backend)})</span></h4>
+    <div class="conn-tiers">${["simple", "office", "reasoning", "vision"].map(tierRow).join("")}</div>
+    <div class="row gap" style="justify-content:flex-start;margin:6px 0 12px"><button type="button" class="btn ghost chip" id="conn-route-test">${L("路由测试", "Test routing")}</button></div>
+    <div id="conn-route-result"></div>
+    <h4>${L("厂商连接", "Vendor connections")} <span class="muted">${connected.length}/${data.connections.length}</span></h4>
+    <div class="conn-grid">${data.connections.map(card).join("")}</div>`;
+
+  const msg = (el, text) => { const m = el.querySelector(".conn-msg"); if (m) m.textContent = text; };
+  panel.querySelectorAll(".conn-card").forEach((el) => {
+    const pid = el.dataset.pid;
+    el.querySelector(".conn-save").onclick = async () => {
+      const body = { base_url: el.querySelector(".conn-url").value.trim(), verify_tls: el.querySelector(".conn-tls").checked,
+        custom_base_url: el.querySelector(".conn-custom").checked };
+      const key = el.querySelector(".conn-key").value.trim();
+      if (key) body.api_key = key;
+      try {
+        await api(`/api/connections/${encodeURIComponent(pid)}`, { method: "POST", body: JSON.stringify(body) });
+        el.querySelector(".conn-key").value = "";
+        await renderConnectionsPanel(langZh);
+      } catch (e) { msg(el, e.message); }
+    };
+    el.querySelector(".conn-test").onclick = async () => {
+      msg(el, L("测试中…", "testing…"));
+      try {
+        const r = await api(`/api/connections/${encodeURIComponent(pid)}/test`, { method: "POST", body: "{}", timeoutMs: 60000 });
+        if (!r.ok) { msg(el, `✗ ${r.error || "failed"}`); return; }
+        await renderConnectionsPanel(langZh);
+      } catch (e) { msg(el, e.message); }
+    };
+    const clr = el.querySelector(".conn-clear");
+    if (clr) clr.onclick = async () => {
+      if (!confirm(L(`删除 ${pid} 的 API key？`, `Remove the ${pid} API key?`))) return;
+      await api(`/api/connections/${encodeURIComponent(pid)}`, { method: "POST", body: JSON.stringify({ clear: true }) });
+      await renderConnectionsPanel(langZh);
+    };
+  });
+  panel.querySelectorAll(".conn-tier").forEach((row) => {
+    row.querySelector(".conn-tier-provider").onchange = () => {
+      const c = data.connections.find((x) => x.provider === row.querySelector(".conn-tier-provider").value) || {};
+      const dl = row.querySelector("datalist");
+      dl.innerHTML = [...new Set([...(c.models || []), ...(c.default_models || [])])].map((m) => `<option value="${escapeHtml(m)}">`).join("");
+      row.querySelector(".conn-tier-model").value = (c.models || c.default_models || [])[0] || "";
+    };
+    row.querySelector(".conn-tier-save").onclick = async () => {
+      try {
+        const r = await api("/api/connections/tier", { method: "POST", body: JSON.stringify({ route_key: row.dataset.tier,
+          provider: row.querySelector(".conn-tier-provider").value, model: row.querySelector(".conn-tier-model").value.trim() }) });
+        showRoutes(r.routes);
+      } catch (e) { $("#conn-route-result").textContent = e.message; }
+    };
+  });
+  const showRoutes = (routes) => {
+    $("#conn-route-result").innerHTML = `<table class="conn-routes"><tr><th>${L("等级", "Tier")}</th><th>${L("厂商", "Vendor")}</th><th>${L("模型", "Model")}</th><th>Base URL</th><th>Key</th></tr>${routes.map((r) =>
+      `<tr><td>${escapeHtml(tierNames[r.route_key] || r.route_key)}</td><td>${escapeHtml(r.provider || "—")}</td><td>${escapeHtml(r.model || "—")}</td><td><code>${escapeHtml(r.base_url || "—")}</code></td><td>${r.key_present ? "✓" : "✗"}</td></tr>`).join("")}</table>`;
+  };
+  $("#conn-route-test").onclick = async () => {
+    try { showRoutes((await api("/api/connections/route-test")).routes); } catch (e) { $("#conn-route-result").textContent = e.message; }
+  };
 }
 
 // ── Control Center: science database connectors ────────────────────────
@@ -7727,6 +7839,7 @@ async function renderControl() {
   // (runtimes / ecosystem) are still loading.
   await renderSearchPanel(langZh);
   await renderSciencePanel(langZh);
+  await renderConnectionsPanel(langZh);
   await renderRuntimesPanel(langZh);
   await renderEcosystemRecommend(langZh);
   await renderMcpPanel(langZh);
