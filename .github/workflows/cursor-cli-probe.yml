@@ -1,0 +1,64 @@
+name: Cursor CLI probe (real --help)
+
+# Installs the official Cursor CLI with its install script and saves the real help texts, so the Hub's Cursor
+# adapter is built on the CLI's actual flags (cursor.com is not reachable from the dev sandbox). No account needed.
+# Trigger: "[cursor-probe]" in the commit SUBJECT line, or manual.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["**"]
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[cursor-probe]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Mode
+        env:
+          MSG: ${{ github.event.head_commit.message }}
+        run: |
+          SUBJECT=$(printf '%s\n' "$MSG" | head -n 1)
+          RUN=false
+          case "$SUBJECT" in *"[cursor-probe]"*) RUN=true;; esac
+          [ "${{ github.event_name }}" = workflow_dispatch ] && RUN=true
+          echo "RUN=$RUN" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v4
+        if: env.RUN == 'true'
+      - name: Install Cursor CLI and save help texts
+        if: env.RUN == 'true'
+        run: |
+          mkdir -p outputs/cursor_probe
+          cd outputs/cursor_probe
+          (curl https://cursor.com/install -fsS | bash) > install.txt 2>&1 || echo "install failed: $?" >> install.txt
+          export PATH="$HOME/.local/bin:$PATH"
+          ls -la "$HOME/.local/bin" >> install.txt 2>&1 || true
+          BIN=$(command -v cursor-agent || command -v agent || true)
+          echo "BIN=$BIN" >> install.txt
+          [ -n "$BIN" ] || exit 0
+          "$BIN" --version > version.txt 2>&1 || true
+          "$BIN" --help > help.txt 2>&1 || true
+          for sub in login logout status update resume ls mcp; do "$BIN" $sub --help > "help-$sub.txt" 2>&1 || true; done
+          # print mode without an account: shows the auth error shape (and that nothing hangs)
+          timeout 30 "$BIN" -p "say hi" --output-format stream-json > print-noauth.txt 2>&1 || echo "exit=$?" >> print-noauth.txt
+          # login without a browser: the URL it prints (killed after a few seconds; no account is used)
+          NO_OPEN_BROWSER=1 timeout 12 script -qec "$BIN login" /dev/null > login-noauth.txt 2>&1 || echo "exit=$?" >> login-noauth.txt
+          sed -i -E 's#(https://[^ ]*[?&](code|token|state|challenge)[^ ]*)#<login url redacted>#g' login-noauth.txt
+          "$BIN" status > status-noauth.txt 2>&1 || echo "exit=$?" >> status-noauth.txt
+          ls -la
+      - name: Commit probe outputs
+        if: always() && env.RUN == 'true'
+        run: |
+          git config user.name "agent-hub-bot"
+          git config user.email "agent-hub-bot@users.noreply.github.com"
+          git add -f outputs/cursor_probe
+          git diff --cached --quiet || git commit -m "Cursor CLI probe outputs (run ${{ github.run_id }})"
+          for i in 1 2 3; do
+            git pull --rebase -X theirs origin "${{ github.ref_name }}" && git push origin "HEAD:${{ github.ref_name }}" && exit 0
+            git rebase --abort 2>/dev/null || true
+            sleep 5
+          done
