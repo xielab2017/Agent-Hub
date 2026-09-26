@@ -2590,7 +2590,7 @@ async function pollSkillRun(runId, card, zh) {
         const chk = s.citation_check || {};
         card.querySelector(".skill-run-out").innerHTML = (s.title ? `<p><strong>${escapeHtml(s.title)}</strong><br>${escapeHtml(
           `${s.sections} sections · ${s.words} words · ${chk.cited} references cited · ${s.llm_calls} model calls (${s.model})`)}</p>` : "")
-          + (r.outputs || []).map((o) => `<a class="btn chip" href="/api/skill-runs/${encodeURIComponent(runId)}/file?name=${encodeURIComponent(o.name)}" download>⬇ ${escapeHtml(o.name)}</a>`).join(" ");
+          + (r.outputs || []).slice().sort((a, b) => (b.name.endsWith(".docx") ? 1 : 0) - (a.name.endsWith(".docx") ? 1 : 0)).map((o) => `<a class="btn chip" href="/api/skill-runs/${encodeURIComponent(runId)}/file?name=${encodeURIComponent(o.name)}" download>⬇ ${escapeHtml(o.name)}</a>`).join(" ");
         if (r.status !== "done") card.classList.add("error");
         return;
       }

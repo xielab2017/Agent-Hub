@@ -2066,6 +2066,8 @@ hr.soft {
 .msg.skill-run .skill-run-log { max-height: 22rem; overflow: auto; font-size: .78em; line-height: 1.35;
   background: var(--code-bg, rgba(127,127,127,.08)); padding: .5rem .7rem; border-radius: 6px; white-space: pre-wrap; }
 .msg.skill-run .skill-run-out { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .4rem; }
+.msg.skill-run .skill-run-out > p { flex: 1 1 100%; margin: 0 0 .3rem; }  /* title row above the download chips */
+.msg.skill-run .skill-run-out > a.chip { white-space: nowrap; }
 
 /* multi-vendor model APIs */
 .conn-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 10px; }

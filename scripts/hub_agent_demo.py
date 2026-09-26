@@ -48,6 +48,10 @@ def main() -> int:
     args = ap.parse_args()
     out = Path(args.out).resolve()
     out.mkdir(parents=True, exist_ok=True)
+    import shutil
+
+    for old in ("screens", "skill_run"):  # one run = one record (earlier runs stay in git history)
+        shutil.rmtree(out / old, ignore_errors=True)
     report: dict = {"run_url": sd.RUN_URL, "turns": []}
     from playwright.sync_api import sync_playwright
 
@@ -120,6 +124,12 @@ def main() -> int:
                         time.sleep(4)
                     info = api(hub, f"/api/skill-runs/{run_id}")
                     turn["skill_result"] = {k: info.get(k) for k in ("status", "stage", "summary", "outputs", "error")}
+                    keep = out / "skill_run"  # the deliverable itself, so it can be opened from the branch
+                    keep.mkdir(exist_ok=True)
+                    for name in ("review.docx", "review_final.md", "citation_audit.json", "response_to_reviewers.md"):
+                        src = Path(info.get("out") or "") / name
+                        if src.is_file():
+                            shutil.copy2(src, keep / name)
                     page.wait_for_timeout(3000)
                     page.locator(".msg.skill-run").last.scroll_into_view_if_needed()
                     shots.take(page, "A", "skill-finished", note=f"skill run {info.get('status')}")
