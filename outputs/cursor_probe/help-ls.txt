@@ -1,0 +1,6 @@
+Usage: agent ls [options]
+
+Resume a chat session
+
+Options:
+  -h, --help  Display help for command

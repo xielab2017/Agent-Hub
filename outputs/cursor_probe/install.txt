@@ -1,0 +1,33 @@
+
+Cursor Agent Installer
+
+▸ Detecting system architecture...
+[1A[2K✓ Detected linux/x64
+▸ Creating installation directory...
+[1A[2K✓ Directory created
+▸ Downloading Cursor Agent package...
+  Download URL: https://downloads.cursor.com/lab/2026.09.26-dd393fe/linux/x64/agent-cli-package.tar.gz
+                                                                           0.0%#                                                                          2.8%#####                                                                      8.2%#########                                                                 13.7%#############                                                             18.9%#################                                                         24.3%#####################                                                     29.6%#########################                                                 34.8%############################                                              40.0%################################                                          45.3%###################################                                       48.9%#######################################                                   54.3%##########################################                                59.6%##############################################                            64.9%##################################################                        70.2%######################################################                    75.6%##########################################################                80.9%##############################################################            86.2%#################################################################         91.4%#####################################################################     96.8%######################################################################## 100.0%
+[1A[2K[1A[2K[1A[2K[1A[2K✓ Package downloaded and extracted
+▸ Finalizing installation...
+[1A[2K✓ Package installed successfully
+▸ Creating bin directory...
+[1A[2K✓ Bin directory ready
+▸ Creating symlinks to agent executable...
+[1A[2K✓ Symlink created
+
+✨ Installation Complete! 
+
+
+Start using Cursor Agent:
+   agent
+
+
+Happy coding! 🚀
+
+total 16
+drwxr-xr-x 2 runner runner 4096 Sep 26 05:59 .
+drwxr-xr-x 4 runner runner 4096 Sep 26 05:59 ..
+lrwxrwxrwx 1 runner runner   79 Sep 26 05:59 agent -> /home/runner/.local/share/cursor-agent/versions/2026.09.26-dd393fe/cursor-agent
+lrwxrwxrwx 1 runner runner   79 Sep 26 05:59 cursor-agent -> /home/runner/.local/share/cursor-agent/versions/2026.09.26-dd393fe/cursor-agent
+BIN=/home/runner/.local/bin/cursor-agent

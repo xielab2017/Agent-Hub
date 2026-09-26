@@ -1,0 +1,6 @@
+Usage: agent update [options]
+
+Update Cursor Agent to the latest version
+
+Options:
+  -h, --help  Display help for command

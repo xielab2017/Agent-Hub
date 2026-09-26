@@ -1,0 +1,6 @@
+Usage: agent logout [options]
+
+Sign out and clear stored authentication
+
+Options:
+  -h, --help  Display help for command
