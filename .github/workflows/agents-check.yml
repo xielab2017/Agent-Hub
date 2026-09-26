@@ -1,0 +1,89 @@
+name: Agents check (multi-model + Claude Code / Codex)
+
+# 1. Installs the real Claude Code and OpenAI Codex CLIs and checks their --help against the flags
+#    ali/agent_cli.py uses (CLI drift guard) — no account is needed for that.
+# 2. Drives Agent Hub's UI with Playwright (scripts/agents_demo.py): 多模型 API (MiniMax from the MINIMAX_KEY
+#    secret + a stub campus endpoint, tier routing), Claude Code external-link sign-in, Codex device-code
+#    sign-in and chats through both agents (fake CLIs from tests/fakes stand in for real accounts).
+# Screenshots are pushed to the branch about every 90 s (outputs/agents_demo/screens/).
+# Trigger: "[agents-check]" in the commit SUBJECT line, or manual.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["**"]
+
+permissions:
+  contents: write
+
+jobs:
+  agents:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[agents-check]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    concurrency:
+      group: agents-check-${{ github.ref }}
+      cancel-in-progress: false
+    steps:
+      - name: Mode
+        env:
+          MSG: ${{ github.event.head_commit.message }}
+        run: |
+          SUBJECT=$(printf '%s\n' "$MSG" | head -n 1)
+          RUN=false
+          case "$SUBJECT" in *"[agents-check]"*) RUN=true;; esac
+          [ "${{ github.event_name }}" = workflow_dispatch ] && RUN=true
+          echo "RUN=$RUN ($SUBJECT)"; echo "RUN=$RUN" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v4
+        if: env.RUN == 'true'
+      - uses: actions/setup-python@v5
+        if: env.RUN == 'true'
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        if: env.RUN == 'true'
+        with:
+          node-version: "22"
+      - name: Install
+        if: env.RUN == 'true'
+        run: |
+          python -m pip install --upgrade pip pyyaml python-docx playwright pytest
+          python -m playwright install --with-deps chromium
+          npm install -g @anthropic-ai/claude-code @openai/codex
+      - name: Real CLI flag check
+        if: env.RUN == 'true'
+        continue-on-error: true  # a drift report must not stop the UI demo; it is committed with the outputs
+        run: |
+          mkdir -p outputs/agents_demo
+          BIN="$(npm prefix -g)/bin"
+          python scripts/real_cli_check.py --claude "$BIN/claude" --codex "$BIN/codex" 2>&1 | tee outputs/agents_demo/real-cli-check.txt
+      - name: Tests
+        if: env.RUN == 'true'
+        run: python -m pytest -q tests/test_agent_cli.py tests/test_connections.py 2>&1 | tail -3
+      - name: UI demo (live screenshots)
+        if: env.RUN == 'true'
+        env:
+          MINIMAX_KEY: ${{ secrets.MINIMAX_KEY }}
+        run: |
+          git config user.name "agent-hub-bot"
+          git config user.email "agent-hub-bot@users.noreply.github.com"
+          scripts/push_loop.sh outputs/agents_demo 90 > /dev/null 2>&1 &
+          echo $! > /tmp/push_loop.pid
+          set -o pipefail
+          python scripts/agents_demo.py --out outputs/agents_demo --fakes tests/fakes 2>&1 | tee outputs/agents_demo/demo-log.txt
+      - name: Commit outputs
+        if: always() && env.RUN == 'true'
+        run: |
+          kill "$(cat /tmp/push_loop.pid 2>/dev/null)" 2>/dev/null || true
+          sleep 2
+          git rebase --abort 2>/dev/null || true
+          git add outputs/agents_demo
+          git diff --cached --quiet || git commit -m "Agents check outputs (run ${{ github.run_id }})"
+          git fetch -q origin "${{ github.ref_name }}"
+          [ -z "$(git log --oneline "origin/${{ github.ref_name }}..HEAD")" ] && exit 0
+          for i in 1 2 3; do
+            git pull --rebase -X theirs origin "${{ github.ref_name }}" && git push origin "HEAD:${{ github.ref_name }}" && exit 0
+            git rebase --abort 2>/dev/null || true
+            sleep 5
+          done
+          echo "::error::could not push the outputs"; exit 1

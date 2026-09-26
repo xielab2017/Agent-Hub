@@ -1,0 +1,50 @@
+#!/usr/bin/env python3
+"""Fake OpenAI Codex CLI for tests: exec --help, login (device / link / api key), login status, exec --json."""
+import json, os, sys, time, uuid
+from pathlib import Path
+args = sys.argv[1:]
+home = Path(os.environ.get("CODEX_HOME") or Path.home() / ".codex")
+log = os.environ.get("FAKE_AGENT_LOG")
+if log:
+    with open(log, "a") as fh:
+        fh.write(json.dumps({"argv": args, "codex_api_key": bool(os.environ.get("CODEX_API_KEY")),
+                             "openai_key": bool(os.environ.get("OPENAI_API_KEY")), "cwd": os.getcwd()}) + "\n")
+if args[:1] == ["--version"]:
+    print("codex-cli 0.99.0"); sys.exit(0)
+if args[:2] == ["exec", "--help"]:
+    print("Usage: codex exec [OPTIONS] [PROMPT]\n  --json\n  -s, --sandbox <SANDBOX_MODE>\n  --skip-git-repo-check\n"
+          "  -C, --cd <DIR>\n  -m, --model <MODEL>\nCommands:\n  resume  Resume a previous session"); sys.exit(0)
+if args[:2] == ["login", "status"]:
+    if (home / "auth.json").exists():
+        print("Logged in using ChatGPT"); sys.exit(0)
+    print("Not logged in"); sys.exit(1)
+if args[:1] == ["logout"]:
+    (home / "auth.json").unlink(missing_ok=True); print("Logged out"); sys.exit(0)
+if args[:1] == ["login"]:
+    home.mkdir(parents=True, exist_ok=True)
+    if "--with-api-key" in args:
+        key = sys.stdin.readline().strip()
+        (home / "auth.json").write_text(json.dumps({"OPENAI_API_KEY": "stored"})); print("Successfully logged in"); sys.exit(0)
+    if "--device-auth" in args:
+        print("Follow these steps to sign in with ChatGPT using device code authorization:\n")
+        print("1. Open this link in your browser and sign in\n   https://auth.openai.com/codex/device\n")
+        print("2. Enter this one-time code (expires in 15 minutes)\n   ABCD-12345\n", flush=True)
+    else:
+        print("Starting local login server on http://localhost:1455.\nIf your browser did not open, navigate to this URL to authenticate:\n")
+        print("https://auth.openai.com/oauth/authorize?response_type=code&client_id=fake&redirect_uri=http%3A%2F%2Flocalhost%3A1455\n", flush=True)
+    time.sleep(float(os.environ.get("FAKE_LOGIN_WAIT", "1")))
+    (home / "auth.json").write_text(json.dumps({"tokens": "fake"}))
+    print("Successfully logged in"); sys.exit(0)
+if args[:1] == ["exec"]:
+    rest = args[1:]
+    sid = rest[rest.index("resume") + 1] if "resume" in rest else str(uuid.uuid4())
+    prompt = rest[-1]
+    out = lambda o: print(json.dumps(o), flush=True)
+    out({"type": "thread.started", "thread_id": sid})
+    out({"type": "turn.started"})
+    out({"type": "item.started", "item": {"id": "i1", "type": "command_execution", "command": "ls"}})
+    out({"type": "item.completed", "item": {"id": "i1", "type": "command_execution", "command": "ls", "exit_code": 0}})
+    out({"type": "item.completed", "item": {"id": "i2", "type": "agent_message", "text": f"Fake Codex listed the workspace. You said: {prompt[:40]}"}})
+    out({"type": "turn.completed", "usage": {"input_tokens": 10, "output_tokens": 5}})
+    sys.exit(0)
+print("unsupported", args, file=sys.stderr); sys.exit(2)

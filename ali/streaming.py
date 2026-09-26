@@ -161,6 +161,7 @@ def get_ai_agent():
 
 
 _OPENCLAW_FAMILY = frozenset({"openclaw", "qqclaw", "aliyun_claw"})
+_AGENT_CLI = frozenset({"claude-code", "codex"})  # official vendor agent CLIs (ali/agent_cli.py)
 
 
 def _resolve_hub_chat_mode(ali: dict[str, Any] | None) -> str:
@@ -185,6 +186,8 @@ def _chat_engine_for_runtime(
         return "hermes"
     if runtime_resolved in _OPENCLAW_FAMILY:
         return "openclaw"
+    if runtime_resolved in _AGENT_CLI:
+        return runtime_resolved
     return "direct"
 
 
@@ -222,6 +225,10 @@ def agent_status() -> dict[str, Any]:
             engine = "direct-llm"
         else:
             engine = "demo"
+    elif planned in _AGENT_CLI:
+        from . import agent_cli as _acli
+
+        engine = planned if _acli.find_bin(planned) else ("direct-llm" if direct_ready else "demo")
     elif direct_ready:
         engine = "direct-llm"
     else:
@@ -276,7 +283,7 @@ def agent_status() -> dict[str, Any]:
         "chat_engine": engine,
         "hub_chat_mode": hub_chat_mode,
         "hub_fast_chat": hub_chat_mode == "direct",
-        "agent_mode": planned in ("hermes", "openclaw"),
+        "agent_mode": planned in ("hermes", "openclaw", *_AGENT_CLI),
         "python": sys.version.split()[0],
     }
 
@@ -1123,7 +1130,7 @@ def start_chat(
     route_info["hub_chat_mode"] = hub_chat_mode
     route_info["hub_fast_chat"] = not prefer_agent  # legacy field for older UI
     route_info["chat_engine"] = chat_engine
-    route_info["agent_mode"] = chat_engine in ("hermes", "openclaw")
+    route_info["agent_mode"] = chat_engine in ("hermes", "openclaw", *_AGENT_CLI)
 
     if simple_chat:
         # Fast path: short preamble, skip workspace snapshot / heavy soul fuse
@@ -1655,6 +1662,7 @@ def _run_agent_streaming(
                 and resolved in ("openclaw", "qqclaw", "aliyun_claw")
                 and not route_info.get("simple_chat")
             )
+            use_agent_cli = engine in _AGENT_CLI and resolved == engine and not route_info.get("simple_chat")
 
             if use_hermes:
                 # Credentials already synced on Connect; light touch only when needed
@@ -1675,7 +1683,15 @@ def _run_agent_streaming(
                     except Exception:  # noqa: BLE001
                         pass
 
-            if use_openclaw:
+            if use_agent_cli:
+                used = _agent_cli_reply(q, session_id, msg_text, active_preamble, assistant_parts,
+                                        route_info=route_info, workspace=workspace)
+                if not used:
+                    used = _direct_llm_reply(q, session_id, msg_text, model, assistant_parts,
+                                             route_info=route_info, preamble=active_preamble)
+                if not used:
+                    _demo_reply(q, msg_text, assistant_parts, route_info=route_info, preamble=active_preamble)
+            elif use_openclaw:
                 oc_input = msg_text
                 if active_preamble:
                     oc_input = f"[SYSTEM CONTEXT]\n{active_preamble}\n\n[USER]\n{msg_text}"
@@ -2146,7 +2162,15 @@ def _run_agent_streaming(
                         engine == "openclaw"
                         and not route_info.get("simple_chat")
                     )
-                    if use_openclaw:
+                    if engine in _AGENT_CLI and not route_info.get("simple_chat"):
+                        used = _agent_cli_reply(q, session_id, msg_text, retry_preamble, assistant_parts,
+                                                route_info=route_info, workspace=workspace)
+                        if not used:
+                            used = _direct_llm_reply(q, session_id, msg_text, model, assistant_parts,
+                                                     route_info=route_info, preamble=retry_preamble)
+                        if not used:
+                            _demo_reply(q, msg_text, assistant_parts, route_info=route_info, preamble=retry_preamble)
+                    elif use_openclaw:
                         oc_input = f"[SYSTEM CONTEXT]\n{retry_preamble}\n\n[USER]\n{msg_text}" if retry_preamble else msg_text
                         used = _openclaw_cli_reply(
                             q, session_id, oc_input, model, assistant_parts, route_info=route_info,
@@ -2296,6 +2320,69 @@ def _run_agent_streaming(
                     STREAMS.pop(stream_id, None)
 
             threading.Thread(target=_cleanup, daemon=True).start()
+
+
+def _agent_cli_reply(
+    q: queue.Queue,
+    session_id: str,
+    msg_text: str,
+    preamble: str,
+    assistant_parts: list[str],
+    *,
+    route_info: dict[str, Any] | None = None,
+    workspace: str = "",
+) -> bool:
+    """Run the turn through Claude Code / Codex (official CLIs), streaming text and tool use live."""
+    from . import agent_cli
+
+    route_info = route_info if route_info is not None else {}
+    rid = str(route_info.get("chat_engine") or "")
+    binpath = agent_cli.find_bin(rid) if rid in _AGENT_CLI else ""
+    if not binpath:
+        return False
+    label = "Claude Code" if rid == "claude-code" else "Codex"
+    _think(q, f"已接入 {label} · 官方 Agent CLI（权限：{agent_cli.permission_level()}）", kind="dispatch")
+    _put(q, "meta", {"mode": rid, "engine": rid, "agent_mode": True, "bin": binpath})
+    tools = route_info.setdefault("agent_tools", [])
+    streamed = {"n": 0}
+
+    def on_event(kind: str, data: Any) -> None:
+        if kind == "token" and data:
+            streamed["n"] += 1
+            assistant_parts.append(str(data))
+            _put(q, "token", {"text": str(data)})
+        elif kind == "tool":
+            payload = {"name": str(data.get("name") or "tool"), "preview": str(data.get("preview") or "")[:120]}
+            tools.append(payload)
+            _put(q, "tool", payload)
+            _think(q, f"{label} 工具：{payload['name']} {payload['preview']}", kind="tool")
+        elif kind == "think" and data:
+            _think(q, str(data)[:300], kind="reasoning")
+        elif kind == "meta" and isinstance(data, dict) and data.get("session_id"):
+            route_info["agent_session"] = data["session_id"]
+
+    from .settings import load_campus_config
+
+    timeout = float((load_campus_config().get("backend") or {}).get("timeout_seconds") or 900)
+    try:
+        result = agent_cli.run(rid, msg_text, hub_session=session_id, workspace=workspace, system=preamble or "",
+                               on_event=on_event, cancelled=lambda: _cancelled_for_queue(q),
+                               timeout=max(timeout, 300.0), binpath=binpath)
+    except Exception as exc:  # noqa: BLE001 — fall back to the direct model path
+        _put(q, "meta", {"mode": rid, "engine": rid, "error": str(exc)})
+        _think(q, f"{label} 不可用：{exc}", kind="dispatch")
+        return False
+    if result.get("error"):
+        _put(q, "meta", {"mode": rid, "engine": rid, "error": result["error"]})
+        if not streamed["n"]:
+            _think(q, f"{label} 出错：{result['error']}", kind="dispatch")
+            return False
+    if not streamed["n"] and result.get("text"):
+        assistant_parts.append(result["text"])
+        _put(q, "token", {"text": result["text"]})
+    if result.get("cost_usd") is not None:
+        route_info["agent_cost_usd"] = result["cost_usd"]
+    return bool(streamed["n"] or result.get("text"))
 
 
 def _openclaw_cli_reply(

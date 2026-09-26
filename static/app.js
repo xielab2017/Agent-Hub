@@ -2045,7 +2045,9 @@ function renderEngineBadge(meta, routeInfo) {
   const mode = (meta && meta.mode) || "";
   const engine = (meta && meta.engine) || (routeInfo && routeInfo.chat_engine) || "";
   if (meta && meta.agent_mode) {
-    if (mode.includes("openclaw") || engine === "openclaw") {
+    if (engine === "claude-code" || engine === "codex") {
+      el.textContent = engine === "codex" ? "OpenAI Codex" : "Claude Code";
+    } else if (mode.includes("openclaw") || engine === "openclaw") {
       el.textContent = t("engine.openclaw");
     } else {
       el.textContent = t("engine.hermes");
@@ -2101,7 +2103,8 @@ function renderModeBanner(status) {
     ? ` · ${escapeHtml(t("hubChat.direct"))}`
     : ` · ${escapeHtml(t("hubChat.agent"))}`;
   if (engine === "hermes" || engine === "hermes-cli" || engine === "openclaw" || agent.agent_mode) {
-    const engLabel = engine === "openclaw" ? t("engine.openclaw") : t("engine.hermes");
+    const engLabel = engine === "openclaw" ? t("engine.openclaw")
+      : engine === "claude-code" ? "Claude Code" : engine === "codex" ? "OpenAI Codex" : t("engine.hermes");
     el.innerHTML = `<strong>${escapeHtml(t("mode.agent"))}</strong> · ${escapeHtml(engLabel)}${hubBit}${clawBit || " · claw=<code>Hermes Agent</code>"}${autoBit}${soulBit}`;
   } else if (engine === "direct-llm" || agent.direct_llm) {
     el.innerHTML = `<strong>${escapeHtml(t("mode.ai"))}</strong>${hubBit} — <span class="key-masked">${escapeHtml(agent.api_key_masked || "API")}</span>${clawBit}${autoBit}${soulBit}`;
@@ -2125,7 +2128,8 @@ function renderAgent(status) {
   const hubMode = agent.hub_chat_mode || "agent";
   const engine = agent.chat_engine || "";
   if (engine === "hermes" || engine === "hermes-cli" || engine === "openclaw" || agent.agent_mode) {
-    const eng = engine === "openclaw" ? "OpenClaw" : (clawName || "Hermes");
+    const eng = engine === "openclaw" ? "OpenClaw" : engine === "claude-code" ? "Claude Code"
+      : engine === "codex" ? "OpenAI Codex" : (clawName || "Hermes");
     el.textContent = `${t("mode.agent")} · ${eng} · ${policy || "office"}`;
     el.className = "badge ok";
   } else if (agent.direct_llm || engine === "direct-llm") {
@@ -3459,7 +3463,9 @@ function updateMessageElapsedMeta(assistantEl, route, elapsedMs) {
   if (!meta) return;
   const role = "Agent Hub";
   let routeBit = "";
-  if (route && route.tier) {
+  if (route && (route.chat_engine === "claude-code" || route.chat_engine === "codex")) {
+    routeBit = ` · ${route.chat_engine === "codex" ? "OpenAI Codex" : "Claude Code"}`;
+  } else if (route && route.tier) {
     routeBit = ` · ${route.tier}/${route.route_key || ""}${route.model ? " · " + route.model : ""}`;
   }
   if (route && route.subagent_label) {
@@ -5140,7 +5146,9 @@ function appendMessage(m, scroll = true) {
   if (m.id) div.dataset.mid = m.id;
   const role = m.role === "user" ? "You" : "Agent Hub";
   let route = "";
-  if (m.route && m.route.tier) {
+  if (m.route && (m.route.chat_engine === "claude-code" || m.route.chat_engine === "codex")) {
+    route = ` · ${m.route.chat_engine === "codex" ? "OpenAI Codex" : "Claude Code"}`;  // answered by the vendor agent
+  } else if (m.route && m.route.tier) {
     route = ` · ${m.route.tier}/${m.route.route_key || ""}${m.route.model ? " · " + m.route.model : ""}`;
   }
   if (m.route && m.route.subagent_label) {
@@ -7951,6 +7959,82 @@ async function renderSchedulePanel(langZh) {
   });
 }
 
+// ── Claude Code / Codex: external-link sign-in (Claws panel) ───────────
+
+async function mountAgentLogin(row, rid, langZh) {
+  const L = (zh, en) => (langZh ? zh : en);
+  const box = document.createElement("div");
+  box.className = "agent-login";
+  box.dataset.rid = rid;
+  (row.firstElementChild || row).appendChild(box);
+  const render = async () => {
+    let st = {};
+    try { st = await api(`/api/runtimes/${rid}/auth`); } catch (_) {}
+    const badge = !st.installed ? `<span class="conn-badge off">${L("未安装", "not installed")}</span>`
+      : st.logged_in ? `<span class="conn-badge ok">✓ ${L("已登录", "signed in")} · ${escapeHtml(st.detail || st.mode || "")}</span>`
+      : `<span class="conn-badge err">${L("未登录", "not signed in")}</span>`;
+    box.innerHTML = `<div class="agent-login-head">${badge}
+        <label class="muted">${L("权限", "Permissions")} <select class="agent-perm">
+          <option value="read-only" ${st.permissions !== "workspace-write" ? "selected" : ""}>${L("只读", "read-only")}</option>
+          <option value="workspace-write" ${st.permissions === "workspace-write" ? "selected" : ""}>${L("可写工作区", "workspace-write")}</option>
+        </select></label></div>
+      <div class="agent-login-actions">
+        <button type="button" class="btn primary chip" data-login="link">${L("外部链接登录", "Sign in via link")}</button>
+        ${rid === "codex" ? `<button type="button" class="btn ghost chip" data-login="device">${L("设备码登录", "Device code")}</button>` : ""}
+        <button type="button" class="btn ghost chip" data-login="api_key">${L("填 API key", "Use API key")}</button>
+        ${st.logged_in ? `<button type="button" class="btn ghost chip" data-logout="1">${L("退出", "Sign out")}</button>` : ""}
+      </div><div class="agent-login-job"></div>`;
+    box.querySelector(".agent-perm").onchange = async (e) => {
+      await api("/api/runtimes/agent-permissions", { method: "POST", body: JSON.stringify({ level: e.target.value }) });
+    };
+    box.querySelectorAll("[data-login]").forEach((b) => { b.onclick = () => start(b.dataset.login); });
+    const lo = box.querySelector("[data-logout]");
+    if (lo) lo.onclick = async () => { await api(`/api/runtimes/${rid}/logout`, { method: "POST", body: "{}" }); render(); };
+  };
+  const start = async (method) => {
+    const jobEl = box.querySelector(".agent-login-job");
+    let body = { method };
+    if (method === "api_key") {
+      const key = prompt(rid === "claude-code" ? L("粘贴 Anthropic API key", "Paste an Anthropic API key")
+        : L("粘贴 OpenAI API key", "Paste an OpenAI API key"));
+      if (!key) return;
+      body.api_key = key.trim();
+    }
+    let job;
+    try { job = await api(`/api/runtimes/${rid}/login`, { method: "POST", body: JSON.stringify(body) }); }
+    catch (e) { jobEl.textContent = e.message; return; }
+    const draw = (j) => {
+      jobEl.innerHTML = `<div class="agent-login-card">
+        ${j.url ? `<div>${L("① 在浏览器打开并授权：", "① Open and authorise in your browser:")}<br><a class="agent-login-url" href="${escapeHtml(j.url)}" target="_blank" rel="noopener">${escapeHtml(j.url.length > 90 ? j.url.slice(0, 90) + "…" : j.url)}</a></div>` : `<div class="muted">${L("等待登录链接…", "waiting for the sign-in link…")}</div>`}
+        ${j.code ? `<div>${L("② 输入设备码：", "② Enter the device code:")} <code class="agent-login-code">${escapeHtml(j.code)}</code></div>` : ""}
+        ${j.status === "running" && rid === "claude-code" ? `<div class="conn-row">${L("② 授权后若页面给出代码，粘贴到这里：", "② If the page shows a code, paste it here:")}
+          <input class="agent-login-input" placeholder="code" /><button type="button" class="btn primary chip agent-login-send">${L("提交", "Submit")}</button></div>` : ""}
+        <div class="muted">${j.status === "running" ? L("⏳ 等待授权…", "⏳ waiting for authorisation…")
+          : j.status === "done" ? L("✓ 登录完成", "✓ signed in") : `✗ ${escapeHtml(j.error || "failed")}`}</div>
+        <pre class="agent-login-log">${escapeHtml((j.lines || []).slice(-8).join("\n"))}</pre></div>`;
+      const send = jobEl.querySelector(".agent-login-send");
+      if (send) send.onclick = async () => {
+        const v = jobEl.querySelector(".agent-login-input").value.trim();
+        if (v) await api(`/api/runtimes/login/${job.id}/input`, { method: "POST", body: JSON.stringify({ code: v }) });
+      };
+    };
+    draw(job);
+    let keepInput = "";
+    while (job.status === "running") {
+      await new Promise((res) => setTimeout(res, 1200));
+      const inp = jobEl.querySelector(".agent-login-input");
+      keepInput = inp ? inp.value : keepInput;
+      try { job = await api(`/api/runtimes/login/${job.id}`); } catch (_) { break; }
+      draw(job);
+      const again = jobEl.querySelector(".agent-login-input");
+      if (again && keepInput) again.value = keepInput;
+    }
+    await render();
+    draw(job);
+  };
+  await render();
+}
+
 async function renderRuntimesPanel(langZh) {
   const panel = $("#ctab-runtimes");
   if (!panel) return;
@@ -8089,6 +8173,7 @@ async function renderRuntimesPanel(langZh) {
           : `<button type="button" class="btn ghost chip" data-copy="${escapeHtml(r.id)}">${langZh ? "复制命令" : "Copy cmds"}</button>`}
       </div>`;
     list.appendChild(row);
+    if (r.id === "claude-code" || r.id === "codex") mountAgentLogin(row, r.id, langZh);
   });
 
   $("#btn-runtime-set").onclick = async () => {

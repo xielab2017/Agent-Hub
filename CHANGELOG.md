@@ -1,5 +1,26 @@
 # Changelog
 
+## v5.4.0 — 2026-09-26
+
+- **Multi-vendor model APIs (Control Center → 多模型 API).** Several vendors can be connected at once, each
+  with its own key (secrets store, masked in the UI), endpoint (catalog URL, the vendor's alternates such as
+  MiniMax `…/anthropic`, or a marked custom gateway) and TLS policy; saving a vendor never switches the active
+  backend. Test / fetch models per vendor (model list, or a one-token chat where `/models` is not offered).
+  **Tier routing:** simple / office / reasoning / vision can each be bound to a vendor + model (the backend
+  becomes Hybrid; unbound tiers keep the previous vendor or follow office). Hybrid routes, subagents, English
+  search terms, claw sync and the literature-review skill's model client use each vendor's own endpoint and key
+  (`providers.connection` / `hub_model`, `ali/connections.py`, `/api/connections…`).
+- **Claude Code and OpenAI Codex as agents (Claws).** New runtimes `claude-code` and `codex`
+  (`ali/agent_cli.py`): chat turns run through the official CLIs headless with live streamed text and tool use,
+  per-session resume, the Hub workspace as working directory and read-only permissions by default
+  (workspace-write optional; the Hub never passes a permission-bypass mode). **Sign-in by external link:**
+  Claude Code `setup-token` (the link is shown in the UI, a code can be pasted back, the long-lived token is
+  stored by the Hub and never displayed), Codex browser link or device code, or an API key for either. A flag
+  check refuses to run a CLI version whose `--help` lacks the flags the adapter needs; the workflow
+  "Agents check" verifies the real CLIs' flags and drives the UI with screenshots.
+- **Runnable literature-review skill** (from v5.3.6+): `/skill`, `/skill-author`, `/skill-export`,
+  reviewer gap filling, seeds always kept as evidence, citation audit — see `docs/CHANGES-agent-hub.md`.
+
 ## v5.3.6 — 2026-09-25
 
 Tested against the real MiniMax API from GitHub runners (workflow

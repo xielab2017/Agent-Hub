@@ -2082,3 +2082,11 @@ hr.soft {
 .conn-routes td, .conn-routes th { border-bottom: 1px solid rgba(127,127,127,.25); padding: 3px 6px; text-align: left; }
 .conn-row .btn { white-space: nowrap; }
 .conn-row .conn-msg { flex: 1 1 100%; font-size: .8em; }
+
+/* Claude Code / Codex sign-in */
+.agent-login { margin-top: 8px; padding: 8px; border-radius: 8px; background: rgba(127,127,127,.08); }
+.agent-login-head, .agent-login-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
+.agent-login-card { display: grid; gap: 6px; font-size: .9em; }
+.agent-login-url { word-break: break-all; }
+.agent-login-code { font-size: 1.2em; letter-spacing: .08em; padding: 2px 6px; }
+.agent-login-log { max-height: 8rem; overflow: auto; font-size: .75em; white-space: pre-wrap; margin: 0; }

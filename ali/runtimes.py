@@ -236,7 +236,56 @@ RUNTIMES: list[dict[str, Any]] = [
             "note_en": "Container claw runs separately; Agent-CLI Direct LLM can share providers.",
         },
     },
+    {
+        "id": "claude-code",
+        "family": "agent-cli",
+        "label": "Claude Code",
+        "label_zh": "Claude Code",
+        "desc": "Anthropic's coding agent CLI — sign in with a Claude subscription (browser link) or an API key.",
+        "desc_zh": "Anthropic 官方 Agent CLI：用 Claude 订阅账号（浏览器授权链接）或 API key 登录。",
+        "homepage": "https://www.anthropic.com/claude-code",
+        "docs": "https://docs.claude.com/en/docs/claude-code/overview",
+        "detect": {"whiches": ["claude"], "paths": ["~/.claude/.credentials.json"]},
+        "install": {
+            "kind": "script",
+            "posix": ["curl -fsSL https://claude.ai/install.sh | bash"],
+            "windows": ["irm https://claude.ai/install.ps1 | iex"],
+            "alt_posix": ["npm install -g @anthropic-ai/claude-code"],
+            "verify": ["claude", "--version"],
+        },
+        "login": True,
+        "optimize": {
+            "ali.agent_runtime": "claude-code",
+            "note_zh": "对话交给 Claude Code（默认只读权限，可在 Claws 面板改为可写工作区）。",
+            "note_en": "Chat runs through Claude Code (read-only by default; workspace-write can be enabled).",
+        },
+    },
+    {
+        "id": "codex",
+        "family": "agent-cli",
+        "label": "OpenAI Codex",
+        "label_zh": "OpenAI Codex",
+        "desc": "OpenAI's coding agent CLI — sign in with ChatGPT (browser link / device code) or an API key.",
+        "desc_zh": "OpenAI 官方 Agent CLI：用 ChatGPT 账号（浏览器链接 / 设备码）或 API key 登录。",
+        "homepage": "https://github.com/openai/codex",
+        "docs": "https://developers.openai.com/codex/cli",
+        "detect": {"whiches": ["codex"], "paths": ["~/.codex/auth.json"]},
+        "install": {
+            "kind": "script",
+            "posix": ["npm install -g @openai/codex"],
+            "windows": ["npm install -g @openai/codex"],
+            "verify": ["codex", "--version"],
+        },
+        "login": True,
+        "optimize": {
+            "ali.agent_runtime": "codex",
+            "note_zh": "对话交给 Codex（默认只读沙箱，可在 Claws 面板改为可写工作区）。",
+            "note_en": "Chat runs through Codex (read-only sandbox by default; workspace-write can be enabled).",
+        },
+    },
 ]
+
+AGENT_CLI_RUNTIMES = ("claude-code", "codex")
 
 
 def get_runtime(runtime_id: str) -> dict[str, Any] | None:
@@ -346,6 +395,8 @@ def _iter_package_json_candidates(runtime_id: str) -> list[Path]:
         "nano_claw": ["nano-claw", "nano_claw"],
         "nanobot": ["nanobot-ai", "nanobot"],
         "nanoclaw": ["nanoclaw"],
+        "claude-code": ["@anthropic-ai/claude-code"],
+        "codex": ["@openai/codex"],
     }.get(runtime_id, [runtime_id.replace("_", "-"), runtime_id])
     cands: list[Path] = []
     # Prefer nested package under node_modules (npm --prefix installs)
@@ -413,6 +464,8 @@ def _bin_names_for_runtime(meta: dict[str, Any]) -> list[str]:
         "nano_claw": ["nano-claw"],
         "qqclaw": ["openclaw"],
         "aliyun_claw": ["openclaw"],
+        "claude-code": ["claude"],
+        "codex": ["codex"],
     }.get(str(rid), [])
     for e in extras:
         if e not in names:
@@ -825,10 +878,22 @@ def connect_runtime(runtime_id: str) -> dict[str, Any]:
     cfg, ali = _ali_cfg()
     ali["agent_runtime"] = runtime_id
     ali["auto_runtime"] = runtime_id
+    if runtime_id in AGENT_CLI_RUNTIMES:  # connecting a vendor agent means it should answer (agent mode)
+        ali["hub_chat_mode"] = "agent"
+        ali.pop("hub_fast_chat", None)
     save_campus_config(cfg)
     claw_sync: dict[str, Any] = {}
     llm_sync: dict[str, Any] = {}
     skills_sync: dict[str, Any] = {}
+    if runtime_id in AGENT_CLI_RUNTIMES:
+        # vendor agent CLIs use their own login; soul / skills context is passed per turn
+        # (--append-system-prompt), so nothing is written into ~/.claude or ~/.codex here.
+        from . import agent_cli
+
+        out = list_runtimes()
+        out["auth"] = agent_cli.auth_status(runtime_id)
+        out["llm_sync"] = {"ok": True, "skipped": "vendor login"}
+        return out
     try:
         from . import soul as soul_mod
 
@@ -1067,6 +1132,10 @@ def upgrade_commands(runtime_id: str) -> list[str]:
             "openclaw plugins install @tencent-connect/openclaw-qqbot@latest",
             "openclaw --version || true",
         ]
+    if runtime_id == "claude-code":
+        return ["claude update || npm install -g @anthropic-ai/claude-code@latest || true", "claude --version || true"]
+    if runtime_id == "codex":
+        return ["npm install -g @openai/codex@latest || true", "codex --version || true"]
 
     return base
 

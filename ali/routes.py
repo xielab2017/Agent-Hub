@@ -44,6 +44,7 @@ from . import (
     skill_runner,
     task_runner,
     connections as conn_mod,
+    agent_cli,
     streaming,
     subagent_planner,
     uploads,
@@ -427,6 +428,15 @@ def handle_get(handler) -> None:
             prefer = [prefer]
         lanes = agents.pick_subagents_for_parallel(count, message, prefer_ids=list(prefer))
         return _json(handler, 200, {"ok": True, "lanes": lanes, "count": len(lanes)})
+
+    # vendor agent CLIs (Claude Code / Codex): sign-in status and login jobs
+    if len(parts) == 4 and parts[:2] == ["api", "runtimes"] and parts[3] == "auth" and parts[2] in ("claude-code", "codex"):
+        return _json(handler, 200, agent_cli.auth_status(parts[2]))
+    if len(parts) == 4 and parts[:3] == ["api", "runtimes", "login"]:
+        try:
+            return _json(handler, 200, agent_cli.login_status(parts[3]))
+        except FileNotFoundError:
+            return _json(handler, 404, {"error": "login job not found"})
 
     if path == "/api/runtimes":
         return _json(handler, 200, runtimes.list_runtimes())
@@ -1382,6 +1392,37 @@ def handle_post(handler) -> None:
             return _json(handler, 200, result)
         except ValueError as exc:
             return _json(handler, 400, {"error": str(exc)})
+
+    if len(parts) == 4 and parts[:2] == ["api", "runtimes"] and parts[2] in ("claude-code", "codex") \
+            and parts[3] in ("login", "logout"):
+        body = _read_json(handler)
+        try:
+            if parts[3] == "logout":
+                return _json(handler, 200, agent_cli.logout(parts[2]))
+            job = agent_cli.start_login(parts[2], str(body.get("method") or "link"),
+                                        api_key=str(body.get("api_key") or ""))
+            audit.log_event("agent_login", {"runtime": parts[2], "method": job.get("method"), "job": job.get("id")})
+            return _json(handler, 200, job)
+        except (ValueError, RuntimeError) as exc:
+            return _json(handler, 400, {"error": str(exc)})
+    if len(parts) == 5 and parts[:3] == ["api", "runtimes", "login"] and parts[4] == "input":
+        body = _read_json(handler)
+        try:
+            return _json(handler, 200, agent_cli.login_input(parts[3], str(body.get("text") or body.get("code") or "")))
+        except FileNotFoundError:
+            return _json(handler, 404, {"error": "login job not found"})
+        except OSError as exc:
+            return _json(handler, 400, {"error": str(exc)})
+    if path == "/api/runtimes/agent-permissions":
+        body = _read_json(handler)
+        level = str(body.get("level") or "read-only")
+        if level not in ("read-only", "workspace-write"):
+            return _json(handler, 400, {"error": "level must be read-only or workspace-write"})
+        cfg = load_campus_config()
+        cfg.setdefault("ali", {})["agent_permissions"] = level
+        save_campus_config(cfg)
+        audit.log_event("agent_permissions", {"level": level})
+        return _json(handler, 200, {"ok": True, "level": level})
 
     if path == "/api/runtimes/connect":
         body = _read_json(handler)

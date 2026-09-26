@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+"""Fake Claude Code CLI for tests: --help, setup-token (link → code → token), -p with stream-json."""
+import json, os, sys, uuid
+args = sys.argv[1:]
+log = os.environ.get("FAKE_AGENT_LOG")
+if log:
+    with open(log, "a") as fh:
+        fh.write(json.dumps({"argv": args, "oauth": bool(os.environ.get("CLAUDE_CODE_OAUTH_TOKEN")),
+                             "api_key": bool(os.environ.get("ANTHROPIC_API_KEY")),
+                             "base_url": os.environ.get("ANTHROPIC_BASE_URL", ""), "cwd": os.getcwd()}) + "\n")
+if args[:1] == ["--version"]:
+    print("2.9.0 (Claude Code)"); sys.exit(0)
+if args[:1] == ["--help"]:
+    print("Usage: claude [options] [prompt]\n  -p, --print  print response\n  --output-format <format>\n"
+          "  --verbose\n  --include-partial-messages\n  -r, --resume [sessionId]\n  --permission-mode <mode>\n"
+          "  --allowedTools, --allowed-tools <tools...>\n  --model <model>\n  --append-system-prompt <prompt>")
+    sys.exit(0)
+if args[:1] == ["setup-token"]:
+    print("\x1b[1mOpening browser to sign in…\x1b[0m")
+    print("Browser didn't open? Use the url below to sign in:\n")
+    print("https://claude.ai/oauth/authorize?code=true&client_id=fake&state=xyz\n", flush=True)
+    sys.stdout.write("Paste code here if prompted > "); sys.stdout.flush()
+    code = sys.stdin.readline().strip()
+    if not code:
+        print("no code"); sys.exit(1)
+    print("\n✓ Long-lived authentication token created successfully!\n")
+    print("Your OAuth token (valid for 1 year):\n\nsk-ant-oat01-" + "Z" * 60 + "\n", flush=True)
+    sys.exit(0)
+if "-p" in args:
+    prompt = args[args.index("-p") + 1]
+    sid = args[args.index("--resume") + 1] if "--resume" in args else str(uuid.uuid4())
+    out = lambda o: print(json.dumps(o), flush=True)
+    out({"type": "system", "subtype": "init", "session_id": sid, "model": "claude-fake"})
+    out({"type": "assistant", "message": {"content": [{"type": "tool_use", "name": "Read", "input": {"file_path": "README.md"}}]}})
+    reply = f"Fake Claude read the workspace. You said: {prompt[:40]}"
+    for i in range(0, len(reply), 12):
+        out({"type": "stream_event", "event": {"type": "content_block_delta", "delta": {"type": "text_delta", "text": reply[i:i + 12]}}})
+    out({"type": "assistant", "message": {"content": [{"type": "text", "text": reply}]}})
+    out({"type": "result", "subtype": "success", "is_error": False, "result": reply, "session_id": sid, "total_cost_usd": 0.0012})
+    sys.exit(0)
+print("unsupported", args, file=sys.stderr); sys.exit(2)

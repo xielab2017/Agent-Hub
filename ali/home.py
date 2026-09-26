@@ -103,6 +103,8 @@ def native_claw_home(runtime_id: str) -> Path | None:
         "nanobot": home / ".nanobot",
         "nano_claw": home / ".nano-claw",
         "nanoclaw": home / "nanoclaw",
+        "claude-code": home / ".claude",
+        "codex": Path(os.environ.get("CODEX_HOME") or home / ".codex"),
     }
     if rid in mapping:
         return mapping[rid]
