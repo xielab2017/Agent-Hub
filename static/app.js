@@ -3206,15 +3206,51 @@ async function renderConnectionsPanel(langZh) {
   if (aRes.status === "fulfilled") agents = aRes.value.agents || [];
   const L = (zh, en) => (langZh ? zh : en);
   const connected = data.connections.filter((c) => c.key_present || c.provider === "local-ollama");
+  const TIER_KEYS = ["simple", "office", "reasoning", "vision"];
   const tierNames = { simple: L("简单问答 C0", "Simple C0"), office: L("办公写作 C1", "Office C1"),
     reasoning: L("推理 C3", "Reasoning C3"), vision: L("视觉 Vision", "Vision") };
+  const tierNamesShort = { simple: L("简单", "simple"), office: L("办公", "office"), reasoning: L("推理", "reasoning"), vision: L("视觉", "vision") };
+  const hybrid = data.mode === "hybrid";
+  // Which tiers a source answers — identical rule for an agent account and an API vendor.
+  const tiersOf = (id) => (hybrid ? TIER_KEYS.filter((rk) => (data.tiers[rk] || {}).provider === id) : []);
+
+  // One list of model sources: signed-in agent accounts and API vendors, same card, same actions.
+  const sources = [
+    ...agents.map((a) => ({
+      kind: "account", id: a.id, agent: a,
+      label: langZh ? a.label : a.label_en,
+      ready: !!a.logged_in,
+      version: a.version || "",
+      search: `${a.id} ${a.label} ${a.label_en} ${a.account}`.toLowerCase(),
+    })),
+    ...data.connections.map((c) => ({
+      kind: "api", id: c.provider, conn: c,
+      label: langZh ? c.label : c.label_en,
+      ready: !!c.key_present || c.provider === "local-ollama",
+      version: "",
+      search: `${c.provider} ${c.label} ${c.label_en} ${c.base_url || ""}`.toLowerCase(),
+    })),
+  ];
+  const filter = panel.dataset.srcFilter || "all";
+  const query = String(panel.dataset.srcQuery || "");
+  const matchesFilter = (s) => (filter === "all" ? true
+    : filter === "ready" ? s.ready
+      : filter === "account" ? s.kind === "account" : s.kind === "api");
+  const visible = sources.filter((s) => matchesFilter(s) && (!query || s.search.includes(query)));
+  const counts = {
+    all: sources.length,
+    ready: sources.filter((s) => s.ready).length,
+    account: sources.filter((s) => s.kind === "account").length,
+    api: sources.filter((s) => s.kind === "api").length,
+  };
+
   const tierRow = (rk) => {
     const cur = data.tiers[rk] || {};
     const opts = [`<option value="">${L("（未绑定：跟随办公）", "(unbound: follow office)")}</option>`]
-      .concat([`<optgroup label="${L("API 厂商", "API vendors")}">`], connected.map((c) => `<option value="${escapeHtml(c.provider)}" ${c.provider === cur.provider ? "selected" : ""}>${escapeHtml(langZh ? c.label : c.label_en)}</option>`), ["</optgroup>"])
       .concat(agents.length ? [`<optgroup label="${L("账号登录（Agent）", "Signed-in accounts (agents)")}">`] : [],
         agents.map((a) => `<option value="${escapeHtml(a.id)}" ${a.id === cur.provider ? "selected" : ""}>${escapeHtml(langZh ? a.label : a.label_en)}${a.logged_in ? "" : L(" · 未登录", " · not signed in")}</option>`),
-        agents.length ? ["</optgroup>"] : []);
+        agents.length ? ["</optgroup>"] : [])
+      .concat([`<optgroup label="${L("API 厂商", "API vendors")}">`], connected.map((c) => `<option value="${escapeHtml(c.provider)}" ${c.provider === cur.provider ? "selected" : ""}>${escapeHtml(langZh ? c.label : c.label_en)}</option>`), ["</optgroup>"]);
     const agentSel = agents.find((a) => a.id === cur.provider);
     const models = agentSel ? { models: agentSel.models } : (connected.find((c) => c.provider === cur.provider) || {});
     const list = [...new Set([...(models.models || []), ...(models.default_models || []), cur.model].filter(Boolean))];
@@ -3224,62 +3260,95 @@ async function renderConnectionsPanel(langZh) {
       <datalist id="conn-models-${rk}">${list.map((m) => `<option value="${escapeHtml(m)}">`).join("")}</datalist>
       <button type="button" class="btn ghost chip conn-tier-save">${L("保存", "Save")}</button></div>`;
   };
-  const card = (c) => {
+
+  // Shared card chrome: kind, name, id, readiness, version, and which tiers it answers.
+  const head = (s, statusBadge, extraBadges = "") => `<div class="src-head">
+      <span class="src-kind src-kind-${s.kind}">${s.kind === "account" ? L("账号登录", "Account") : L("API key", "API key")}</span>
+      <strong class="src-name">${escapeHtml(s.label)}</strong>
+      <code class="src-id">${escapeHtml(s.id)}</code>
+      ${statusBadge}${extraBadges}
+      ${s.version ? `<span class="conn-badge ver" title="${L("已安装的 CLI 版本", "installed CLI version")}${s.agent && s.agent.version_source ? ` · ${escapeHtml(s.agent.version_source)}` : ""}">v${escapeHtml(s.version)}</span>` : ""}
+      <span class="src-tier-chips">${tiersOf(s.id).map((rk) => `<span class="conn-badge ok">${L("用于", "serves")} ${escapeHtml(tierNamesShort[rk] || rk)}</span>`).join("")}</span>
+    </div>`;
+  // Shared footer: bind this source to tiers. Accounts and vendors bind the same way.
+  const tierActions = (s) => {
+    const bound = tiersOf(s.id);
+    return `<div class="src-actions">
+      <span class="muted src-actions-label">${L("用于对话", "Answer chat")}</span>
+      <button type="button" class="btn ghost chip src-bind" data-tiers="office">${L("办公", "Office")}</button>
+      <button type="button" class="btn ghost chip src-bind" data-tiers="reasoning">${L("推理", "Reasoning")}</button>
+      <button type="button" class="btn ghost chip src-bind" data-tiers="simple,office,reasoning,vision">${L("全部对话", "All chat")}</button>
+      ${bound.length ? `<button type="button" class="btn ghost chip src-unbind">${L("解除绑定", "Unbind")}</button>` : ""}
+      <span class="muted conn-msg"></span>
+    </div>`;
+  };
+
+  const accountCard = (s) => {
+    const a = s.agent;
+    const status = !a.installed ? `<span class="conn-badge off">${L("未安装", "not installed")}</span>`
+      : a.logged_in ? `<span class="conn-badge ok">✓ ${L("已登录", "signed in")}</span>`
+        : `<span class="conn-badge err">${L("未登录", "not signed in")}</span>`;
+    const quick = a.logged_in ? "" : `<button type="button" class="btn primary chip src-quick-login">⚡ ${L("快捷登录", "Quick sign-in")}</button>`;
+    return `<div class="conn-card src-card" data-kind="account" data-rid="${escapeHtml(a.id)}" data-sid="${escapeHtml(a.id)}">
+      ${head(s, status)}
+      <div class="src-meta muted">${L("账号", "Account")}：${escapeHtml(a.account)} · ${escapeHtml(a.detail || L("登录方式：外部链接", "sign in: browser link"))}${a.device_login ? L(" / 设备码", " / device code") : ""} ${L("或", "or")} ${escapeHtml(a.key_label)}</div>
+      <div class="conn-row src-row">
+        ${quick}
+        <button type="button" class="btn ghost chip agent-install">${a.installed ? L("升级 CLI", "Upgrade CLI") : L("一键安装", "Install")}</button>
+        ${a.installed && !a.version ? `<span class="muted">${L("版本未知", "version unknown")}</span>` : ""}
+        ${!a.installed ? `<span class="muted src-install-cmd">${escapeHtml((a.install_cmd || []).join(" && "))}</span>` : ""}
+      </div>
+      <div class="agent-login-slot"></div>
+      ${tierActions(s)}</div>`;
+  };
+
+  const apiCard = (s) => {
+    const c = s.conn;
     const pr = c.probe || {};
-    const badge = !c.key_present && c.provider !== "local-ollama" ? `<span class="conn-badge off">${L("未配置", "not set")}</span>`
-      : pr.ok ? `<span class="conn-badge ok">✓ ${L("可用", "ok")}${pr.count ? ` · ${pr.count} ${L("个模型", "models")}` : ""}</span>`
-      : pr.error ? `<span class="conn-badge err" title="${escapeHtml(pr.error)}">✗ ${L("测试失败", "failed")}</span>`
-      : `<span class="conn-badge">${L("已填 key", "key set")}</span>`;
+    const status = !c.key_present && c.provider !== "local-ollama" ? `<span class="conn-badge off">${L("未配置", "not set")}</span>`
+      : pr.ok ? `<span class="conn-badge ok">✓ ${L("可用", "ok")}</span>`
+        : pr.error ? `<span class="conn-badge err" title="${escapeHtml(pr.error)}">✗ ${L("测试失败", "failed")}</span>`
+          : `<span class="conn-badge">${L("已填 key", "key set")}</span>`;
+    const models = pr.count || (c.models || []).length;
+    const extra = `${models ? `<span class="conn-badge ver">${models} ${L("个模型", "models")}</span>` : ""}`
+      + `${c.provider === data.backend ? `<span class="conn-badge">${L("当前后端", "active backend")}</span>` : ""}`;
     const urls = (c.base_urls || []).map((u) => `<option value="${escapeHtml(u)}">`).join("");
-    return `<div class="conn-card" data-pid="${escapeHtml(c.provider)}">
-      <div class="conn-head"><strong>${escapeHtml(langZh ? c.label : c.label_en)}</strong> <code>${escapeHtml(c.provider)}</code> ${badge}
-        ${c.provider === data.backend ? `<span class="conn-badge">${L("当前后端", "active backend")}</span>` : ""}</div>
-      <div class="conn-row">
+    return `<div class="conn-card src-card" data-kind="api" data-pid="${escapeHtml(c.provider)}" data-sid="${escapeHtml(c.provider)}">
+      ${head(s, status, extra)}
+      <div class="src-meta muted">${escapeHtml(c.hint || "")}</div>
+      <div class="conn-row src-row">
         <input type="password" class="conn-key" autocomplete="off" placeholder="${c.key_present ? escapeHtml(c.key_masked || "••••") + L("（已保存，留空不改）", " (saved — leave empty to keep)") : L("粘贴 API key", "Paste API key")}" />
         <input class="conn-url" list="conn-urls-${escapeHtml(c.provider)}" value="${escapeHtml(c.base_url || "")}" placeholder="Base URL" />
         <datalist id="conn-urls-${escapeHtml(c.provider)}">${urls}</datalist>
       </div>
-      <div class="conn-row">
+      <div class="conn-row src-row">
         <label class="attach-chip"><input type="checkbox" class="conn-tls" ${c.verify_tls ? "checked" : ""}/> TLS</label>
         <label class="attach-chip"><input type="checkbox" class="conn-custom" ${c.custom_base_url ? "checked" : ""}/> ${L("自定义地址", "custom URL")}</label>
         <button type="button" class="btn primary chip conn-save">${L("保存", "Save")}</button>
         <button type="button" class="btn ghost chip conn-test">${L("测试 / 获取模型", "Test / fetch models")}</button>
         ${c.key_present ? `<button type="button" class="btn ghost chip conn-clear">${L("删除 key", "Remove key")}</button>` : ""}
-        <span class="muted conn-msg">${c.models && c.models.length ? `${c.models.length} ${L("个模型已获取", "models fetched")}` : escapeHtml(c.hint || "")}</span>
-      </div></div>`;
-  };
-  const short = { "claude-code": "Claude", codex: "ChatGPT / Codex", cursor: "Cursor" };
-  const quickBtn = (a) => `<button type="button" class="btn ${a.logged_in ? "ghost" : "primary"} quick-login" data-rid="${escapeHtml(a.id)}">${a.logged_in
-    ? `✓ ${escapeHtml(short[a.id] || a.id)}` : `⚡ ${escapeHtml(short[a.id] || a.id)} ${L("一键登录", "quick sign-in")}`}</button>`;
-  const tierNamesShort = { simple: L("简单", "simple"), office: L("办公", "office"), reasoning: L("推理", "reasoning"), vision: L("视觉", "vision") };
-  const agentCard = (a) => `<div class="conn-card agent-card" data-rid="${escapeHtml(a.id)}">
-      <div class="conn-head"><strong>${escapeHtml(langZh ? a.label : a.label_en)}</strong> <code>${escapeHtml(a.id)}</code>
-        ${!a.installed ? `<span class="conn-badge off">${L("未安装", "not installed")}</span>` : ""}
-        ${(a.tiers || []).map((rk) => `<span class="conn-badge ok">${L("用于", "serves")} ${escapeHtml(tierNamesShort[rk] || rk)}</span>`).join("")}</div>
-      <div class="muted">${L("账号", "Account")}：${escapeHtml(a.account)} · ${L("登录方式：外部链接", "sign in: browser link")}${a.device_login ? L(" / 设备码", " / device code") : ""} ${L("或", "or")} ${escapeHtml(a.key_label)}</div>
-      <div class="conn-row">
-        <button type="button" class="btn ghost chip agent-install">${a.installed ? L("升级", "Upgrade") : L("一键安装", "Install")}</button>
-        <button type="button" class="btn ghost chip agent-bind" data-tiers="office">${L("用于办公", "Use for office")}</button>
-        <button type="button" class="btn ghost chip agent-bind" data-tiers="reasoning">${L("用于推理", "Use for reasoning")}</button>
-        <button type="button" class="btn ghost chip agent-bind" data-tiers="simple,office,reasoning,vision">${L("用于全部对话", "Use for all chat")}</button>
-        ${(a.tiers || []).length ? `<button type="button" class="btn ghost chip agent-unbind">${L("解除绑定", "Unbind")}</button>` : ""}
-        <span class="muted conn-msg">${a.installed ? "" : escapeHtml((a.install_cmd || []).join(" && "))}</span>
       </div>
-      <div class="agent-login-slot"></div></div>`;
+      ${tierActions(s)}</div>`;
+  };
+
+  const filterBtn = (key, zh, en) => `<button type="button" class="src-filter-btn ${filter === key ? "active" : ""}" data-src-filter="${key}">${L(zh, en)} <em>${counts[key]}</em></button>`;
   panel.innerHTML = `
-    <p class="muted">${L("同时接入多家厂商：每家各自保存 key、地址与 TLS，不会切换当前后端。下方「按任务等级路由」把简单问答 / 办公 / 推理 / 视觉分配给不同厂商或已登录的账号（启用后后端切换为 Hybrid）。",
-      "Connect several vendors at once — each keeps its own key, endpoint and TLS; saving never switches the active backend. Tier routing below assigns simple / office / reasoning / vision to different vendors or signed-in accounts (the backend then becomes Hybrid).")}</p>
-    <div class="quick-login-bar"><strong>${L("快捷登录", "Quick sign-in")}</strong>
-      ${agents.map(quickBtn).join("")}
-      <span class="muted">${L("一键：未安装先自动安装，再打开官方授权页；可同时登录多个账号。", "One click: installs if needed, then opens the official sign-in page; several accounts can be signed in at once.")}</span></div>
-    <h4>${L("账号登录（订阅 / Agent）", "Signed-in accounts (subscriptions / agents)")} <span class="muted">${agents.filter((a) => a.logged_in).length}/${agents.length}</span></h4>
-    <div class="conn-grid agent-grid">${agents.map(agentCard).join("")}</div>
-    <h4>${L("按任务等级路由", "Tier routing")} <span class="muted">(${data.mode === "hybrid" ? "Hybrid" : L("当前单一后端：", "single backend: ") + escapeHtml(data.backend)})</span></h4>
-    <div class="conn-tiers">${["simple", "office", "reasoning", "vision"].map(tierRow).join("")}</div>
+    <p class="muted">${L("一个列表里既有「账号登录」的外部 Agent（Claude 订阅 / ChatGPT Codex / Cursor，含已安装的 CLI 版本），也有填 API key 的厂商。两种来源用同一张卡片、同一套「用于对话」按钮：谁回答哪一等级，在卡片上就能决定（启用后后端切换为 Hybrid）。保存 key 不会切换当前后端。",
+      "One list holds both kinds of model source: external agents you sign in to (Claude subscription / ChatGPT Codex / Cursor, with the installed CLI version) and vendors you give an API key. Both use the same card and the same “Answer chat” buttons, so which source serves which tier is decided right on the card (the backend then becomes Hybrid). Saving a key never switches the active backend.")}</p>
+    <div class="src-toolbar">
+      <div class="src-filter" role="group" aria-label="${L("来源筛选", "Filter sources")}">
+        ${filterBtn("all", "全部", "All")}${filterBtn("ready", "可用", "Ready")}${filterBtn("account", "账号登录", "Accounts")}${filterBtn("api", "API key", "API keys")}
+      </div>
+      <input type="search" id="src-search" class="input src-search" value="${escapeHtml(query)}" placeholder="${L("搜索来源…", "Search sources…")}" aria-label="${L("搜索来源", "Search sources")}" />
+    </div>
+    <div class="src-grid">${visible.length
+      ? visible.map((s) => (s.kind === "account" ? accountCard(s) : apiCard(s))).join("")
+      : `<p class="muted">${L("没有匹配的来源。", "No source matches.")}</p>`}</div>
+    <h4>${L("按任务等级路由", "Tier routing")} <span class="muted">(${hybrid ? "Hybrid" : L("当前单一后端：", "single backend: ") + escapeHtml(data.backend)})</span></h4>
+    <p class="muted">${L("卡片上的「用于对话」是这张表的快捷方式；需要指定具体模型 id 时在这里填。", "The cards’ “Answer chat” buttons are a shortcut for this table; set an exact model id here.")}</p>
+    <div class="conn-tiers">${TIER_KEYS.map(tierRow).join("")}</div>
     <div class="row gap" style="justify-content:flex-start;margin:6px 0 12px"><button type="button" class="btn ghost chip" id="conn-route-test">${L("路由测试", "Test routing")}</button></div>
-    <div id="conn-route-result"></div>
-    <h4>${L("厂商连接", "Vendor connections")} <span class="muted">${connected.length}/${data.connections.length}</span></h4>
-    <div class="conn-grid">${data.connections.map(card).join("")}</div>`;
+    <div id="conn-route-result"></div>`;
 
   const msg = (el, text) => { const m = el.querySelector(".conn-msg"); if (m) m.textContent = text; };
   const rerender = () => renderConnectionsPanel(langZh);
@@ -3305,40 +3374,57 @@ async function renderConnectionsPanel(langZh) {
       await api("/api/connections/tier", { method: "POST", body: JSON.stringify({ route_key: rk, provider: rid, model: "" }) });
     }
   };
-  panel.querySelectorAll(".agent-card").forEach((el) => {
+
+  panel.querySelectorAll(".src-filter-btn").forEach((b) => {
+    b.onclick = () => { panel.dataset.srcFilter = b.dataset.srcFilter; rerender(); };
+  });
+  const search = panel.querySelector("#src-search");
+  if (search) {
+    let timer = null;
+    search.oninput = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => { panel.dataset.srcQuery = search.value.trim().toLowerCase(); rerender(); }, 250);
+    };
+  }
+
+  // "Answer chat" on every card, whichever kind of source it is.
+  panel.querySelectorAll(".src-card").forEach((el) => {
+    const sid = el.dataset.sid;
+    const src = sources.find((s) => s.id === sid);
+    el.querySelectorAll(".src-bind").forEach((b) => {
+      b.onclick = async () => {
+        if (!src.ready && !confirm(src.kind === "account"
+          ? L("该账号还没登录，仍要绑定吗？（对话会提示先登录）", "This account is not signed in yet — bind anyway?")
+          : L("该厂商还没填 API key，仍要绑定吗？", "This vendor has no API key yet — bind anyway?"))) return;
+        try { await bind(sid, b.dataset.tiers.split(",")); rerender(); } catch (e) { msg(el, e.message); }
+      };
+    });
+    const ub = el.querySelector(".src-unbind");
+    if (ub) ub.onclick = async () => { await bind("", tiersOf(sid)); rerender(); };
+  });
+
+  panel.querySelectorAll('.src-card[data-kind="account"]').forEach((el) => {
     const a = agents.find((x) => x.id === el.dataset.rid);
     const slot = el.querySelector(".agent-login-slot");
     el._login = mountAgentLogin(slot, a.id, langZh, { onChange: (st) => { if (st === "done" || st === "logout") rerender(); } });
     el.querySelector(".agent-install").onclick = async () => {
       try { if (await install(a, el, a.installed ? "upgrade" : "install")) rerender(); } catch (e) { msg(el, e.message); }
     };
-    el.querySelectorAll(".agent-bind").forEach((b) => {
-      b.onclick = async () => {
-        if (!a.logged_in && !confirm(L("该账号还没登录，仍要绑定吗？（对话会提示先登录）", "This account is not signed in yet — bind anyway?"))) return;
-        try { await bind(a.id, b.dataset.tiers.split(",")); rerender(); } catch (e) { msg(el, e.message); }
-      };
-    });
-    const ub = el.querySelector(".agent-unbind");
-    if (ub) ub.onclick = async () => { await bind("", a.tiers || []); rerender(); };
-  });
-  panel.querySelectorAll(".quick-login").forEach((b) => {
-    b.onclick = async () => {
-      const a = agents.find((x) => x.id === b.dataset.rid);
-      const el = panel.querySelector(`.agent-card[data-rid="${a.id}"]`);
-      el.scrollIntoView({ block: "center" });
-      if (a.logged_in) { msg(el, L("已登录，可在上方「用于…」绑定到对话", "signed in — bind it to chat with “Use for …”")); return; }
+    const quick = el.querySelector(".src-quick-login");
+    if (quick) quick.onclick = async () => {
       const win = openAuthTab(langZh);  // opened now, inside the click; pointed at the sign-in page later
-      b.disabled = true;
+      quick.disabled = true;
       try {
         if (!a.installed && !(await install(a, el))) { if (win) win.close(); return; }
         const box = await el._login;
         const ok = await box._start("link", win);
-        msg(el, ok ? L("✓ 登录完成 — 用「用于办公 / 推理 / 全部对话」让它回答", "✓ signed in — use “Use for …” to let it answer")
+        msg(el, ok ? L("✓ 登录完成 — 用「用于对话」让它回答", "✓ signed in — use “Answer chat” to let it answer")
           : L("登录未完成，可重试或改用 API key", "sign-in not finished — retry or use an API key"));
-      } catch (e) { msg(el, e.message); if (win) win.close(); } finally { b.disabled = false; }
+      } catch (e) { msg(el, e.message); if (win) win.close(); } finally { quick.disabled = false; }
     };
   });
-  panel.querySelectorAll(".conn-card:not(.agent-card)").forEach((el) => {
+
+  panel.querySelectorAll('.src-card[data-kind="api"]').forEach((el) => {
     const pid = el.dataset.pid;
     el.querySelector(".conn-save").onclick = async () => {
       const body = { base_url: el.querySelector(".conn-url").value.trim(), verify_tls: el.querySelector(".conn-tls").checked,
@@ -3348,7 +3434,7 @@ async function renderConnectionsPanel(langZh) {
       try {
         await api(`/api/connections/${encodeURIComponent(pid)}`, { method: "POST", body: JSON.stringify(body) });
         el.querySelector(".conn-key").value = "";
-        await renderConnectionsPanel(langZh);
+        await rerender();
       } catch (e) { msg(el, e.message); }
     };
     el.querySelector(".conn-test").onclick = async () => {
@@ -3356,19 +3442,22 @@ async function renderConnectionsPanel(langZh) {
       try {
         const r = await api(`/api/connections/${encodeURIComponent(pid)}/test`, { method: "POST", body: "{}", timeoutMs: 60000 });
         if (!r.ok) { msg(el, `✗ ${r.error || "failed"}`); return; }
-        await renderConnectionsPanel(langZh);
+        await rerender();
       } catch (e) { msg(el, e.message); }
     };
     const clr = el.querySelector(".conn-clear");
     if (clr) clr.onclick = async () => {
       if (!confirm(L(`删除 ${pid} 的 API key？`, `Remove the ${pid} API key?`))) return;
       await api(`/api/connections/${encodeURIComponent(pid)}`, { method: "POST", body: JSON.stringify({ clear: true }) });
-      await renderConnectionsPanel(langZh);
+      await rerender();
     };
   });
+
   panel.querySelectorAll(".conn-tier").forEach((row) => {
     row.querySelector(".conn-tier-provider").onchange = () => {
-      const c = data.connections.find((x) => x.provider === row.querySelector(".conn-tier-provider").value) || {};
+      const picked = row.querySelector(".conn-tier-provider").value;
+      const agentSel = agents.find((a) => a.id === picked);
+      const c = agentSel ? { models: agentSel.models } : (data.connections.find((x) => x.provider === picked) || {});
       const dl = row.querySelector("datalist");
       dl.innerHTML = [...new Set([...(c.models || []), ...(c.default_models || [])])].map((m) => `<option value="${escapeHtml(m)}">`).join("");
       row.querySelector(".conn-tier-model").value = (c.models || c.default_models || [])[0] || "";
@@ -3382,7 +3471,7 @@ async function renderConnectionsPanel(langZh) {
     };
   });
   const showRoutes = (routes) => {
-    $("#conn-route-result").innerHTML = `<table class="conn-routes"><tr><th>${L("等级", "Tier")}</th><th>${L("厂商", "Vendor")}</th><th>${L("模型", "Model")}</th><th>Base URL</th><th>Key</th></tr>${routes.map((r) =>
+    $("#conn-route-result").innerHTML = `<table class="conn-routes"><tr><th>${L("等级", "Tier")}</th><th>${L("来源", "Source")}</th><th>${L("模型", "Model")}</th><th>Base URL</th><th>Key</th></tr>${routes.map((r) =>
       `<tr><td>${escapeHtml(tierNames[r.route_key] || r.route_key)}</td><td>${escapeHtml(r.provider || "—")}</td><td>${escapeHtml(r.model || "—")}</td><td><code>${escapeHtml(r.base_url || "—")}</code></td><td>${r.key_present ? "✓" : "✗"}</td></tr>`).join("")}</table>`;
   };
   $("#conn-route-test").onclick = async () => {

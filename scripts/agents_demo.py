@@ -97,8 +97,11 @@ def main() -> int:
             page.click("#conn-route-test")
             page.wait_for_timeout(1000)
             shots.take(page, "A", "connections", note="多模型 API: vendors connected side by side + tier routing test")
-            page.locator(".conn-grid:not(.agent-grid)").scroll_into_view_if_needed()
-            shots.take(page, "A", "vendor-cards", note="vendor cards: own key (masked), endpoint, TLS, test status")
+            page.click('.src-filter-btn[data-src-filter="api"]')
+            page.wait_for_timeout(1200)
+            shots.take(page, "A", "vendor-cards", note="API-key sources: own key (masked), endpoint, TLS, test status")
+            page.click('.src-filter-btn[data-src-filter="all"]')
+            page.wait_for_timeout(1200)
             close_control(page)
             if key:
                 sd.command(page, "请写一段简短的实验室组会通知，时间周五下午三点。")
@@ -107,11 +110,12 @@ def main() -> int:
 
             # ── 2. accounts live in 多模型 API: quick sign-in (several at once) ─────────
             open_tab(page, "connections")
-            page.locator(".quick-login-bar").scroll_into_view_if_needed()
-            shots.take(page, "A", "accounts", note="多模型 API: quick sign-in bar + Claude / ChatGPT(Codex) / Cursor accounts")
+            page.click('.src-filter-btn[data-src-filter="account"]')
+            page.wait_for_timeout(1200)
+            shots.take(page, "A", "accounts", note="多模型 API: one source list — account cards with quick sign-in and CLI version")
             # Claude subscription: one click → the official sign-in page opens in a new tab by itself
             with page.context.expect_page() as tab:
-                page.click('.quick-login[data-rid="claude-code"]')
+                page.click('.src-card[data-rid="claude-code"] .src-quick-login')
             box = page.locator('.agent-login[data-rid="claude-code"]')
             page.wait_for_selector('.agent-login[data-rid="claude-code"] .agent-login-url', timeout=30000)
             page.wait_for_timeout(1500)
@@ -138,19 +142,19 @@ def main() -> int:
             # Cursor: one click, the sign-in page opens by itself; done when the browser authorises
             page.wait_for_timeout(1500)
             with page.context.expect_page() as tab2:
-                page.click('.quick-login[data-rid="cursor"]')
+                page.click('.src-card[data-rid="cursor"] .src-quick-login')
             page.wait_for_function("""() => /已登录|signed in/.test(document.querySelector('.agent-login[data-rid="cursor"] .agent-login-head')?.textContent || '')""",
                                    timeout=40000)
             report["steps"].append({"step": "cursor-auth", **api(hub, "/api/runtimes/cursor/auth"),
                                     "auth_tab": tab2.value.url})
             page.wait_for_timeout(1500)
-            page.locator(".quick-login-bar").scroll_into_view_if_needed()
+            page.locator(".src-grid").scroll_into_view_if_needed()
             shots.take(page, "A", "accounts-signed-in", note="three accounts signed in at the same time")
 
             # ── 3. tier routing to accounts: reasoning → Claude, office → Cursor (buttons on the cards) ──
-            page.locator('.agent-card[data-rid="claude-code"] .agent-bind[data-tiers="reasoning"]').click()
+            page.locator('.src-card[data-rid="claude-code"] .src-bind[data-tiers="reasoning"]').click()
             page.wait_for_timeout(2500)
-            page.locator('.agent-card[data-rid="cursor"] .agent-bind[data-tiers="office"]').click()
+            page.locator('.src-card[data-rid="cursor"] .src-bind[data-tiers="office"]').click()
             page.wait_for_timeout(2500)
             page.click("#conn-route-test")
             page.wait_for_timeout(1500)

@@ -84,6 +84,23 @@ def test_agents_view_lists_every_account_with_its_state():
         assert "key_cursor_test" not in dumped and "sk-ant-api03" not in dumped  # no secrets in the view
 
 
+def test_agents_view_carries_the_cli_version_next_to_the_login_state():
+    """One card in 多模型 API shows sign-in and version together — Claws no longer lists these agents."""
+    from ali import agent_cli, connections
+
+    fakes = ROOT / "tests" / "fakes"
+    with state() as t, pytest.MonkeyPatch.context() as mp:
+        mp.setenv("PATH", f"{fakes}{os.pathsep}{os.environ['PATH']}")
+        mp.setenv("HOME", str(t))
+        agent_cli._HELP_CACHE.clear()
+        rows = {a["id"]: a for a in connections.agents_view()["agents"]}
+        for rid, row in rows.items():
+            assert "version" in row and "version_source" in row, rid
+            assert isinstance(row["version"], str) and isinstance(row["version_source"], str), rid
+            # installed via the fakes on PATH, so each one reports a version and where it came from
+            assert row["installed"] and row["version"] and row["version_source"], rid
+
+
 E2E = r"""
 import json, sys, time
 sys.path.insert(0, sys.argv[1])

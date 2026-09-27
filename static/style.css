@@ -2095,11 +2095,53 @@ hr.soft {
 .agent-login-code { font-size: 1.2em; letter-spacing: .08em; padding: 2px 6px; }
 .agent-login-log { max-height: 8rem; overflow: auto; font-size: .75em; white-space: pre-wrap; margin: 0; }
 
-/* 多模型 API: quick sign-in for agent accounts */
-.quick-login-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0 12px; padding: 10px 12px;
-  border: 1px solid var(--border); border-radius: 10px; background: color-mix(in srgb, var(--accent) 8%, transparent); }
-.quick-login-bar .muted { flex: 1 1 260px; font-size: 12px; }
-.agent-card .agent-login { margin-top: 6px; }
+/* 多模型 API: one list of model sources — signed-in agent accounts and API-key vendors on the same card */
+.src-toolbar {
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 10px 0 12px;
+  padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+}
+.src-filter { display: flex; flex-wrap: wrap; gap: 4px; }
+.src-filter-btn {
+  border: 1px solid var(--border); background: var(--bg-elev); color: var(--muted);
+  font: inherit; font-size: calc(var(--font-size-base) - 1px); padding: 5px 11px;
+  border-radius: 999px; cursor: pointer;
+}
+.src-filter-btn em { font-style: normal; font-variant-numeric: tabular-nums; opacity: .75; margin-left: 3px; }
+.src-filter-btn:hover { color: var(--text); border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); }
+.src-filter-btn.active {
+  color: #fff; border-color: transparent; font-weight: 650;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 88%, #fff 12%), var(--accent));
+}
+.src-filter-btn.active em { opacity: .9; }
+.src-search { flex: 1 1 180px; min-width: 140px; max-width: 320px; }
+.src-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 10px; }
+.src-card { display: flex; flex-direction: column; gap: 2px; background: var(--bg-elev); }
+.src-card[data-kind="account"] { border-left: 3px solid color-mix(in srgb, var(--accent) 70%, transparent); }
+.src-card[data-kind="api"] { border-left: 3px solid color-mix(in srgb, var(--muted) 55%, transparent); }
+.src-head { display: flex; gap: .4rem; align-items: center; flex-wrap: wrap; margin-bottom: 4px; }
+.src-kind {
+  font-size: .72em; font-weight: 700; letter-spacing: .02em; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 6px; white-space: nowrap;
+}
+.src-kind-account { color: #fff; background: color-mix(in srgb, var(--accent) 80%, #000 20%); }
+.src-kind-api { color: var(--text); background: color-mix(in srgb, var(--muted) 28%, transparent); }
+.src-name { font-size: calc(var(--font-size-base) + 1px); }
+.src-id { color: var(--muted); font-size: .8em; }
+.conn-badge.ver { background: color-mix(in srgb, var(--accent) 16%, transparent); font-variant-numeric: tabular-nums; }
+.src-tier-chips { display: flex; gap: 4px; flex-wrap: wrap; margin-left: auto; }
+.src-meta { font-size: calc(var(--font-size-base) - 2px); line-height: 1.45; }
+.src-meta:empty { display: none; }
+/* Buttons keep their label; the install command gets its own line rather than squeezing them. */
+.src-row > .btn { flex: 0 0 auto; }
+.src-install-cmd { flex: 1 1 100%; font-family: var(--mono); font-size: .78em; word-break: break-all; }
+.src-actions {
+  display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
+  margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border);
+}
+.src-actions-label { flex: 0 0 auto; font-size: calc(var(--font-size-base) - 2px); }
+.src-actions .conn-msg { flex: 1 1 100%; font-size: .8em; }
+.src-card .agent-login { margin-top: 6px; }
 
 /* chat model picker (API models + accounts, multi-select → fused answer) */
 .model-pick-wrap { position: relative; display: inline-block; }

@@ -33,8 +33,27 @@ def is_agent(pid: str) -> bool:
     return str(pid or "") in AGENT_ACCOUNTS
 
 
+def _agent_version(rid: str, installed: bool) -> dict[str, Any]:
+    """``{"version": …, "version_source": …}`` for an installed agent CLI; empty strings when unknown."""
+    if not installed:
+        return {"version": "", "version_source": ""}
+    try:
+        from .runtimes import detect_runtime_version
+
+        info = detect_runtime_version(rid) or {}
+    except Exception:  # noqa: BLE001
+        return {"version": "", "version_source": ""}
+    return {"version": str(info.get("version") or "").strip(),
+            "version_source": str(info.get("source") or "").strip()}
+
+
 def agents_view() -> dict[str, Any]:
-    """Each agent account: installed / signed in / how, permissions, install command (no secrets)."""
+    """Each agent account: installed / signed in / how, its CLI version, permissions, install command.
+
+    The installed CLI's version travels with the sign-in state so the 多模型 API tab can show both on one
+    card — an out-of-date CLI is the usual reason an agent refuses a flag the Hub needs, and it used to be
+    visible only in the Claws tab, which no longer lists these agents at all.  Never returns a secret.
+    """
     import threading
 
     from . import agent_cli
@@ -55,7 +74,8 @@ def agents_view() -> dict[str, Any]:
                      "logged_in": bool(st.get("logged_in")), "detail": st.get("detail") or "",
                      "mode": st.get("mode") or "", "permissions": st.get("permissions") or "read-only",
                      "install_cmd": (inst.get("windows") if os.name == "nt" else inst.get("posix")) or [],
-                     "homepage": rt.get("homepage") or "", "device_login": rid == "codex"}
+                     "homepage": rt.get("homepage") or "", "device_login": rid == "codex",
+                     "bin": st.get("bin") or "", **_agent_version(rid, bool(st.get("installed")))}
 
     threads = [threading.Thread(target=one, args=(rid,), daemon=True) for rid in AGENT_ACCOUNTS]
     for t in threads:
