@@ -1300,8 +1300,9 @@ body.resizing-composer * {
 }
 .fs-item:hover { background: var(--bg-soft); border-color: var(--border); }
 .mode-banner {
-  margin: 8px 16px 0; padding: 8px 12px; border-radius: 10px; font-size: 12px;
-  border: 1px solid var(--border); color: var(--muted); background: var(--bg-elev);
+  margin: 6px 16px 0; padding: 6px 12px; border-radius: 10px; font-size: 12px;
+  border: 1px solid var(--border); color: var(--text); background: var(--bg-elev);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .engine-badge.ok { color: var(--ok, #2ecc71); border-color: color-mix(in srgb, var(--ok, #2ecc71) 40%, transparent); }
 .mode-banner strong { color: var(--text); }

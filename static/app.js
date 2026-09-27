@@ -2171,13 +2171,8 @@ function renderModeBanner(status) {
   const autoName = clawLabelFor(agent, "auto");
   const soul = agent.soul || {};
   const soulRole = soul.active_role || state.activeSoul || "";
-  const fused = soul.fused ? " · fused✓" : "";
-  const clawSoul = soul.claw_soul_exists ? " · claw-soul✓" : (rt && rt !== "direct" ? " · claw-soul…" : "");
-  const soulBit = soulRole ? ` · soul=<code>${escapeHtml(soulRole)}</code>${clawSoul}${fused}` : "";
-  const autoBit = agent.runtime_auto && (agent.runtime_active === "auto" || !agent.runtime_active)
-    ? ` · auto→<code>${escapeHtml(autoName || agent.runtime_auto)}</code>`
-    : "";
-  const clawBit = clawName ? ` · claw=<code>${escapeHtml(clawName)}</code>` : "";
+  const soulBit = soulRole ? ` · Soul ${escapeHtml(soulRole)}` : "";
+  const clawBit = clawName ? ` · ${escapeHtml(clawName)}` : "";
   const hubBit = hubMode === "direct"
     ? ` · ${escapeHtml(t("hubChat.direct"))}`
     : ` · ${escapeHtml(t("hubChat.agent"))}`;
@@ -2185,14 +2180,14 @@ function renderModeBanner(status) {
     const engLabel = engine === "openclaw" ? t("engine.openclaw")
       : agentLabel(engine) ? agentLabel(engine)
       : engine === "hub-agent" ? "Hub Agent" : t("engine.hermes");
-    el.innerHTML = `<strong>${escapeHtml(t("mode.agent"))}</strong> · ${escapeHtml(engLabel)}${hubBit}${clawBit || " · claw=<code>Hermes Agent</code>"}${autoBit}${soulBit}`;
+    el.innerHTML = `<strong>${escapeHtml(t("mode.agent"))}</strong>${hubBit}${clawBit}${soulBit}`;
+    el.title = `${engLabel}${autoName ? ` · auto→${autoName}` : ""}`;
   } else if (engine === "direct-llm" || agent.direct_llm) {
-    el.innerHTML = `<strong>${escapeHtml(t("mode.ai"))}</strong>${hubBit} — <span class="key-masked">${escapeHtml(agent.api_key_masked || "API")}</span>${clawBit}${autoBit}${soulBit}`;
+    el.innerHTML = `<strong>${escapeHtml(t("mode.ai"))}</strong>${hubBit}${clawBit}${soulBit}`;
+    el.title = agent.api_key_masked || "API";
   } else if (rt && rt !== "direct" && rt !== "auto") {
-    const linkedBit = linked && linked !== rt
-      ? ` · linked=<code>${escapeHtml(linkedName)}</code>`
-      : "";
-    el.innerHTML = `<strong>${escapeHtml(t("mode.claw"))}</strong>${clawBit}${linkedBit}${autoBit}${soulBit}`;
+    el.innerHTML = `<strong>${escapeHtml(t("mode.claw"))}</strong>${clawBit}${soulBit}`;
+    el.title = linkedName && linkedName !== clawName ? `linked ${linkedName}` : "";
   } else {
     el.innerHTML = `<strong>${escapeHtml(t("mode.demo"))}</strong>${clawBit}${soulBit}`;
   }
