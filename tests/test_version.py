@@ -19,6 +19,8 @@ def test_version_strings_agree():
     html = (ROOT / "static" / "index.html").read_text(encoding="utf-8")
     assert set(re.findall(r"\?v=([0-9][0-9.]*)", html)) == {VERSION}
     assert f'id="version-label">v{VERSION}<' in html
+    js = (ROOT / "static" / "app.js").read_text(encoding="utf-8")
+    assert re.search(rf'const LOGO_VER = "{re.escape(VERSION)}"', js)
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     assert f"badge/version-{VERSION}-" in readme and f"当前版本：**v{VERSION}**" in readme
     assert f"## v{VERSION} " in (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")

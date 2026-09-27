@@ -1,5 +1,24 @@
 # Changelog
 
+## v5.6.0 — 2026-09-27
+
+- **Login and API are one source list.** Claude / ChatGPT / Cursor sign-in and vendor API keys share the
+  same catalog (`GET /api/models/sources`). Control Center tab is now **API 与登录 / APIs & sign-in**; the
+  Models tab lists both kinds of source and can bind a hybrid tier to an account. The composer Model button
+  is the picker for every ready source (multi-select still fuses).
+- **One version everywhere: 5.6.0.** `ali/__init__.py`, `ali/config.py`, `pyproject.toml`, README, CHANGELOG,
+  `static/index.html` (`?v=` + label), and `static/app.js` `LOGO_VER` (was still 5.3.6). `tests/test_version.py`
+  now checks `app.js` as well.
+- **Chinese / English toggle.** Switching 中 / EN updates session chrome, archive/folder/search placeholders,
+  the file-browser overlay, the model button, and an open Control Center — without wiping the current
+  subagent selection or resetting the chat title to “New task”.
+- **Chat windows stay on the session you clicked.** Switching sessions paints a cached pane (or a loading
+  placeholder) immediately, so the previous conversation never remains on screen. Re-clicking the active
+  session repairs a mismatched pane.
+- **Main-page visibility.** Live streaming used `<pre class="stream-live-pre">`, which CSS hid
+  (`.msg .body > pre:not(.code-box-pre)`). Stream text is visible again; message contrast, session titles,
+  the composer, and the model picker popover are easier to read.
+
 ## v5.5.0 — 2026-09-26
 
 - **Every configured API acts as an agent (Hub agent).** With chat mode Agent and no external claw, the Hub

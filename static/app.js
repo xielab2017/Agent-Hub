@@ -15,7 +15,7 @@ const FONT_SIZE_LABELS = {
   zh: { 13: "小 13", 14: "中 14", 15: "中大 15", 16: "大 16", 18: "特大 18" },
   en: { 13: "S 13", 14: "M 14", 15: "M+ 15", 16: "L 16", 18: "XL 18" },
 };
-const LOGO_VER = "5.3.6";
+const LOGO_VER = "5.6.0";
 const DEFAULT_LOGO = `/brand/suat-logo-color.png?v=${LOGO_VER}`;
 const LOGO_PRESETS = [
   { id: "suat-color", src: `/brand/suat-logo-color.png?v=${LOGO_VER}`, labelKey: "appearance.logoPresetColor" },
@@ -37,7 +37,7 @@ function bindArchiveControls() {
   btn.onclick = async () => {
     state.showArchived = !state.showArchived;
     btn.classList.toggle("active", state.showArchived);
-    btn.textContent = state.showArchived ? "返回会话" : "归档";
+    syncArchiveButton();
     await refreshSessions();
   };
 }
@@ -120,9 +120,27 @@ const I18N = {
     "nav.tasks": "任务",
     "nav.sessions": "会话",
     "nav.control": "⚙ 控制中心",
+    "nav.language": "语言",
+    "nav.theme": "深浅模式",
+    "nav.archive": "归档",
+    "nav.archiveBack": "返回会话",
+    "nav.searchSessions": "搜索会话或文件夹",
+    "nav.folderPh": "文件夹",
+    "nav.newFolder": "新建文件夹",
+    "nav.resizeSidebar": "拖拽调整侧栏宽度 · 双击恢复默认",
     "chat.new": "新任务",
+    "chat.loading": "正在打开会话…",
+    "chat.you": "你",
     "empty.title": "校园 Agent Hub",
     "empty.body": "描述任务并运行 · Agent Hub 调度 Skill / Agent · 进度条跟踪执行",
+    "composer.drop": "拖放文件 / 图片到此处",
+    "model.auto": "模型：自动",
+    "model.loading": "加载模型…",
+    "model.fusion": "融合",
+    "sources.api": "API 厂商",
+    "sources.accounts": "账号登录（Agent）",
+    "sources.openConnections": "打开 API 与登录",
+    "sources.hint": "外部账号登录与各家 API 已合并：同一份模型来源，主界面「模型」按钮可多选融合。",
     "skills.picker": "Skill",
     "skills.auto": "自动匹配",
     "skills.add": "添加",
@@ -231,7 +249,7 @@ const I18N = {
     "control.mcp": "MCP",
     "control.recommend": "每日推荐",
     "control.skills": "Skills",
-    "control.connections": "多模型 API",
+    "control.connections": "API 与登录",
     "control.soul": "Soul",
     "control.agents": "Agents",
     "control.feedback": "反馈",
@@ -347,6 +365,8 @@ const I18N = {
     "sub.split": "分屏",
     "sub.sidebar": "侧栏",
     "sub.picker": "Subagent",
+    "sub.popout": "在独立窗口查看子代理",
+    "sub.popoutShort": "子窗口",
     "sub.add": "添加",
     "sub.pick": "— 选择子代理 —",
     "sub.none": "未选子代理（默认主 Agent）",
@@ -371,6 +391,7 @@ const I18N = {
     "appearance.lang": "界面语言",
     "appearance.theme": "深浅模式",
     "appearance.accent": "主题色",
+    "appearance.bg": "背景色",
     "appearance.fontSize": "字号",
     "appearance.hint": "可在侧栏一键切换；保存配置后会同步到服务器，供多设备默认使用。",
     "appearance.logo": "更换 Logo",
@@ -411,9 +432,27 @@ const I18N = {
     "nav.tasks": "Tasks",
     "nav.sessions": "Sessions",
     "nav.control": "⚙ Control Center",
+    "nav.language": "Language",
+    "nav.theme": "Theme",
+    "nav.archive": "Archive",
+    "nav.archiveBack": "Back to chats",
+    "nav.searchSessions": "Search sessions or folders",
+    "nav.folderPh": "Folder",
+    "nav.newFolder": "New folder",
+    "nav.resizeSidebar": "Drag to resize sidebar · double-click to reset",
     "chat.new": "New task",
+    "chat.loading": "Opening chat…",
+    "chat.you": "You",
     "empty.title": "Campus Agent Hub",
     "empty.body": "Describe a task and run · Agent Hub dispatches skills/agents · progress tracked",
+    "composer.drop": "Drop files or images here",
+    "model.auto": "Model: auto",
+    "model.loading": "loading models…",
+    "model.fusion": "Fusion",
+    "sources.api": "API vendors",
+    "sources.accounts": "Signed-in accounts (agents)",
+    "sources.openConnections": "Open APIs & sign-in",
+    "sources.hint": "External-agent sign-in and vendor APIs share one source list. The composer Model button can multi-select and fuse answers.",
     "skills.picker": "Skill",
     "skills.auto": "Auto-match",
     "skills.add": "Add",
@@ -521,7 +560,7 @@ const I18N = {
     "control.ecosystem": "Ecosystem",
     "control.mcp": "MCP",
     "control.recommend": "Daily",
-    "control.connections": "Multi-model APIs",
+    "control.connections": "APIs & sign-in",
     "control.skills": "Skills",
     "control.soul": "Soul",
     "control.agents": "Agents",
@@ -638,6 +677,8 @@ const I18N = {
     "sub.split": "Split",
     "sub.sidebar": "Sidebar",
     "sub.picker": "Subagent",
+    "sub.popout": "Open subagents in a window",
+    "sub.popoutShort": "Window",
     "sub.add": "Add",
     "sub.pick": "— pick a subagent —",
     "sub.none": "No subagent (main Agent)",
@@ -662,6 +703,7 @@ const I18N = {
     "appearance.lang": "Language",
     "appearance.theme": "Light / Dark",
     "appearance.accent": "Accent color",
+    "appearance.bg": "Background",
     "appearance.fontSize": "Font size",
     "appearance.hint": "Use sidebar toggles anytime. Saving syncs defaults to the server for other devices.",
     "appearance.logo": "Change logo",
@@ -724,6 +766,7 @@ const state = {
   streamMeta: null,
   streamConsumers: {},
   streamBuffers: {}, // sessionId -> live SSE buffer (survives session switches)
+  sessionMessages: {}, // sessionId -> last fetched messages (instant pane swap)
   settings: null,
   pendingWf: null,
   lastAssistantText: "",
@@ -776,6 +819,7 @@ function applyI18n() {
   const lang = state.prefs.language === "en" ? "en" : "zh";
   document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
   $$("[data-i18n]").forEach((el) => {
+    if (el.id === "chat-title") return; // session title is live, not a static phrase
     const key = el.getAttribute("data-i18n");
     if (key) el.textContent = t(key);
   });
@@ -800,6 +844,33 @@ function applyI18n() {
     themeBtn.textContent = mode === "auto" ? "◐ Auto" : (resolved.theme === "dark" ? "☾ Dark" : "☀ Light");
   }
   syncFontSizeControls();
+  applyStaticChromeI18n();
+}
+
+function syncArchiveButton() {
+  const btn = $("#btn-toggle-archived");
+  if (!btn) return;
+  const key = state.showArchived ? "nav.archiveBack" : "nav.archive";
+  btn.textContent = t(key);
+  btn.title = t(key);
+  btn.setAttribute("data-i18n", key);
+  btn.setAttribute("data-i18n-title", key);
+}
+
+function applyStaticChromeI18n() {
+  const search = $("#session-search");
+  if (search) {
+    search.placeholder = t("nav.searchSessions");
+    search.setAttribute("aria-label", t("nav.searchSessions"));
+  }
+  const folder = $("#new-folder-name");
+  if (folder) {
+    folder.placeholder = t("nav.folderPh");
+    folder.setAttribute("aria-label", t("nav.folderPh"));
+  }
+  syncArchiveButton();
+  document.documentElement.style.setProperty("--drop-hint", `"${t("composer.drop").replace(/"/g, '\\"')}"`);
+  try { updateModelPickButton(); } catch (_) {}
 }
 
 function isDaytime(date = new Date()) {
@@ -994,7 +1065,7 @@ function setPrefs(partial, { syncServer = false } = {}) {
   }
   persistPrefsLocal();
   applyTheme();
-  if (syncServer) persistPrefsServer();
+  const serverWrite = syncServer ? persistPrefsServer() : Promise.resolve();
   if (state.status) {
     renderConn(state.status);
     renderAgent(state.status);
@@ -1007,7 +1078,8 @@ function setPrefs(partial, { syncServer = false } = {}) {
     refreshChatChromeLanguage();
     const overlay = $("#control-overlay");
     if (overlay && !overlay.classList.contains("hidden")) {
-      renderControl();
+      // Wait until the new language is on the server so loadSettings cannot snap back.
+      serverWrite.then(() => renderControl()).catch(() => renderControl());
     }
   } else if (appearanceChanged) {
     syncAppearanceFormControls();
@@ -1149,7 +1221,7 @@ function refreshChatChromeLanguage() {
   const titleEl = $("#chat-title");
   if (titleEl) titleEl.textContent = sessionDisplayTitle(cur || { title: titleEl.textContent });
   const empty = $("#empty-state");
-  if (empty) {
+  if (empty && !empty.classList.contains("session-switching")) {
     const h = empty.querySelector("[data-i18n='empty.title'], h3");
     const p = empty.querySelector("[data-i18n-html='empty.body'], p");
     if (h) h.textContent = t("empty.title");
@@ -1157,7 +1229,12 @@ function refreshChatChromeLanguage() {
   }
   try { renderSoulSelect(); } catch (_) {}
   try { renderSkillPicker(); } catch (_) {}
-  try { renderSubagentPicker(); } catch (_) {}
+  // Do not call renderSubagentPicker() — that helper clears the current selection.
+  try { applyChatLayout(); } catch (_) {}
+  try { updateComposerAdvSummary(); } catch (_) {}
+  try { syncRouteLabels(); } catch (_) {}
+  try { renderActiveRuns({ force: true }); } catch (_) {}
+  try { if (state.currentId) renderTaskDock(state.currentId); } catch (_) {}
   applyI18n();
 }
 
@@ -2882,9 +2959,9 @@ function updateModelPickButton() {
   const zh = state.prefs.language !== "en";
   const ids = state.pickedModels || [];
   btn.classList.toggle("fusion", ids.length > 1);
-  btn.textContent = !ids.length ? (zh ? "模型：自动" : "Model: auto")
+  btn.textContent = !ids.length ? t("model.auto")
     : ids.length === 1 ? `${zh ? "模型：" : "Model: "}${sourceLabel(ids[0])}`
-      : `${zh ? "融合 · " : "Fusion · "}${ids.map(sourceLabel).join(" + ")}`;
+      : `${t("model.fusion")} · ${ids.map(sourceLabel).join(" + ")}`;
   btn.title = ids.length > 1 ? (zh ? "所选模型同时作答，再合并成一份回答" : "The chosen models answer together; one merges them") : "";
 }
 
@@ -2921,7 +2998,7 @@ function renderModelPicker() {
       <input class="model-pick-search" placeholder="${L("搜索模型…", "Search models…")}" value="${escapeHtml(q)}" />
       <button type="button" class="btn ghost chip model-pick-auto">${L("自动（按分级路由）", "Auto (tier routing)")}</button></div>
     <div class="muted model-pick-hint">${L("勾选一个：只用它回答；勾选多个：同时作答并融合成一份回答。", "Tick one to use it; tick several to have them answer together and merge.")}</div>
-    <div class="model-pick-list">${rows || `<div class="muted">${L("还没有可用模型 — 在 控制中心 → 多模型 API 添加 key 或登录账号", "No models yet — add keys or sign in under Control Center → 多模型 API")}</div>`}</div>`;
+    <div class="model-pick-list">${rows || `<div class="muted">${L("还没有可用模型 — 在 控制中心 → API 与登录 添加 key 或登录账号", "No models yet — add keys or sign in under Control Center → APIs & sign-in")}</div>`}</div>`;
   const search = pop.querySelector(".model-pick-search");
   search.oninput = () => { const pos = search.selectionStart; renderModelPicker(); const s2 = pop.querySelector(".model-pick-search"); s2.focus(); s2.setSelectionRange(pos, pos); };
   pop.querySelector(".model-pick-auto").onclick = () => { setPickedModels([]); renderModelPicker(); };
@@ -2952,7 +3029,7 @@ async function toggleModelPicker(force) {
   if (open) {
     pop.hidden = false;
     btn.setAttribute("aria-expanded", "true");
-    pop.innerHTML = `<div class="muted" style="padding:8px">${state.prefs.language !== "en" ? "加载模型…" : "loading models…"}</div>`;
+    pop.innerHTML = `<div class="muted" style="padding:8px">${escapeHtml(t("model.loading"))}</div>`;
     await loadModelSources();
     renderModelPicker();
     updateModelPickButton();
@@ -3266,8 +3343,8 @@ async function renderConnectionsPanel(langZh) {
       </div>
       <div class="agent-login-slot"></div></div>`;
   panel.innerHTML = `
-    <p class="muted">${L("同时接入多家厂商：每家各自保存 key、地址与 TLS，不会切换当前后端。下方「按任务等级路由」把简单问答 / 办公 / 推理 / 视觉分配给不同厂商或已登录的账号（启用后后端切换为 Hybrid）。",
-      "Connect several vendors at once — each keeps its own key, endpoint and TLS; saving never switches the active backend. Tier routing below assigns simple / office / reasoning / vision to different vendors or signed-in accounts (the backend then becomes Hybrid).")}</p>
+    <p class="muted">${L("账号登录（Claude / ChatGPT / Cursor）与各家 API 已合成同一份模型来源：主界面「模型」按钮可勾选任意来源，多选即融合回答。每家各自保存 key、地址与 TLS，保存不会切换当前后端。下方「按任务等级路由」把简单问答 / 办公 / 推理 / 视觉分配给不同厂商或已登录的账号（启用后后端切换为 Hybrid）。",
+      "Signed-in accounts (Claude / ChatGPT / Cursor) and vendor APIs share one source list — the composer Model button can pick any of them, or several for a fused answer. Each vendor keeps its own key, endpoint and TLS; saving never switches the active backend. Tier routing below assigns simple / office / reasoning / vision to different vendors or signed-in accounts (the backend then becomes Hybrid).")}</p>
     <div class="quick-login-bar"><strong>${L("快捷登录", "Quick sign-in")}</strong>
       ${agents.map(quickBtn).join("")}
       <span class="muted">${L("一键：未安装先自动安装，再打开官方授权页；可同时登录多个账号。", "One click: installs if needed, then opens the official sign-in page; several accounts can be signed in at once.")}</span></div>
@@ -5193,11 +5270,13 @@ function modelsMain(cfg) {
 function populateModelSelect(selected) {
   const sel = $("#model-select");
   if (!sel) return;
-  const choices = modelChoicesFromSettings();
+  const fromSettings = modelChoicesFromSettings();
+  const fromSources = (state.modelSources || []).filter((s) => s.ready).map((s) => s.id);
+  const choices = [...new Set([...fromSources, ...fromSettings])];
   const cur = selected || sel.value || "";
   if (cur && !choices.includes(cur)) choices.unshift(cur);
   sel.innerHTML = choices.map((id) =>
-    `<option value="${escapeHtml(id)}" ${id === cur ? "selected" : ""}>${escapeHtml(SHORT_MODEL(id))}</option>`
+    `<option value="${escapeHtml(id)}" ${id === cur ? "selected" : ""}>${escapeHtml(sourceLabel(id) === id ? SHORT_MODEL(id) : sourceLabel(id))}</option>`
   ).join("") || `<option value="">—</option>`;
   if (cur) sel.value = cur;
   updateComposerAdvSummary();
@@ -5296,6 +5375,43 @@ async function deleteSession(id) {
   else if (!state.sessions.length) await createSession();
 }
 
+function rememberSessionMessages(id, messages) {
+  if (!id) return;
+  state.sessionMessages[id] = Array.isArray(messages) ? messages.slice() : [];
+}
+
+/** Swap the main chat pane immediately so the previous session never stays on screen. */
+function paintSessionPane(id, { loading = false } = {}) {
+  const box = $("#messages");
+  if (!box) return;
+  box.dataset.sid = id || "";
+  const cached = state.sessionMessages[id];
+  const live = state.streamBuffers[id];
+  const streaming = !!(state.sessionRuns[id] && state.sessionRuns[id].streaming);
+  if (cached && cached.length) {
+    renderMessages(cached);
+    if (streaming && live && (live.rawBuf || live.full || live.orchPlan)) {
+      if (live.orchPlan) restoreLiveMultiOrch(id);
+      else paintStreamBuffer(id, { force: true });
+    }
+    return;
+  }
+  if (streaming && live && (live.rawBuf || live.full || live.orchPlan)) {
+    box.innerHTML = "";
+    appendMessage({ role: "assistant", content: live.full || live.rawBuf || "", route: live.route });
+    if (live.orchPlan) restoreLiveMultiOrch(id);
+    else paintStreamBuffer(id, { force: true });
+    return;
+  }
+  if (loading) {
+    box.innerHTML = `<div class="empty-state session-switching" id="empty-state">
+      <p class="muted">${escapeHtml(t("chat.loading"))}</p>
+    </div>`;
+    return;
+  }
+  renderMessages([]);
+}
+
 async function selectSession(id) {
   if (!id) return;
   // Never land the UI on a hidden lane child — jump to its parent if known
@@ -5315,12 +5431,16 @@ async function selectSession(id) {
   const prevId = state.currentId;
   if (prevId === id) {
     setSidebarOpen(false);
+    if ($("#messages")?.dataset.sid !== id) paintSessionPane(id);
     return;
   }
   state.currentId = id;
+  const listed = state.sessions.find((s) => s.id === id);
+  if (listed) $("#chat-title").textContent = sessionDisplayTitle(listed);
   renderSessionList();
   renderActiveRuns({ force: true });
   updateSendEnabled();
+  paintSessionPane(id, { loading: true });
 
   // Instant paint from live buffer while history loads (no freeze waiting on API)
   const live = state.streamBuffers[id];
@@ -5340,6 +5460,7 @@ async function selectSession(id) {
     state.activeFolderId = s.folder_id || "";
     localStorage.setItem("agent_hub_active_folder", state.activeFolderId);
     $("#chat-title").textContent = sessionDisplayTitle(s);
+    rememberSessionMessages(id, s.messages || []);
     renderMessages(s.messages || []);
 
     // Rehydrate live multi-subagent board after history wipe
@@ -5396,6 +5517,7 @@ async function selectSession(id) {
 function renderMessages(messages) {
   const box = $("#messages");
   box.innerHTML = "";
+  if (state.currentId) box.dataset.sid = state.currentId;
   if (!messages.length) {
     box.innerHTML = `<div class="empty-state" id="empty-state">
       <img class="empty-logo-img" src="${logoSrc("empty")}" alt="深圳理工大学" />
@@ -5415,7 +5537,7 @@ function appendMessage(m, scroll = true) {
   const div = document.createElement("div");
   div.className = `msg ${m.role || "assistant"}${m.error ? " error" : ""}`;
   if (m.id) div.dataset.mid = m.id;
-  const role = m.role === "user" ? "You" : "Agent Hub";
+  const role = m.role === "user" ? t("chat.you") : "Agent Hub";
   let route = "";
   if (m.route && m.route.chat_engine === "fusion") {
     const n = ((m.route.fusion || {}).members || []).length;
@@ -8068,6 +8190,24 @@ async function renderControl() {
   }
 
   const isHybrid = (cfg.mode === "hybrid") || (b.type === "hybrid");
+  let agentAccounts = [];
+  try {
+    await loadModelSources();
+    agentAccounts = (await api("/api/connections/agents", { timeoutMs: 20000 })).agents || [];
+  } catch (_) {}
+  const fusedSources = state.modelSources || [];
+  const srcGroups = new Map();
+  fusedSources.forEach((src) => {
+    const name = langZh ? src.group : (src.group_en || src.group);
+    const key = `${src.kind}|${name}`;
+    if (!srcGroups.has(key)) srcGroups.set(key, { name, kind: src.kind, ready: 0, total: 0 });
+    const g = srcGroups.get(key);
+    g.total += 1;
+    if (src.ready) g.ready += 1;
+  });
+  const sourcesHtml = [...srcGroups.values()].map((g) =>
+    `<span class="source-chip ${g.kind === "agent" ? "agent" : "api"}">${escapeHtml(g.kind === "agent" ? t("sources.accounts") : t("sources.api"))} · ${escapeHtml(g.name)} · ${g.ready}/${g.total}</span>`
+  ).join("");
   let hybridHtml = "";
   if (isHybrid) {
     const hy = cfg.hybrid || {};
@@ -8080,22 +8220,36 @@ async function renderControl() {
     hybridHtml = `<h4>${langZh ? "混合路由绑定" : "Hybrid route binding"}</h4>
       <div class="grid-2">${routeKeys.map((rk) => {
         const entry = hy[rk.key] || {};
-        const provOpts = providers.filter((p) => p.id !== "hybrid").map((p) =>
+        const apiOpts = providers.filter((p) => p.id !== "hybrid").map((p) =>
           `<option value="${escapeHtml(p.id)}" ${p.id === entry.provider ? "selected" : ""}>${escapeHtml(p.label)}</option>`
         ).join("");
+        const acctOpts = agentAccounts.map((a) =>
+          `<option value="${escapeHtml(a.id)}" ${a.id === entry.provider ? "selected" : ""}>${escapeHtml(langZh ? a.label : a.label_en)}${a.logged_in ? "" : (langZh ? " · 未登录" : " · not signed in")}</option>`
+        ).join("");
         return `<div class="field"><span>${escapeHtml(rk.label)}</span>
-          <select data-key="hybrid.${rk.key}.provider">${provOpts}</select>
+          <select data-key="hybrid.${rk.key}.provider">
+            <optgroup label="${escapeHtml(t("sources.api"))}">${apiOpts}</optgroup>
+            ${acctOpts ? `<optgroup label="${escapeHtml(t("sources.accounts"))}">${acctOpts}</optgroup>` : ""}
+          </select>
           <select data-key="hybrid.${rk.key}.model">${modelIdOptions(entry.model || "", entry.provider || "")}</select>
         </div>`;
       }).join("")}</div>`;
   }
 
   $("#ctab-models").innerHTML = `
+    <p class="muted">${escapeHtml(t("sources.hint"))}</p>
+    <div class="source-chip-row">${sourcesHtml || `<span class="muted">${langZh ? "还没有来源 — 先在「API 与登录」添加 key 或登录账号" : "No sources yet — add a key or sign in under APIs & sign-in"}</span>`}</div>
+    <div class="row gap" style="justify-content:flex-start;margin:8px 0 14px">
+      <button type="button" class="btn primary chip" id="btn-open-connections">${escapeHtml(t("sources.openConnections"))}</button>
+    </div>
     <p class="muted">${langZh
       ? `当前厂商：<strong>${escapeHtml((currentProv && currentProv.label) || b.type || "—")}</strong>。切换后端后点「应用此厂商」可自动填充推荐模型。`
       : `Provider: <strong>${escapeHtml((currentProv && currentProv.label) || b.type || "—")}</strong>. Apply provider to auto-fill recommendations.`}</p>
     <div class="grid-2">${slots.map(modelField).join("")}</div>
     ${hybridHtml}`;
+  $("#btn-open-connections")?.addEventListener("click", () => {
+    document.querySelector('.ctab[data-ctab="connections"]')?.click();
+  });
 
   const o = cfg.obsidian || {};
   $("#ctab-obsidian").innerHTML = `
