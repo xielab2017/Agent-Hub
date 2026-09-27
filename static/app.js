@@ -1910,7 +1910,8 @@ async function boot() {
   try {
     const status = await api("/api/status");
     state.status = status;
-    $("#version-label").textContent = `v${status.version || "1.2.0"}`;
+    // The Hub renders the version into the HTML; only overwrite when the API actually reports one.
+    if (status.version) $("#version-label").textContent = `v${status.version}`;
     if (status.ui) {
       const hasLocal =
         localStorage.getItem("hermes_ali_lang") ||

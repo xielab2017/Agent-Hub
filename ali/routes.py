@@ -2067,6 +2067,14 @@ def _send_bytes(handler, data: bytes, ctype: str, filename: str) -> None:
     handler.wfile.write(data)
 
 
+VERSION_PLACEHOLDER = "__APP_VERSION__"
+
+
+def render_html(text: str) -> str:
+    """Substitute the one build-time placeholder the shipped HTML uses for its version."""
+    return text.replace(VERSION_PLACEHOLDER, VERSION)
+
+
 def _serve_file(handler, filepath: Path, root: Path | None = None) -> None:
     try:
         filepath = filepath.resolve()
@@ -2074,7 +2082,12 @@ def _serve_file(handler, filepath: Path, root: Path | None = None) -> None:
         if not str(filepath).startswith(str(static_root)) or not filepath.is_file():
             return _json(handler, 404, {"error": "not found"})
         data = filepath.read_bytes()
+        if filepath.suffix == ".html":
+            # One version everywhere: the HTML carries a placeholder, ali.config.VERSION fills it in.
+            data = render_html(data.decode("utf-8")).encode("utf-8")
     except OSError:
+        return _json(handler, 404, {"error": "not found"})
+    except UnicodeDecodeError:
         return _json(handler, 404, {"error": "not found"})
 
     ctype, _ = mimetypes.guess_type(str(filepath))

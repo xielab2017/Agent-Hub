@@ -1,3 +1,5 @@
 """Hermes-ALI — lightweight cross-platform Hermes Agent terminal."""
 
-__version__ = "5.5.0"
+from .config import VERSION as __version__
+
+__all__ = ["__version__"]
