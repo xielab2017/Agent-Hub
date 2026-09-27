@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/xielab2017/Agent-Hub/releases"><img alt="version" src="https://img.shields.io/badge/version-5.5.0-rose.svg" /></a>
+  <a href="https://github.com/xielab2017/Agent-Hub/releases"><img alt="version" src="https://img.shields.io/badge/version-5.6.0-rose.svg" /></a>
   <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-MIT-blue.svg" /></a>
   <a href="https://www.python.org/"><img alt="python" src="https://img.shields.io/badge/python-%3E%3D3.9-brightgreen.svg" /></a>
   <a href="https://github.com/xielab2017/Agent-Hub"><img alt="platform" src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg" /></a>
@@ -101,7 +101,7 @@ chmod +x ctl.sh "Start Agent Hub.command" "Stop Agent Hub.command" start.sh stop
 curl -s http://127.0.0.1:8765/api/health
 ```
 
-确认健康检查里显示 `"version": "5.5.0"`。如果仍然不对，可临时换端口验证当前源码：
+确认健康检查里显示 `"version": "5.6.0"`。如果仍然不对，可临时换端口验证当前源码：
 
 ```bash
 python3 server.py --host 127.0.0.1 --port 9876 --open
@@ -313,7 +313,7 @@ Agent-Hub/
 
 ## 开发与版本
 
-当前版本：**v5.5.0**（分支 `main`）
+当前版本：**v5.6.0**（分支 `main`）
 
 ```bash
 # 健康检查
@@ -327,6 +327,7 @@ git pull
 
 简要更新：
 
+- **v5.6.0** — 版本号在代码、页面和 logo 缓存参数中统一为 5.6.0；中 / EN 切换覆盖侧栏、模型按钮和当前聊天；会话标题默认可读，文件夹不再盖住正在看的对话；主界面消息对比度提高；API 与已登录账号仍在同一个模型列表里
 - **v5.5.0** — 任意已配置的模型 API 直接当 Agent：按上下文自行检索文献、读工作区文件、启动 Skill（如「写一篇综述」→ literature-review）；Skill 进度卡片新增「停止」按钮（已停止的运行保留已生成文件）；新增双击停止脚本 `Stop Agent Hub.command` / `stop-agent-hub.bat`（与启动脚本成对），修复 Windows 启动脚本日志重定向
 - **v5.4.0** — 多模型 API（多家厂商并存、按任务等级路由）；Claude Code / Codex 作为 Agent，支持外部链接登录
 - **v5.3.6** — 真实 MiniMax 实测（GitHub Actions「MiniMax live check」，默认模型 MiniMax-M3）：直连 / Hermes 全部通过；修复工具调用标记外泄、文献摘要读取、PubMed 排序、中文科研问题的英文检索词、无关文献过滤、设计参数误报与点名文献核查

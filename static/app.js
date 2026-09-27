@@ -15,7 +15,7 @@ const FONT_SIZE_LABELS = {
   zh: { 13: "小 13", 14: "中 14", 15: "中大 15", 16: "大 16", 18: "特大 18" },
   en: { 13: "S 13", 14: "M 14", 15: "M+ 15", 16: "L 16", 18: "XL 18" },
 };
-const LOGO_VER = "5.3.6";
+const LOGO_VER = "5.6.0";
 const DEFAULT_LOGO = `/brand/suat-logo-color.png?v=${LOGO_VER}`;
 const LOGO_PRESETS = [
   { id: "suat-color", src: `/brand/suat-logo-color.png?v=${LOGO_VER}`, labelKey: "appearance.logoPresetColor" },
@@ -37,7 +37,8 @@ function bindArchiveControls() {
   btn.onclick = async () => {
     state.showArchived = !state.showArchived;
     btn.classList.toggle("active", state.showArchived);
-    btn.textContent = state.showArchived ? "返回会话" : "归档";
+    btn.textContent = state.showArchived ? t("nav.backChats") : t("nav.archive");
+    btn.title = state.showArchived ? t("nav.backChats") : t("nav.archiveTitle");
     await refreshSessions();
   };
 }
@@ -45,6 +46,13 @@ function bindArchiveControls() {
 function detectSystemLanguage() {
   const nav = String(navigator.language || navigator.userLanguage || "en").toLowerCase();
   return nav.startsWith("zh") ? "zh" : "en";
+}
+
+/** UI language is only zh or en. "zh-CN" / "en-US" must still toggle. */
+function normalizeLang(value) {
+  const s = String(value || "").trim().toLowerCase().replace(/_/g, "-");
+  if (s === "en" || s.startsWith("en-")) return "en";
+  return "zh";
 }
 
 function controlLangZh() {
@@ -119,8 +127,17 @@ const I18N = {
     "nav.workflows": "模板",
     "nav.tasks": "任务",
     "nav.sessions": "会话",
+    "nav.searchPh": "搜索会话或文件夹",
+    "nav.archive": "归档",
+    "nav.archiveTitle": "查看归档",
+    "nav.backChats": "返回会话",
+    "nav.folderPh": "文件夹",
+    "nav.newFolder": "新建文件夹",
     "nav.control": "⚙ 控制中心",
     "chat.new": "新任务",
+    "role.you": "你",
+    "role.hub": "Agent Hub",
+    "drop.hint": "拖放文件 / 图片到此处",
     "empty.title": "校园 Agent Hub",
     "empty.body": "描述任务并运行 · Agent Hub 调度 Skill / Agent · 进度条跟踪执行",
     "skills.picker": "Skill",
@@ -410,8 +427,17 @@ const I18N = {
     "nav.workflows": "Templates",
     "nav.tasks": "Tasks",
     "nav.sessions": "Sessions",
+    "nav.searchPh": "Search chats or folders",
+    "nav.archive": "Archive",
+    "nav.archiveTitle": "Show archived",
+    "nav.backChats": "Back to chats",
+    "nav.folderPh": "Folder",
+    "nav.newFolder": "New folder",
     "nav.control": "⚙ Control Center",
     "chat.new": "New task",
+    "role.you": "You",
+    "role.hub": "Agent Hub",
+    "drop.hint": "Drop files or images here",
     "empty.title": "Campus Agent Hub",
     "empty.body": "Describe a task and run · Agent Hub dispatches skills/agents · progress tracked",
     "skills.picker": "Skill",
@@ -748,7 +774,7 @@ const state = {
   soulRoles: [],
   activeSoul: "office",
   prefs: {
-    language: localStorage.getItem("hermes_ali_lang") || detectSystemLanguage(),
+    language: normalizeLang(localStorage.getItem("hermes_ali_lang") || detectSystemLanguage()),
     theme: localStorage.getItem("hermes_ali_theme") || "auto",
     accent: localStorage.getItem("hermes_ali_accent") || "suat",
     bg: (() => {
@@ -765,6 +791,10 @@ const state = {
   },
   /** Cumulative token usage for the current session (from SSE done events) */
   usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, cost: null },
+  /** "chat" shows one session; "folder" shows that folder's task list in the main pane. */
+  pane: "chat",
+  folderOverviewId: null,
+  currentMessages: null,
 };
 
 function t(key) {
@@ -797,9 +827,41 @@ function applyI18n() {
   if (themeBtn) {
     const resolved = resolveAppearance();
     const mode = state.prefs.theme === "auto" ? "auto" : resolved.theme;
-    themeBtn.textContent = mode === "auto" ? "◐ Auto" : (resolved.theme === "dark" ? "☾ Dark" : "☀ Light");
+    const zh = lang === "zh";
+    themeBtn.textContent = mode === "auto"
+      ? (zh ? "◐ 自动" : "◐ Auto")
+      : (resolved.theme === "dark" ? (zh ? "☾ 深色" : "☾ Dark") : (zh ? "☀ 浅色" : "☀ Light"));
+    themeBtn.title = zh ? "主题：自动 / 浅色 / 深色" : "Theme: auto / light / dark";
   }
   syncFontSizeControls();
+  syncSidebarChromeLanguage();
+  try { updateModelPickButton(); } catch (_) {}
+}
+
+function syncSidebarChromeLanguage() {
+  const search = $("#session-search");
+  if (search) {
+    search.placeholder = t("nav.searchPh");
+    search.setAttribute("aria-label", t("nav.searchPh"));
+  }
+  const folder = $("#new-folder-name");
+  if (folder) {
+    folder.placeholder = t("nav.folderPh");
+    folder.setAttribute("aria-label", t("nav.folderPh"));
+  }
+  const newFolder = $("#btn-new-folder");
+  if (newFolder) {
+    newFolder.textContent = t("nav.newFolder");
+    newFolder.title = t("nav.newFolder");
+  }
+  const arch = $("#btn-toggle-archived");
+  if (arch) {
+    arch.textContent = state.showArchived ? t("nav.backChats") : t("nav.archive");
+    arch.title = state.showArchived ? t("nav.backChats") : t("nav.archiveTitle");
+  }
+  const drop = t("drop.hint");
+  document.querySelector(".composer")?.setAttribute("data-drop-label", drop);
+  $("#chat-panes")?.setAttribute("data-drop-label", drop);
 }
 
 function isDaytime(date = new Date()) {
@@ -966,6 +1028,9 @@ async function persistPrefsServer() {
 }
 
 function setPrefs(partial, { syncServer = false } = {}) {
+  if (partial && Object.prototype.hasOwnProperty.call(partial, "language") && partial.language !== undefined) {
+    partial = { ...partial, language: normalizeLang(partial.language) };
+  }
   const langChanged = Object.prototype.hasOwnProperty.call(partial, "language")
     && partial.language !== undefined
     && partial.language !== state.prefs.language;
@@ -1144,6 +1209,21 @@ function sessionDisplayTitle(s) {
   return title;
 }
 
+function sessionWhen(s) {
+  const ts = Number(s && s.updated_at);
+  if (!Number.isFinite(ts) || ts <= 0) return "";
+  const d = new Date(ts < 1e12 ? ts * 1000 : ts);
+  if (Number.isNaN(d.getTime())) return "";
+  const zh = state.prefs.language !== "en";
+  try {
+    return d.toLocaleString(zh ? "zh-CN" : "en", {
+      month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit",
+    });
+  } catch (_) {
+    return "";
+  }
+}
+
 function refreshChatChromeLanguage() {
   const cur = state.sessions.find((s) => s.id === state.currentId);
   const titleEl = $("#chat-title");
@@ -1159,6 +1239,17 @@ function refreshChatChromeLanguage() {
   try { renderSkillPicker(); } catch (_) {}
   try { renderSubagentPicker(); } catch (_) {}
   applyI18n();
+  const pop = $("#model-pick-pop");
+  if (pop && !pop.hidden) renderModelPicker();
+  const streaming = !!(state.currentId && state.sessionRuns[state.currentId]?.streaming);
+  if (!streaming && state.pane === "folder" && state.folderOverviewId != null) {
+    renderFolderOverview(state.folderOverviewId);
+  } else if (!streaming && Array.isArray(state.currentMessages)) {
+    const box = $("#messages");
+    const top = box ? box.scrollTop : 0;
+    renderMessages(state.currentMessages);
+    if (box) box.scrollTop = top;
+  }
 }
 
 function renderAccentDots() {
@@ -2885,7 +2976,9 @@ function updateModelPickButton() {
   btn.textContent = !ids.length ? (zh ? "模型：自动" : "Model: auto")
     : ids.length === 1 ? `${zh ? "模型：" : "Model: "}${sourceLabel(ids[0])}`
       : `${zh ? "融合 · " : "Fusion · "}${ids.map(sourceLabel).join(" + ")}`;
-  btn.title = ids.length > 1 ? (zh ? "所选模型同时作答，再合并成一份回答" : "The chosen models answer together; one merges them") : "";
+  btn.title = ids.length > 1
+    ? (zh ? "所选 API 与账号同时作答，再合并成一份回答" : "The chosen API models and accounts answer together; one merges them")
+    : (zh ? "API 模型与已登录账号在同一列表，可多选融合" : "API models and signed-in accounts share this list; multi-select fuses them");
 }
 
 function setPickedModels(ids) {
@@ -2915,13 +3008,14 @@ function renderModelPicker() {
       ${g.rows.map((src) => `<label class="model-pick-row ${src.ready ? "" : "off"}" data-id="${escapeHtml(src.id)}">
         <input type="checkbox" ${picked.has(src.id) ? "checked" : ""} ${src.ready ? "" : "disabled"} />
         <span>${escapeHtml(src.kind === "agent" ? (src.model || L("默认模型", "default model")) : src.model)}</span>
-        ${src.ready ? "" : `<a href="#" class="model-pick-login">${escapeHtml(src.note || L("未登录", "not signed in"))} · ${L("去登录", "sign in")}</a>`}
+        <span class="model-kind ${src.kind === "agent" ? "agent" : "api"}">${src.kind === "agent" ? L("账号", "Account") : "API"}</span>
+        ${src.ready ? "" : `<a href="#" class="model-pick-login">${escapeHtml((zh ? src.note : (src.note_en || src.note)) || L("未登录", "not signed in"))} · ${L("去登录", "sign in")}</a>`}
       </label>`).join("")}</div>`).join("");
   pop.innerHTML = `<div class="model-pick-top">
       <input class="model-pick-search" placeholder="${L("搜索模型…", "Search models…")}" value="${escapeHtml(q)}" />
       <button type="button" class="btn ghost chip model-pick-auto">${L("自动（按分级路由）", "Auto (tier routing)")}</button></div>
-    <div class="muted model-pick-hint">${L("勾选一个：只用它回答；勾选多个：同时作答并融合成一份回答。", "Tick one to use it; tick several to have them answer together and merge.")}</div>
-    <div class="model-pick-list">${rows || `<div class="muted">${L("还没有可用模型 — 在 控制中心 → 多模型 API 添加 key 或登录账号", "No models yet — add keys or sign in under Control Center → 多模型 API")}</div>`}</div>`;
+    <div class="muted model-pick-hint">${L("API 与已登录账号在同一列表。勾选一个：只用它；勾选多个：同时作答并融合成一份。", "API models and signed-in accounts are one list. Tick one to use it; tick several to answer together and merge.")}</div>
+    <div class="model-pick-list">${rows || `<div class="muted">${L("还没有可用模型 — 在 控制中心 → 多模型 API 添加 key 或登录账号", "No models yet — add a key or sign in under Control Center → Multi-model API")}</div>`}</div>`;
   const search = pop.querySelector(".model-pick-search");
   search.oninput = () => { const pos = search.selectionStart; renderModelPicker(); const s2 = pop.querySelector(".model-pick-search"); s2.focus(); s2.setSelectionRange(pos, pos); };
   pop.querySelector(".model-pick-auto").onclick = () => { setPickedModels([]); renderModelPicker(); };
@@ -3271,13 +3365,13 @@ async function renderConnectionsPanel(langZh) {
     <div class="quick-login-bar"><strong>${L("快捷登录", "Quick sign-in")}</strong>
       ${agents.map(quickBtn).join("")}
       <span class="muted">${L("一键：未安装先自动安装，再打开官方授权页；可同时登录多个账号。", "One click: installs if needed, then opens the official sign-in page; several accounts can be signed in at once.")}</span></div>
-    <h4>${L("账号登录（订阅 / Agent）", "Signed-in accounts (subscriptions / agents)")} <span class="muted">${agents.filter((a) => a.logged_in).length}/${agents.length}</span></h4>
+    <h4>${L("模型来源 · 账号登录", "Model sources · signed-in accounts")} <span class="muted">${agents.filter((a) => a.logged_in).length}/${agents.length}</span></h4>
     <div class="conn-grid agent-grid">${agents.map(agentCard).join("")}</div>
     <h4>${L("按任务等级路由", "Tier routing")} <span class="muted">(${data.mode === "hybrid" ? "Hybrid" : L("当前单一后端：", "single backend: ") + escapeHtml(data.backend)})</span></h4>
     <div class="conn-tiers">${["simple", "office", "reasoning", "vision"].map(tierRow).join("")}</div>
     <div class="row gap" style="justify-content:flex-start;margin:6px 0 12px"><button type="button" class="btn ghost chip" id="conn-route-test">${L("路由测试", "Test routing")}</button></div>
     <div id="conn-route-result"></div>
-    <h4>${L("厂商连接", "Vendor connections")} <span class="muted">${connected.length}/${data.connections.length}</span></h4>
+    <h4>${L("模型来源 · API", "Model sources · API")} <span class="muted">${connected.length}/${data.connections.length}</span></h4>
     <div class="conn-grid">${data.connections.map(card).join("")}</div>`;
 
   const msg = (el, text) => { const m = el.querySelector(".conn-msg"); if (m) m.textContent = text; };
@@ -4300,6 +4394,16 @@ function bindSessionListDelegation() {
     await refreshSessions();
   });
   list.addEventListener("click", async (e) => {
+    const more = e.target.closest("[data-more]");
+    if (more && list.contains(more)) {
+      e.preventDefault();
+      e.stopPropagation();
+      const item = more.closest(".session-item");
+      const willOpen = item && !item.classList.contains("menu-open");
+      list.querySelectorAll(".session-item.menu-open").forEach((el) => el.classList.remove("menu-open"));
+      if (willOpen && item) item.classList.add("menu-open");
+      return;
+    }
     const actions = e.target.closest(".session-actions");
     if (actions) {
       const rename = e.target.closest("[data-rename]");
@@ -4351,7 +4455,7 @@ function bindSessionListDelegation() {
     if (!item || !list.contains(item)) return;
     const sid = item.dataset.sid;
     if (!sid) return;
-    if (sid === state.currentId) {
+    if (sid === state.currentId && state.pane !== "folder" && !$("#messages .folder-overview")) {
       setSidebarOpen(false);
       return;
     }
@@ -4390,17 +4494,24 @@ function renderSessionList() {
     const open = localStorage.getItem(openKey) !== "0";
     const header = document.createElement("div");
     header.className = "session-folder" + (folderId === state.activeFolderId ? " active" : "");
+    const viewTitle = langZh ? "在主界面列出这些聊天" : "List these chats";
     const folderActions = folderId
-      ? `<span class="folder-actions"><button type="button" class="act" data-folder-rename="${escapeHtml(folderId)}" title="${langZh ? "重命名文件夹" : "Rename folder"}">✎</button><button type="button" class="act" data-folder-archive="${escapeHtml(folderId)}" title="${folder.archived ? (langZh ? "恢复文件夹" : "Restore folder") : (langZh ? "文件夹存档" : "Archive folder")}">${folder.archived ? "↩" : "▣"}</button><button type="button" class="act danger" data-folder-delete="${escapeHtml(folderId)}" title="${langZh ? "删除文件夹" : "Delete folder"}">×</button></span>`
-      : `<span class="folder-actions"><button type="button" class="act danger" data-folder-clear title="${langZh ? "清空未分类任务" : "Clear unclassified tasks"}">×</button></span>`;
+      ? `<span class="folder-actions"><button type="button" class="act" data-folder-view title="${viewTitle}">☰</button><button type="button" class="act" data-folder-rename="${escapeHtml(folderId)}" title="${langZh ? "重命名文件夹" : "Rename folder"}">✎</button><button type="button" class="act" data-folder-archive="${escapeHtml(folderId)}" title="${folder.archived ? (langZh ? "恢复文件夹" : "Restore folder") : (langZh ? "文件夹存档" : "Archive folder")}">${folder.archived ? "↩" : "▣"}</button><button type="button" class="act danger" data-folder-delete="${escapeHtml(folderId)}" title="${langZh ? "删除文件夹" : "Delete folder"}">×</button></span>`
+      : `<span class="folder-actions"><button type="button" class="act" data-folder-view title="${viewTitle}">☰</button><button type="button" class="act danger" data-folder-clear title="${langZh ? "清空未分类任务" : "Clear unclassified tasks"}">×</button></span>`;
     header.innerHTML = `<div class="folder-header"><button type="button" class="folder-toggle" data-folder-toggle="${escapeHtml(folderId)}">${open ? "▾" : "▸"} <span>${escapeHtml(folder.name)}</span><small>${items.length}</small></button>${folderActions}</div>`;
     header.querySelector("[data-folder-toggle]").onclick = () => {
       state.activeFolderId = folderId;
       localStorage.setItem("agent_hub_active_folder", folderId);
       localStorage.setItem(openKey, open ? "0" : "1");
       renderSessionList();
-      renderFolderOverview(folderId);
     };
+    header.querySelector("[data-folder-view]")?.addEventListener("click", (event) => {
+      event.stopPropagation();
+      state.activeFolderId = folderId;
+      localStorage.setItem("agent_hub_active_folder", folderId);
+      renderSessionList();
+      renderFolderOverview(folderId);
+    });
     header.querySelector("[data-folder-rename]")?.addEventListener("click", async (event) => {
       event.stopPropagation();
       const next = prompt(langZh ? "文件夹名称" : "Folder name", folder.name);
@@ -4424,6 +4535,8 @@ function renderSessionList() {
       await Promise.all(items.map((s) => api(`/api/sessions/${encodeURIComponent(s.id)}`, { method: "PATCH", body: JSON.stringify({ archived: true }) })));
       if (items.some((s) => s.id === state.currentId)) {
         state.currentId = null;
+        state.currentMessages = [];
+        state.pane = "chat";
         $("#messages").innerHTML = "";
         $("#chat-title").textContent = t("chat.new");
       }
@@ -4450,14 +4563,17 @@ function renderSessionList() {
     btn.setAttribute("role", "button");
     btn.tabIndex = 0;
     const title = sessionDisplayTitle(s);
+    const when = sessionWhen(s);
     btn.innerHTML = `
       <span class="session-main">
         ${running ? `<span class="session-spinner" aria-hidden="true"></span>` : ""}
         <span class="title">${escapeHtml(title)}</span>
+        ${when ? `<span class="session-when">${escapeHtml(when)}</span>` : ""}
         ${running
           ? `<span class="session-status running-tag">${langZh ? "执行中" : "Running"} ${pct}%</span>`
-          : `<span class="session-status idle-tag">${langZh ? "就绪" : "Idle"}</span>`}
+          : ""}
       </span>
+      <button type="button" class="act session-more" data-more="1" title="${escapeHtml(langZh ? "会话操作" : "Chat actions")}">⋯</button>
       <span class="session-actions">
         <button type="button" class="act" data-rename="${escapeHtml(s.id)}" title="${escapeHtml(langZh ? "更改名称" : "Rename")}">✎</button>
        <button type="button" class="act" data-backup="${escapeHtml(s.id)}" title="${escapeHtml(langZh ? "备份" : "Backup")}">⬇</button>
@@ -4473,7 +4589,7 @@ function renderSessionList() {
     btn.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
-        if (s.id === state.currentId) {
+        if (s.id === state.currentId && state.pane !== "folder" && !$("#messages .folder-overview")) {
           setSidebarOpen(false);
           return;
         }
@@ -4540,6 +4656,8 @@ async function archiveSession(id) {
   await api(`/api/sessions/${id}`, { method: "PATCH", body: JSON.stringify({ archived: true }) });
   if (state.currentId === id) {
     state.currentId = null;
+    state.currentMessages = [];
+    state.pane = "chat";
     $("#messages").innerHTML = "";
     $("#chat-title").textContent = t("chat.new");
   }
@@ -5283,6 +5401,8 @@ async function deleteSession(id) {
   await api(`/api/sessions/${id}`, { method: "PATCH", body: JSON.stringify({ archived: true }) });
   if (state.currentId === id) {
     state.currentId = null;
+    state.currentMessages = [];
+    state.pane = "chat";
     $("#messages").innerHTML = "";
     $("#chat-title").textContent = t("chat.new");
   }
@@ -5313,7 +5433,8 @@ async function selectSession(id) {
 
   // Optimistic highlight so switching feels instant even if API is slow
   const prevId = state.currentId;
-  if (prevId === id) {
+  // Same session, but a folder overview may be covering its messages — reload those.
+  if (prevId === id && state.pane !== "folder" && !$("#messages .folder-overview")) {
     setSidebarOpen(false);
     return;
   }
@@ -5395,6 +5516,8 @@ async function selectSession(id) {
 
 function renderMessages(messages) {
   const box = $("#messages");
+  state.pane = "chat";
+  state.currentMessages = (messages || []).slice();
   box.innerHTML = "";
   if (!messages.length) {
     box.innerHTML = `<div class="empty-state" id="empty-state">
@@ -5405,17 +5528,22 @@ function renderMessages(messages) {
     applyBrandLogos();
     return;
   }
-  messages.forEach((m) => appendMessage(m, false));
+  messages.forEach((m) => appendMessage(m, false, { track: false }));
   box.scrollTop = box.scrollHeight;
 }
 
-function appendMessage(m, scroll = true) {
+function appendMessage(m, scroll = true, opts = {}) {
+  if (opts.track !== false) {
+    state.pane = "chat";
+    if (!Array.isArray(state.currentMessages)) state.currentMessages = [];
+    state.currentMessages.push(m);
+  }
   const empty = $("#empty-state");
   if (empty) empty.remove();
   const div = document.createElement("div");
   div.className = `msg ${m.role || "assistant"}${m.error ? " error" : ""}`;
   if (m.id) div.dataset.mid = m.id;
-  const role = m.role === "user" ? "You" : "Agent Hub";
+  const role = m.role === "user" ? t("role.you") : t("role.hub");
   let route = "";
   if (m.route && m.route.chat_engine === "fusion") {
     const n = ((m.route.fusion || {}).members || []).length;
@@ -5831,6 +5959,8 @@ function applyChatLayout() {
 function renderFolderOverview(folderId) {
   const box = $("#messages");
   if (!box) return;
+  state.pane = "folder";
+  state.folderOverviewId = folderId;
   const langZh = state.prefs.language !== "en";
   const folder = (state.folders || []).find((f) => f.id === folderId);
   const sessions = state.sessions
@@ -5851,7 +5981,7 @@ function renderFolderOverview(folderId) {
       const row = document.createElement("button");
       row.type = "button";
       row.className = "folder-task-row" + (s.id === state.currentId ? " active" : "");
-      row.innerHTML = `<span class="folder-task-title">${s.pinned ? "★ " : ""}${escapeHtml(sessionDisplayTitle(s))}</span><small>${escapeHtml(s.updated_at || "")}</small>`;
+      row.innerHTML = `<span class="folder-task-title">${s.pinned ? "★ " : ""}${escapeHtml(sessionDisplayTitle(s))}</span><small>${escapeHtml(sessionWhen(s))}</small>`;
       row.onclick = () => selectSession(s.id).catch((err) => console.warn(err));
       list.appendChild(row);
     });
@@ -9884,7 +10014,7 @@ $("#route-select")?.addEventListener("change", () => {
 });
 
 $("#btn-lang").addEventListener("click", () => {
-  setPrefs({ language: state.prefs.language === "zh" ? "en" : "zh" }, { syncServer: true });
+  setPrefs({ language: normalizeLang(state.prefs.language) === "zh" ? "en" : "zh" }, { syncServer: true });
 });
 $("#btn-web-search")?.addEventListener("click", () => {
   state.webSearch = !state.webSearch;

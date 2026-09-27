@@ -1,5 +1,20 @@
 # Changelog
 
+## v5.6.0 — 2026-09-27
+
+- **One version string.** 5.6.0 is set in `ali/__init__.py`, `ali/config.py`, `pyproject.toml`, README,
+  `static/index.html` (`?v=` and the sidebar label), and `LOGO_VER` in `static/app.js` (this was still 5.3.6).
+- **中 / EN actually switches the chrome.** Language is normalized to `zh` or `en` (`zh-CN` / `en-US` included),
+  so the sidebar toggle no longer stays on Chinese. Search, folders, archive, theme, the model button, and the
+  open chat's labels follow the same switch.
+- **Chat list stays readable.** Session actions sit on hover so each chat title is visible. Folding a folder
+  no longer replaces the open conversation; ☰ lists that folder's chats in the main pane, and choosing a chat
+  brings its messages back.
+- **Main pane contrast.** Message cards, the empty state, and the top bar / composer use solid surfaces so the
+  conversation stays readable on the SUAT and white backgrounds.
+- **API and signed-in accounts stay one model list.** The composer picker marks each row API or Account, and
+  the multi-model page groups both under model sources.
+
 ## v5.5.0 — 2026-09-26
 
 - **Every configured API acts as an agent (Hub agent).** With chat mode Agent and no external claw, the Hub

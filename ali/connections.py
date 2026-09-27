@@ -137,7 +137,8 @@ def model_sources(cfg: dict[str, Any] | None = None, *, agents: list[dict[str, A
             out.append({"id": f"{rid}{SOURCE_SEP}{m}", "kind": "agent", "provider": rid, "model": m,
                         "label": (m or "默认"), "label_en": (m or "default"), "group": a["label"],
                         "group_en": a["label_en"], "ready": bool(a.get("installed") and a.get("logged_in")),
-                        "note": "" if a.get("logged_in") else ("未安装" if not a.get("installed") else "未登录")})
+                        "note": "" if a.get("logged_in") else ("未安装" if not a.get("installed") else "未登录"),
+                        "note_en": "" if a.get("logged_in") else ("not installed" if not a.get("installed") else "not signed in")})
     return {"ok": True, "sources": out}
 
 
