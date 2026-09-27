@@ -41,12 +41,12 @@
           <button type="button" id="btn-font-inc" class="btn ghost chip font-step" aria-label="Increase font size">A+</button>
         </div>
         <button type="button" id="btn-new" class="btn primary" data-i18n="nav.newChat">+ 新任务</button>
-        <input id="session-search" class="input session-search" type="search" placeholder="搜索会话或文件夹" aria-label="搜索会话或文件夹" />
+        <input id="session-search" class="input session-search" type="search" data-i18n-placeholder="nav.searchPh" placeholder="搜索会话或文件夹" aria-label="搜索会话或文件夹" />
       </div>
 
       <div id="panel-main" class="side-panel">
-       <div class="side-section-label session-section-head"><span data-i18n="nav.sessions">会话</span><button id="btn-toggle-archived" type="button" class="btn ghost chip" title="查看归档">归档</button></div>
-        <form id="folder-create-form" class="folder-tools"><input id="new-folder-name" class="input" placeholder="文件夹" aria-label="文件夹" /><button id="btn-new-folder" type="submit" class="btn ghost folder-add" title="新建文件夹">新建文件夹</button></form>
+       <div class="side-section-label session-section-head"><span data-i18n="nav.sessions">会话</span><button id="btn-toggle-archived" type="button" class="btn ghost chip" data-i18n="nav.archived" data-i18n-title="nav.archived" title="归档">归档</button></div>
+        <form id="folder-create-form" class="folder-tools"><input id="new-folder-name" class="input" data-i18n-placeholder="nav.folder" placeholder="文件夹" aria-label="文件夹" /><button id="btn-new-folder" type="submit" class="btn ghost folder-add" data-i18n-title="nav.newFolder" data-i18n="nav.newFolder" title="新建文件夹">新建文件夹</button></form>
        <div id="session-list" class="session-list"></div>
       </div>
 
@@ -76,7 +76,7 @@
           <span id="token-in">0</span>↑ <span id="token-out">0</span>↓
           <span id="token-cost" class="muted"></span>
         </span>
-        <button id="btn-subagent-popout" class="btn ghost hidden" title="在独立窗口查看子代理">⧉ 子窗口</button>
+        <button id="btn-subagent-popout" class="btn ghost hidden" data-i18n="sub.popoutWindow" data-i18n-title="sub.popoutWindow" title="⧉ 子窗口">⧉ 子窗口</button>
         <button id="btn-stop" class="btn ghost hidden" title="Stop">⏹</button>
       </header>
       <div id="subagent-bar" class="subagent-bar hidden" aria-label="Subagents" hidden></div>
@@ -150,7 +150,7 @@
             </select>
           </label>
           <div class="model-pick-wrap">
-            <button type="button" id="model-pick-btn" class="btn ghost chip model-pick-btn" aria-haspopup="true" aria-expanded="false">模型：自动</button>
+            <button type="button" id="model-pick-btn" class="btn ghost chip model-pick-btn" aria-haspopup="true" aria-expanded="false" data-i18n="composer.modelPickAuto">模型：自动</button>
             <div id="model-pick-pop" class="model-pick-pop" hidden></div>
           </div>
           <span id="composer-adv-summary" class="composer-adv-summary muted"></span>
@@ -216,13 +216,13 @@
   <div id="fs-overlay" class="overlay hidden">
     <div class="control-card fs-card">
       <div class="control-head">
-        <h2 id="fs-title">选择工作路径</h2>
-        <button type="button" id="btn-fs-close" class="btn ghost">关闭</button>
+        <h2 id="fs-title" data-i18n="fs.title">选择工作路径</h2>
+        <button type="button" id="btn-fs-close" class="btn ghost" data-i18n="fs.close">关闭</button>
       </div>
       <div class="fs-toolbar">
-        <button type="button" id="btn-fs-up" class="btn ghost">↑ 上级</button>
+        <button type="button" id="btn-fs-up" class="btn ghost" data-i18n="fs.up">↑ 上级</button>
         <input id="fs-path" type="text" readonly />
-        <button type="button" id="btn-fs-use" class="btn primary">使用此目录</button>
+        <button type="button" id="btn-fs-use" class="btn primary" data-i18n="fs.use">使用此目录</button>
       </div>
       <div id="fs-shortcuts" class="fs-shortcuts"></div>
       <div id="fs-list" class="fs-list"></div>
@@ -321,7 +321,7 @@
 
   <div id="wf-overlay" class="overlay hidden">
     <div class="login-card wf-card">
-      <h2 id="wf-title">工作流</h2>
+      <h2 id="wf-title" data-i18n="wf.title">工作流</h2>
       <p id="wf-desc" class="muted"></p>
       <textarea id="wf-input" rows="6" data-i18n-placeholder="wf.inputPh" placeholder="粘贴会议笔记 / 邮件要点 / 文档内容…"></textarea>
       <div class="row">

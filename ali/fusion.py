@@ -88,7 +88,22 @@ def synthesizer(members: list[dict[str, Any]], cfg: dict[str, Any]) -> dict[str,
             pid, model = first["provider"], first["model"]
         else:
             hm = hub_model(cfg, "reasoning")
-            if not hm.get("provider") or hm.get("error"):
+            if not hm.get("provider") or hm.get("error") or is_agent(hm.get("provider")):
+                for fallback_tier in ("office", "simple", "vision"):
+                    cand = hub_model(cfg, fallback_tier)
+                    if cand.get("provider") and not cand.get("error") and not is_agent(cand.get("provider")):
+                        hm = cand
+                        break
+            if not hm.get("provider") or hm.get("error") or is_agent(hm.get("provider")):
+                from .providers import list_connections
+
+                for c in list_connections(cfg):
+                    if c.get("key_present") or c.get("provider") == "local-ollama":
+                        prov = connection(cfg, c["provider"])
+                        model = next(iter(c.get("models") or []), "") or next(iter(c.get("default_models") or []), "")
+                        if model:
+                            return {"provider": c["provider"], "model": model, "base_url": prov["base_url"],
+                                    "api_key": prov["api_key"], "verify_tls": prov["verify_tls"], "label": model}
                 return {}
             return {"provider": hm["provider"], "model": hm["model"], "base_url": hm["base_url"],
                     "api_key": hm["api_key"], "verify_tls": hm["verify_tls"], "label": hm["model"] or hm["provider"]}

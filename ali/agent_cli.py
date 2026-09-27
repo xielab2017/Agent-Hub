@@ -170,6 +170,33 @@ def check_flags(rid: str, binpath: str = "", help_text: str | None = None) -> li
     return missing
 
 
+_VERSION_CACHE: dict[str, tuple[float, str]] = {}
+
+
+def cli_version(rid: str, binpath: str = "") -> str:
+    """Installed version of the external agent CLI (e.g. '2.9.0', '0.99.0')."""
+    binpath = binpath or find_bin(rid)
+    if not binpath:
+        return ""
+    try:
+        mtime = os.path.getmtime(binpath)
+    except OSError:
+        mtime = 0.0
+    hit = _VERSION_CACHE.get(binpath)
+    if hit and hit[0] == mtime:
+        return hit[1]
+    ver = ""
+    try:
+        out = subprocess.run([binpath, "--version"], capture_output=True, text=True, timeout=10, env=build_env(rid))
+        raw = ((out.stdout or "") + (out.stderr or "")).strip()
+        m = re.search(r"\b(\d+\.\d+(?:\.\d+)?(?:-[a-zA-Z0-9.]+)?)\b", raw)
+        ver = m.group(1) if m else (raw.splitlines()[0][:30] if raw else "")
+    except (OSError, subprocess.TimeoutExpired):
+        ver = ""
+    _VERSION_CACHE[binpath] = (mtime, ver)
+    return ver
+
+
 # ── per-Hub-session CLI session ids ────────────────────────────────────
 
 
@@ -574,8 +601,9 @@ def auth_status(rid: str, *, binpath: str = "") -> dict[str, Any]:
     """Whether the agent can run, and how it is signed in (never returns a secret)."""
     binpath = binpath or find_bin(rid)
     mode = auth_mode(rid)
+    ver = cli_version(rid, binpath)
     info: dict[str, Any] = {"runtime": rid, "installed": bool(binpath), "bin": binpath, "mode": mode,
-                            "logged_in": False, "detail": ""}
+                            "logged_in": False, "detail": "", "version": ver}
     if rid == "claude-code":
         if mode == "oauth" and _secret(OAUTH_SLOT):
             info.update(logged_in=True, detail="Claude subscription (token held by Agent Hub)")

@@ -819,7 +819,7 @@ def start_chat(
     ali = cfg.get("ali") if isinstance(cfg.get("ali"), dict) else {}
     chat_mode = str((ali or {}).get("chat_mode") or "auto").strip()
     depth_raw = (thinking_depth or "").strip() or str((ali or {}).get("thinking_depth") or "medium")
-    simple_chat = routing.is_simple_chat(msg)
+    simple_chat = routing.is_simple_chat(msg) and not (len(route_info.get("fusion_sources") or []) > 1)
     if simple_chat:
         # Greetings: keep light depth; avoid nudging into heavy tiers
         depth_raw = "light"
@@ -1173,7 +1173,7 @@ def start_chat(
         # a picked API model answers itself, not the connected claw's own model
         chat_engine = "hub-agent" if (prefer_agent and not simple_chat and not task_id
                                       and _hub_agent_enabled(ali if isinstance(ali, dict) else {})) else "direct"
-    if len(route_info.get("fusion_sources") or []) > 1 and not simple_chat and not task_id:
+    if len(route_info.get("fusion_sources") or []) > 1 and not task_id:
         chat_engine = "fusion"
     route_info["hub_chat_mode"] = hub_chat_mode
     route_info["hub_fast_chat"] = not prefer_agent  # legacy field for older UI

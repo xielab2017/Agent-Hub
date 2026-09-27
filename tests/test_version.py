@@ -22,3 +22,5 @@ def test_version_strings_agree():
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     assert f"badge/version-{VERSION}-" in readme and f"当前版本：**v{VERSION}**" in readme
     assert f"## v{VERSION} " in (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    app_js = (ROOT / "static" / "app.js").read_text(encoding="utf-8")
+    assert f'const LOGO_VER = "{VERSION}";' in app_js

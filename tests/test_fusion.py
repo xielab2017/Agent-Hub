@@ -25,13 +25,14 @@ def test_sources_list_api_vendors_and_accounts_without_secrets():
     with state():
         connections.save("deepseek", {"api_key": "sk-deepseek-aaaaaaaaaaaaaaaa"})
         agents = [{"id": "claude-code", "label": "Claude 订阅（Claude Code）", "label_en": "Claude", "installed": True,
-                   "logged_in": True},
+                   "version": "2.9.0", "logged_in": True},
                   {"id": "cursor", "label": "Cursor 账号（Cursor Agent）", "label_en": "Cursor", "installed": True,
-                   "logged_in": False}]
+                   "version": "2026.09.26-fake", "logged_in": False}]
         rows = connections.model_sources(agents=agents)["sources"]
         ids = {r["id"] for r in rows}
         assert "deepseek::deepseek-chat" in ids or any(i.startswith("deepseek::") for i in ids)
         assert {"claude-code::", "claude-code::opus", "cursor::auto"} <= ids
+        assert next(r for r in rows if r["id"] == "claude-code::opus")["version"] == "2.9.0"
         assert not next(r for r in rows if r["id"] == "cursor::auto")["ready"]  # not signed in: shown, not ready
         assert "sk-deepseek" not in json.dumps(rows)
         assert not any(r["provider"] == "kimi" for r in rows)  # vendors without a key are not offered

@@ -15,7 +15,7 @@ const FONT_SIZE_LABELS = {
   zh: { 13: "小 13", 14: "中 14", 15: "中大 15", 16: "大 16", 18: "特大 18" },
   en: { 13: "S 13", 14: "M 14", 15: "M+ 15", 16: "L 16", 18: "XL 18" },
 };
-const LOGO_VER = "5.3.6";
+const LOGO_VER = "5.5.0";
 const DEFAULT_LOGO = `/brand/suat-logo-color.png?v=${LOGO_VER}`;
 const LOGO_PRESETS = [
   { id: "suat-color", src: `/brand/suat-logo-color.png?v=${LOGO_VER}`, labelKey: "appearance.logoPresetColor" },
@@ -37,7 +37,8 @@ function bindArchiveControls() {
   btn.onclick = async () => {
     state.showArchived = !state.showArchived;
     btn.classList.toggle("active", state.showArchived);
-    btn.textContent = state.showArchived ? "返回会话" : "归档";
+    btn.textContent = state.showArchived ? t("nav.backToSessions") : t("nav.archived");
+    btn.title = state.showArchived ? t("nav.backToSessions") : t("nav.archived");
     await refreshSessions();
   };
 }
@@ -120,6 +121,15 @@ const I18N = {
     "nav.tasks": "任务",
     "nav.sessions": "会话",
     "nav.control": "⚙ 控制中心",
+    "nav.searchPh": "搜索会话或文件夹",
+    "nav.archived": "归档",
+    "nav.backToSessions": "返回会话",
+    "nav.folder": "文件夹",
+    "nav.newFolder": "新建文件夹",
+    "sub.popoutWindow": "⧉ 子窗口",
+    "composer.modelPickAuto": "模型：自动",
+    "composer.modelPickFusion": "融合 · ",
+    "wf.title": "工作流",
     "chat.new": "新任务",
     "empty.title": "校园 Agent Hub",
     "empty.body": "描述任务并运行 · Agent Hub 调度 Skill / Agent · 进度条跟踪执行",
@@ -231,11 +241,17 @@ const I18N = {
     "control.mcp": "MCP",
     "control.recommend": "每日推荐",
     "control.skills": "Skills",
-    "control.connections": "多模型 API",
+    "control.connections": "多模型与外部 Agent",
     "control.soul": "Soul",
     "control.agents": "Agents",
     "control.feedback": "反馈",
     "control.save": "保存配置",
+    "fusion.tag": "融合回答",
+    "fusion.modelsAnswered": "个模型作答",
+    "fusion.mergedBy": "合并：",
+    "fusion.expand": "展开看各模型原始回答",
+    "sidebar.resizeTitle": "拖拽调整侧栏宽度 · 双击恢复默认",
+    "composer.resizeTitle": "拖拽调整输入框高度",
     "msg.copy": "复制",
     "msg.quote": "引用",
     "msg.revise": "提交修改",
@@ -411,6 +427,15 @@ const I18N = {
     "nav.tasks": "Tasks",
     "nav.sessions": "Sessions",
     "nav.control": "⚙ Control Center",
+    "nav.searchPh": "Search chats or folders",
+    "nav.archived": "Archived",
+    "nav.backToSessions": "Back to chats",
+    "nav.folder": "Folder",
+    "nav.newFolder": "New folder",
+    "sub.popoutWindow": "⧉ Popout",
+    "composer.modelPickAuto": "Model: auto",
+    "composer.modelPickFusion": "Fusion · ",
+    "wf.title": "Workflow",
     "chat.new": "New task",
     "empty.title": "Campus Agent Hub",
     "empty.body": "Describe a task and run · Agent Hub dispatches skills/agents · progress tracked",
@@ -521,12 +546,18 @@ const I18N = {
     "control.ecosystem": "Ecosystem",
     "control.mcp": "MCP",
     "control.recommend": "Daily",
-    "control.connections": "Multi-model APIs",
+    "control.connections": "Multi-Model & Agents",
     "control.skills": "Skills",
     "control.soul": "Soul",
     "control.agents": "Agents",
     "control.feedback": "Feedback",
     "control.save": "Save",
+    "fusion.tag": "Fused answer",
+    "fusion.modelsAnswered": "models answered",
+    "fusion.mergedBy": "merged by ",
+    "fusion.expand": "expand for each model's answer",
+    "sidebar.resizeTitle": "Drag to resize sidebar · double click to reset",
+    "composer.resizeTitle": "Drag to resize input box",
     "msg.copy": "Copy",
     "msg.quote": "Quote",
     "msg.revise": "Propose change",
@@ -1147,7 +1178,15 @@ function sessionDisplayTitle(s) {
 function refreshChatChromeLanguage() {
   const cur = state.sessions.find((s) => s.id === state.currentId);
   const titleEl = $("#chat-title");
-  if (titleEl) titleEl.textContent = sessionDisplayTitle(cur || { title: titleEl.textContent });
+  if (titleEl) {
+    if ($(".folder-overview")) {
+      const folder = (state.folders || []).find((f) => f.id === state.activeFolderId);
+      const langZh = state.prefs.language !== "en";
+      titleEl.textContent = `📁 ${folder?.name || (langZh ? "未分类文件夹" : "Unclassified folder")}`;
+    } else {
+      titleEl.textContent = sessionDisplayTitle(cur || { title: titleEl.textContent });
+    }
+  }
   const empty = $("#empty-state");
   if (empty) {
     const h = empty.querySelector("[data-i18n='empty.title'], h3");
@@ -1155,9 +1194,34 @@ function refreshChatChromeLanguage() {
     if (h) h.textContent = t("empty.title");
     if (p) p.innerHTML = t("empty.body");
   }
+  const btnArch = $("#btn-toggle-archived");
+  if (btnArch) {
+    btnArch.textContent = state.showArchived ? t("nav.backToSessions") : t("nav.archived");
+    btnArch.title = state.showArchived ? t("nav.backToSessions") : t("nav.archived");
+  }
+  const btnSub = $("#btn-subagent-popout");
+  if (btnSub) {
+    btnSub.textContent = t("sub.popoutWindow");
+    btnSub.title = t("sub.popoutWindow");
+  }
+  const sideResize = $("#sidebar-resize");
+  if (sideResize) sideResize.title = t("sidebar.resizeTitle");
+  const compResize = $("#composer-resize");
+  if (compResize) compResize.title = t("composer.resizeTitle");
   try { renderSoulSelect(); } catch (_) {}
   try { renderSkillPicker(); } catch (_) {}
   try { renderSubagentPicker(); } catch (_) {}
+  try { updateModelPickButton(); } catch (_) {}
+  try {
+    const pop = $("#model-pick-pop");
+    if (pop && !pop.hidden) renderModelPicker();
+  } catch (_) {}
+  try { applyChatLayout(); } catch (_) {}
+  try { renderActiveRuns({ force: true }); } catch (_) {}
+  try { renderBgDots(); } catch (_) {}
+  if ($(".folder-overview") && state.activeFolderId) {
+    try { renderFolderOverview(state.activeFolderId); } catch (_) {}
+  }
   applyI18n();
 }
 
@@ -2882,9 +2946,9 @@ function updateModelPickButton() {
   const zh = state.prefs.language !== "en";
   const ids = state.pickedModels || [];
   btn.classList.toggle("fusion", ids.length > 1);
-  btn.textContent = !ids.length ? (zh ? "模型：自动" : "Model: auto")
+  btn.textContent = !ids.length ? t("composer.modelPickAuto")
     : ids.length === 1 ? `${zh ? "模型：" : "Model: "}${sourceLabel(ids[0])}`
-      : `${zh ? "融合 · " : "Fusion · "}${ids.map(sourceLabel).join(" + ")}`;
+      : `${t("composer.modelPickFusion")}${ids.map(sourceLabel).join(" + ")}`;
   btn.title = ids.length > 1 ? (zh ? "所选模型同时作答，再合并成一份回答" : "The chosen models answer together; one merges them") : "";
 }
 
@@ -2905,23 +2969,24 @@ function renderModelPicker() {
   const groups = new Map();
   (state.modelSources || []).forEach((src) => {
     const name = zh ? src.group : (src.group_en || src.group);
-    if (q && !`${name} ${src.model} ${src.label || ""}`.toLowerCase().includes(q)) return;
+    if (q && !`${name} ${src.model} ${src.label || ""} ${src.version || ""}`.toLowerCase().includes(q)) return;
     const key = `${src.kind === "agent" ? "2" : "1"}|${name}`;
     if (!groups.has(key)) groups.set(key, { name, kind: src.kind, rows: [] });
     groups.get(key).rows.push(src);
   });
   const rows = [...groups.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([, g]) => `
-      <div class="model-pick-group"><div class="model-pick-head">${g.kind === "agent" ? L("账号 · ", "Account · ") : ""}${escapeHtml(g.name)}</div>
+      <div class="model-pick-group"><div class="model-pick-head"><span>${g.kind === "agent" ? L("外部 Agent 账号 · ", "External Agent Account · ") : ""}${escapeHtml(g.name)}</span></div>
       ${g.rows.map((src) => `<label class="model-pick-row ${src.ready ? "" : "off"}" data-id="${escapeHtml(src.id)}">
         <input type="checkbox" ${picked.has(src.id) ? "checked" : ""} ${src.ready ? "" : "disabled"} />
-        <span>${escapeHtml(src.kind === "agent" ? (src.model || L("默认模型", "default model")) : src.model)}</span>
+        <span class="model-pick-name">${escapeHtml(src.kind === "agent" ? (src.model || L("默认模型", "default model")) : src.model)}</span>
+        ${src.version ? `<span class="model-pick-ver">v${escapeHtml(src.version)}</span>` : ""}
         ${src.ready ? "" : `<a href="#" class="model-pick-login">${escapeHtml(src.note || L("未登录", "not signed in"))} · ${L("去登录", "sign in")}</a>`}
       </label>`).join("")}</div>`).join("");
   pop.innerHTML = `<div class="model-pick-top">
       <input class="model-pick-search" placeholder="${L("搜索模型…", "Search models…")}" value="${escapeHtml(q)}" />
       <button type="button" class="btn ghost chip model-pick-auto">${L("自动（按分级路由）", "Auto (tier routing)")}</button></div>
     <div class="muted model-pick-hint">${L("勾选一个：只用它回答；勾选多个：同时作答并融合成一份回答。", "Tick one to use it; tick several to have them answer together and merge.")}</div>
-    <div class="model-pick-list">${rows || `<div class="muted">${L("还没有可用模型 — 在 控制中心 → 多模型 API 添加 key 或登录账号", "No models yet — add keys or sign in under Control Center → 多模型 API")}</div>`}</div>`;
+    <div class="model-pick-list">${rows || `<div class="muted">${L("还没有可用模型 — 在 控制中心 → 多模型与外部 Agent 添加 key 或登录账号", "No models yet — add keys or sign in under Control Center → Multi-Model & Agents")}</div>`}</div>`;
   const search = pop.querySelector(".model-pick-search");
   search.oninput = () => { const pos = search.selectionStart; renderModelPicker(); const s2 = pop.querySelector(".model-pick-search"); s2.focus(); s2.setSelectionRange(pos, pos); };
   pop.querySelector(".model-pick-auto").onclick = () => { setPickedModels([]); renderModelPicker(); };
@@ -3249,11 +3314,12 @@ async function renderConnectionsPanel(langZh) {
   };
   const short = { "claude-code": "Claude", codex: "ChatGPT / Codex", cursor: "Cursor" };
   const quickBtn = (a) => `<button type="button" class="btn ${a.logged_in ? "ghost" : "primary"} quick-login" data-rid="${escapeHtml(a.id)}">${a.logged_in
-    ? `✓ ${escapeHtml(short[a.id] || a.id)}` : `⚡ ${escapeHtml(short[a.id] || a.id)} ${L("一键登录", "quick sign-in")}`}</button>`;
+    ? `✓ ${escapeHtml(short[a.id] || a.id)}${a.version ? ` (v${escapeHtml(a.version)})` : ""}` : `⚡ ${escapeHtml(short[a.id] || a.id)} ${L("一键登录", "quick sign-in")}`}</button>`;
   const tierNamesShort = { simple: L("简单", "simple"), office: L("办公", "office"), reasoning: L("推理", "reasoning"), vision: L("视觉", "vision") };
   const agentCard = (a) => `<div class="conn-card agent-card" data-rid="${escapeHtml(a.id)}">
       <div class="conn-head"><strong>${escapeHtml(langZh ? a.label : a.label_en)}</strong> <code>${escapeHtml(a.id)}</code>
-        ${!a.installed ? `<span class="conn-badge off">${L("未安装", "not installed")}</span>` : ""}
+        ${a.version ? `<span class="conn-badge" title="${escapeHtml(a.version)}">v${escapeHtml(a.version)}</span>` : ""}
+        ${!a.installed ? `<span class="conn-badge off">${L("未安装", "not installed")}</span>` : a.logged_in ? `<span class="conn-badge ok">✓ ${L("已登录", "signed in")}</span>` : `<span class="conn-badge off">${L("未登录", "not signed in")}</span>`}
         ${(a.tiers || []).map((rk) => `<span class="conn-badge ok">${L("用于", "serves")} ${escapeHtml(tierNamesShort[rk] || rk)}</span>`).join("")}</div>
       <div class="muted">${L("账号", "Account")}：${escapeHtml(a.account)} · ${L("登录方式：外部链接", "sign in: browser link")}${a.device_login ? L(" / 设备码", " / device code") : ""} ${L("或", "or")} ${escapeHtml(a.key_label)}</div>
       <div class="conn-row">
@@ -3266,18 +3332,18 @@ async function renderConnectionsPanel(langZh) {
       </div>
       <div class="agent-login-slot"></div></div>`;
   panel.innerHTML = `
-    <p class="muted">${L("同时接入多家厂商：每家各自保存 key、地址与 TLS，不会切换当前后端。下方「按任务等级路由」把简单问答 / 办公 / 推理 / 视觉分配给不同厂商或已登录的账号（启用后后端切换为 Hybrid）。",
-      "Connect several vendors at once — each keeps its own key, endpoint and TLS; saving never switches the active backend. Tier routing below assigns simple / office / reasoning / vision to different vendors or signed-in accounts (the backend then becomes Hybrid).")}</p>
-    <div class="quick-login-bar"><strong>${L("快捷登录", "Quick sign-in")}</strong>
+    <p class="muted">${L("同时接入多模型 API 与外部 Agent 账号（Claude Code / Codex / Cursor）：每家各自管理 key、登录状态与版本，可按任务等级路由，亦可在主界面多选模型直接进行多模型作答与融合。",
+      "Connect multiple API vendors and external agent accounts (Claude Code / Codex / Cursor) simultaneously. Manage keys, login status and versions in one place; bind them to routing tiers or select multiple models in chat to fuse their answers.")}</p>
+    <div class="quick-login-bar"><strong>${L("外部 Agent 快捷登录", "Agent Quick Sign-In")}</strong>
       ${agents.map(quickBtn).join("")}
-      <span class="muted">${L("一键：未安装先自动安装，再打开官方授权页；可同时登录多个账号。", "One click: installs if needed, then opens the official sign-in page; several accounts can be signed in at once.")}</span></div>
-    <h4>${L("账号登录（订阅 / Agent）", "Signed-in accounts (subscriptions / agents)")} <span class="muted">${agents.filter((a) => a.logged_in).length}/${agents.length}</span></h4>
+      <span class="muted">${L("一键安装与官方授权登录；可同时登录多个 Agent，与 API 厂商无缝并存及融合调用。", "One-click install and official auth. Sign in multiple agents simultaneously to run alongside and fuse with API vendors.")}</span></div>
+    <h4>${L("外部 Agent 账号与版本", "External Agent Accounts & Versions")} <span class="muted">${agents.filter((a) => a.logged_in).length}/${agents.length} ${L("已登录", "signed in")}</span></h4>
     <div class="conn-grid agent-grid">${agents.map(agentCard).join("")}</div>
-    <h4>${L("按任务等级路由", "Tier routing")} <span class="muted">(${data.mode === "hybrid" ? "Hybrid" : L("当前单一后端：", "single backend: ") + escapeHtml(data.backend)})</span></h4>
+    <h4>${L("按任务等级路由（API + Agent 混合）", "Tier Routing (API + Agent Hybrid)")} <span class="muted">(${data.mode === "hybrid" ? "Hybrid" : L("当前单一后端：", "single backend: ") + escapeHtml(data.backend)})</span></h4>
     <div class="conn-tiers">${["simple", "office", "reasoning", "vision"].map(tierRow).join("")}</div>
     <div class="row gap" style="justify-content:flex-start;margin:6px 0 12px"><button type="button" class="btn ghost chip" id="conn-route-test">${L("路由测试", "Test routing")}</button></div>
     <div id="conn-route-result"></div>
-    <h4>${L("厂商连接", "Vendor connections")} <span class="muted">${connected.length}/${data.connections.length}</span></h4>
+    <h4>${L("API 厂商连接", "API Vendor Connections")} <span class="muted">${connected.length}/${data.connections.length} ${L("可用", "ready")}</span></h4>
     <div class="conn-grid">${data.connections.map(card).join("")}</div>`;
 
   const msg = (el, text) => { const m = el.querySelector(".conn-msg"); if (m) m.textContent = text; };
@@ -5317,19 +5383,37 @@ async function selectSession(id) {
     setSidebarOpen(false);
     return;
   }
+
+  // Disconnect previous session's live assistant DOM reference to prevent cross-session leakage
+  if (prevId && state.streamBuffers[prevId]) {
+    state.streamBuffers[prevId].assistantEl = null;
+    state.streamBuffers[prevId].bodyEl = null;
+  }
+
   state.currentId = id;
   renderSessionList();
   renderActiveRuns({ force: true });
   updateSendEnabled();
 
+  // Instantly update header title if known from session list
+  const known = state.sessions.find((s) => s.id === id);
+  if (known) {
+    const titleEl = $("#chat-title");
+    if (titleEl) titleEl.textContent = sessionDisplayTitle(known);
+  }
+
+  // Clear messages container or paint target session's live buffer immediately to avoid showing old session's bubbles
+  const box = $("#messages");
+  if (box) {
+    box.innerHTML = "";
+  }
+
   // Instant paint from live buffer while history loads (no freeze waiting on API)
   const live = state.streamBuffers[id];
   if (live && (live.rawBuf || live.full || live.orchPlan) && state.sessionRuns[id]?.streaming) {
-    if (!$("#messages .msg")) {
-      appendMessage({ role: "assistant", content: live.full || live.rawBuf || "", route: live.route });
-      if (live.orchPlan) restoreLiveMultiOrch(id);
-      else paintStreamBuffer(id, { force: true });
-    }
+    appendMessage({ role: "assistant", content: live.full || live.rawBuf || "", route: live.route });
+    if (live.orchPlan) restoreLiveMultiOrch(id);
+    else paintStreamBuffer(id, { force: true });
     resetWorkflowProgress(t("stream.running"));
     setWorkflowProgress(state.sessionRuns[id].pct || 30, null, t("stream.hint.execute"), "outputting");
   }
@@ -5833,13 +5917,18 @@ function renderFolderOverview(folderId) {
   if (!box) return;
   const langZh = state.prefs.language !== "en";
   const folder = (state.folders || []).find((f) => f.id === folderId);
+  const folderTitle = folder?.name || (langZh ? "未分类" : "Unclassified");
+  const titleEl = $("#chat-title");
+  if (titleEl) {
+    titleEl.textContent = `📁 ${folderTitle}`;
+  }
   const sessions = state.sessions
     .filter((s) => (s.folder_id || "") === folderId)
     .sort((a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) || String(b.updated_at || "").localeCompare(String(a.updated_at || "")));
   box.innerHTML = "";
   const section = document.createElement("section");
   section.className = "folder-overview";
-  section.innerHTML = `<div class="folder-overview-head"><span class="eyebrow">${langZh ? "文件夹任务" : "Folder tasks"}</span><h3>${escapeHtml(folder?.name || (langZh ? "未分类" : "Unclassified"))}</h3><p>${langZh ? `共 ${sessions.length} 个任务，选择任务继续对话` : `${sessions.length} tasks. Select one to continue.`}</p></div><div class="folder-overview-list"></div>`;
+  section.innerHTML = `<div class="folder-overview-head"><span class="eyebrow">${langZh ? "文件夹任务" : "Folder tasks"}</span><h3>${escapeHtml(folderTitle)}</h3><p>${langZh ? `共 ${sessions.length} 个任务，选择任务继续对话` : `${sessions.length} tasks. Select one to continue.`}</p></div><div class="folder-overview-list"></div>`;
   const list = section.querySelector(".folder-overview-list");
   if (!sessions.length) {
     const empty = document.createElement("p");
@@ -9854,6 +9943,7 @@ function setupComposerDropPaste() {
 setupComposerDropPaste();
 $("#btn-close-subpane")?.addEventListener("click", () => {
   state.activeSubagent = "";
+  state.selectedSubagents = [];
   renderSubagentPicker();
   applyChatLayout();
 });

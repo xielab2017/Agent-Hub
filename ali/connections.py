@@ -52,6 +52,7 @@ def agents_view() -> dict[str, Any]:
         import os
 
         rows[rid] = {"id": rid, **AGENT_ACCOUNTS[rid], "installed": bool(st.get("installed")),
+                     "version": str(st.get("version") or ""),
                      "logged_in": bool(st.get("logged_in")), "detail": st.get("detail") or "",
                      "mode": st.get("mode") or "", "permissions": st.get("permissions") or "read-only",
                      "install_cmd": (inst.get("windows") if os.name == "nt" else inst.get("posix")) or [],
@@ -137,6 +138,7 @@ def model_sources(cfg: dict[str, Any] | None = None, *, agents: list[dict[str, A
             out.append({"id": f"{rid}{SOURCE_SEP}{m}", "kind": "agent", "provider": rid, "model": m,
                         "label": (m or "默认"), "label_en": (m or "default"), "group": a["label"],
                         "group_en": a["label_en"], "ready": bool(a.get("installed") and a.get("logged_in")),
+                        "version": str(a.get("version") or ""),
                         "note": "" if a.get("logged_in") else ("未安装" if not a.get("installed") else "未登录")})
     return {"ok": True, "sources": out}
 

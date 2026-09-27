@@ -77,6 +77,9 @@ def test_agents_view_lists_every_account_with_its_state():
         rows = {a["id"]: a for a in connections.agents_view()["agents"]}
         assert set(rows) == {"claude-code", "codex", "cursor"}
         assert all(r["installed"] for r in rows.values())  # the fakes are on PATH
+        assert rows["claude-code"]["version"] == "2.9.0"
+        assert rows["codex"]["version"] == "0.99.0"
+        assert rows["cursor"]["version"] == "2026.09.26-fake"
         assert rows["claude-code"]["logged_in"] and rows["cursor"]["logged_in"]  # two accounts at once
         assert not rows["codex"]["logged_in"] and rows["codex"]["device_login"]
         assert rows["claude-code"]["tiers"] == ["reasoning"]
