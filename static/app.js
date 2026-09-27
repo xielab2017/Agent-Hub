@@ -37,7 +37,9 @@ function bindArchiveControls() {
   btn.onclick = async () => {
     state.showArchived = !state.showArchived;
     btn.classList.toggle("active", state.showArchived);
-    btn.textContent = state.showArchived ? "返回会话" : "归档";
+    // The key moves with the state, so a later 中/EN switch relabels the button correctly.
+    btn.setAttribute("data-i18n", state.showArchived ? "nav.backToSessions" : "nav.archived");
+    btn.textContent = t(state.showArchived ? "nav.backToSessions" : "nav.archived");
     await refreshSessions();
   };
 }
@@ -120,9 +122,47 @@ const I18N = {
     "nav.tasks": "任务",
     "nav.sessions": "会话",
     "nav.control": "⚙ 控制中心",
+    "nav.searchSessions": "搜索会话或文件夹",
+    "nav.archived": "归档",
+    "nav.archivedTitle": "查看归档的会话",
+    "nav.backToSessions": "返回会话",
+    "nav.folderPh": "文件夹",
+    "nav.newFolder": "新建文件夹",
+    "nav.resize": "拖拽调整侧栏宽度 · 双击恢复默认",
+    "nav.language": "界面语言",
+    "nav.theme": "主题",
+    "nav.background": "背景",
+    "nav.accent": "主色",
+    "nav.appearance": "外观",
+    "nav.appearanceToggle": "展开 / 收起外观设置",
+    "nav.fontDec": "缩小字号",
+    "nav.fontInc": "放大字号",
+    "nav.fontSize": "字号",
     "chat.new": "新任务",
+    "chat.menu": "菜单",
+    "chat.stop": "停止生成",
+    "chat.tokens": "Token 用量 · 点击查看明细",
+    "chat.popout": "⧉ 子窗口",
+    "chat.popoutTitle": "在独立窗口查看子代理",
+    "chat.route": "路由等级",
+    "chat.engine": "引擎",
+    "model.auto": "模型：自动",
+    "model.prefix": "模型：",
+    "model.fusionPrefix": "融合 · ",
+    "model.fusionTitle": "所选模型同时作答，再合并成一份回答",
+    "model.loading": "加载模型…",
+    "composer.browse": "浏览目录",
+    "composer.uploadFile": "上传文件",
+    "composer.uploadFolder": "上传文件夹",
+    "composer.advTitle": "Skill / Soul / 路由 / 模型",
+    "composer.hubChatTitle": "Agent（工具）或快聊",
+    "composer.resize": "拖拽调整输入框高度",
+    "wf.title": "工作流",
     "empty.title": "校园 Agent Hub",
     "empty.body": "描述任务并运行 · Agent Hub 调度 Skill / Agent · 进度条跟踪执行",
+    "starter.review": "写一篇文献综述",
+    "starter.minutes": "整理会议笔记",
+    "starter.search": "联网检索并总结",
     "skills.picker": "Skill",
     "skills.auto": "自动匹配",
     "skills.add": "添加",
@@ -181,6 +221,7 @@ const I18N = {
     "mode.demo": "演示模式 · 请配置 API Key 或安装 Agent",
     "mode.claw": "Claw 已连接 · Hub↔Claw Soul 融合 · Direct LLM",
     "mode.agent": "Agent 模式 · 工具/Skill",
+    "mode.details": "运行细节",
     "composer.hubChat": "Hub 聊天",
     "composer.settings": "任务设置",
     "hubChat.agent": "Agent（工具）",
@@ -411,9 +452,47 @@ const I18N = {
     "nav.tasks": "Tasks",
     "nav.sessions": "Sessions",
     "nav.control": "⚙ Control Center",
+    "nav.searchSessions": "Search chats or folders",
+    "nav.archived": "Archived",
+    "nav.archivedTitle": "Show archived chats",
+    "nav.backToSessions": "Back to chats",
+    "nav.folderPh": "Folder",
+    "nav.newFolder": "New folder",
+    "nav.resize": "Drag to resize the sidebar · double-click to reset",
+    "nav.language": "Interface language",
+    "nav.theme": "Theme",
+    "nav.background": "Background",
+    "nav.accent": "Accent colour",
+    "nav.appearance": "Appearance",
+    "nav.appearanceToggle": "Show / hide appearance settings",
+    "nav.fontDec": "Smaller text",
+    "nav.fontInc": "Larger text",
+    "nav.fontSize": "Font size",
     "chat.new": "New task",
+    "chat.menu": "Menu",
+    "chat.stop": "Stop generating",
+    "chat.tokens": "Token usage · click for details",
+    "chat.popout": "⧉ Sub-window",
+    "chat.popoutTitle": "Watch subagents in a separate window",
+    "chat.route": "Route tier",
+    "chat.engine": "Engine",
+    "model.auto": "Model: auto",
+    "model.prefix": "Model: ",
+    "model.fusionPrefix": "Fusion · ",
+    "model.fusionTitle": "The chosen models answer together; one merges them",
+    "model.loading": "loading models…",
+    "composer.browse": "Browse folders",
+    "composer.uploadFile": "Upload a file",
+    "composer.uploadFolder": "Upload a folder",
+    "composer.advTitle": "Skill / Soul / Route / Model",
+    "composer.hubChatTitle": "Agent (tools) or fast chat",
+    "composer.resize": "Drag to resize the input box",
+    "wf.title": "Workflow",
     "empty.title": "Campus Agent Hub",
     "empty.body": "Describe a task and run · Agent Hub dispatches skills/agents · progress tracked",
+    "starter.review": "Write a literature review",
+    "starter.minutes": "Turn meeting notes into actions",
+    "starter.search": "Search the web and summarise",
     "skills.picker": "Skill",
     "skills.auto": "Auto-match",
     "skills.add": "Add",
@@ -472,6 +551,7 @@ const I18N = {
     "mode.demo": "Demo · set API key or install an Agent",
     "mode.claw": "Claw connected · Hub↔Claw Soul fused · Direct LLM",
     "mode.agent": "Agent mode · tools/skills",
+    "mode.details": "Details",
     "composer.hubChat": "Hub chat",
     "composer.settings": "Task settings",
     "hubChat.agent": "Agent (tools)",
@@ -772,25 +852,35 @@ function t(key) {
   return (I18N[lang] && I18N[lang][key]) || (I18N.zh[key] || key);
 }
 
+/** Every way a node can carry a translation, so one pass localises text, HTML, placeholders, titles and labels. */
+const I18N_ATTRS = [
+  ["data-i18n", (el, text) => { el.textContent = text; }],
+  ["data-i18n-html", (el, text) => { el.innerHTML = text; }],
+  ["data-i18n-placeholder", (el, text) => el.setAttribute("placeholder", text)],
+  ["data-i18n-title", (el, text) => el.setAttribute("title", text)],
+  ["data-i18n-aria", (el, text) => el.setAttribute("aria-label", text)],
+];
+
+/** Localise one subtree (the node itself included) — used for freshly rendered panels and message rows. */
+function localize(root) {
+  if (!root || !root.querySelectorAll) return;
+  I18N_ATTRS.forEach(([attr, set]) => {
+    const apply = (el) => {
+      const key = el.getAttribute(attr);
+      if (key) set(el, t(key));
+    };
+    if (root.hasAttribute && root.hasAttribute(attr)) apply(root);
+    root.querySelectorAll(`[${attr}]`).forEach(apply);
+  });
+}
+
 function applyI18n() {
   const lang = state.prefs.language === "en" ? "en" : "zh";
   document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
-  $$("[data-i18n]").forEach((el) => {
-    const key = el.getAttribute("data-i18n");
-    if (key) el.textContent = t(key);
-  });
-  $$("[data-i18n-html]").forEach((el) => {
-    const key = el.getAttribute("data-i18n-html");
-    if (key) el.innerHTML = t(key);
-  });
-  $$("[data-i18n-placeholder]").forEach((el) => {
-    const key = el.getAttribute("data-i18n-placeholder");
-    if (key) el.setAttribute("placeholder", t(key));
-  });
-  $$("[data-i18n-title]").forEach((el) => {
-    const key = el.getAttribute("data-i18n-title");
-    if (key) el.setAttribute("title", t(key));
-  });
+  localize(document.body);
+  // Labels that hold a live value rather than a fixed string, re-derived after the sweep above.
+  try { updateModelPickButton(); } catch (_) {}
+  try { renderStarters(); } catch (_) {}
   const langBtn = $("#btn-lang");
   if (langBtn) langBtn.textContent = lang === "zh" ? "中 / EN" : "EN / 中";
   const themeBtn = $("#btn-theme");
@@ -1154,11 +1244,30 @@ function refreshChatChromeLanguage() {
     const p = empty.querySelector("[data-i18n-html='empty.body'], p");
     if (h) h.textContent = t("empty.title");
     if (p) p.innerHTML = t("empty.body");
+    try { renderStarters(); } catch (_) {}
   }
   try { renderSoulSelect(); } catch (_) {}
   try { renderSkillPicker(); } catch (_) {}
   try { renderSubagentPicker(); } catch (_) {}
+  try { syncRouteLabels(); } catch (_) {}
+  if (state.status) {
+    try { renderModeBanner(state.status); } catch (_) {}
+    try { renderEngineBadge(state.streamMeta, null); } catch (_) {}
+  }
   applyI18n();
+  repaintMessagesForLanguage();
+}
+
+/** Message rows bake the language into their meta lines and action chips, so reload them once on a switch. */
+function repaintMessagesForLanguage() {
+  const id = state.currentId;
+  if (!id || state.streaming || state.streamConsumers[id]) return;
+  api(`/api/sessions/${id}`)
+    .then((s) => {
+      if (state.currentId !== id || state.streaming || state.streamConsumers[id]) return;
+      renderMessages(s.messages || []);
+    })
+    .catch(() => {});
 }
 
 function renderAccentDots() {
@@ -2105,21 +2214,43 @@ function renderModeBanner(status) {
   const hubBit = hubMode === "direct"
     ? ` · ${escapeHtml(t("hubChat.direct"))}`
     : ` · ${escapeHtml(t("hubChat.agent"))}`;
+  // Headline = mode and who answers; the claw / auto / soul wiring goes behind a toggle, because as
+  // one long run of `key=value` it read as noise across the top of every chat.
+  let headline;
+  let detail;
   if (engine === "hermes" || engine === "hermes-cli" || engine === "openclaw" || agent.agent_mode) {
     const engLabel = engine === "openclaw" ? t("engine.openclaw")
       : agentLabel(engine) ? agentLabel(engine)
       : engine === "hub-agent" ? "Hub Agent" : t("engine.hermes");
-    el.innerHTML = `<strong>${escapeHtml(t("mode.agent"))}</strong> · ${escapeHtml(engLabel)}${hubBit}${clawBit || " · claw=<code>Hermes Agent</code>"}${autoBit}${soulBit}`;
+    headline = `<strong>${escapeHtml(t("mode.agent"))}</strong> · ${escapeHtml(engLabel)}${hubBit}`;
+    detail = `${clawBit || " · claw=<code>Hermes Agent</code>"}${autoBit}${soulBit}`;
   } else if (engine === "direct-llm" || agent.direct_llm) {
-    el.innerHTML = `<strong>${escapeHtml(t("mode.ai"))}</strong>${hubBit} — <span class="key-masked">${escapeHtml(agent.api_key_masked || "API")}</span>${clawBit}${autoBit}${soulBit}`;
+    headline = `<strong>${escapeHtml(t("mode.ai"))}</strong>${hubBit} — <span class="key-masked">${escapeHtml(agent.api_key_masked || "API")}</span>`;
+    detail = `${clawBit}${autoBit}${soulBit}`;
   } else if (rt && rt !== "direct" && rt !== "auto") {
     const linkedBit = linked && linked !== rt
       ? ` · linked=<code>${escapeHtml(linkedName)}</code>`
       : "";
-    el.innerHTML = `<strong>${escapeHtml(t("mode.claw"))}</strong>${clawBit}${linkedBit}${autoBit}${soulBit}`;
+    headline = `<strong>${escapeHtml(t("mode.claw"))}</strong>`;
+    detail = `${clawBit}${linkedBit}${autoBit}${soulBit}`;
   } else {
-    el.innerHTML = `<strong>${escapeHtml(t("mode.demo"))}</strong>${clawBit}${soulBit}`;
+    headline = `<strong>${escapeHtml(t("mode.demo"))}</strong>`;
+    detail = `${clawBit}${soulBit}`;
   }
+  const open = localStorage.getItem("agent_hub_mode_detail_open") === "1";
+  const stripped = detail.replace(/^\s*·\s*/, "");
+  el.innerHTML = `<span class="mode-banner-head">${headline}</span>${stripped
+    ? `<button type="button" class="mode-banner-toggle" aria-expanded="${open ? "true" : "false"}" aria-controls="mode-banner-detail">${escapeHtml(t("mode.details"))}</button>
+       <span class="mode-banner-detail" id="mode-banner-detail"${open ? "" : " hidden"}>${stripped}</span>`
+    : ""}`;
+  const toggle = el.querySelector(".mode-banner-toggle");
+  if (toggle) toggle.onclick = () => {
+    const box = el.querySelector(".mode-banner-detail");
+    const on = box.hidden;
+    box.hidden = !on;
+    toggle.setAttribute("aria-expanded", on ? "true" : "false");
+    localStorage.setItem("agent_hub_mode_detail_open", on ? "1" : "0");
+  };
 }
 
 function renderAgent(status) {
@@ -2880,13 +3011,12 @@ function sourceLabel(id) {
 function updateModelPickButton() {
   const btn = $("#model-pick-btn");
   if (!btn) return;
-  const zh = state.prefs.language !== "en";
   const ids = state.pickedModels || [];
   btn.classList.toggle("fusion", ids.length > 1);
-  btn.textContent = !ids.length ? (zh ? "模型：自动" : "Model: auto")
-    : ids.length === 1 ? `${zh ? "模型：" : "Model: "}${sourceLabel(ids[0])}`
-      : `${zh ? "融合 · " : "Fusion · "}${ids.map(sourceLabel).join(" + ")}`;
-  btn.title = ids.length > 1 ? (zh ? "所选模型同时作答，再合并成一份回答" : "The chosen models answer together; one merges them") : "";
+  btn.textContent = !ids.length ? t("model.auto")
+    : ids.length === 1 ? `${t("model.prefix")}${sourceLabel(ids[0])}`
+      : `${t("model.fusionPrefix")}${ids.map(sourceLabel).join(" + ")}`;
+  btn.title = ids.length > 1 ? t("model.fusionTitle") : "";
 }
 
 function setPickedModels(ids) {
@@ -2953,7 +3083,7 @@ async function toggleModelPicker(force) {
   if (open) {
     pop.hidden = false;
     btn.setAttribute("aria-expanded", "true");
-    pop.innerHTML = `<div class="muted" style="padding:8px">${state.prefs.language !== "en" ? "加载模型…" : "loading models…"}</div>`;
+    pop.innerHTML = `<div class="muted" style="padding:8px">${escapeHtml(t("model.loading"))}</div>`;
     await loadModelSources();
     renderModelPicker();
     updateModelPickButton();
@@ -4301,7 +4431,6 @@ function updateSessionRunUi(id) {
   const pct = Math.max(0, Math.min(100, Math.round(next.pct || 0)));
   const sub = next.subagent_label || "";
   el.classList.toggle("running", running);
-  el.style.setProperty("--run-pct", `${pct}%`);
   let spin = el.querySelector(".session-spinner");
   const main = el.querySelector(".session-main");
   if (running) {
@@ -4322,16 +4451,27 @@ function updateSessionRunUi(id) {
       const langZh = state.prefs.language !== "en";
       statusEl.textContent = `${langZh ? "执行中" : "Running"} ${pct}%${sub ? ` · ${sub}` : ""}`;
     }
+    setSessionProgress(el, pct);
   } else {
     spin?.remove();
-    const statusEl = el.querySelector(".session-status");
-    if (statusEl) {
-      statusEl.className = "session-status idle-tag";
-      statusEl.textContent = state.prefs.language !== "en" ? "就绪" : "Idle";
-    }
+    el.querySelector(".session-progress")?.remove();
+    el.querySelector(".session-status.running-tag")?.remove();
   }
   // Soft update parallel strip (no full rebuild unless membership changed)
   renderActiveRuns();
+}
+
+/** Progress lives in its own bar under the title, not as a background wash behind the text. */
+function setSessionProgress(el, pct) {
+  let bar = el.querySelector(".session-progress");
+  if (!bar) {
+    bar = document.createElement("span");
+    bar.className = "session-progress";
+    bar.setAttribute("aria-hidden", "true");
+    bar.innerHTML = "<span></span>";
+    el.insertBefore(bar, el.querySelector(".session-actions"));
+  }
+  bar.firstElementChild.style.width = `${pct}%`;
 }
 
 function setSessionRun(id, patch) {
@@ -4364,14 +4504,10 @@ function clearSessionRun(id) {
   const el = document.querySelector(`.session-item[data-sid="${CSS.escape(String(id))}"]`);
   if (el) {
     el.classList.remove("running");
-    el.style.removeProperty("--run-pct");
     el.querySelector(".session-spinner")?.remove();
     el.querySelector(".session-pct")?.remove();
-    const statusEl = el.querySelector(".session-status");
-    if (statusEl) {
-      statusEl.className = "session-status idle-tag";
-      statusEl.textContent = state.prefs.language !== "en" ? "就绪" : "Idle";
-    }
+    el.querySelector(".session-progress")?.remove();
+    el.querySelector(".session-status.running-tag")?.remove();
   } else {
     renderSessionList();
   }
@@ -4540,14 +4676,17 @@ function renderSessionList() {
     btn.setAttribute("role", "button");
     btn.tabIndex = 0;
     const title = sessionDisplayTitle(s);
+    // Two lines: the chat's own name and state first, its controls underneath. On one line the six
+    // action buttons and the folder select squeezed every title down to an ellipsis.
     btn.innerHTML = `
       <span class="session-main">
         ${running ? `<span class="session-spinner" aria-hidden="true"></span>` : ""}
-        <span class="title">${escapeHtml(title)}</span>
+        <span class="title" title="${escapeHtml(title)}">${escapeHtml(title)}</span>
         ${running
           ? `<span class="session-status running-tag">${langZh ? "执行中" : "Running"} ${pct}%</span>`
-          : `<span class="session-status idle-tag">${langZh ? "就绪" : "Idle"}</span>`}
+          : s.pinned ? `<span class="session-status pin-tag" title="${escapeHtml(langZh ? "已置顶" : "Pinned")}">★</span>` : ""}
       </span>
+      ${running ? `<span class="session-progress" aria-hidden="true"><span style="width:${pct}%"></span></span>` : ""}
       <span class="session-actions">
         <button type="button" class="act" data-rename="${escapeHtml(s.id)}" title="${escapeHtml(langZh ? "更改名称" : "Rename")}">✎</button>
        <button type="button" class="act" data-backup="${escapeHtml(s.id)}" title="${escapeHtml(langZh ? "备份" : "Backup")}">⬇</button>
@@ -4557,9 +4696,6 @@ function renderSessionList() {
        <button type="button" class="act danger" data-del="${escapeHtml(s.id)}" title="${escapeHtml(langZh ? "删除" : "Delete")}">×</button>
         <select class="session-folder-select" data-move-folder="${escapeHtml(s.id)}" title="${escapeHtml(langZh ? "移动到文件夹" : "Move to folder")}"><option value="">${langZh ? "未分类" : "Unclassified"}</option>${(state.folders || []).map((f) => `<option value="${escapeHtml(f.id)}" ${s.folder_id === f.id ? "selected" : ""}>${escapeHtml(f.name)}</option>`).join("")}</select>
       </span>`;
-    if (running) {
-      btn.style.setProperty("--run-pct", `${pct}%`);
-    }
     btn.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
@@ -4773,6 +4909,12 @@ function skillMetaById(id) {
   return { id, name: id, managed: true };
 }
 
+/** Catalog entries carry label (zh), label_en and name; a virtual core skill has only the first two. */
+function skillLabel(meta, id, langZh) {
+  const m = meta || {};
+  return (langZh ? (m.label || m.name) : (m.label_en || m.name || m.label)) || id;
+}
+
 function renderSkillPicker() {
   const catSel = $("#skill-cat-select");
   const subSel = $("#skill-sub-select");
@@ -4796,7 +4938,7 @@ function renderSkillPicker() {
   const skills = (sub && sub.skills) || [];
   pickSel.innerHTML = `<option value="">${escapeHtml(t("skills.pick"))}</option>` + skills.map((sk) => {
     const id = sk.id;
-    const label = langZh ? (sk.label || sk.name || id) : (sk.name || sk.label || id);
+    const label = skillLabel(sk, id, langZh);
     const used = state.selectedSkills.includes(id) ? " ✓" : "";
     return `<option value="${escapeHtml(id)}">${escapeHtml(label)}${used}</option>`;
   }).join("");
@@ -4806,7 +4948,7 @@ function renderSkillPicker() {
   } else {
     row.innerHTML = state.selectedSkills.map((id) => {
       const meta = skillMetaById(id);
-      const label = langZh ? (meta.label || meta.name || id) : (meta.name || meta.label || id);
+      const label = skillLabel(meta, id, langZh);
       return `<span class="skill-tag" data-skill="${escapeHtml(id)}">
         <span>${escapeHtml(label)}</span>
         <button type="button" class="rm-skill" title="${escapeHtml(t("skills.remove"))}" aria-label="remove">×</button>
@@ -5236,13 +5378,13 @@ function syncRouteLabels() {
   const sel = $("#route-select");
   if (!sel) return;
   const map = {
-    auto: state.prefs.language === "zh" ? "Auto（自动分级）" : "Auto",
+    auto: t("route.auto"),
     simple: `C0 · ${fast || "fast"}`,
     office: `C1 · ${main || "main"}`,
     C2: `C2 · ${main || "main"}+review`,
     reasoning: `C3 · ${reason || "reasoning"}`,
     vision: `Vision · ${vision || "vision"}`,
-    agent: state.prefs.language === "zh" ? `Agent · ${main || "main"}` : `Agent · ${main || "main"}`,
+    agent: `Agent · ${main || "main"}`,
   };
   Array.from(sel.options).forEach((opt) => {
     if (map[opt.value]) opt.textContent = map[opt.value];
@@ -5491,12 +5633,38 @@ function renderMessages(messages) {
       <img class="empty-logo-img" src="${logoSrc("empty")}" alt="深圳理工大学" />
       <h3 data-i18n="empty.title">${escapeHtml(t("empty.title"))}</h3>
       <p data-i18n-html="empty.body">${t("empty.body")}</p>
+      <div class="empty-starters" id="empty-starters"></div>
     </div>`;
     applyBrandLogos();
+    renderStarters();
     return;
   }
   messages.forEach((m) => appendMessage(m, false));
   box.scrollTop = box.scrollHeight;
+}
+
+/** A new chat is otherwise a logo in an empty page; these say what the Hub can be asked for. */
+const STARTERS = [
+  { key: "starter.review", prompt: { zh: "请写一篇关于（主题）的文献综述，附来源 URL。", en: "Write a literature review on (topic), with source URLs." } },
+  { key: "starter.minutes", prompt: { zh: "把下面的会议笔记整理成决议 / 待办 / 风险：", en: "Turn these meeting notes into decisions / to-dos / risks:" } },
+  { key: "starter.search", prompt: { zh: "联网检索并总结（主题）的最新进展，列出要点与来源。", en: "Search the web and summarise the latest on (topic), with key points and sources." } },
+];
+
+function renderStarters() {
+  const box = $("#empty-starters");
+  if (!box) return;
+  const zh = state.prefs.language !== "en";
+  box.innerHTML = STARTERS.map((s, i) =>
+    `<button type="button" class="empty-starter" data-starter="${i}">${escapeHtml(t(s.key))}</button>`).join("");
+  box.querySelectorAll("[data-starter]").forEach((b) => {
+    b.onclick = () => {
+      const input = $("#input");
+      if (!input) return;
+      input.value = STARTERS[Number(b.dataset.starter)].prompt[zh ? "zh" : "en"];
+      input.focus();
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    };
+  });
 }
 
 function appendMessage(m, scroll = true) {
@@ -7535,7 +7703,9 @@ async function stopStream() {
 function openWorkflow(w) {
   state.pendingWf = w;
   const label = wfLabel(w);
-  $("#wf-title").textContent = `${w.icon || ""} ${label.name}`;
+  const wfTitle = $("#wf-title");
+  wfTitle.removeAttribute("data-i18n");  // a concrete workflow name must survive a 中/EN switch
+  wfTitle.textContent = `${w.icon || ""} ${label.name}`;
   $("#wf-desc").textContent = label.description || "";
   $("#wf-input").value = "";
   $("#wf-save-inbox").checked = !!w.save_to_inbox;
@@ -7640,14 +7810,7 @@ function openControl(on = true) {
 }
 
 function applyControlCenterLanguage() {
-  const lang = controlLangZh() ? "zh" : "en";
-  const dict = I18N[lang] || I18N.zh;
-  const root = $("#control-overlay");
-  if (!root) return;
-  root.querySelectorAll("[data-i18n]").forEach((el) => {
-    const key = el.getAttribute("data-i18n");
-    if (key && dict[key]) el.textContent = dict[key];
-  });
+  localize($("#control-overlay"));
 }
 
 function field(label, key, value, type = "text") {
@@ -9976,6 +10139,21 @@ $("#route-select")?.addEventListener("change", () => {
 $("#btn-lang").addEventListener("click", () => {
   setPrefs({ language: state.prefs.language === "zh" ? "en" : "zh" }, { syncServer: true });
 });
+// Background / accent / font size are tucked away: the chat list is what the sidebar is for.
+(() => {
+  const btn = $("#btn-appearance");
+  const tray = $("#appearance-tray");
+  if (!btn || !tray) return;
+  const open = localStorage.getItem("agent_hub_appearance_open") === "1";
+  const set = (on) => {
+    tray.hidden = !on;
+    btn.setAttribute("aria-expanded", on ? "true" : "false");
+    btn.classList.toggle("active", on);
+    localStorage.setItem("agent_hub_appearance_open", on ? "1" : "0");
+  };
+  set(open);
+  btn.addEventListener("click", () => set(tray.hidden));
+})();
 $("#btn-web-search")?.addEventListener("click", () => {
   state.webSearch = !state.webSearch;
   const btn = $("#btn-web-search");

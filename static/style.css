@@ -790,7 +790,16 @@ html[data-bg="white"] .brand-sub {
   margin: 0 0 10px;
 }
 
-.quick-prefs { display: flex; gap: 6px; }
+.quick-prefs { display: flex; flex-wrap: wrap; gap: 6px; }
+.quick-prefs .btn.chip { white-space: nowrap; }
+.quick-prefs #btn-appearance { flex: 0 1 auto; }
+/* Background / accent / font size sit behind the 外观 chip so the chat list owns the sidebar. */
+.appearance-tray {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 10px; border: 1px solid var(--border); border-radius: 10px;
+  background: color-mix(in srgb, var(--bg-soft) 70%, transparent);
+}
+.appearance-tray[hidden] { display: none; }
 .btn.chip {
   flex: 1;
   padding: 7px 8px;
@@ -980,33 +989,52 @@ html[data-bg="white"] .brand-sub {
   cursor: pointer;
   font: inherit;
 }
-.session-item { display: flex; justify-content: space-between; gap: 6px; align-items: center; position: relative; overflow: visible; }
+/* A chat entry is two lines: its name and state, then its controls. On one line the six action
+   buttons plus the folder select left the title nothing but an ellipsis. */
+.session-item { display: flex; flex-direction: column; gap: 4px; align-items: stretch; position: relative; overflow: hidden; }
 .session-item .session-main {
-  display: flex; align-items: center; gap: 6px; min-width: 0; flex: 1;
+  display: flex; align-items: center; gap: 6px; min-width: 0;
 }
-.session-item .session-actions { display: flex; gap: 1px; flex-shrink: 0; opacity: 1; z-index: 2; }
+.session-item .session-actions {
+  display: flex; gap: 1px; align-items: center; flex-wrap: wrap; z-index: 2;
+  max-height: 0; opacity: 0; overflow: hidden;
+  transition: max-height .14s ease, opacity .14s ease;
+}
+.session-item:hover .session-actions,
+.session-item.active .session-actions,
+.session-item:focus-within .session-actions {
+  max-height: 44px; opacity: 1;
+}
+/* Touch devices have no hover, so the controls stay out on every row. */
+@media (hover: none) {
+  .session-item .session-actions { max-height: 44px; opacity: 1; }
+}
 .session-item .act {
   border: 0; background: transparent; color: var(--muted); cursor: pointer;
-  font: inherit; font-size: 13px; line-height: 1; padding: 4px 5px; border-radius: 6px;
+  font: inherit; font-size: 13px; line-height: 1; padding: 5px 6px; border-radius: 6px;
 }
 .session-item .act:hover { color: var(--text); background: var(--bg); }
+.session-item .act:focus-visible { outline: 2px solid color-mix(in srgb, var(--accent) 60%, transparent); outline-offset: 1px; }
 .session-item .act.danger:hover { color: var(--danger); }
 .session-item:hover, .wf-item:hover { background: var(--bg-soft); }
 .session-item.active {
   background: var(--bg-soft);
   border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
 }
-.session-item.running {
-  background:
-    linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--accent) 22%, transparent) 0,
-      color-mix(in srgb, var(--accent) 22%, transparent) var(--run-pct, 0%),
-      transparent var(--run-pct, 0%)
-    );
+.session-item.active .title { font-weight: 650; }
+.session-item.running { background: color-mix(in srgb, var(--accent) 7%, transparent); }
+.session-progress {
+  display: block; height: 3px; border-radius: 2px; overflow: hidden;
+  background: color-mix(in srgb, var(--muted) 22%, transparent);
+}
+.session-progress > span {
+  display: block; height: 100%; border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 55%, var(--ok)));
+  transition: width .3s ease;
 }
 .session-item .title, .wf-item .name {
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: calc(var(--font-size-base) - 1px); flex: 1; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: var(--font-size-base); flex: 1 1 auto; min-width: 0;
 }
 .session-item .session-status {
   flex-shrink: 0; font-size: 10px; font-variant-numeric: tabular-nums;
@@ -1014,11 +1042,10 @@ html[data-bg="white"] .brand-sub {
 }
 .session-item .session-status.running-tag {
   color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
 }
-.session-item .session-status.idle-tag {
-  color: var(--muted);
-  background: color-mix(in srgb, var(--muted) 10%, transparent);
+.session-item .session-status.pin-tag {
+  color: var(--accent); background: transparent; padding: 0;
 }
 .session-item .session-pct {
   flex-shrink: 0; font-size: 11px; font-variant-numeric: tabular-nums;
@@ -1047,7 +1074,7 @@ html[data-bg="white"] .brand-sub {
 .folder-tools .input { min-width: 0; flex: 1; }
 .session-folder { margin-top: 8px; padding: 4px 6px; color: var(--muted); font-size: 12px; }
 .folder-toggle { border: 0; background: transparent; color: inherit; cursor: pointer; padding: 2px 0; }
-.session-folder-select { max-width: 96px; font-size: 10px; opacity: .8; }
+.session-folder-select { max-width: 110px; font-size: 10px; opacity: .8; margin-left: auto; }
 
 .sidebar-foot {
   border-top: 1px solid var(--border);
@@ -1097,7 +1124,20 @@ html[data-bg="white"] .brand-sub {
 }
 .empty-state {
   margin: auto; text-align: center; color: var(--muted);
-  max-width: 420px; padding: 24px;
+  max-width: 480px; padding: 24px;
+}
+.empty-starters { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 18px; }
+.empty-starter {
+  border: 1px solid var(--border); border-radius: 999px;
+  background: var(--bg-elev); color: var(--text);
+  font: inherit; font-size: calc(var(--font-size-base) - 1px);
+  padding: 7px 14px; cursor: pointer;
+  transition: border-color .15s ease, background .15s ease, transform .15s ease;
+}
+.empty-starter:hover {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg-elev));
+  transform: translateY(-1px);
 }
 .empty-logo-img { width: min(280px, 72%); height: auto; margin: 0 auto 14px; display: block; opacity: 0.95; }
 .empty-logo { display: none !important; }
@@ -1283,11 +1323,23 @@ body.resizing-composer * {
 }
 .fs-item:hover { background: var(--bg-soft); border-color: var(--border); }
 .mode-banner {
-  margin: 8px 16px 0; padding: 8px 12px; border-radius: 10px; font-size: 12px;
+  margin: 8px 16px 0; padding: 7px 12px; border-radius: 10px;
+  font-size: calc(var(--font-size-base) - 2px); line-height: 1.5;
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px;
   border: 1px solid var(--border); color: var(--muted); background: var(--bg-elev);
 }
 .engine-badge.ok { color: var(--ok, #2ecc71); border-color: color-mix(in srgb, var(--ok, #2ecc71) 40%, transparent); }
 .mode-banner strong { color: var(--text); }
+.mode-banner-head { flex: 0 1 auto; }
+.mode-banner-toggle {
+  flex: 0 0 auto; border: 1px solid var(--border); background: transparent; color: var(--muted);
+  font: inherit; font-size: calc(var(--font-size-base) - 3px);
+  padding: 1px 8px; border-radius: 999px; cursor: pointer;
+}
+.mode-banner-toggle:hover { color: var(--text); border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); }
+.mode-banner-toggle[aria-expanded="true"] { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 55%, var(--border)); }
+.mode-banner-detail { flex: 1 1 100%; color: var(--muted); }
+.mode-banner-detail[hidden] { display: none; }
 .composer-tools select, .composer-tools input {
   border: 1px solid var(--border); background: var(--bg); color: var(--text);
   border-radius: 8px; padding: 6px 8px; font: inherit; font-size: calc(var(--font-size-base) - 1px);
@@ -1712,18 +1764,19 @@ hr.soft {
   box-shadow: inset 0 1px 2px rgba(0,0,0,.08);
 }
 .folder-add {
-  flex: 0 0 100px;
-  width: 100px;
-  min-height: 38px;
-  min-width: 100px;
-  border: 1px solid color-mix(in srgb, var(--accent) 65%, #000 8%);
-  color: #fff !important;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 86%, #fff 14%), color-mix(in srgb, var(--accent) 78%, #000 22%)) !important;
-  box-shadow: 0 2px 0 color-mix(in srgb, var(--accent) 55%, #000 28%), 0 4px 10px color-mix(in srgb, var(--accent) 22%, transparent);
-  font-weight: 700;
+  flex: 0 0 auto;
+  width: auto;
+  min-height: 32px;
+  min-width: 0;
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  background: transparent;
+  box-shadow: none;
+  font-weight: 600;
+  font-size: calc(var(--font-size-base) - 1px);
 }
-.folder-add:hover { transform: translateY(-1px); filter: brightness(1.05); }
-.folder-add:active { transform: translateY(1px); box-shadow: 0 1px 0 color-mix(in srgb, var(--accent) 55%, #000 28%); }
+.folder-add:hover { color: var(--text); border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); }
 .folder-toggle { border: 0; background: transparent; color: inherit; cursor: pointer; padding: 6px 4px; display: flex; align-items: center; gap: 6px; width: 100%; text-align: left; }
 .folder-toggle span { flex: 1; }
 .folder-toggle small { opacity: .7; font-size: 10px; }
@@ -1752,39 +1805,59 @@ hr.soft {
   font-size: calc(var(--font-size-base) + 1px);
   line-height: 1.2;
 }
-.folder-tools { margin: 6px 14px 8px; width: 234px; max-width: calc(100% - 28px); align-items: center; }
+.folder-tools { margin: 6px 14px 10px; width: auto; max-width: none; align-items: center; }
 .folder-tools .input {
-  height: 38px;
-  border: 1px solid color-mix(in srgb, var(--accent) 62%, var(--border));
-  border-radius: 10px;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 7%, var(--bg)), color-mix(in srgb, var(--accent) 15%, var(--bg-soft)));
-  box-shadow: inset 0 2px 3px rgba(0,0,0,.10), 0 2px 0 color-mix(in srgb, var(--accent) 25%, var(--border));
+  flex: 1 1 auto;
+  width: auto;
+  max-width: none;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  box-shadow: none;
   color: var(--text);
-  padding: 8px 10px;
-  text-align: center;
+  padding: 6px 10px;
+  text-align: left;
 }
 .folder-tools .input:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: inset 0 2px 3px rgba(0,0,0,.08), 0 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent), 0 2px 0 color-mix(in srgb, var(--accent) 35%, var(--border));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent);
 }
 .session-section-head {
-  width: 234px;
-  max-width: calc(100% - 28px);
+  width: auto;
+  max-width: none;
   margin-inline: 14px;
   justify-content: flex-start;
 }
-.session-section-head > span { flex: 1 1 auto; }
+/* The section title is the loudest thing here; 归档 / Archived is a secondary control. */
+.session-section-head > span {
+  flex: 1 1 auto;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: .01em;
+}
 .session-section-head .chip {
   margin-left: auto;
-  flex: 0 0 100px;
-  width: 100px;
-  min-width: 100px;
-  height: 38px;
-  color: #fff !important;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 86%, #fff 14%), color-mix(in srgb, var(--accent) 78%, #000 22%)) !important;
-  border: 1px solid color-mix(in srgb, var(--accent) 65%, #000 8%);
-  box-shadow: 0 2px 0 color-mix(in srgb, var(--accent) 55%, #000 28%), 0 4px 10px color-mix(in srgb, var(--accent) 22%, transparent);
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 0;
+  height: 30px;
+  padding: 4px 12px;
+  font-size: calc(var(--font-size-base) - 1px);
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+.session-section-head .chip:hover {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+}
+.session-section-head .chip.active {
+  color: #fff;
+  border-color: transparent;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 86%, #fff 14%), var(--accent));
 }
 .session-folder.active .folder-header {
   border-radius: 8px;

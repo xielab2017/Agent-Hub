@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>子代理独立窗口 · Agent Hub</title>
+  <title>Agent Hub</title>
   <link rel="stylesheet" href="/style.css?v=__APP_VERSION__" />
   <style>
     body { margin: 0; padding: 0; background: var(--bg, #0f1419); color: var(--text, #e7ecf3); font-family: inherit; }
@@ -11,7 +11,7 @@
     .popout-head {
       padding: 12px 16px; border-bottom: 1px solid var(--border, #2a323d);
       display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-      background: var(--panel, #151b22);
+      background: var(--bg-elev, #151b22);
     }
     .popout-title { font-weight: 600; font-size: 15px; }
     .popout-goal { color: var(--muted, #8a96a6); font-size: 13px; flex: 1 1 auto; min-width: 200px; }
@@ -22,7 +22,7 @@
       border: 1px solid var(--border, #2a323d);
       border-radius: 10px;
       padding: 10px 12px;
-      background: var(--panel-2, #181f27);
+      background: var(--bg-soft, #181f27);
     }
     .popout-lane-head {
       display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
@@ -46,27 +46,27 @@
       border-top: 1px solid var(--border, #2a323d);
       padding: 8px 16px; font-size: 12px; color: var(--muted, #8a96a6);
       display: flex; justify-content: space-between; align-items: center; gap: 8px;
-      background: var(--panel, #151b22);
+      background: var(--bg-elev, #151b22);
     }
   </style>
 </head>
 <body>
   <div class="popout">
     <div class="popout-head">
-      <span class="popout-title">子代理独立窗口</span>
-      <span class="popout-goal" id="popout-goal">等待并行任务…</span>
+      <span class="popout-title" data-i18n="title">子代理独立窗口</span>
+      <span class="popout-goal" id="popout-goal" data-i18n="waiting">等待并行任务…</span>
       <div class="popout-actions">
-        <button type="button" class="btn ghost chip" id="btn-reconnect">重连</button>
-        <button type="button" class="btn ghost chip" id="btn-close">关闭</button>
+        <button type="button" class="btn ghost chip" id="btn-reconnect" data-i18n="reconnect">重连</button>
+        <button type="button" class="btn ghost chip" id="btn-close" data-i18n="close">关闭</button>
       </div>
     </div>
     <div class="popout-body">
       <div class="popout-lanes" id="popout-lanes">
-        <div class="popout-empty" id="popout-empty">还没有子代理任务 — 触发并行后将在此显示每个子代理的实时进度与输出。</div>
+        <div class="popout-empty" id="popout-empty" data-i18n="empty">还没有子代理任务 — 触发并行后将在此显示每个子代理的实时进度与输出。</div>
       </div>
     </div>
     <div class="popout-foot">
-      <span id="popout-status">空闲</span>
+      <span id="popout-status" data-i18n="idle">空闲</span>
       <span id="popout-count">0 / 0</span>
     </div>
   </div>
@@ -74,8 +74,49 @@
   (function () {
     const params = new URLSearchParams(window.location.search);
     const parentId = params.get("parent") || "";
+    // This window is opened standalone, so it reads the 中/EN choice the main window stored.
+    const I18N = {
+      zh: {
+        title: "子代理独立窗口", waiting: "等待并行任务…", reconnect: "重连", close: "关闭",
+        empty: "还没有子代理任务 — 触发并行后将在此显示每个子代理的实时进度与输出。",
+        idle: "空闲", reconnecting: "重新连接中…", planned: "并行任务已规划",
+        noParent: "未指定父会话 — 在主窗口触发多子代理任务后会自动打开此窗口", waitingShort: "等待中",
+        thinking: "思考中…",
+      },
+      en: {
+        title: "Subagent window", waiting: "Waiting for a parallel run…", reconnect: "Reconnect", close: "Close",
+        empty: "No subagent yet — once a parallel run starts, every subagent’s live progress and output appears here.",
+        idle: "Idle", reconnecting: "Reconnecting…", planned: "Parallel run planned",
+        noParent: "No parent chat given — this window opens by itself when the main window starts a parallel run.",
+        waitingShort: "Waiting", thinking: "thinking…",
+      },
+    };
+    const lang = (() => {
+      try { return localStorage.getItem("hermes_ali_lang") === "en" ? "en" : "zh"; } catch (_) { return "zh"; }
+    })();
+    const T = (key) => (I18N[lang] || I18N.zh)[key] || key;
+    document.documentElement.lang = lang === "en" ? "en" : "zh-CN";
+    document.title = T("title") + " · Agent Hub";
+    document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = T(el.getAttribute("data-i18n")); });
+    // Follow the main window's theme instead of staying on the markup's dark/ocean default.
+    (function applyPrefs() {
+      const read = (k, dflt) => { try { return localStorage.getItem(k) || dflt; } catch (_) { return dflt; } };
+      let theme = read("hermes_ali_theme", "auto");
+      if (theme === "auto") {
+        const dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+        theme = dark ? "dark" : "light";
+      }
+      const root = document.documentElement;
+      root.setAttribute("data-theme", theme);
+      root.setAttribute("data-accent", read("hermes_ali_accent", "suat"));
+      const bg = read("hermes_ali_bg", "auto");
+      if (bg && bg !== "auto") root.setAttribute("data-bg", bg);
+      const size = Number(read("hermes_ali_font_size", "14"));
+      if (size >= 12 && size <= 20) root.style.setProperty("--font-size-base", size + "px");
+    })();
     const token = (() => {
-      try { return localStorage.getItem("agent_hub_token") || ""; } catch (_) { return ""; }
+      // Same key the main window writes; with the wrong one every request here came back 401.
+      try { return localStorage.getItem("hermes_ali_token") || ""; } catch (_) { return ""; }
     })();
     const lanesEl = document.getElementById("popout-lanes");
     const emptyEl = document.getElementById("popout-empty");
@@ -220,7 +261,7 @@
                   content: (prev.content || "") + (payload.text || ""),
                 });
               } else if (event === "thinking") {
-                statusEl.textContent = payload.text || payload.message || "thinking…";
+                statusEl.textContent = payload.text || payload.message || T("thinking");
               } else if (event === "done") {
                 updateLane(key, { status: "completed", pct: 100 });
               } else if (event === "error") {
@@ -279,7 +320,7 @@
             letter: l.letter, status: l.status || "pending", pct: 5, model: l.model || "",
           }));
           goalEl.textContent = data.goal || goalEl.textContent;
-          statusEl.textContent = "并行任务已规划";
+          statusEl.textContent = T("planned");
         } else if (data.event === "status") {
           updateLane(data.key, { status: data.status, pct: data.pct, progress: data.progress, model: data.model });
         } else if (data.event === "content") {
@@ -297,14 +338,14 @@
     document.getElementById("btn-reconnect").onclick = () => {
       clearStreams();
       Object.keys(state.lanes).forEach((k) => delete state.lanes[k]);
-      lanesEl.innerHTML = '<div class="popout-empty" id="popout-empty">重新连接中…</div>';
+      lanesEl.innerHTML = '<div class="popout-empty" id="popout-empty">' + T("reconnecting") + '</div>';
       registerParent(parentId);
     };
     document.getElementById("btn-close").onclick = () => window.close();
 
     if (!parentId) {
-      goalEl.textContent = "未指定父会话 — 在主窗口触发多子代理任务后会自动打开此窗口";
-      statusEl.textContent = "等待中";
+      goalEl.textContent = T("noParent");
+      statusEl.textContent = T("waitingShort");
     } else {
       registerParent(parentId);
       setInterval(() => {

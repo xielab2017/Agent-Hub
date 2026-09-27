@@ -75,10 +75,14 @@ def install_skills_root() -> Path:
 
 
 CORE_SKILL_HINTS = [
-    {"id": "deploy-campus-office-ai", "label": "校园办公部署", "role": "ops", "category": "ops", "sub": "deploy"},
-    {"id": "meeting-minutes", "label": "会议纪要", "role": "office", "category": "office", "sub": "meeting"},
-    {"id": "email-draft", "label": "邮件起草", "role": "office", "category": "office", "sub": "email"},
-    {"id": "research-review", "label": "科研审阅", "role": "research", "category": "research", "sub": "literature"},
+    {"id": "deploy-campus-office-ai", "label": "校园办公部署", "label_en": "Campus office deploy",
+     "role": "ops", "category": "ops", "sub": "deploy"},
+    {"id": "meeting-minutes", "label": "会议纪要", "label_en": "Meeting minutes",
+     "role": "office", "category": "office", "sub": "meeting"},
+    {"id": "email-draft", "label": "邮件起草", "label_en": "Email draft",
+     "role": "office", "category": "office", "sub": "email"},
+    {"id": "research-review", "label": "科研审阅", "label_en": "Research review",
+     "role": "research", "category": "research", "sub": "literature"},
 ]
 
 
