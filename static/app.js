@@ -15,7 +15,7 @@ const FONT_SIZE_LABELS = {
   zh: { 13: "小 13", 14: "中 14", 15: "中大 15", 16: "大 16", 18: "特大 18" },
   en: { 13: "S 13", 14: "M 14", 15: "M+ 15", 16: "L 16", 18: "XL 18" },
 };
-const LOGO_VER = "5.6.0";
+const LOGO_VER = "5.6.1";
 const DEFAULT_LOGO = `/brand/suat-logo-color.png?v=${LOGO_VER}`;
 const LOGO_PRESETS = [
   { id: "suat-color", src: `/brand/suat-logo-color.png?v=${LOGO_VER}`, labelKey: "appearance.logoPresetColor" },
@@ -2973,19 +2973,36 @@ function updateModelPickButton() {
   const zh = state.prefs.language !== "en";
   const ids = state.pickedModels || [];
   btn.classList.toggle("fusion", ids.length > 1);
-  btn.textContent = !ids.length ? (zh ? "模型：自动" : "Model: auto")
-    : ids.length === 1 ? `${zh ? "模型：" : "Model: "}${sourceLabel(ids[0])}`
-      : `${zh ? "融合 · " : "Fusion · "}${ids.map(sourceLabel).join(" + ")}`;
+  btn.textContent = !ids.length ? (zh ? "后端：自动" : "Backend: auto")
+    : ids.length === 1 ? `${zh ? "后端：" : "Backend: "}${sourceLabel(ids[0])}`
+      : `${zh ? "融合后端 · " : "Fused backends · "}${ids.map(sourceLabel).join(" + ")}`;
   btn.title = ids.length > 1
-    ? (zh ? "所选 API 与账号同时作答，再合并成一份回答" : "The chosen API models and accounts answer together; one merges them")
-    : (zh ? "API 模型与已登录账号在同一列表，可多选融合" : "API models and signed-in accounts share this list; multi-select fuses them");
+    ? (zh ? "这些后端同时作答，再合并成一份" : "These backends answer together, then one merges them")
+    : (zh ? "选中的模型就是当前后端" : "The model you pick is the live backend");
+}
+
+async function activateBackendSource(id) {
+  const src = (state.modelSources || []).find((s) => s.id === id);
+  if (!src || !src.ready) return;
+  try {
+    await api("/api/models/activate", { method: "POST", body: JSON.stringify({ source: id }) });
+    state.settings = await api("/api/settings");
+    syncComposerFromSettings();
+  } catch (err) {
+    console.warn(err);
+  }
 }
 
 function setPickedModels(ids) {
   state.pickedModels = [...new Set(ids.filter(Boolean))].slice(0, 6);
-  // one picked source also drives the legacy single select, so older paths send the same model
+  const legacy = $("#model-select");
+  if (legacy && state.pickedModels.length === 1) {
+    const model = String(state.pickedModels[0]).split("::").pop() || "";
+    if (model && [...legacy.options].some((o) => o.value === model)) legacy.value = model;
+  }
   updateModelPickButton();
   persistChatModeAndModel();
+  if (state.pickedModels.length === 1) activateBackendSource(state.pickedModels[0]);
 }
 
 function renderModelPicker() {
@@ -2999,23 +3016,35 @@ function renderModelPicker() {
   (state.modelSources || []).forEach((src) => {
     const name = zh ? src.group : (src.group_en || src.group);
     if (q && !`${name} ${src.model} ${src.label || ""}`.toLowerCase().includes(q)) return;
-    const key = `${src.kind === "agent" ? "2" : "1"}|${name}`;
-    if (!groups.has(key)) groups.set(key, { name, kind: src.kind, rows: [] });
+    const key = `${src.kind === "agent" ? "2" : "1"}|${src.provider}|${name}`;
+    if (!groups.has(key)) groups.set(key, { name, kind: src.kind, provider: src.provider, needsKey: !!src.needs_key, rows: [] });
     groups.get(key).rows.push(src);
   });
-  const rows = [...groups.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([, g]) => `
-      <div class="model-pick-group"><div class="model-pick-head">${g.kind === "agent" ? L("账号 · ", "Account · ") : ""}${escapeHtml(g.name)}</div>
+  const backendNow = ((state.settings && state.settings.config && state.settings.config.backend) || {}).type || "";
+  const rows = [...groups.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([, g]) => {
+    const active = g.rows.some((src) => src.active) || (g.kind !== "agent" && g.provider === backendNow && picked.size === 0);
+    const keyRow = g.needsKey ? `<div class="model-key-row" data-pid="${escapeHtml(g.provider)}">
+        <input type="password" class="model-key-input" autocomplete="off" placeholder="${L("粘贴这个后端的 API key", "Paste this backend's API key")}" />
+        <button type="button" class="btn primary chip model-key-save">${L("保存并用作后端", "Save and use")}</button>
+      </div>` : "";
+    const loginSlot = g.kind === "agent" && g.rows.some((src) => !src.ready)
+      ? `<div class="agent-login-slot" data-rid="${escapeHtml(g.provider)}"></div>` : "";
+    return `<div class="model-pick-group ${active ? "is-backend" : ""}" data-provider="${escapeHtml(g.provider)}">
+      <div class="model-pick-head">${g.kind === "agent" ? L("账号 · ", "Account · ") : L("后端 · ", "Backend · ")}${escapeHtml(g.name)}
+        ${active ? `<span class="model-kind agent">${L("当前后端", "live backend")}</span>` : ""}</div>
+      ${keyRow}${loginSlot}
       ${g.rows.map((src) => `<label class="model-pick-row ${src.ready ? "" : "off"}" data-id="${escapeHtml(src.id)}">
         <input type="checkbox" ${picked.has(src.id) ? "checked" : ""} ${src.ready ? "" : "disabled"} />
         <span>${escapeHtml(src.kind === "agent" ? (src.model || L("默认模型", "default model")) : src.model)}</span>
-        <span class="model-kind ${src.kind === "agent" ? "agent" : "api"}">${src.kind === "agent" ? L("账号", "Account") : "API"}</span>
-        ${src.ready ? "" : `<a href="#" class="model-pick-login">${escapeHtml((zh ? src.note : (src.note_en || src.note)) || L("未登录", "not signed in"))} · ${L("去登录", "sign in")}</a>`}
-      </label>`).join("")}</div>`).join("");
+        ${src.active ? `<span class="model-kind agent">${L("使用中", "in use")}</span>` : ""}
+        ${src.ready ? "" : `<span class="model-pick-note">${escapeHtml((zh ? src.note : (src.note_en || src.note)) || "")}</span>`}
+      </label>`).join("")}</div>`;
+  }).join("");
   pop.innerHTML = `<div class="model-pick-top">
-      <input class="model-pick-search" placeholder="${L("搜索模型…", "Search models…")}" value="${escapeHtml(q)}" />
-      <button type="button" class="btn ghost chip model-pick-auto">${L("自动（按分级路由）", "Auto (tier routing)")}</button></div>
-    <div class="muted model-pick-hint">${L("API 与已登录账号在同一列表。勾选一个：只用它；勾选多个：同时作答并融合成一份。", "API models and signed-in accounts are one list. Tick one to use it; tick several to answer together and merge.")}</div>
-    <div class="model-pick-list">${rows || `<div class="muted">${L("还没有可用模型 — 在 控制中心 → 多模型 API 添加 key 或登录账号", "No models yet — add a key or sign in under Control Center → Multi-model API")}</div>`}</div>`;
+      <input class="model-pick-search" placeholder="${L("搜索后端或模型…", "Search backends or models…")}" value="${escapeHtml(q)}" />
+      <button type="button" class="btn ghost chip model-pick-auto">${L("自动", "Auto")}</button></div>
+    <div class="muted model-pick-hint">${L("这里就是后端。勾选一个模型：对话、Skill 和 Hub 都改用它。勾选多个：各自作答再融合。没有 key 的后端直接在下面粘贴。", "This list is the backend. Tick one model and chat, skills and the Hub switch to it. Tick several and they answer together, then merge. Paste a key here for a backend that has none.")}</div>
+    <div class="model-pick-list">${rows || `<div class="muted">${L("没有可列出的后端", "No backends to list")}</div>`}</div>`;
   const search = pop.querySelector(".model-pick-search");
   search.oninput = () => { const pos = search.selectionStart; renderModelPicker(); const s2 = pop.querySelector(".model-pick-search"); s2.focus(); s2.setSelectionRange(pos, pos); };
   pop.querySelector(".model-pick-auto").onclick = () => { setPickedModels([]); renderModelPicker(); };
@@ -3027,14 +3056,39 @@ function renderModelPicker() {
       setPickedModels([...next]);
     };
   });
-  pop.querySelectorAll(".model-pick-login").forEach((a) => {
-    a.onclick = async (e) => {
-      e.preventDefault();
-      pop.hidden = true;
-      if (typeof openControl === "function") await openControl();
-      const tab = document.querySelector("[data-ctab=connections]");
-      if (tab) tab.click();
+  pop.querySelectorAll(".model-key-save").forEach((btn) => {
+    btn.onclick = async () => {
+      const row = btn.closest(".model-key-row");
+      const pid = row && row.dataset.pid;
+      const key = (row.querySelector(".model-key-input").value || "").trim();
+      if (!pid || !key) return;
+      btn.disabled = true;
+      try {
+        await api(`/api/connections/${encodeURIComponent(pid)}`, { method: "POST", body: JSON.stringify({ api_key: key }) });
+        await loadModelSources();
+        const first = (state.modelSources || []).find((s) => s.provider === pid && s.ready);
+        if (first) {
+          state.pickedModels = [first.id];
+          await activateBackendSource(first.id);
+        }
+        renderModelPicker();
+        updateModelPickButton();
+      } catch (err) {
+        btn.disabled = false;
+        row.insertAdjacentHTML("beforeend", `<span class="conn-badge err">${escapeHtml(err.message || String(err))}</span>`);
+      }
     };
+  });
+  pop.querySelectorAll(".agent-login-slot").forEach((slot) => {
+    if (typeof mountAgentLogin === "function") {
+      mountAgentLogin(slot, slot.dataset.rid, zh, {
+        onChange: async (st) => {
+          if (st !== "done" && st !== "logout") return;
+          await loadModelSources();
+          renderModelPicker();
+        },
+      });
+    }
   });
 }
 

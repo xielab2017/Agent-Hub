@@ -1301,6 +1301,7 @@ body.resizing-composer * {
   display: flex; flex-direction: column; gap: 2px;
   font-size: 11px; color: var(--muted);
 }
+.composer-tools label:has(#model-select) { display: none; }
 .composer-tools label.grow { flex: 1; min-width: 160px; }
 .workspace-row { display: flex; gap: 6px; align-items: center; }
 .workspace-row input { flex: 1; }
@@ -2139,9 +2140,13 @@ hr.soft {
 .model-pick-wrap { position: relative; display: inline-block; }
 .model-pick-btn { max-width: 380px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .model-pick-btn.fusion { border-color: var(--accent); color: var(--accent); font-weight: 600; }
-.model-pick-pop { position: absolute; bottom: calc(100% + 6px); left: 0; z-index: 50; width: min(420px, 90vw);
-  max-height: 60vh; overflow: auto; padding: 8px; border: 1px solid var(--border); border-radius: 10px;
-  background: var(--panel, var(--bg)); box-shadow: 0 8px 28px rgba(0,0,0,.35); }
+.model-pick-pop { position: absolute; bottom: calc(100% + 6px); left: 0; z-index: 50; width: min(520px, 92vw);
+  max-height: 70vh; overflow: auto; padding: 10px 12px; border: 1px solid #d9cfe3; border-radius: 12px;
+  background: #fff; color: #1c1424; box-shadow: 0 16px 40px rgba(40, 16, 56, 0.28); }
+.model-pick-pop .muted, .model-pick-pop .model-pick-note { color: #5c4d68; }
+.model-pick-group.is-backend { outline: 1px solid #7a2a8f; border-radius: 8px; padding: 4px 6px; background: #f8f1fb; }
+.model-key-row { display: flex; gap: 6px; align-items: center; margin: 4px 0 6px; }
+.model-key-row .model-key-input { flex: 1; min-width: 0; border: 1px solid #d5c9e0; border-radius: 8px; padding: 6px 8px; background: #fff; color: #1c1424; }
 .model-pick-top { display: flex; gap: 6px; margin-bottom: 4px; }
 .model-pick-search { flex: 1; }
 .model-pick-hint { font-size: 12px; margin: 2px 0 6px; }
@@ -2161,3 +2166,91 @@ hr.soft {
 .fusion-member.err { opacity: .75; }
 .fusion-member-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .fusion-member-body { font-size: 13px; }
+
+/* Main column is a light reading surface so the chat stays visible against the purple sidebar. */
+html .app > .main {
+  background: #f3eef6;
+  color: #1c1424;
+}
+html .app > .main .topbar,
+html .app > .main .composer {
+  background: #ffffff;
+  color: #1c1424;
+  border-color: #ddd2e6;
+}
+html .app > .main .topbar h2,
+html .app > .main .empty-state,
+html .app > .main .empty-state h3,
+html .app > .main .empty-state p,
+html .app > .main .msg,
+html .app > .main .msg.assistant,
+html .app > .main .msg.user,
+html .app > .main .folder-overview,
+html .app > .main .folder-overview h3,
+html .app > .main .folder-task-row,
+html .app > .main label,
+html .app > .main .composer-adv-summary {
+  color: #1c1424;
+}
+html .app > .main .messages {
+  padding: 28px 8vw 36px;
+  font-size: 16px;
+}
+html .app > .main .empty-state {
+  background: #ffffff;
+  border: 1px solid #e4d7ee;
+  border-radius: 16px;
+  box-shadow: 0 10px 28px rgba(60, 24, 80, 0.08);
+  max-width: 560px;
+  padding: 36px 28px;
+}
+html .app > .main .empty-state h3 { font-size: 28px; }
+html .app > .main .empty-state p { font-size: 16px; color: #3d3148; }
+html .app > .main .msg {
+  font-size: 16px;
+  max-width: min(880px, 100%);
+}
+html .app > .main .msg.assistant {
+  background: #ffffff;
+  border: 1px solid #e0d4ea;
+  box-shadow: 0 2px 8px rgba(40, 16, 56, 0.06);
+}
+html .app > .main .msg.user {
+  background: #f3e4f8;
+  border: 1px solid #d7b6e4;
+  color: #1c1424;
+}
+html .app > .main .msg .meta,
+html .app > .main .muted,
+html .app > .main .folder-overview-head p,
+html .app > .main .folder-task-row small {
+  color: #5c4d68;
+}
+html .app > .main textarea,
+html .app > .main select,
+html .app > .main input,
+html .app > .main .model-pick-pop {
+  background: #ffffff;
+  color: #1c1424;
+  border-color: #d5c9e0;
+}
+html .app > .main textarea#input {
+  font-size: 16px;
+  min-height: 56px;
+}
+html .app > .main .btn.ghost,
+html .app > .main .btn.chip {
+  color: #3a2448;
+  background: #ffffff;
+  border-color: #d5c9e0;
+}
+html .app > .main .btn.primary,
+html .app > .main .btn.send {
+  color: #ffffff;
+}
+html .app > .main .route-badge,
+html .app > .main .token-chip {
+  color: #6a247c;
+  background: #fff;
+  border-color: #e0d0ea;
+}

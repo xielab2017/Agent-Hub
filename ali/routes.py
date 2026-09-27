@@ -1880,6 +1880,13 @@ def handle_post(handler) -> None:
             return _json(handler, 404, {"error": str(exc)})
         return _json(handler, 200, {"ok": True, "review": review})
 
+    if path == "/api/models/activate":
+        body = _read_json(handler)
+        try:
+            return _json(handler, 200, conn_mod.activate_source(str(body.get("source") or "")))
+        except ValueError as exc:
+            return _json(handler, 400, {"error": str(exc)})
+
     if path == "/api/connections/tier":
         body = _read_json(handler)
         try:

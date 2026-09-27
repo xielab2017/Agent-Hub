@@ -34,7 +34,26 @@ def test_sources_list_api_vendors_and_accounts_without_secrets():
         assert {"claude-code::", "claude-code::opus", "cursor::auto"} <= ids
         assert not next(r for r in rows if r["id"] == "cursor::auto")["ready"]  # not signed in: shown, not ready
         assert "sk-deepseek" not in json.dumps(rows)
-        assert not any(r["provider"] == "kimi" for r in rows)  # vendors without a key are not offered
+        kimi = [r for r in rows if r["provider"] == "kimi"]
+        assert kimi and all(r.get("needs_key") and not r["ready"] for r in kimi)
+
+
+def test_activate_source_becomes_the_backend():
+    from ali import connections
+    from ali.settings import load_campus_config
+
+    with state():
+        connections.save("deepseek", {"api_key": "sk-deepseek-aaaaaaaaaaaaaaaa"})
+        out = connections.activate_source("deepseek::deepseek-chat")
+        assert out["backend"] == "deepseek" and out["model"] == "deepseek-chat"
+        cfg = load_campus_config()
+        assert cfg["backend"]["type"] == "deepseek"
+        assert cfg["models"]["main"] == "deepseek-chat"
+        connections.activate_source("claude-code::opus")
+        cfg = load_campus_config()
+        assert cfg["backend"]["type"] == "hybrid"
+        assert cfg["hybrid"]["office"]["provider"] == "claude-code"
+        assert cfg["hybrid"]["office"]["model"] == "opus"
 
 
 def test_pin_source_routes_to_that_vendor_or_account():

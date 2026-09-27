@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0f1419" />
   <title>Agent Hub</title>
-  <link rel="stylesheet" href="/style.css?v=5.6.0" />
+  <link rel="stylesheet" href="/style.css?v=5.6.1" />
 </head>
 <body>
   <div id="login-overlay" class="overlay hidden">
@@ -22,10 +22,10 @@
     <aside id="sidebar" class="sidebar">
       <div class="sidebar-head">
         <div class="brand">
-          <img class="brand-logo" src="/brand/suat-logo-color.png?v=5.6.0" alt="SUAT" />
+          <img class="brand-logo" src="/brand/suat-logo-color.png?v=5.6.1" alt="SUAT" />
           <div>
             <div class="brand-name">Agent Hub</div>
-          <div class="brand-sub" id="version-label">v5.6.0</div>
+          <div class="brand-sub" id="version-label">v5.6.1</div>
           </div>
         </div>
         <div class="quick-prefs">
@@ -85,7 +85,7 @@
       <div id="chat-panes" class="chat-panes">
         <div id="messages" class="messages">
           <div class="empty-state" id="empty-state">
-          <img class="empty-logo-img" src="/brand/suat-logo-color.png?v=5.6.0" alt="深圳理工大学" />
+          <img class="empty-logo-img" src="/brand/suat-logo-color.png?v=5.6.1" alt="深圳理工大学" />
             <h3 data-i18n="empty.title">校园 Agent Hub</h3>
             <p data-i18n-html="empty.body">描述任务并运行 · Agent Hub 调度 Skill / Agent · 进度条跟踪执行</p>
           </div>
@@ -150,7 +150,7 @@
             </select>
           </label>
           <div class="model-pick-wrap">
-            <button type="button" id="model-pick-btn" class="btn ghost chip model-pick-btn" aria-haspopup="true" aria-expanded="false">模型：自动</button>
+            <button type="button" id="model-pick-btn" class="btn ghost chip model-pick-btn" aria-haspopup="true" aria-expanded="false">后端：自动</button>
             <div id="model-pick-pop" class="model-pick-pop" hidden></div>
           </div>
           <span id="composer-adv-summary" class="composer-adv-summary muted"></span>
@@ -238,10 +238,10 @@
       <div class="control-tabs">
         <button class="ctab active" data-ctab="appearance" data-i18n="control.appearance">外观</button>
         <button class="ctab" data-ctab="health" data-i18n="control.health">健康</button>
-        <button class="ctab" data-ctab="backend" data-i18n="control.backend">后端</button>
+        <button class="ctab hidden" data-ctab="backend" data-i18n="control.backend">后端</button>
         <button class="ctab" data-ctab="search" data-i18n="control.search">搜索</button>
-        <button class="ctab" data-ctab="models" data-i18n="control.models">模型</button>
-        <button class="ctab" data-ctab="connections" data-i18n="control.connections">多模型 API</button>
+        <button class="ctab hidden" data-ctab="models" data-i18n="control.models">模型</button>
+        <button class="ctab hidden" data-ctab="connections" data-i18n="control.connections">多模型 API</button>
         <button class="ctab" data-ctab="runtimes" data-i18n="control.runtimes">Claws</button>
         <button class="ctab" data-ctab="ecosystem" data-i18n="control.ecosystem">生态</button>
         <button class="ctab" data-ctab="mcp" data-i18n="control.mcp">MCP</button>
@@ -335,6 +335,6 @@
   </div>
 
   <div id="sidebar-backdrop" class="backdrop hidden"></div>
-  <script src="/app.js?v=5.6.0"></script>
+  <script src="/app.js?v=5.6.1"></script>
 </body>
 </html>

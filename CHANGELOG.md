@@ -1,5 +1,10 @@
 # Changelog
 
+## v5.6.1 — 2026-09-27
+
+- **The model list is the backend.** Picking one model in the composer writes `backend.type` and the main model slots (`POST /api/models/activate`). Picking an account binds every chat tier to that agent. Vendors without a key appear in the same list with a key field. The separate Control Center tabs 后端 / 模型 / 多模型 API are no longer a second place to choose a backend.
+- **Brighter main column.** The chat surface is a light high-contrast sheet (16px type, white cards) so it stays readable against the purple sidebar.
+
 ## v5.6.0 — 2026-09-27
 
 - **One version string.** 5.6.0 is set in `ali/__init__.py`, `ali/config.py`, `pyproject.toml`, README,

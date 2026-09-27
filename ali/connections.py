@@ -1,7 +1,7 @@
 """Multi-vendor model connections ("多模型 API"): several vendors' keys and endpoints at once.
 
-Saving a connection never switches ``backend.type``: the active backend (single vendor) or the hybrid tier map
-decides who answers; connections only make vendors available with their own key, endpoint and TLS policy.
+Saving a connection never switches ``backend.type`` by itself. Choosing a row in the chat model list does:
+``activate_source`` writes that vendor (or agent account) into the live backend.
 Keys live in the secrets store (``secrets.set_api_key(pid, …)``); config holds only non-secret fields.
 
 Agent accounts (Claude subscription via Claude Code, ChatGPT via Codex, Cursor) are model sources too: each signs
@@ -115,19 +115,27 @@ def model_sources(cfg: dict[str, Any] | None = None, *, agents: list[dict[str, A
     out: list[dict[str, Any]] = []
     hybrid = cfg.get("hybrid") or {}
     backend = str((cfg.get("backend") or {}).get("type") or "")
+    active_model = str((cfg.get("models") or {}).get("main") or (cfg.get("models") or {}).get("qwen_main") or "")
     for c in list_connections(cfg):
         pid = c["provider"]
-        if not (c.get("key_present") or pid == "local-ollama"):
-            continue
+        keyed = bool(c.get("key_present") or pid == "local-ollama")
         bound = [str((hybrid.get(rk) or {}).get("model") or "") for rk in hybrid
                  if (hybrid.get(rk) or {}).get("provider") == pid]
         if pid == backend:
             bound += [str(v) for v in (cfg.get("models") or {}).values() if isinstance(v, str)]
         fetched = list(c.get("models") or [])
         names = [m for m in dict.fromkeys([*bound, *fetched[:60], *(c.get("default_models") or [])]) if m]
+        if not keyed:
+            names = names[:8]
+        if not names:
+            continue
         for m in names:
             out.append({"id": f"{pid}{SOURCE_SEP}{m}", "kind": "api", "provider": pid, "model": m, "label": m,
-                        "group": c.get("label") or pid, "group_en": c.get("label_en") or pid, "ready": True,
+                        "group": c.get("label") or pid, "group_en": c.get("label_en") or pid,
+                        "ready": keyed, "needs_key": not keyed,
+                        "active": bool(keyed and pid == backend and m == active_model),
+                        "note": "" if keyed else "需要 API key",
+                        "note_en": "" if keyed else "needs API key",
                         "bound": m in bound})
     for a in (agents if agents is not None else agents_view()["agents"]):
         rid = a["id"]
@@ -139,7 +147,46 @@ def model_sources(cfg: dict[str, Any] | None = None, *, agents: list[dict[str, A
                         "group_en": a["label_en"], "ready": bool(a.get("installed") and a.get("logged_in")),
                         "note": "" if a.get("logged_in") else ("未安装" if not a.get("installed") else "未登录"),
                         "note_en": "" if a.get("logged_in") else ("not installed" if not a.get("installed") else "not signed in")})
-    return {"ok": True, "sources": out}
+    return {"ok": True, "sources": out, "backend": backend, "active_model": active_model}
+
+
+def activate_source(source: str) -> dict[str, Any]:
+    """Make one picker row the live backend.
+
+    An API row sets ``backend.type`` and the main model slots to that vendor and model.
+    An account row binds every chat tier to that agent, so the backend follows the choice
+    instead of staying a separate control.
+    """
+    from .providers import apply_provider_preset
+    from .settings import save_campus_config
+
+    pid, model = split_source(source)
+    if not pid:
+        raise ValueError("model source required")
+    if is_agent(pid):
+        for rk in ("simple", "office", "reasoning", "vision"):
+            set_tier(rk, pid, model)
+        cfg = _cfg()
+        ali = dict(cfg.get("ali") or {})
+        ali["last_model"] = model or pid
+        ali["last_models"] = [f"{pid}{SOURCE_SEP}{model}"]
+        cfg["ali"] = ali
+        save_campus_config(cfg)
+        return {"ok": True, "backend": "hybrid", "model": model, "source": f"{pid}{SOURCE_SEP}{model}", "agent": True}
+    if not get_provider(pid) or pid == "hybrid":
+        raise ValueError(f"unknown model source: {source}")
+    cfg = apply_provider_preset(_cfg(), pid, fill_models=True)
+    if model:
+        models = dict(cfg.get("models") or {})
+        for key in ("main", "qwen_main", "fast", "qwen_fast", "reasoning", "deepseek_reasoning", "vision", "qwen_vl"):
+            models[key] = model
+        cfg["models"] = models
+    ali = dict(cfg.get("ali") or {})
+    ali["last_model"] = model
+    ali["last_models"] = [f"{pid}{SOURCE_SEP}{model}"]
+    cfg["ali"] = ali
+    save_campus_config(cfg)
+    return {"ok": True, "backend": pid, "model": model, "source": f"{pid}{SOURCE_SEP}{model}", "agent": False}
 
 
 def _cfg() -> dict[str, Any]:
